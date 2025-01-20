@@ -1,0 +1,34 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Bipando" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/LightSkyBlue</item>
+        <item name="colorPrimaryVariant">@color/black</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <!-- Customize your theme here. -->
+
+    </style>
+    <style name="Theme.Bipando.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">false</item>
+    </style>
+    <style name="Theme.Bipando_2" parent="Theme.Bipando_4">
+        <item name="colorPrimary">@color/green</item>
+    </style>
+
+    <style name="Theme.Bipando_3" parent="Theme.Bipando">
+        <item name="colorPrimary">@color/red</item>
+    </style>
+
+    <style name="Theme.Bipando_4" parent="Theme.Bipando">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+    </style>
+    <style name="Theme.Bipando.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.Bipando.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+</resources>

@@ -1,0 +1,164 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="UselessParent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/silver">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/image_edit"
+                        style="@style/Theme.Bipando.ImageView"
+                        android:scaleType="centerCrop"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/up_picture"
+                        android:contentDescription="@string/todo"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/img_fragment_edit"
+                        style="@style/Theme.Bipando.ImgCicle"
+                        app:civ_border_color="@color/white"
+                        app:civ_border_width="1dp"
+                        app:civ_circle_background_color="@color/silver"
+                        app:layout_constraintBottom_toBottomOf="@id/image_edit"
+                        app:layout_constraintEnd_toEndOf="@id/image_edit" />
+
+                    <TextView
+                        android:id="@+id/txt_edit_bacode"
+                        style="@style/Theme.Bipando.TextViewFormat"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/textview_barcode_custon"
+                        android:text="@string/_5683636373738"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/image_edit" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/linearLayout_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        style="@style/Theme.Bipando.Format"
+                        android:layout_marginStart="10dp"
+                        android:src="@drawable/ic_shopping" />
+
+                    <EditText
+                        android:id="@+id/edt_name_fragment"
+                        style="@style/Theme.Bipando.EditTextNameFormat"
+                        android:autofillHints="null"
+                        android:inputType="text"
+                        tools:ignore="LabelFor" />
+                </FrameLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/linear_edit_f"
+                style="@style/Theme.Bipando.FormatCardView"
+                android:elevation="2dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/DarkGray" />
+
+                    <LinearLayout
+                        android:id="@+id/linear_Edit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/Theme.Bipando.Format"
+                            android:layout_marginStart="10dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/calendar" />
+
+                        <Button
+                            android:id="@+id/datePickerButton"
+                            style="?android:spinnerStyle"
+                            android:layout_width="250dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="@string/_01_jan_2020"
+                            android:textColor="@color/black"
+                            android:textSize="20sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@color/DarkGray" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/Theme.Bipando.Format"
+                            android:layout_marginStart="10dp"
+                            android:src="@drawable/edit_note" />
+
+                        <EditText
+                            android:id="@+id/edit_fragment_note"
+                            style="@style/Theme.Bipando.EditTextNotaFormat"
+                            tools:ignore="LabelFor" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@color/DarkGray" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <Button
+                android:id="@+id/btn_fragment_excluir"
+                style="@style/Theme.Bipando.FormatButtom"
+                android:text="@string/excluir" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

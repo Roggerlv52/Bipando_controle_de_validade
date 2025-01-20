@@ -1,0 +1,9 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFD700"/>
+       <!-- Cor de preenchimento do círculo -->
+       <corners android:radius="50dp"/>
+       <!-- Metade da largura/altura para garantir um círculo -->
+   <size android:width="100dp" 
+	   android:height="100dp"/>
+      <!-- Tamanho do círculo -->
+</shape>

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "449087711343",
+    "project_id": "bipando-2f84a",
+    "storage_bucket": "bipando-2f84a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:449087711343:android:11702ac8205ae5a92b859a",
+        "android_client_info": {
+          "package_name": "com.rogger.bipando"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "449087711343-k16461buvfn53c0cvte33sdkdsqbvpim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVbUPEDJGF2Lq6R9EDxdIPJCup1_4R8fU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "449087711343-k16461buvfn53c0cvte33sdkdsqbvpim.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

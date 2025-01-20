@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFEFD5</color>
+    <color name="purple_500">#FFEFD5</color>
+
+    <!-- Color abaixo Status bar -->
+    <color name="purple_700">#006400</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#006400</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="pink">#FF69B4</color>
+    <color name="red">#FF0000</color>
+    <color name="orange">#FF4500</color>
+    <color name="poweblue">#B0E0E6</color>
+    <color name="DarkGray">#A9A9A9</color>
+    <color name="silver">#C0C0C0</color>
+    <color name="lightgray">#DCDCDC</color>
+    <color name="PaleTurquoise">#E0FFFF</color>
+    <color name="GhostWhite">#F8F8FF</color>
+    <color name="gray_darker">#2D272727</color>
+    <color name="yellow">#FFD700</color>
+    <color name="green">#008000</color>
+    <color name="LightSkyBlue">#87CEFA</color>
+    <color name="gray">#808080</color>
+    <color name="skyBlue">#87CEEB</color>
+
+    <color name="zxing_custom_possible_result_points">#c0ffff00</color>
+    <color name="zxing_custom_result_view">#b0000000</color>
+    <color name="zxing_custom_viewfinder_laser">#ffcc0000</color>
+    <color name="zxing_custom_viewfinder_mask">#60000000</color>
+
+</resources>

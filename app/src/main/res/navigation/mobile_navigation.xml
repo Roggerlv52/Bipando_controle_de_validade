@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.rogger.bipando.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_nav_home_to_nav_edit_fragment"
+            app:destination="@id/nav_edit_fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_edit_fragment"
+        android:name="com.rogger.bipando.ui.edit.EditFragment"
+        android:label="@string/edit"
+        tools:layout="@layout/fragment_edit">
+        <argument
+            android:name="productName"
+            app:argType="string" />
+        <argument
+            android:name="barcode"
+            app:argType="string" />
+        <argument
+            android:name="imageUrl"
+            app:argType="string" />
+        <argument
+            android:name="data"
+            app:argType="string" />
+        <argument
+            android:name="note"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_nav_edit_fragment_to_nav_home"
+            app:destination="@id/nav_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_deleted"
+        android:name="com.rogger.bipando.ui.deleted.DeletedFragment"
+        android:label="@string/menu_deleted"
+        tools:layout="@layout/fragment_deleted" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.rogger.bipando.ui.profile.ProfileFragemt"
+        android:label="@string/menu_profile_config"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_nav_profile_to_nav_home"
+            app:destination="@id/nav_home" />
+    </fragment>
+    <activity
+        android:id="@+id/mainActivity"
+        android:name="com.rogger.bipando.MainActivity"
+        android:label="app_bar_main"
+        tools:layout="@layout/app_bar_main" />
+</navigation>

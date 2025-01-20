@@ -1,0 +1,265 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="UselessParent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                app:cardCornerRadius="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="16dp"
+                        android:src="@drawable/no_picture"
+                        app:civ_border_color="@color/gray"
+                        app:civ_border_width="1dp" />
+
+                    <TextView
+                        android:id="@+id/userNameProfile"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Rogger Oliveira"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/userNickname"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="16dp"
+                        android:text="@string/lovely_moose" />
+
+                    <TextView
+                        android:id="@+id/userId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="20dp"
+                        android:text="@string/_5683636373738" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:padding="16dp"
+                app:cardCornerRadius="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="Configurações da conta"
+                        android:textStyle="normal" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_marginBottom="16dp"
+                            android:text="Nome"
+                            android:textSize="18sp"
+                            android:textStyle="normal" />
+
+                        <TextView
+                            android:id="@+id/profile_title_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginBottom="16dp"
+                            android:text="Rogger de Oliveira "
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+                    </FrameLayout>
+
+                    <android.view.View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/silver" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_marginBottom="8dp"
+                            android:text="Aviso vencimento"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginBottom="8dp"
+                            android:text="12 pm, 18 pm"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+                    </FrameLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:padding="16dp"
+                app:cardCornerRadius="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="Celecione um thema" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginEnd="10dp"
+                            android:layout_marginBottom="8dp"
+                            android:orientation="vertical">
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/box_profile_1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:padding="8dp"
+                                android:layout_gravity="center"
+                                android:text="Thema 1 "
+                                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/box_profile_2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:padding="8dp"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="5dp"
+                                android:buttonTint="@color/green"
+                                android:text="Thema 2  "
+                                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/box_profile_3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:padding="8dp"
+                                android:layout_gravity="start"
+                                android:layout_marginTop="5dp"
+                                android:text="Thema 3  "
+                                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/box_profile_4"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:padding="8dp"
+                                android:layout_marginBottom="4dp"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="5dp"
+                                android:text="Thema 4  "
+                                tools:ignore="UseSwitchCompatOrMaterialXml" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <android.view.View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/silver" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/profile_switch"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="5dp"
+                            android:text="@string/aviso_de_vencimento" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/box_off_beep"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="8dp"
+                            android:layout_marginBottom="4dp"
+                            android:layout_gravity="start"
+                            android:layout_marginTop="5dp"
+                            android:text=" Desativar beep  "
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="8dp"
+                android:text="Aviso vencimento" />
+        </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>
