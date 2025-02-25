@@ -8,10 +8,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -20,13 +20,13 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.databinding.ActivityMainBinding;
 import com.rogger.bipando.ui.base.BaseActivity;
-import com.rogger.bipando.ui.commun.ImageCallback;
+import com.rogger.bipando.ui.base.Utils;
 import com.rogger.bipando.ui.commun.SharedPreferencesManager;
+import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.squareup.picasso.Picasso;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -47,17 +47,6 @@ public class MainActivity extends BaseActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        /*
-        binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .setAnchorView(R.id.fab).show();
-            }
-        });
-       
-         */
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
@@ -86,12 +75,12 @@ public class MainActivity extends BaseActivity {
                         .placeholder(R.drawable.ic_launcher_foreground)
                         .into(imgProfile);
                 assert photoUrl != null && n != null;
-                SharedPreferencesManager.saveUserInfo(this,n, photoUrl.toString());
+                SharedPreferencesManager.saveUserInfo(this, n, photoUrl.toString());
             }
 
         }
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_deleted)
+                R.id.nav_home, R.id.nav_item_deleted_fragment, R.id.nav_category)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -116,6 +105,15 @@ public class MainActivity extends BaseActivity {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();
+        }
+        if (id == R.id.menu_add_category) {
+            Utils.dialogCategory(this, "Nova categoria", (name) -> {
+                CategoriaViewModel categoria = new ViewModelProvider(this)
+                        .get(CategoriaViewModel.class);
+                Categoria c = new Categoria();
+                c.setNome(name);
+                categoria.insert(c);
+            });
         }
         return super.onOptionsItemSelected(item);
     }

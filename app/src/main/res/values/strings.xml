@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Bipando</string>
+    <string name="app_name" translatable="false">Bipando</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -15,7 +15,7 @@
     <string name="remove_text">Removido com sucesso!</string>
     <string name="selct_date">Selecione uma data.</string>
     <string name="mesage_scanner">Esse codificador aceita (números) e (letras), digite conforme desejado.</string>
-    <string name="name_barcod_valid_">Nome do item,codigo de barras e validade são obrigatorio!</string>
+    <string name="name_barcod_valid_">Nome do produto obrigatorio!</string>
 
     <string name="web_site">https://www.facebook.com/roger.oliveiracharts</string>
     <string name="linkdin">https://www.linkedin.com/in/roger-de-oliveira-b980a3213</string>
@@ -24,7 +24,7 @@
     <string name="dias_restante">" Dias restante"</string>
     <string name="voltar">Voltar</string>
     <string name="home">Home</string>
-    <string name="enter_manual_code">Digitar manual codigo de barras</string>
+    <string name="enter_manual_code">Digitar codigo de barras</string>
     <string name="todo">TODO</string>
     <string name="excluir">Excluir</string>
     <string name="_01_jan_2020">01 JAN 2020</string>
@@ -34,6 +34,7 @@
     <string name="test_queijo_framengo_fatiado_200g">Queijo Framengo fatiado 200g</string>
     <string name="cofigure">Configurações</string>
     <string name="aviso_de_vencimento">Aviso de vencimento</string>
+    <string name="scan_mute_sound">Scan mute sound</string>
     <string name="lovely_moose">Lovely Moose</string>
     <string name="product_deleted">Produto deletados</string>
     <string name="edit">Editar</string>
@@ -43,5 +44,14 @@
     <string name="controle_de_validade">Controle de validade</string>
     <string name="fazer_login_com_facebook">Fazer login com Facebook</string>
     <string name="digitaliz_c_digo_de_barras">Digitaliz código de barras</string>
-
+    <string name="save">Salvar</string>
+    <string name="add_category">Adicionar\n</string>
+    <string name="category"> Categorias</string>
+    <string name="add_category_">Criar nova categoria</string>
+    <string name="menu_gallery">Galeria</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="delete_item">Itens deletados</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

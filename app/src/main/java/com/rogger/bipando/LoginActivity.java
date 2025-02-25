@@ -150,7 +150,6 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // TODO: Implement this method
         handler.removeCallbacks(runnable);
     }
 

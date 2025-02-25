@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,18 +14,19 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.slider.Slider;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.rogger.bipando.R;
+import com.rogger.bipando.notification.NotificationPrefs;
+import com.rogger.bipando.notification.NotificationScheduler;
 import com.rogger.bipando.ui.commun.SharedPreferencesManager;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
 public class ProfileFragemt extends Fragment {
     @SuppressLint("UseSwitchCompatOrMaterialCode")
-    private SwitchMaterial box1, box2, box3, box4,boxBeep;
+    private SwitchMaterial box1, box2, box3, box4, boxBeep, swNotification;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,7 +43,7 @@ public class ProfileFragemt extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
         int themeNumber = SharedPreferencesManager.getThemeNumber(requireContext(), "chave");
-        boolean stateBeep = SharedPreferencesManager.getBeepState(requireContext(),"beep");
+        boolean stateBeep = SharedPreferencesManager.getBeepState(requireContext(), "beep");
 
         AppCompatActivity activity = (AppCompatActivity) requireActivity();
         if (activity.getSupportActionBar() != null) {
@@ -53,25 +55,31 @@ public class ProfileFragemt extends Fragment {
         box3 = view.findViewById(R.id.box_profile_3);
         box4 = view.findViewById(R.id.box_profile_4);
         boxBeep = view.findViewById(R.id.box_off_beep);
+        swNotification = view.findViewById(R.id.swNotification);
 
-        CircleImageView circleImageView = view.findViewById(R.id.profileImage);
+        ImageView circleImageView = view.findViewById(R.id.profileImage);
         TextView txtName = view.findViewById(R.id.userNameProfile);
         TextView txtTitle = view.findViewById(R.id.profile_title_name);
+        Slider sliderYellow = view.findViewById(R.id.sliderYellow);
+        TextView txtYellow = view.findViewById(R.id.txtYellow);
+
+        swNotification.setChecked(NotificationPrefs.getAlert(requireContext()));
+        sliderYellow.setValue(NotificationPrefs.getDays(requireContext()));
+
+        txtYellow.setText((int) sliderYellow.getValue() + " dias");
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(requireContext());
         String imageUrl = userInfo.get(1);
         String name = userInfo.get(0);
         txtName.setText(name);
         txtTitle.setText(name);
-        if (imageUrl != null){
+        if (imageUrl != null) {
             Picasso.get()
                     .load(imageUrl)
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .into(circleImageView);
         }
-        if(stateBeep){
-            boxBeep.setChecked(true);
-        }
+        boxBeep.setChecked(stateBeep);
         switch (themeNumber) {
             case 1:
             case 0:
@@ -88,6 +96,15 @@ public class ProfileFragemt extends Fragment {
                 break;
         }
 
+        swNotification.setOnCheckedChangeListener((button, isChecked) -> {
+            NotificationPrefs.onAlert(requireContext(), isChecked);
+            if (isChecked) {
+                NotificationScheduler.start(requireContext());
+            } else {
+                NotificationScheduler.stop(requireContext());
+            }
+        });
+
         CompoundButton.OnCheckedChangeListener listener = this::onCheckedChanged;
         CompoundButton.OnCheckedChangeListener listenerBeep = this::onCheckedBeep;
         // Adicionando o listener aos CheckBoxes
@@ -97,17 +114,23 @@ public class ProfileFragemt extends Fragment {
         box4.setOnCheckedChangeListener(listener);
 
         boxBeep.setOnCheckedChangeListener(listenerBeep);
+        sliderYellow.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser) {
+                txtYellow.setText((int) value + " dias");
+                NotificationPrefs.saveDays(requireContext(), (int) value);
+            }
+        });
+
         super.onViewCreated(view, savedInstanceState);
     }
 
     private void onCheckedBeep(CompoundButton compoundButton, boolean beep) {
-        if(beep){
+        if (beep) {
             if (compoundButton.getId() == R.id.box_off_beep) {
-                SharedPreferencesManager.sharedBeepState(requireContext(),"beep", true);
+                SharedPreferencesManager.sharedBeepState(requireContext(), "beep", true);
             }
-        }
-        else{
-            SharedPreferencesManager.sharedBeepState(requireContext(),"beep", false);
+        } else {
+            SharedPreferencesManager.sharedBeepState(requireContext(), "beep", false);
         }
     }
 
@@ -123,22 +146,22 @@ public class ProfileFragemt extends Fragment {
             if (buttonView.getId() == R.id.box_profile_1) {
                 SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 1);
                 uncheckOthers(box1);
-                requireActivity().setTheme(R.style.Theme_Bipando);
+                requireActivity().setTheme(R.style.Theme_Bpd);
                 requireActivity().recreate();
             } else if (buttonView.getId() == R.id.box_profile_2) {
                 SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 2);
                 uncheckOthers(box2);
-                requireActivity().setTheme(R.style.Theme_Bipando_2);
+                requireActivity().setTheme(R.style.Theme_Bpd_2);
                 requireActivity().recreate();
             } else if (buttonView.getId() == R.id.box_profile_3) {
                 SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 3);
                 uncheckOthers(box3);
-                requireActivity().setTheme(R.style.Theme_Bipando_3);
+                requireActivity().setTheme(R.style.Theme_Bpd_3);
                 requireActivity().recreate();
             } else if (buttonView.getId() == R.id.box_profile_4) {
                 SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 4);
                 uncheckOthers(box4);
-                requireActivity().setTheme(R.style.Theme_Bipando_4);
+                requireActivity().setTheme(R.style.Theme_Bpd_4);
                 requireActivity().recreate();
             }
         }

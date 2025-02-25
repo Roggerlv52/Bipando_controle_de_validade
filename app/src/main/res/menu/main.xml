@@ -6,4 +6,9 @@
         android:orderInCategory="100"
         android:title="@string/logout"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_add_category"
+        android:orderInCategory="100"
+        android:title="@string/add_category_"
+        app:showAsAction="never" />
 </menu>

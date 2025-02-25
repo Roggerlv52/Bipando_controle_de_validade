@@ -1,5 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.Bipando" parent="Theme.MaterialComponents.Light.NoActionBar">
+
+    <style name="Theme.Bpd" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/LightSkyBlue</item>
         <item name="colorPrimaryVariant">@color/black</item>
@@ -11,24 +12,34 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimary</item>
         <!-- Customize your theme here. -->
+        <item name="ic_color_theme">@color/white</item>
 
     </style>
-    <style name="Theme.Bipando.NoActionBar">
+
+    <style name="Theme.Bpd.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">false</item>
     </style>
-    <style name="Theme.Bipando_2" parent="Theme.Bipando_4">
+
+    <style name="Theme.Bpd_2" parent="Theme.Bpd_4">
         <item name="colorPrimary">@color/green</item>
     </style>
 
-    <style name="Theme.Bipando_3" parent="Theme.Bipando">
+    <style name="Theme.Bpd_3" parent="Theme.Bpd">
         <item name="colorPrimary">@color/red</item>
     </style>
 
-    <style name="Theme.Bipando_4" parent="Theme.Bipando">
+    <style name="Theme.Bpd_4" parent="Theme.Bpd">
         <item name="colorPrimary">@color/black</item>
         <item name="colorOnPrimary">@color/white</item>
     </style>
-    <style name="Theme.Bipando.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-    <style name="Theme.Bipando.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Theme.Bpd.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Bpd.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="ThemeOverlay.Bipando.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_600</item>
+        <item name="fullscreenTextColor">@color/light_blue_A200</item>
+    </style>
 </resources>

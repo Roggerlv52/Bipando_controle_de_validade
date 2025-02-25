@@ -1,133 +1,341 @@
 package com.rogger.bipando.ui.edit;
 
-import static android.app.Activity.RESULT_OK;
-
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.rogger.bipando.R;
-import com.rogger.bipando.ui.base.OnPhotoCapturedListener;
-import com.rogger.bipando.ui.base.SelectDialog;
+import com.rogger.bipando.data.model.Categoria;
+import com.rogger.bipando.data.model.Produto;
+import com.rogger.bipando.ui.base.DialogUtil;
 import com.rogger.bipando.ui.base.Utils;
-import com.rogger.bipando.ui.scanner.ImageBarcode;
-import com.squareup.picasso.Picasso;
+import com.rogger.bipando.ui.commun.ShowSelectDialog;
+import com.rogger.bipando.ui.gallery.CameraCallback;
+import com.rogger.bipando.ui.gallery.ImagePikerUtil;
+import com.rogger.bipando.ui.gallery.ImageUtils;
+import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
+import com.rogger.bipando.ui.viewmodel.DataViewModel;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
+public class EditFragment extends Fragment {
 
-public class EditFragment extends Fragment implements OnPhotoCapturedListener {
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private ImageView imageView;
-    private File photoFile;
-    private Uri photoUri;
+    private TextView txtBarcode;
+    private EditText edtName, edtNote;
+    private Button btnData, btnSave;
+    private ImageView imgUpload;
+    private Spinner spinner;
 
-    @Nullable
+    private long timestamp;
+    private Produto produto;
+
+    private DataViewModel dataViewModel;
+    private CategoriaViewModel categoriaViewModel;
+    private EditPresenterViewModel editVM;
+
+    private ArrayAdapter<Categoria> categoriaAdapter;
+    private final List<Categoria> listaCategorias = new ArrayList<>();
+    private boolean carregandoSpinner = true;
+
+    private ImagePikerUtil imagePickerUtil;
+    private ActivityResultLauncher<Intent> cameraLauncher;
+
+    // -------------------- LIFECYCLE --------------------
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_edit, container, false);
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        View v = inflater.inflate(R.layout.fragment_edit, container, false);
+
+        txtBarcode = v.findViewById(R.id.txt_edit_bacode);
+        edtName = v.findViewById(R.id.edt_name_fragment);
+        edtNote = v.findViewById(R.id.edit_fragment_note);
+        btnData = v.findViewById(R.id.datePickerButton);
+        btnSave = v.findViewById(R.id.btn_fgm_save);
+        imgUpload = v.findViewById(R.id.image_edit);
+        spinner = v.findViewById(R.id.spinner_edit);
+
+        dataViewModel = new ViewModelProvider(requireActivity())
+                .get(DataViewModel.class);
+
+        categoriaViewModel = new ViewModelProvider(requireActivity())
+                .get(CategoriaViewModel.class);
+
+        editVM = new ViewModelProvider(this)
+                .get(EditPresenterViewModel.class);
+
+        imagePickerUtil = new ImagePikerUtil();
+        loadProduto();
+        return v;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        imageView = view.findViewById(R.id.image_edit);
-        TextView txtBarcode = view.findViewById(R.id.txt_edit_bacode);
-        imageView = view.findViewById(R.id.image_edit);
-        EditText edtName = view.findViewById(R.id.edt_name_fragment);
-        Button btnData = view.findViewById(R.id.datePickerButton);
-        EditText edtNote = view.findViewById(R.id.edit_fragment_note);
-        /*
-        *
-         new SelectDialog(this);
-         new Utils(this);
-         Chamando o construtor pra escutar o evento de listener para ativar a interface.
-         *
-         *
-         */
-        new SelectDialog(this);
-        new Utils(this);
+        setupCamera();
+        setupGalleryResult();
+        setupSpinner();
+        setupClicks();
+        setupMenu();
+        loadProduto();
+    }
 
-        if (getArguments() != null) {
-            String imageUrl = getArguments().getString("imageUrl");
-            String name = getArguments().getString("productName");
-            String barcode = getArguments().getString("barcode");
-            String data = getArguments().getString("data");
-            String note = getArguments().getString("note");
+    // -------------------- CAMERA / GALERIA --------------------
 
-            Picasso.get().load(imageUrl).into(imageView);
-            txtBarcode.setText(barcode);
-            edtName.setText(name);
-            btnData.setText(data);
-            edtNote.setText(note);
+    private void setupCamera() {
+        cameraLauncher = imagePickerUtil.register(this, new CameraCallback() {
+            @Override
+            public void onImageCaptured(@NonNull Uri uri, @NonNull File file) {
+                try {
+                    File processed =
+                            ImageUtils.processImage(requireContext(), uri, file);
+                    editVM.onNewImage(processed);
+                    imgUpload.setImageURI(Uri.fromFile(processed));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
-            txtBarcode.setOnClickListener(view1 -> {
-                startImageBarcode(barcode);
-            });
-            imageView.setOnClickListener(this::startAlerta);
+            @Override
+            public void onCancel() {
+            }
+
+            @Override
+            public void onError(@NonNull Exception e) {
+            }
+        });
+    }
+
+    private void setupGalleryResult() {
+        getParentFragmentManager().setFragmentResultListener(
+                "gallery_result",
+                getViewLifecycleOwner(),
+                (key, bundle) -> {
+                    try {
+                        Uri uri = Uri.parse(bundle.getString("imageUri"));
+                        File out = ImagePikerUtil.createImageFile(requireContext());
+                      File  processed =
+                                ImageUtils.processImage(requireContext(), uri, out);
+
+                        editVM.onNewImage(processed);
+                        imgUpload.setImageURI(Uri.fromFile(processed));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+        );
+    }
+
+    // -------------------- UI --------------------
+
+    private void setupClicks() {
+
+        imgUpload.setOnClickListener(v ->
+                ShowSelectDialog.show(requireContext(), new ShowSelectDialog.selectedCallback() {
+                    @Override
+                    public void openGallery() {
+                        editVM.prepareForNewImage();
+                        NavHostFragment.findNavController(EditFragment.this)
+                                .navigate(R.id.action_editFragment_to_galerryFragment);
+                    }
+
+                    @Override
+                    public void openCamera() {
+                        editVM.prepareForNewImage();
+                        imagePickerUtil.openCamera(requireContext(), cameraLauncher);
+                    }
+                })
+        );
+
+        btnData.setOnClickListener(v ->
+                Utils.showDatePicker(requireContext(), (ts, data) -> {
+                    timestamp = ts;
+                    btnData.setText(data);
+                })
+        );
+
+        btnSave.setOnClickListener(v -> {
+            if (!Utils.validEditText(edtName)) return;
+
+            collectInputs();
+            dataViewModel.update(produto);
+
+            Toast.makeText(getContext(),
+                    "Produto salvo com sucesso",
+                    Toast.LENGTH_SHORT).show();
+
+            NavHostFragment.findNavController(this).popBackStack();
+        });
+
+        txtBarcode.setOnClickListener(v -> {
+            Bundle b = new Bundle();
+            b.putString("barcode", produto.getCodigoBarras());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.nav_barcode_show, b);
+        });
+    }
+
+    // -------------------- SPINNER --------------------
+
+    private void setupSpinner() {
+        categoriaViewModel.getCategories().observe(
+                getViewLifecycleOwner(),
+                cats -> {
+                    listaCategorias.clear();
+
+                    Categoria placeholder = new Categoria();
+                    placeholder.setId(-1);
+                    placeholder.setNome("Selecione uma categoria");
+                    listaCategorias.add(placeholder);
+
+                    if (cats != null) listaCategorias.addAll(cats);
+
+                    categoriaAdapter = new ArrayAdapter<>(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            listaCategorias
+                    );
+                    categoriaAdapter.setDropDownViewResource(
+                            android.R.layout.simple_spinner_dropdown_item);
+
+                    spinner.setAdapter(categoriaAdapter);
+
+                    if (produto != null) selecionarCategoria(produto.getCategory());
+                    carregandoSpinner = false;
+                }
+        );
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(
+                    AdapterView<?> parent, View view, int position, long id
+            ) {
+                if (carregandoSpinner || produto == null) return;
+
+                Categoria c = listaCategorias.get(position);
+                produto.setCategory(c.getId() == -1 ? null : c.getNome());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    // -------------------- DADOS --------------------
+
+    private void loadProduto() {
+        Bundle args = getArguments();
+        if (args == null) return;
+
+        int id = args.getInt("id", -1);
+        if (id == -1) return;
+        dataViewModel.getProdutoByIdInMemory(id)
+                .observe(getViewLifecycleOwner(), this::bindProduto);
+    }
+
+    private void bindProduto(Produto p) {
+        this.produto = p;
+
+        edtName.setText(p.getNome());
+        edtNote.setText(p.getAnotacoes());
+        txtBarcode.setText(p.getCodigoBarras());
+
+        timestamp = p.getTimestamp();
+        btnData.setText(timestampParaData(timestamp));
+        editVM.setOldImagePath(produto.getImagem());
+        if (!editVM.hasNewImage()) {
+            if (p.getImagem() != null) {
+                imgUpload.setImageURI(Uri.fromFile(new File(p.getImagem())));
+            } else {
+                imgUpload.setImageResource(R.drawable.up_picture);
+            }
         }
-        super.onViewCreated(view, savedInstanceState);
+        if (!carregandoSpinner) selecionarCategoria(p.getCategory());
     }
 
-    private void startAlerta(View v) {
-        SelectDialog.showCustomAlertDialog(this.requireContext());
+    private void collectInputs() {
+        produto.setNome(edtName.getText().toString().trim());
+        produto.setAnotacoes(edtNote.getText().toString());
+        produto.setTimestamp(timestamp);
+        produto.setCodigoBarras(txtBarcode.getText().toString());
+        editVM.applyImageToProduto(produto);
     }
 
-    private void startImageBarcode(String barcode) {
-        Intent intent = new Intent(getContext(), ImageBarcode.class);
-        intent.putExtra("kayBarcode", barcode);
-        startActivity(intent);
-    }
-
-    @Override
-    public void onOpenCamera() {
-        try {
-            photoFile = createImageFile();
-            Intent cameraIntent = Utils.CameraIntent(requireContext(), photoFile);
-            startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    private void selecionarCategoria(String nome) {
+        if (nome == null) return;
+        for (int i = 0; i < listaCategorias.size(); i++) {
+            if (nome.equals(listaCategorias.get(i).getNome())) {
+                spinner.setSelection(i);
+                break;
+            }
         }
     }
 
-    @Override
-    public void onPassUri(Uri uri) {
-        photoUri = uri;
+    // -------------------- MENU --------------------
+
+    private void setupMenu() {
+        requireActivity().addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                menu.clear();
+                inflater.inflate(R.menu.menu_edit, menu);
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                if (item.getItemId() == R.id.action_delete) {
+                    DialogUtil.showDeleteDialog(
+                            requireContext(),
+                            "Deseja realmente excluir este produto?",
+                            () -> {
+                                dataViewModel.moverParaLixeira(produto.getId());
+                                NavHostFragment.findNavController(EditFragment.this)
+                                        .popBackStack();
+                            }
+                    );
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner());
     }
 
-    private File createImageFile() throws IOException {
-        //Cria o nome do arquivo
-        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(imageFileName,/* prefixo*/
-                ".jpg",/*sufixo*/
-                storageDir/*Diretório*/);
-        //Guarda o caminho do arquivo para usá-lo depois
-        String currentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
+    // -------------------- UTILS --------------------
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            imageView.setImageURI(photoUri);
-        }
+    private static String timestampParaData(long ts) {
+        return new SimpleDateFormat(
+                "dd/MM/yyyy", new Locale("pt", "BR")
+        ).format(new Date(ts));
     }
 }

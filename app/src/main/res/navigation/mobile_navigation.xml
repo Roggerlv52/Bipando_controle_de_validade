@@ -34,16 +34,79 @@
         <argument
             android:name="note"
             app:argType="string" />
+
         <action
-            android:id="@+id/action_nav_edit_fragment_to_nav_home"
-            app:destination="@id/nav_home" />
+            android:id="@+id/action_editFragment_to_galerryFragment"
+            app:destination="@id/nav_gallery_fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_add_fragment"
+        android:name="com.rogger.bipando.ui.add.AddFragment"
+        android:label="Adicionar Produto">
+
+        <argument
+            android:name="key_barcode"
+            app:argType="string" />
+
+        <argument
+            android:name="categoria_nome"
+            app:argType="string" />
+
+        <argument
+            android:name="categoria_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_addFragment_to_nav_gallery_fragment"
+            app:destination="@id/nav_gallery_fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_show_fragment"
+        android:name="com.rogger.bipando.ui.home.ShowFragment"
+        android:label="Show"
+        tools:layout="@layout/fragment_show">
+        <argument
+            android:name="imageUri"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_item_deleted_fragment"
+        android:name="com.rogger.bipando.ui.deleteitem.ItemDeletedFragment"
+        android:label="@string/delete_item"
+        tools:layout="@layout/fragment_item_deleted" />
+    <fragment
+        android:id="@+id/nav_barcode_scan_fragment"
+        android:name="com.rogger.bipando.ui.scanner.BarcodeScanFragment"
+        android:label="Scanner">
+        <argument
+            android:name="categoria_nome"
+            app:argType="string" />
+
+        <argument
+            android:name="categoria_id"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_barcode_show"
+        android:name="com.rogger.bipando.ui.edit.ImageBarcodeShow"
+        android:label="Codigo de barras">
+        <argument
+            android:name="barcode"
+            app:argType="string" />
     </fragment>
 
+
     <fragment
-        android:id="@+id/nav_deleted"
-        android:name="com.rogger.bipando.ui.deleted.DeletedFragment"
-        android:label="@string/menu_deleted"
-        tools:layout="@layout/fragment_deleted" />
+        android:id="@+id/nav_gallery_fragment"
+        android:name="com.rogger.bipando.ui.gallery.GalerryFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/fragment_galerry" />
+    <fragment
+        android:id="@+id/nav_category"
+        android:name="com.rogger.bipando.ui.category.FragmentAddEditCategory"
+        android:label="@string/category"
+        tools:layout="@layout/fragment_add_edit_categoty" />
 
     <fragment
         android:id="@+id/nav_profile"

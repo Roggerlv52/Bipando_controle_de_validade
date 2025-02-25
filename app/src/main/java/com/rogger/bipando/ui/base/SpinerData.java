@@ -1,48 +1,11 @@
 package com.rogger.bipando.ui.base;
 
-import android.graphics.Bitmap;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 
 public class SpinerData {
-	private int day, month, year;
-	private String barcode, dataSql;
-	private Bitmap bitmap;
-
-    public void setBitmap(Bitmap b){
-		this.bitmap = b;
-	}
-	public  Bitmap getBitmap(){
-		return this.bitmap;
-	}
-	public void setBarcode(String b) {
-		this.barcode = b;
-	}
-
-	public String getBarcode() {
-		return this.barcode;
-	}
-
-	public void setDataSql(String d) {
-		this.dataSql = d;
-	}
-
-	public String getDataSql(String d) {
-		String Agora = "";
-		try {
-			SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-			Date datasalva = dataFormatada.parse(d);
-			SimpleDateFormat minhadata = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-			Agora = minhadata.format(datasalva);
-
-		} catch (Exception e) {
-		}
-		return Agora;
-	}
 
 	public int[] retornaVetor(String datas) {
 		int year = 0;
@@ -65,7 +28,7 @@ public class SpinerData {
 			SimpleDateFormat formatoDay = new SimpleDateFormat("dd");
 			SimpleDateFormat formatoMes = new SimpleDateFormat("MM");
 			SimpleDateFormat formatoAno = new SimpleDateFormat("yyyy");
-			SimpleDateFormat formatoOriginal = new SimpleDateFormat("yyyy-MM-dd");
+			SimpleDateFormat formatoOriginal = new SimpleDateFormat("yyyy/MM/dd");
 			try {
 				Date data = formatoOriginal.parse(datas);
 				day = Integer.parseInt(formatoDay.format(data));
@@ -81,7 +44,7 @@ public class SpinerData {
 	}
 
 	public String makeDateString(int day, int month, int year) {
-		return " " + day + " de " + getMonthFormat(month) + " de " + year;
+		return " " + day + "/" + month + "/" + year;
 	}
 
 	private String getMonthFormat(int month) {

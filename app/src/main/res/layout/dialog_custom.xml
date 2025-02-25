@@ -5,16 +5,6 @@
     android:background="@drawable/custom_btn_dialog"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:background="@color/yellow"
-        android:text="Selecione uma imagem"
-        android:textAlignment="center"
-        android:textColor="@color/black"
-        android:textStyle="bold" />
-
     <ImageView
         android:id="@+id/img_dialog"
         android:layout_width="match_parent"

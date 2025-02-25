@@ -1,6 +1,5 @@
 package com.rogger.bipando.ui.home;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,30 +13,40 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.rogger.bipando.R;
-import com.rogger.bipando.database.DatabaseTest;
-import com.rogger.bipando.database.Registro;
+import com.rogger.bipando.data.model.Categoria;
+import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.databinding.FragmentHomeBinding;
-import com.rogger.bipando.ui.scanner.BarcodeScan;
+import com.rogger.bipando.notification.NotificationPrefs;
+import com.rogger.bipando.ui.base.DialogUtil;
+import com.rogger.bipando.ui.commun.SharedPreferencesManager;
+import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
+import com.rogger.bipando.ui.viewmodel.DataViewModel;
 
 import java.util.List;
 
-public class HomeFragment extends Fragment implements OnItemClickListener {
+public class HomeFragment extends Fragment {
     private ViewFlipper viewFlipper;
     private ImageView imageView;
     private ProgressBar progressBar;
     private FragmentHomeBinding binding;
+    private DataViewModel dataViewModel;
+    private CategoriaViewModel categoryViewModel;
+    private AdapterHome adapter;
 
+    public static HomeFragment newInstance() {
+        return new HomeFragment();
+    }
+
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -45,30 +54,80 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
         progressBar = binding.profileProgress;
-        AdapterHome adapte = new AdapterHome(requireContext(), 3, 10);
-
-        List<Registro> dados= DatabaseTest.gerarDadosFicticios(500);
-        recyclerView.setAdapter(adapte);
-        adapte.setDados(dados);
-        adapte.ordenarPorDiferencaDeDias();
-        adapte.setOnItemClickListener(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new AdapterHome(new AdapterHome.OnItemClickListener() {
+            final Bundle bundle = new Bundle();
 
-        atualizarView(dados);
+            @Override
+            public void onItemClick(Produto produto) {
+                bundle.putInt("id", produto.getId());
+                NavHostFragment
+                        .findNavController(HomeFragment.this).navigate(R.id.nav_edit_fragment, bundle);
+            }
+
+            @Override
+            public void onImageClick(Produto produto) {
+                bundle.putString("imageUri", produto.getImagem());
+                NavHostFragment
+                        .findNavController(HomeFragment.this).navigate(R.id.nav_show_fragment, bundle);
+            }
+        }, NotificationPrefs.getDays(requireContext())
+        );
+        recyclerView.setAdapter(adapter);
         return root;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        FloatingActionButton fab = binding.fab;
-        fab.setOnClickListener(view1 -> {
-            Intent intent = new Intent(getActivity(), BarcodeScan.class);
-            startActivity(intent);
-        });
         super.onViewCreated(view, savedInstanceState);
+
+        dataViewModel = new ViewModelProvider(requireActivity()).get(DataViewModel.class);
+
+        FloatingActionButton fab = binding.fab;
+        categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoriaViewModel.class);
+        categoryViewModel.getCategories().observe(getViewLifecycleOwner(), categories -> {
+
+            fab.setOnClickListener(view1 -> {
+                List<Categoria> categorias =
+                        categoryViewModel.getCategories().getValue();
+
+                // 🔴 Não há categorias
+                if (categorias == null || categorias.isEmpty()) {
+                    Toast.makeText(
+                            requireContext(),
+                            "Crie uma categoria antes de adicionar produtos",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    return;
+                }
+
+                // ✅ Há categorias → mostra dialog
+                DialogUtil.show(
+                        requireContext(),
+                        categorias,
+                        categoriaSelecionada -> {
+
+                            Bundle bundle = new Bundle();
+                            bundle.putString("categoria_nome", categoriaSelecionada.getNome());
+                            bundle.putInt("categoria_id", categoriaSelecionada.getId());
+                            NavHostFragment
+                                    .findNavController(this)
+                                    .navigate(R.id.nav_barcode_scan_fragment, bundle);
+                        }
+                );
+            });
+        });
+
+        dataViewModel.getProdutos().observe(getViewLifecycleOwner(), produtos -> {
+            if (produtos != null) {
+                adapter.setItems(produtos);
+                atualizarView(produtos);
+            }
+        });
+
     }
 
-    private void atualizarView(List<Registro> dados) {
+    private void atualizarView(List<Produto> dados) {
         if (dados.isEmpty()) {
             viewFlipper.setDisplayedChild(1); // Mostra a imagem
             imageView.setImageResource(R.drawable.empty_list);
@@ -82,18 +141,5 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-
-    @Override
-    public void onItemClick(int position, List<Registro> data) {
-        Registro registro = data.get(position);
-        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
-        Bundle bundle = new Bundle();
-        bundle.putString("imageUrl",registro.setUri);
-        bundle.putString("productName",registro.setname);
-        bundle.putString("barcode",registro.setbarcod);
-        bundle.putString("data",registro.setdate);
-        bundle.putString("note",registro.setnote);
-        navController.navigate(R.id.action_nav_home_to_nav_edit_fragment,bundle);
     }
 }

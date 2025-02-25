@@ -52,6 +52,12 @@ android {
 
 dependencies {
 
+    //Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation(libs.legacy.support.v4)
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.work:work-runtime:2.9.0")
+
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -59,13 +65,16 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
+
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
+
+    implementation(libs.coordinatorlayout)
     //implementation(libs.play.services.ads) gerar anuncios
     testImplementation(libs.junit)
     implementation(libs.picasso)
     implementation(libs.okhttp)
-    implementation(libs.circleimageview)
     implementation(libs.zxing.android.embedded)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

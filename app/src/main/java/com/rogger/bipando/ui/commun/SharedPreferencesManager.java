@@ -1,6 +1,5 @@
 package com.rogger.bipando.ui.commun;
 
-import static androidx.browser.trusted.sharing.ShareTarget.FileFormField.KEY_NAME;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,6 +9,7 @@ import java.util.List;
 
 public class SharedPreferencesManager {
     private static final String PREF_NAME = "shared_key_date";
+
     // Método para adicionar um valor ao SharedPreferences
     public static void sharedBeepState(Context context, String key, boolean beep) {
         SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

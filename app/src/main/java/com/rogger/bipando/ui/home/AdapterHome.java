@@ -1,206 +1,173 @@
 package com.rogger.bipando.ui.home;
-
 /*
 /*@Roger de oliveira 
 */
 
-import static java.lang.Math.ceil;
-
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bipando.R;
-import com.rogger.bipando.database.Registro;
-import com.rogger.bipando.ui.base.Utils;
-import com.rogger.bipando.ui.scanner.ImageBarcode;
-import com.squareup.picasso.Picasso;
+import com.rogger.bipando.data.model.Produto;
+import com.rogger.bipando.ui.commun.SharedPreferencesManager;
 
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
-public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
-    private OnItemClickListener mListener;
-    private List<Registro> dados;
-    private final Context context;
+public class AdapterHome extends ListAdapter<Produto, AdapterHome.ViewHolder> {
+    private final List<Produto> fullList = new ArrayList<>();
+    private final OnItemClickListener listener;
     private int n1;
-    private int n2;
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.mListener = listener;
+    public AdapterHome(OnItemClickListener listener, int y) {
+        super(DIFF_CALLBACK);
+        this.listener = listener;
+        n1 = y;
     }
 
-    public void clear() {
-        if (dados != null) {
-            dados.clear();
+    public interface OnItemClickListener {
+        void onItemClick(Produto produto);
+         void onImageClick(Produto produto);
+    }
 
-            notifyDataSetChanged();
+    private static final DiffUtil.ItemCallback<Produto> DIFF_CALLBACK = new DiffUtil.ItemCallback<Produto>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Produto oldItem, @NonNull Produto newItem) {
+            return oldItem.getId() == newItem.getId();
         }
-    }
+
+        @SuppressLint("DiffUtilEquals")
+        @Override
+        public boolean areContentsTheSame(@NonNull Produto oldItem, @NonNull Produto newItem) {
+            return oldItem.getTimestamp() == newItem.getTimestamp()
+                    && Objects.equals(oldItem.getNome(), newItem.getNome())
+                    && Objects.equals(oldItem.getCodigoBarras(), newItem.getCodigoBarras())
+                    && Objects.equals(oldItem.getImagem(), newItem.getImagem());
+        }
+    };
 
     @SuppressLint("NotifyDataSetChanged")
-    public void ordenarPorDiferencaDeDias() {
-        dados.sort(new Comparator<Registro>() {
-            @Override
-            public int compare(Registro item1, Registro item2) {
-                long diferencaDiasItem1 = Utils.calcDifferencInDays(item1.setdate);
-                long diferencaDiasItem2 = Utils.calcDifferencInDays(item2.setdate);
+    public void setItems(@NonNull List<Produto> list) {
+        fullList.clear();
+        fullList.addAll(list);
+        super.submitList(new ArrayList<>(fullList));
+    }
+    /**
+     * Filtra usando a fullList (original).
+     */
+    public void filter(@Nullable String query) {
+        String q = (query == null) ? "" : query.trim().toLowerCase(Locale.getDefault());
+        if (q.isEmpty()) {
+            // mostra tudo
+            super.submitList(new ArrayList<>(fullList));
+            return;
+        }
 
-                // Ordena em ordem crescente
-                return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
+        List<Produto> filtered = new ArrayList<>();
+        for (Produto item : fullList) {
+            CharSequence cs = item.getNome(); // pode ser CharSequence
+            String title = (cs == null) ? "" : cs.toString().toLowerCase(Locale.getDefault());
+            if (title.contains(q)) {
+                filtered.add(item);
             }
-        });
-        notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
-    }
-
-    public AdapterHome(Context context, int n1, int n2) {
-        this.context = context;
-        this.n1 = n1;
-        this.n2 = n2;
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    public void setDados(List<Registro> dados) {
-        this.dados = dados;
-        notifyDataSetChanged();
-    }
-
-    public List<Registro> getDados() {
-        return dados;
+        }
+        super.submitList(filtered);
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int arg1) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_home, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Registro modelo = dados.get(position);
-        long horas = Utils.calcDifferencInDays(modelo.setdate);
-        double dias = ceil(horas / 24.0f);
 
-        String Agora = "";
-        try {
-            SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-            Date datasalva = dataFormatada.parse(modelo.setdate);
-            SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
-            assert datasalva != null;
-            Agora = minhadata.format(datasalva);
-        } catch (Exception e) {
+        Produto items = getItem(position); // ✅ CORRETO
+        Long timestampValidade = items.getTimestamp();
+        //boolean semData = false;
+        if (timestampValidade == null) {
+           // semData = true;
+            holder.txtRight.setText("--");
+            holder.txtLight.setText("Sem data");
+            holder.imageCircle.setImageResource(R.drawable.circle);
+        } else {
+            long agora = System.currentTimeMillis();
+            long diffMillis = timestampValidade - agora;
+            double dias = Math.ceil(diffMillis / (1000.0 * 60 * 60 * 24));
 
-        }
-        if (n1 == 0 && n2 == 0) {
-            n1 = 3;
-            n2 = 10;
-        }
-        holder.txtRight.setText(Agora);
-        int ds = (int) dias;
-		/*
-		Se data for maior que  10 dias cinal verde 
-		Se data for menor ou igual a 10 dias cinal amarelo 
-		Se data for menor que 3 dias cinal vermelho.
-		*/
-        if (dias <= n1) {
-            holder.imageCircle.setImageResource(R.drawable.red_circle);
-            holder.txtLight.setText(ds + "Dias restante");
+            SimpleDateFormat sdf =
+                    new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+            holder.txtRight.setText(sdf.format(new Date(timestampValidade)));
+
             if (dias < 1) {
                 holder.imageCircle.setImageResource(R.drawable.red_circle);
-                holder.txtLight.setText(" VENCIDO ");
+                holder.txtLight.setText("VENCIDO");
+            } else if (dias <= n1) {
+                holder.imageCircle.setImageResource(R.drawable.yellow_circle);
+                holder.txtLight.setText((int) dias + " dias restantes");
+            } else {
+                holder.imageCircle.setImageResource(R.drawable.circle);
+                holder.txtLight.setText((int) dias+ " dias");
             }
         }
-        if (dias <= n2 & dias > n1) {
 
-            holder.imageCircle.setImageResource(R.drawable.yellow_circle);
-            holder.txtLight.setText(ds + "Dias");
-            //NotificationReceiver.showNotification(context);
-        }
-        if (dias > n2) {
-            holder.imageCircle.setImageResource(R.drawable.circle);
-            holder.txtLight.setText(String.valueOf(ds));
-        }
-        holder.txtTitle.setText(modelo.setname);
-        holder.txtSubTitle.setText(modelo.setnote);
-        holder.txtBarcode.setText(modelo.setbarcod);
-        String uri = modelo.setUri;
+        holder.txtTitle.setText(items.getNome());
+        holder.txtBarcode.setText(items.getCodigoBarras());
+
+        String uri = items.getImagem();
         if (uri != null) {
-            Picasso.get().load(uri).into(holder.imageView);
+            holder.imageView.setImageURI(Uri.parse(uri));
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }
-        holder.id = modelo.id;
-        holder.uri = modelo.setUri;
+        // ✅ CLICK SEMPRE NO FINAL
+        holder.itemLayout.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(items);
+            }
+        });
+        holder.imageView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onImageClick(items);
+            }
+        });
     }
 
-    public int getItemCount() {
-        return dados != null ? dados.size() : 0;
 
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final ImageView imageCircle;
-        private final CircleImageView imageView;
-        private final TextView txtRight;
-        private final TextView txtLight;
-        private final TextView txtTitle;
-        private final TextView txtSubTitle;
-        private final TextView txtBarcode;
-        private String uri;
-        private int id;
+        private final ImageView imageView;
+        private  LinearLayout itemLayout;
+        private final TextView txtRight, txtLight, txtTitle, txtBarcode;
 
         public ViewHolder(View itemview) {
             super(itemview);
             imageView = itemview.findViewById(R.id.imageview_home);
-            CardView cardHomeItem = itemview.findViewById(R.id.card_layout_home);
             imageCircle = itemview.findViewById(R.id.image_home_circle);
             txtLight = itemview.findViewById(R.id.txt_home_left);
             txtRight = itemview.findViewById(R.id.txt_home_right);
             txtTitle = itemview.findViewById(R.id.home_title);
-            txtSubTitle = itemview.findViewById(R.id.home_subTitle);
             txtBarcode = itemview.findViewById(R.id.home_barcode);
-
-            cardHomeItem.setOnClickListener(new View.OnClickListener() {
-                @SuppressLint("SuspiciousIndentation")
-                @Override
-                public void onClick(View v) {
-                    if (mListener != null) {
-                        int position = getAdapterPosition();
-                        if (position != RecyclerView.NO_POSITION) {
-                            mListener.onItemClick(position, dados);
-                        }
-                    }
-                }
-
-            });
-            imageView.setOnClickListener(v -> {
-                if (uri != null) {
-                    String ids = String.valueOf(id);
-                    Intent intent = new Intent(context, ImageBarcode.class);
-                    intent.putExtra("ids", ids);
-					intent.putExtra("uri",uri);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
-                }
-            });
-
+            itemLayout = itemview.findViewById(R.id.item_layout);
         }
-
     }
-
 }
+

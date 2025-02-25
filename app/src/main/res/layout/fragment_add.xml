@@ -3,9 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-    <include layout="@layout/toolbar" />
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -17,49 +14,66 @@
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/silver">
+                android:layout_height="wrap_content">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <ImageView
-                        android:id="@+id/img_fragmemt_add"
-                        style="@style/Theme.Bipando.ImageView"
-                        android:scaleType="centerCrop"
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/card_imd_add_"
+                        android:layout_margin="10dp"
+                        android:layout_width="180dp"
+                        android:layout_height="180dp"
+                        android:padding="10dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardElevation="1dp"
+                        app:cardBackgroundColor="@color/white"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent" >
+                        <ImageView
+                            android:id="@+id/fragment_img_add"
+                            style="@style/Theme.Bpd.ImageView"
+                            android:scaleType="centerCrop"/>
+                    </androidx.cardview.widget.CardView>
 
                     <TextView
                         android:id="@+id/txt_add_data"
-                        style="@style/Theme.Bipando.TextViewFormat"
+                        style="@style/Theme.Bpd.TextViewFormat"
                         android:layout_marginTop="10dp"
                         android:text="@string/_24_de_set_de_2024"
-                        app:layout_constraintStart_toEndOf="@id/img_fragmemt_add"
-                        app:layout_constraintTop_toTopOf="@id/img_fragmemt_add" />
+                        app:layout_constraintStart_toEndOf="@id/card_imd_add_"
+                        app:layout_constraintTop_toTopOf="@id/card_imd_add_" />
 
                     <TextView
                         android:id="@+id/txt_add_barcode"
-                        style="@style/Theme.Bipando.TextViewFormat"
+                        style="@style/Theme.Bpd.TextViewFormat"
                         android:text="@string/_5683636373738"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/img_fragmemt_add"
+                        app:layout_constraintStart_toEndOf="@id/card_imd_add_"
                         app:layout_constraintTop_toTopOf="@id/txt_add_data" />
 
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        style="@style/Theme.Bipando.ImgCicle"
-                        app:civ_border_color="@color/white"
-                        app:civ_border_width="1dp"
-                        app:civ_circle_background_color="@color/silver"
-                        app:layout_constraintBottom_toBottomOf="@id/img_fragmemt_add"
-                        app:layout_constraintEnd_toEndOf="@id/img_fragmemt_add" />
+                    <androidx.cardview.widget.CardView
+                        style="@style/Theme.Bpd.CardView_CircleAdd"
+                        android:layout_marginBottom="5dp"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="1dp"
+                        app:cardBackgroundColor="@color/zxing_transparent"
+                        app:layout_constraintBottom_toBottomOf="@id/card_imd_add_"
+                        app:layout_constraintEnd_toEndOf="@id/card_imd_add_">
+                        <ImageView
+                            style="@style/Theme.Bpd.ImgCircleAdd"
+                            android:padding="5dp"
+                            android:contentDescription="TODO" />
+                    </androidx.cardview.widget.CardView>
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                style="@style/Theme.Bpd.FormatCardView"
+                android:layout_marginTop="30dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="8dp">
 
                 <FrameLayout
                     android:id="@+id/linearLayout_name_add"
@@ -67,76 +81,34 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_gravity="top"
-                        android:background="@color/DarkGray" />
-
                     <ImageView
-                        style="@style/Theme.Bipando.Format"
+                        style="@style/Theme.Bpd.Format"
                         android:layout_gravity="start|center"
                         android:layout_marginStart="15dp"
                         android:src="@drawable/ic_shopping" />
 
                     <EditText
                         android:id="@+id/edt_name_fragment_add"
-                        style="@style/Theme.Bipando.EditTextNameFormat" />
+                        style="@style/Theme.Bpd.EditTextNameFormat" />
                 </FrameLayout>
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
-                style="@style/Theme.Bipando.FormatCardView"
-                android:elevation="2dp"
-                app:cardBackgroundColor="@color/white">
+                style="@style/Theme.Bpd.FormatCardView"
+                android:layout_marginTop="10dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/DarkGray" />
-                    <!--
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" >
-
-                        <ImageButton
-                            android:id="@+id/img_btn_scanner_add"
-                            style="@style/Theme.MyApplication.ImgFormat"
-                            android:layout_gravity="start|center"
-                            android:layout_margin="10dp"
-                            android:background="@drawable/edtx_custom"
-                            android:src="@drawable/ic_add_scanner" />
-
-                        <ImageButton
-                            android:id="@+id/img_btn_scanner_edit_add"
-                            style="@style/Theme.MyApplication.ImgFormat"
-                            android:layout_gravity="end|center"
-                            android:layout_margin="10dp"
-                            android:background="@drawable/edtx_custom"
-                            android:src="@drawable/ic_edit" />
-                    </FrameLayout>
-                    -->
-
                     <LinearLayout
                         android:id="@+id/linear_edit_data_add"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
-
-                        <!--
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginEnd="10dp"
-                            android:layout_marginStart="10dp"
-                            android:background="@color/DarkGray" />
-                        -->
 
                         <LinearLayout
                             android:id="@+id/linear_Edit"
@@ -146,7 +118,7 @@
                             android:orientation="horizontal">
 
                             <ImageView
-                                style="@style/Theme.Bipando.Format"
+                                style="@style/Theme.Bpd.Format"
                                 android:layout_marginStart="10dp"
                                 android:src="@drawable/calendar" />
 
@@ -165,6 +137,30 @@
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="10dp"
+                            android:layout_marginTop="1dp"
+                            android:layout_marginEnd="10dp"
+                            android:background="@color/DarkGray" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                style="@style/Theme.Bpd.Format"
+                                android:layout_marginStart="10dp"
+                                android:src="@drawable/ic_lab" />
+                            <Spinner
+                                android:id="@+id/spinner_add"
+                                android:layout_width="250dp"
+                                android:layout_height="50dp"
+                                android:spinnerMode="dropdown"/>
+                        </LinearLayout>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="1dp"
                             android:layout_marginEnd="10dp"
                             android:background="@color/DarkGray" />
 
@@ -175,28 +171,23 @@
                             android:orientation="horizontal">
 
                             <ImageView
-                                style="@style/Theme.Bipando.Format"
+                                style="@style/Theme.Bpd.Format"
                                 android:layout_gravity="start|center"
                                 android:layout_marginStart="10dp"
                                 android:src="@drawable/edit_note" />
 
                             <EditText
                                 android:id="@+id/edit_fragment_note_add"
-                                style="@style/Theme.Bipando.EditTextNotaFormat" />
+                                style="@style/Theme.Bpd.EditTextNotaFormat" />
                         </LinearLayout>
 
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginTop="4dp"
-                            android:background="@color/DarkGray" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <Button
-                android:id="@+id/btn_fragment_salve_add"
-                style="@style/Theme.Bipando.FormatButtom"
+                android:id="@+id/btn_fgm_save_add"
+                style="@style/Theme.Bpd.FormatButtom"
                 android:text="@string/salvar" />
         </LinearLayout>
     </ScrollView>
