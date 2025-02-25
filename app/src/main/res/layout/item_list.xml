@@ -1,20 +1,20 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
-
-    <androidx.cardview.widget.CardView
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/custom_item_round">
+    <LinearLayout
         android:id="@+id/card_layout_home"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
-        android:clickable="true"
-        app:cardCornerRadius="0dp" >
+        android:layout_height="wrap_content"
+        android:clickable="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="10dp"
-			android:layout_marginEnd="4dp" >
+            android:layout_marginEnd="4dp"
+            android:paddingBottom="4dp">
 
             <ImageView
                 android:id="@+id/image_home_circle"
@@ -23,82 +23,75 @@
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="5dp"
                 android:contentDescription="@string/todo"
+                android:src="@drawable/circle"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:src="@drawable/circle" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/txt_home_left"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
+                android:textSize="14sp"
                 app:layout_constraintStart_toEndOf="@id/image_home_circle"
-                app:layout_constraintTop_toTopOf="parent"
-                android:textSize="14sp" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/txt_home_right"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-				android:layout_marginTop="4dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/custo_button"
-				android:textColor="@color/white"
                 android:text="@string/todo"
-                android:textSize="14sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/imageview_home"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_marginEnd="10dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="22dp"
+                android:layout_marginEnd="10dp"
                 android:src="@drawable/quijo"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/txt_home_left"
                 app:civ_border_color="?attr/colorSecondary"
-                app:civ_border_width="0dp" />
+                app:civ_border_width="0dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/txt_home_left" />
 
             <TextView
                 android:id="@+id/home_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                app:layout_constraintStart_toEndOf="@id/imageview_home"
-                app:layout_constraintTop_toBottomOf="@id/txt_home_left"
                 android:text="@string/test_queijo_framengo_fatiado_200g"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                app:layout_constraintStart_toEndOf="@id/imageview_home"
+                app:layout_constraintTop_toBottomOf="@id/txt_home_left" />
 
             <TextView
                 android:id="@+id/home_subTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                app:layout_constraintStart_toEndOf="@id/imageview_home"
-                app:layout_constraintTop_toBottomOf="@id/home_title"
                 android:maxLines="1"
                 android:textSize="14sp"
-                android:textStyle="normal" />
+                android:textStyle="normal"
+                app:layout_constraintStart_toEndOf="@id/imageview_home"
+                app:layout_constraintTop_toBottomOf="@id/home_title" />
 
             <TextView
                 android:id="@+id/home_barcode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@id/home_subTitle"
-                app:layout_constraintTop_toBottomOf="@id/home_subTitle"
-				android:layout_marginTop="20dp"
+                android:layout_marginTop="20dp"
                 android:text="@string/_5683636373738"
                 android:textSize="14sp"
-                android:textStyle="normal" />
+                android:textStyle="normal"
+                app:layout_constraintStart_toStartOf="@id/home_subTitle"
+                app:layout_constraintTop_toBottomOf="@id/home_subTitle" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <android.view.View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_gravity="bottom"
-            android:background="@color/silver" />
-    </androidx.cardview.widget.CardView>
-
+    </LinearLayout>
 </FrameLayout>

@@ -14,8 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
+import android.content.res.Resources;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 
@@ -91,23 +90,16 @@ public class Add_item extends BaseActivity implements OnPhotoCapturedListener {
         btnSalva.setOnClickListener(v -> {
             name = editName.getText().toString();
             note = editNote.getText().toString();
-            if (name != null && barcod != null && dataValid != null) {
+            if (!name.isEmpty()) {
                 String Agora = "";
-                try {
-                    SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-                    Date dataSalva = dataFormatada.parse(dataValid);
-                    SimpleDateFormat minhadata = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-                    Agora = minhadata.format(dataSalva);
 
-                } catch (Exception e) {
-                    Toast.makeText(this, "Erro ao  add", Toast.LENGTH_SHORT).show();
-                }
                 //long c = SqlHelper.getInstance(this).additem(name, note, barcod, Agora, byteArray);
                 trocarFragmento(v);
 
             } else {
                 SpinerData sp = new SpinerData();
-                Toast.makeText(this, R.string.name_barcod_valid_, Toast.LENGTH_SHORT).show();
+                Resources resources = this.getResources();
+                SelectDialog.msg(this, resources.getString(R.string.name_barcod_valid_));
             }
         });
     }
@@ -168,8 +160,8 @@ public class Add_item extends BaseActivity implements OnPhotoCapturedListener {
     }
 
     private void trocarFragmento(View v) {
+        showCustomToast();
         Intent intent = new Intent(this, MainActivity.class);
-        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
         finish();
     }
@@ -179,3 +171,9 @@ public class Add_item extends BaseActivity implements OnPhotoCapturedListener {
         super.onPointerCaptureChanged(hasCapture);
     }
 }
+/*
+SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
+                    Date dataSalva = dataFormatada.parse(dataValid);
+                    SimpleDateFormat minhadata = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
+                    Agora = minhadata.format(dataSalva);
+ */

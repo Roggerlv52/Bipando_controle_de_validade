@@ -47,7 +47,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         progressBar = binding.profileProgress;
         AdapterHome adapte = new AdapterHome(requireContext(), 3, 10);
 
-        List<Registro> dados= DatabaseTest.gerarDadosFicticios(500);
+        List<Registro> dados= DatabaseTest.gerarDadosFicticios(62);
         recyclerView.setAdapter(adapte);
         adapte.setDados(dados);
         adapte.ordenarPorDiferencaDeDias();
