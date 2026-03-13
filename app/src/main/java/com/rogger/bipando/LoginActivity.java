@@ -54,9 +54,9 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
-        boolean loginSate = SharedPreferencesManager.getloginState(this,"state");
+        boolean loginState = SharedPreferencesManager.getLoginState(this,"state");
         setContentView(R.layout.activity_login);
-        if(loginSate){
+        if(loginState){
            openMainActivity();
         }
         progressBar = findViewById(R.id.progressbar_login);
@@ -77,7 +77,7 @@ public class LoginActivity extends BaseActivity {
         btn_gmail.setOnClickListener(
                 v -> {
                   signIn();
-                 SharedPreferencesManager.setloginState(this,"state",true);
+                 SharedPreferencesManager.setLoginState(this,"state",true);
                 });
         btn_face.setOnClickListener(v ->{
             Snackbar.make(v, "Login com facebook não imprementado", Snackbar.LENGTH_LONG)
@@ -132,7 +132,7 @@ public class LoginActivity extends BaseActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         Log.d("LoginActivity", "signInWithCredential:success, User: " + user.getDisplayName());
-                        progressBar.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
                         openMainActivity();
                     } else {
                         Log.w("LoginActivity", "signInWithCredential:failure", task.getException());

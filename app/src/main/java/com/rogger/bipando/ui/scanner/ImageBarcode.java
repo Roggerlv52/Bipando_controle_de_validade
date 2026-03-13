@@ -42,17 +42,17 @@ public class ImageBarcode extends AppCompatActivity {
         window.setStatusBarColor(getResources().getColor(android.R.color.black)); // Substitua android.R.color.black pela cor desejada
         // Dentro do método onCreate() ou onResume() da segunda atividade
 		Intent intent = getIntent();
-		String code = intent.getStringExtra("kayBarcode");
+		String code = intent.getStringExtra("keyBarcode");
 	
 		// Agora você tem os dados recebidos e pode usá-los conforme necessário
 		if (code != null) {
-			ImageBarcod(code);
+			ImageBarcode(code);
 		} else {
 			String ids = intent.getStringExtra("ids");
 			String uri = intent.getStringExtra("uri");
 			if (ids != null && uri != null) {
 				int id = Integer.parseInt(ids);
-				imageVewUri(id,uri);
+				imageViewUri(id,uri);
 			}
 		}
 
@@ -61,7 +61,7 @@ public class ImageBarcode extends AppCompatActivity {
 		});
 	}
 
-	private void ImageBarcod(String code) {
+	private void ImageBarcode(String code) {
 		
 		try {
 			BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
@@ -74,7 +74,7 @@ public class ImageBarcode extends AppCompatActivity {
 		txtCode.setText(code);
 	}
 
-    private void imageVewUri(int id,String uri) {
+    private void imageViewUri(int id,String uri) {
         /*
         Registro modelo = SqlHelper.getInstance(this).buscarId(id);
         if (modelo.byteArray != null) {

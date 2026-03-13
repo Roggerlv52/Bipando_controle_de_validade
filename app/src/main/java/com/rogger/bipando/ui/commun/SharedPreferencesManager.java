@@ -34,14 +34,14 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }
-    public static void setloginState(Context context,String key,boolean state){
+    public static void setLoginState(Context context,String key,boolean state){
         SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedp.edit();
         editor.putBoolean(key,state);
         editor.apply();
 
     }
-    public static boolean getloginState(Context context,String key){
+    public static boolean getLoginState(Context context,String key){
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }

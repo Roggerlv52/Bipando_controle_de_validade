@@ -101,7 +101,7 @@ public class MainActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == R.id.menu_logout) {
             mAuth.signOut();
-            SharedPreferencesManager.setloginState(this, "state", false);
+            SharedPreferencesManager.setLoginState(this, "state", false);
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();

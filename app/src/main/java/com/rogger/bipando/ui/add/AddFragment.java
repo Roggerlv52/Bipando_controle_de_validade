@@ -276,7 +276,7 @@ public class AddFragment extends Fragment {
 
     private void startImageBarcode(String barcode) {
         Intent intent = new Intent(getContext(), ImageBarcode.class);
-        intent.putExtra("kayBarcode", barcode);
+        intent.putExtra("keyBarcode", barcode);
         startActivity(intent);
     }
 
