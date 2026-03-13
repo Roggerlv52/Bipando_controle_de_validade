@@ -54,10 +54,10 @@ public class MainActivity extends BaseActivity {
 
         View viewProfile = navigationView.getHeaderView(0);
         imgProfile = viewProfile.findViewById(R.id.img_profile_navigation);
-        txtProfileName = viewProfile.findViewById(R.id.name_profile_navigarion);
+        txtProfileName = viewProfile.findViewById(R.id.name_profile_navigation);
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
-        FirebaseUser use = mAuth.getCurrentUser();
-        if (use != null) {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
             List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
             String profileUri = userInfo.get(1);
             if (profileUri != null) {
@@ -67,8 +67,8 @@ public class MainActivity extends BaseActivity {
                         .placeholder(R.drawable.ic_launcher_foreground)
                         .into(imgProfile);
             } else {
-                Uri photoUrl = use.getPhotoUrl();
-                String n = use.getDisplayName();
+                Uri photoUrl = user.getPhotoUrl();
+                String n = user.getDisplayName();
                 txtProfileName.setText(n);
                 Picasso.get()
                         .load(photoUrl)
