@@ -21,8 +21,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.rogger.bipando.R;
-import com.rogger.bipando.database.DatabaseTest;
-import com.rogger.bipando.database.Registro;
+import com.rogger.bipando.data.model.Produto;
+
 import com.rogger.bipando.databinding.FragmentHomeBinding;
 import com.rogger.bipando.ui.scanner.BarcodeScan;
 
@@ -47,7 +47,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         progressBar = binding.profileProgress;
         AdapterHome adapte = new AdapterHome(requireContext(), 3, 10);
 
-        List<Registro> dados= DatabaseTest.gerarDadosFicticios(62);
+        List<Produto> dados =
         recyclerView.setAdapter(adapte);
         adapte.setDados(dados);
         adapte.ordenarPorDiferencaDeDias();

@@ -99,18 +99,18 @@
 
     <fragment
         android:id="@+id/nav_gallery_fragment"
-        android:name="com.rogger.bipando.ui.gallery.GalerryFragment"
+        android:name="com.rogger.bipando.ui.gallery.GalleryFragment"
         android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_galerry" />
+        tools:layout="@layout/fragment_gallery" />
     <fragment
         android:id="@+id/nav_category"
         android:name="com.rogger.bipando.ui.category.FragmentAddEditCategory"
         android:label="@string/category"
-        tools:layout="@layout/fragment_add_edit_categoty" />
+        tools:layout="@layout/fragment_add_edit_category" />
 
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.rogger.bipando.ui.profile.ProfileFragemt"
+        android:name="com.rogger.bipando.ui.profile.ProfileFragment"
         android:label="@string/menu_profile_config"
         tools:layout="@layout/fragment_profile">
         <action

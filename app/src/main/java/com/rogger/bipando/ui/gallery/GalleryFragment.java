@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class GalerryFragment extends Fragment {
+public class GalleryFragment extends Fragment {
     private LruCache<String, Bitmap> cache;
     private RecyclerView rc;
 
@@ -52,7 +52,7 @@ public class GalerryFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_galerry, container, false);
+        return inflater.inflate(R.layout.fragment_gallery, container, false);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)

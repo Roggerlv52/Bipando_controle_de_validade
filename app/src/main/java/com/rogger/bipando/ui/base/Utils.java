@@ -21,6 +21,18 @@ public class Utils {
     public interface OnDateSelectedListener {
         void onDateSelected(long timestamp, String dataFormatada);
     }
+    public static long calcDifferencInDays(long timestamp) {
+
+        long agora = System.currentTimeMillis();
+
+        // diferença em milissegundos
+        long diferenca = timestamp - agora;
+
+        // converter para horas
+        long horas = diferenca / (1000 * 60 * 60);
+
+        return horas;
+    }
 
     public interface CategoryCallback {
         void onCategoryCreated(String name);

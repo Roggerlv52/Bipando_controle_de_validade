@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey;
 
 @Entity(tableName = "produtos")
 public class Produto {
-
     @PrimaryKey(autoGenerate = true)
     private int id;
 

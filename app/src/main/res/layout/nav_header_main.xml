@@ -26,7 +26,7 @@
     </androidx.cardview.widget.CardView>
 
     <TextView
-        android:id="@+id/name_profile_navigarion"
+        android:id="@+id/name_profile_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"

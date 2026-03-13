@@ -24,7 +24,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class ProfileFragemt extends Fragment {
+public class ProfileFragment extends Fragment {
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private SwitchMaterial box1, box2, box3, box4, boxBeep, swNotification;
 

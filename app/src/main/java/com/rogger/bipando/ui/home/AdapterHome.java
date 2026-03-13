@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,7 +21,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bipando.R;
-import com.rogger.bipando.database.Registro;
+import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.ui.base.Utils;
 import com.rogger.bipando.ui.scanner.ImageBarcode;
 import com.squareup.picasso.Picasso;
@@ -31,16 +32,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
-    private OnItemClickListener mListener;
-    private List<Registro> dados;
+    private AdapterView.OnItemClickListener mListener;
+    private List<Produto> dados;
     private final Context context;
     private int n1;
     private int n2;
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
+    public void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
         this.mListener = listener;
     }
 
@@ -54,11 +53,11 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @SuppressLint("NotifyDataSetChanged")
     public void ordenarPorDiferencaDeDias() {
-        dados.sort(new Comparator<Registro>() {
+        dados.sort(new Comparator<Produto>() {
             @Override
-            public int compare(Registro item1, Registro item2) {
-                long diferencaDiasItem1 = Utils.calcDifferencInDays(item1.setdate);
-                long diferencaDiasItem2 = Utils.calcDifferencInDays(item2.setdate);
+            public int compare(Produto item1, Produto item2) {
+                long diferencaDiasItem1 = Utils.calcDifferencInDays(item1.getTimestamp());
+                long diferencaDiasItem2 = Utils.calcDifferencInDays(item2.getTimestamp());
 
                 // Ordena em ordem crescente
                 return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
@@ -74,32 +73,32 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void setDados(List<Registro> dados) {
+    public void setDados(List<Produto> dados) {
         this.dados = dados;
         notifyDataSetChanged();
     }
 
-    public List<Registro> getDados() {
+    public List<Produto> getDados() {
         return dados;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int arg1) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_home, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Registro modelo = dados.get(position);
-        long horas = Utils.calcDifferencInDays(modelo.setdate);
+        Produto modelo = dados.get(position);
+        long horas = Utils.calcDifferencInDays(modelo.getTimestamp());
         double dias = ceil(horas / 24.0f);
 
         String Agora = "";
         try {
             SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-            Date datasalva = dataFormatada.parse(modelo.setdate);
+            Date datasalva = dataFormatada.parse(modelog);
             SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
             assert datasalva != null;
             Agora = minhadata.format(datasalva);
@@ -135,17 +134,17 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.imageCircle.setImageResource(R.drawable.circle);
             holder.txtLight.setText(String.valueOf(ds));
         }
-        holder.txtTitle.setText(modelo.setname);
-        holder.txtSubTitle.setText(modelo.setnote);
-        holder.txtBarcode.setText(modelo.setbarcod);
-        String uri = modelo.setUri;
+        holder.txtTitle.setText(modelo.getNome());
+        holder.txtSubTitle.setText(modelo.getAnotacoes());
+        holder.txtBarcode.setText(modelo.getCodigoBarras());
+        String uri = modelo.getImagem();
         if (uri != null) {
             Picasso.get().load(uri).into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }
-        holder.id = modelo.id;
-        holder.uri = modelo.setUri;
+        holder.id = modelo.getId();
+        holder.uri = modelo.getImagem();
     }
 
     public int getItemCount() {
@@ -155,7 +154,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final ImageView imageCircle;
-        private final CircleImageView imageView;
+        private final ImageView imageView;
         private final TextView txtRight;
         private final TextView txtLight;
         private final TextView txtTitle;
@@ -193,7 +192,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                     String ids = String.valueOf(id);
                     Intent intent = new Intent(context, ImageBarcode.class);
                     intent.putExtra("ids", ids);
-					intent.putExtra("uri",uri);
+                    intent.putExtra("uri", uri);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
                 }
