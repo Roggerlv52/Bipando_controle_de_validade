@@ -74,6 +74,16 @@ public class Utils {
         datePickerDialog.show();
     }
 
+    public static long calcDifferencInDays(String timestampStr) {
+        try {
+            long timestamp = Long.parseLong(timestampStr);
+            long diffInMillis = timestamp - System.currentTimeMillis();
+            return diffInMillis / (1000 * 60 * 60); // Retorna em horas conforme usado no Adapter
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public static boolean validEditText(EditText editText) {
         if (editText == null) return false;
 

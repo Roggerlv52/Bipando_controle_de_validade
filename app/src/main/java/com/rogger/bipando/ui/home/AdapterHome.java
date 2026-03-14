@@ -20,7 +20,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bipando.R;
-import com.rogger.bipando.database.Registro;
+import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.ui.base.Utils;
 import com.rogger.bipando.ui.scanner.ImageBarcode;
 import com.squareup.picasso.Picasso;
@@ -35,7 +35,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     private OnItemClickListener mListener;
-    private List<Registro> dados;
+    private List<Produto> dados;
     private final Context context;
     private int n1;
     private int n2;
@@ -54,17 +54,19 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @SuppressLint("NotifyDataSetChanged")
     public void ordenarPorDiferencaDeDias() {
-        dados.sort(new Comparator<Registro>() {
-            @Override
-            public int compare(Registro item1, Registro item2) {
-                long diferencaDiasItem1 = Utils.calcDifferencInDays(item1.setdate);
-                long diferencaDiasItem2 = Utils.calcDifferencInDays(item2.setdate);
+        if (dados != null) {
+            dados.sort(new Comparator<Produto>() {
+                @Override
+                public int compare(Produto item1, Produto item2) {
+                    long diferencaDiasItem1 = Utils.calcDifferencInDays(String.valueOf(item1.getTimestamp()));
+                    long diferencaDiasItem2 = Utils.calcDifferencInDays(String.valueOf(item2.getTimestamp()));
 
-                // Ordena em ordem crescente
-                return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
-            }
-        });
-        notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
+                    // Ordena em ordem crescente
+                    return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
+                }
+            });
+            notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
+        }
     }
 
     public AdapterHome(Context context, int n1, int n2) {
@@ -74,12 +76,12 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void setDados(List<Registro> dados) {
+    public void setDados(List<Produto> dados) {
         this.dados = dados;
         notifyDataSetChanged();
     }
 
-    public List<Registro> getDados() {
+    public List<Produto> getDados() {
         return dados;
     }
 
@@ -92,24 +94,35 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Registro modelo = dados.get(position);
-        long horas = Utils.calcDifferencInDays(modelo.setdate);
+        if (dados == null || position >= dados.size()) {
+            return;
+        }
+
+        Produto modelo = dados.get(position);
+
+        // Verificação de null para timestamp
+        long horas = 0;
+        if (modelo.getTimestamp() > 0) {
+            horas = Utils.calcDifferencInDays(String.valueOf(modelo.getTimestamp()));
+        }
         double dias = ceil(horas / 24.0f);
 
         String Agora = "";
-        try {
-            SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-            Date datasalva = dataFormatada.parse(modelo.setdate);
-            SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
-            assert datasalva != null;
-            Agora = minhadata.format(datasalva);
-        } catch (Exception e) {
-
+        if (modelo.getTimestamp() > 0) {
+            try {
+                Date datasalva = new Date(modelo.getTimestamp());
+                SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
+                Agora = minhadata.format(datasalva);
+            } catch (Exception e) {
+                // Log de erro se necessário
+            }
         }
+
         if (n1 == 0 && n2 == 0) {
             n1 = 3;
             n2 = 10;
         }
+
         holder.txtRight.setText(Agora);
         int ds = (int) dias;
 		/*
@@ -125,7 +138,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                 holder.txtLight.setText(" VENCIDO ");
             }
         }
-        if (dias <= n2 & dias > n1) {
+        if (dias <= n2 && dias > n1) {
 
             holder.imageCircle.setImageResource(R.drawable.yellow_circle);
             holder.txtLight.setText(ds + "Dias");
@@ -135,17 +148,26 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.imageCircle.setImageResource(R.drawable.circle);
             holder.txtLight.setText(String.valueOf(ds));
         }
-        holder.txtTitle.setText(modelo.setname);
-        holder.txtSubTitle.setText(modelo.setnote);
-        holder.txtBarcode.setText(modelo.setbarcod);
-        String uri = modelo.setUri;
-        if (uri != null) {
+
+        // Verificações de null para os campos de texto
+        if (modelo.getNome() != null) {
+            holder.txtTitle.setText(modelo.getNome());
+        }
+        if (modelo.getAnotacoes() != null) {
+            holder.txtSubTitle.setText(modelo.getAnotacoes());
+        }
+        if (modelo.getCodigoBarras() != null) {
+            holder.txtBarcode.setText(modelo.getCodigoBarras());
+        }
+
+        String uri = modelo.getImagem();
+        if (uri != null && !uri.isEmpty()) {
             Picasso.get().load(uri).into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }
-        holder.id = modelo.id;
-        holder.uri = modelo.setUri;
+        holder.id = modelo.getId();
+        holder.uri = modelo.getImagem();
     }
 
     public int getItemCount() {
