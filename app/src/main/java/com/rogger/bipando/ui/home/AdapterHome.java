@@ -33,13 +33,12 @@ import java.util.List;
 import java.util.Locale;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
-    private AdapterView.OnItemClickListener mListener;
+    private OnItemClickListener mListener;
     private List<Produto> dados;
     private final Context context;
-    private int n1;
     private int n2;
 
-    public void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         this.mListener = listener;
     }
 
@@ -53,22 +52,23 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @SuppressLint("NotifyDataSetChanged")
     public void ordenarPorDiferencaDeDias() {
-        dados.sort(new Comparator<Produto>() {
-            @Override
-            public int compare(Produto item1, Produto item2) {
-                long diferencaDiasItem1 = Utils.calcDifferencInDays(item1.getTimestamp());
-                long diferencaDiasItem2 = Utils.calcDifferencInDays(item2.getTimestamp());
+        if (dados != null) {
+            dados.sort(new Comparator<Produto>() {
+                @Override
+                public int compare(Produto item1, Produto item2) {
+                    long diferencaDiasItem1 = Utils.calcDifferencInDays(String.valueOf(item1.getTimestamp()));
+                    long diferencaDiasItem2 = Utils.calcDifferencInDays(String.valueOf(item2.getTimestamp()));
 
-                // Ordena em ordem crescente
-                return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
-            }
-        });
-        notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
+                    // Ordena em ordem crescente
+                    return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
+                }
+            });
+            notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
+        }
     }
 
-    public AdapterHome(Context context, int n1, int n2) {
+    public AdapterHome(Context context, int n2) {
         this.context = context;
-        this.n1 = n1;
         this.n2 = n2;
     }
 
@@ -91,32 +91,42 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        if (dados == null || position >= dados.size()) {
+            return;
+        }
+
         Produto modelo = dados.get(position);
-        long horas = Utils.calcDifferencInDays(modelo.getTimestamp());
+
+        // Verificação de null para timestamp
+        long horas = 0;
+        if (modelo.getTimestamp() > 0) {
+            horas = Utils.calcDifferencInDays(String.valueOf(modelo.getTimestamp()));
+        }
         double dias = ceil(horas / 24.0f);
 
         String Agora = "";
-        try {
-            SimpleDateFormat dataFormatada = new SimpleDateFormat("yyyy-MM-dd", new Locale("pt", "BR"));
-            Date datasalva = dataFormatada.parse(modelog);
-            SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
-            assert datasalva != null;
-            Agora = minhadata.format(datasalva);
-        } catch (Exception e) {
-
+        if (modelo.getTimestamp() > 0) {
+            try {
+                Date datasalva = new Date(modelo.getTimestamp());
+                SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
+                Agora = minhadata.format(datasalva);
+            } catch (Exception e) {
+                // Log de erro se necessário
+            }
         }
-        if (n1 == 0 && n2 == 0) {
-            n1 = 3;
+
+        if (1 == 0 && n2 == 0) {
             n2 = 10;
         }
+
         holder.txtRight.setText(Agora);
         int ds = (int) dias;
 		/*
-		Se data for maior que  10 dias cinal verde 
-		Se data for menor ou igual a 10 dias cinal amarelo 
+		Se data for maior que  10 dias cinal verde
+		Se data for menor ou igual a 10 dias cinal amarelo
 		Se data for menor que 3 dias cinal vermelho.
 		*/
-        if (dias <= n1) {
+        if (dias <= 1) {
             holder.imageCircle.setImageResource(R.drawable.red_circle);
             holder.txtLight.setText(ds + "Dias restante");
             if (dias < 1) {
@@ -124,7 +134,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                 holder.txtLight.setText(" VENCIDO ");
             }
         }
-        if (dias <= n2 & dias > n1) {
+        if (dias <= n2 && dias > 1) {
 
             holder.imageCircle.setImageResource(R.drawable.yellow_circle);
             holder.txtLight.setText(ds + "Dias");
@@ -134,11 +144,20 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.imageCircle.setImageResource(R.drawable.circle);
             holder.txtLight.setText(String.valueOf(ds));
         }
-        holder.txtTitle.setText(modelo.getNome());
-        holder.txtSubTitle.setText(modelo.getAnotacoes());
-        holder.txtBarcode.setText(modelo.getCodigoBarras());
+
+        // Verificações de null para os campos de texto
+        if (modelo.getNome() != null) {
+            holder.txtTitle.setText(modelo.getNome());
+        }
+        if (modelo.getAnotacoes() != null) {
+            holder.txtSubTitle.setText(modelo.getAnotacoes());
+        }
+        if (modelo.getCodigoBarras() != null) {
+            holder.txtBarcode.setText(modelo.getCodigoBarras());
+        }
+
         String uri = modelo.getImagem();
-        if (uri != null) {
+        if (uri != null && !uri.isEmpty()) {
             Picasso.get().load(uri).into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
@@ -192,7 +211,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                     String ids = String.valueOf(id);
                     Intent intent = new Intent(context, ImageBarcode.class);
                     intent.putExtra("ids", ids);
-                    intent.putExtra("uri", uri);
+                    intent.putExtra("uri",uri);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
                 }
