@@ -23,6 +23,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.rogger.bipando.R;
 import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.databinding.FragmentHomeBinding;
+import com.rogger.bipando.notification.NotificationPrefs;
+import com.rogger.bipando.ui.scanner.BarcodeScan;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
 
 import java.util.List;
@@ -44,7 +46,12 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
         progressBar = binding.profileProgress;
-        adapte = new AdapterHome(requireContext(), 10);//passando valor fixo
+        
+        // Recuperar o valor do slider de dias amarelo do SharedPreferences
+        int diasAmarelo = NotificationPrefs.getDays(requireContext());
+        
+        // Instanciar o AdapterHome com o valor dinâmico do slider
+        adapte = new AdapterHome(requireContext(), 3, diasAmarelo);
 
         recyclerView.setAdapter(adapte);
         adapte.setOnItemClickListener(this);
