@@ -1,12 +1,16 @@
 package com.rogger.bipando.ui.home;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
@@ -21,11 +25,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.rogger.bipando.R;
+import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.databinding.FragmentHomeBinding;
 import com.rogger.bipando.notification.NotificationPrefs;
+import com.rogger.bipando.ui.base.Utils;
+import com.rogger.bipando.ui.scanner.BarcodeScan;
+import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HomeFragment extends Fragment implements OnItemClickListener {
@@ -34,6 +43,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     private ProgressBar progressBar;
     private FragmentHomeBinding binding;
     private DataViewModel dataViewModel;
+    private CategoriaViewModel categoriaViewModel;
     private AdapterHome adapte;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -50,7 +60,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
         
         // Instanciar o AdapterHome com o valor dinâmico do slider
-        adapte = new AdapterHome(requireContext(), diasAmarelo);
+        adapte = new AdapterHome(requireContext(), 3, diasAmarelo);
 
         recyclerView.setAdapter(adapte);
         adapte.setOnItemClickListener(this);
@@ -77,9 +87,111 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         FloatingActionButton fab = binding.fab;
         fab.setOnClickListener(view1 -> {
-            Navigation.findNavController(view).navigate(R.id.nav_barcode_scan_fragment);
+            mostrarDialogoSelecaoCategoria();
         });
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    /**
+     * Exibe um diálogo para o utilizador selecionar uma categoria antes de ir para o scanner
+     */
+    private void mostrarDialogoSelecaoCategoria() {
+        // Inicializar o CategoriaViewModel
+        categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
+
+        // Observar as categorias
+        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categorias -> {
+            if (categorias == null || categorias.isEmpty()) {
+                // Sem categorias, mostrar opção de criar
+                mostrarDialogoAdicionarCategoria();
+            } else {
+                // Mostrar diálogo com spinner de categorias
+                mostrarDialogoComSpinner(categorias);
+            }
+        });
+    }
+
+    /**
+     * Exibe um diálogo com um Spinner listando as categorias disponíveis
+     */
+    private void mostrarDialogoComSpinner(List<Categoria> categorias) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Selecione uma Categoria");
+
+        // Criar lista com opção "Adicionar categoria" no início
+        List<Categoria> listaComOpcao = new ArrayList<>();
+        Categoria opcaoAdicionar = new Categoria();
+        opcaoAdicionar.setId(-1);
+        opcaoAdicionar.setNome("+ Adicionar uma categoria");
+        listaComOpcao.add(opcaoAdicionar);
+        listaComOpcao.addAll(categorias);
+
+        // Criar adapter para o spinner
+        ArrayAdapter<Categoria> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                listaComOpcao
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // Criar e configurar o spinner
+        Spinner spinner = new Spinner(requireContext());
+        spinner.setAdapter(adapter);
+
+        builder.setView(spinner);
+
+        // Botões do diálogo
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            Categoria selecionada = (Categoria) spinner.getSelectedItem();
+            if (selecionada.getId() == -1) {
+                // Opção "Adicionar categoria" foi selecionada
+                mostrarDialogoAdicionarCategoria();
+            } else {
+                // Categoria válida selecionada, ir para o scanner
+                irParaScanner(selecionada.getId());
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
+
+        builder.show();
+    }
+
+    /**
+     * Exibe um diálogo para o utilizador criar uma nova categoria
+     */
+    private void mostrarDialogoAdicionarCategoria() {
+        Utils.dialogCategory(
+                requireContext(),
+                "Criar nova categoria",
+                nomeCat -> {
+                    // Criar a categoria
+                    Categoria novaCategoria = new Categoria();
+                    novaCategoria.setNome(nomeCat);
+                    categoriaViewModel.insert(novaCategoria);
+
+                    // Aguardar um pouco para a categoria ser inserida e depois ir para o scanner
+                    // Observar novamente as categorias para obter o ID da categoria criada
+                    categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categorias -> {
+                        if (categorias != null && !categorias.isEmpty()) {
+                            // Procurar a categoria criada (última da lista)
+                            Categoria categoriaCriada = categorias.get(categorias.size() - 1);
+                            if (categoriaCriada.getNome().equals(nomeCat)) {
+                                irParaScanner(categoriaCriada.getId());
+                            }
+                        }
+                    });
+                }
+        );
+    }
+
+    /**
+     * Navega para o BarcodeScanFragment passando o ID da categoria
+     */
+    private void irParaScanner(int categoriaId) {
+        Bundle bundle = new Bundle();
+        bundle.putInt("categoria_id", categoriaId);
+        Navigation.findNavController(requireView()).navigate(R.id.nav_barcode_scan_fragment, bundle);
     }
 
     private void atualizarView(List<Produto> dados) {
