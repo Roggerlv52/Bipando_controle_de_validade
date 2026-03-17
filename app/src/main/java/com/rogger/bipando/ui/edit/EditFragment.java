@@ -37,6 +37,7 @@ import com.rogger.bipando.ui.gallery.ImagePikerUtil;
 import com.rogger.bipando.ui.gallery.ImageUtils;
 import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -119,7 +120,8 @@ public class EditFragment extends Fragment {
                     File processed =
                             ImageUtils.processImage(requireContext(), uri, file);
                     editVM.onNewImage(processed);
-                    imgUpload.setImageURI(Uri.fromFile(processed));
+                    //imgUpload.setImageURI(Uri.fromFile(processed));
+                    Picasso.get().load(Uri.parse("file://"+processed)).into(imgUpload);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -148,6 +150,7 @@ public class EditFragment extends Fragment {
 
                         editVM.onNewImage(processed);
                         imgUpload.setImageURI(Uri.fromFile(processed));
+                        Picasso.get().load(Uri.parse("file://"+processed)).into(imgUpload);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -276,7 +279,7 @@ public class EditFragment extends Fragment {
         editVM.setOldImagePath(produto.getImagem());
         if (!editVM.hasNewImage()) {
             if (p.getImagem() != null) {
-                imgUpload.setImageURI(Uri.fromFile(new File(p.getImagem())));
+                Picasso.get().load(Uri.parse("file://"+p.getImagem())).into(imgUpload);
             } else {
                 imgUpload.setImageResource(R.drawable.up_picture);
             }

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_nav_home_to_nav_edit_fragment"
             app:destination="@id/nav_edit_fragment" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_show_fragment"
+            app:destination="@id/nav_show_fragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"
@@ -63,7 +66,7 @@
     <fragment
         android:id="@+id/nav_show_fragment"
         android:name="com.rogger.bipando.ui.home.ShowFragment"
-        android:label="Show"
+        android:label=""
         tools:layout="@layout/fragment_show">
         <argument
             android:name="imageUri"

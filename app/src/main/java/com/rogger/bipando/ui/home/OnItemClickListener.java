@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface OnItemClickListener {
     void onItemClick(int position, List<Produto> data);
+    void onImageClick(String uri);
 }

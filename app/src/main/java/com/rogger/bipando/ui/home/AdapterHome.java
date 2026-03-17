@@ -8,9 +8,7 @@ import static java.lang.Math.ceil;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.rogger.bipando.R;
 import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.ui.base.Utils;
-import com.rogger.bipando.ui.scanner.ImageBarcode;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -158,13 +155,16 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         String uri = modelo.getImagem();
         if (uri != null && !uri.isEmpty()) {
-            Picasso.get().load(Uri.parse("file://"+uri)).into(holder.imageView);
-           // holder.imageView.setImageURI(Uri.parse(uri));
+            Picasso.get().load(Uri.parse("file://" + uri)).into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }
-        holder.id = modelo.getId();
-        holder.uri = modelo.getImagem();
+        holder.imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onImageClick(modelo.getImagem());
+            }
+        });
     }
 
     public int getItemCount() {
@@ -205,17 +205,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                     }
                 }
 
-            });
-            imageView.setOnClickListener(v -> {
-                if (uri != null) {
-                    String ids = String.valueOf(id);
-                    Intent intent = new Intent(context, ImageBarcode.class);
-                    intent.putExtra("ids", ids);
-                    intent.putExtra("uri",uri);
-                    Log.d("ImageUri","uri->"+uri);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
-                }
             });
 
         }

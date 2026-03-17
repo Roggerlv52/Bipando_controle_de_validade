@@ -1,12 +1,10 @@
 package com.rogger.bipando.ui.home;
 
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -44,9 +42,18 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     private DataViewModel dataViewModel;
     private CategoriaViewModel categoriaViewModel;
     private AdapterHome adapte;
+    private NavController navController;
+    private Bundle bundle;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -54,10 +61,10 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
         progressBar = binding.profileProgress;
-        
+
         // Recuperar o valor do slider de dias amarelo do SharedPreferences
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
-        
+
         // Instanciar o AdapterHome com o valor dinâmico do slider
         adapte = new AdapterHome(requireContext(), diasAmarelo);
 
@@ -225,14 +232,21 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         String barcode = produto.getCodigoBarras() != null ? produto.getCodigoBarras() : "";
         String dataFormatada = produto.getTimestamp() > 0 ? String.valueOf(produto.getTimestamp()) : "";
         String note = produto.getAnotacoes() != null ? produto.getAnotacoes() : "";
-
-        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
-        Bundle bundle = new Bundle();
+        bundle = new Bundle();
+        navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
         bundle.putString("imageUrl", imageUrl);
         bundle.putString("productName", productName);
         bundle.putString("barcode", barcode);
         bundle.putString("data", dataFormatada);
         bundle.putString("note", note);
         navController.navigate(R.id.action_nav_home_to_nav_edit_fragment, bundle);
+    }
+
+    @Override
+    public void onImageClick(String uri) {
+        bundle = new Bundle();
+        navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
+        bundle.putString("imageUri", uri);
+        navController.navigate(R.id.action_nav_home_to_nav_show_fragment, bundle);
     }
 }
