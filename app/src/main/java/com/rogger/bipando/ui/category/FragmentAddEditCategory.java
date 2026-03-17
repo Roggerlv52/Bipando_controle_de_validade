@@ -39,7 +39,7 @@ public class FragmentAddEditCategory extends Fragment {
             @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(
-                R.layout.fragment_add_edit_categoty, container, false);
+                R.layout.fragment_add_edit_category, container, false);
         // ViewModel
         categoriaViewModel =
                 new ViewModelProvider(requireActivity())
