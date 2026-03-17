@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.rogger.bipando.R;
+import com.squareup.picasso.Picasso;
 
 public class ShowFragment extends Fragment {
 
@@ -50,9 +51,8 @@ public class ShowFragment extends Fragment {
                 : null;
 
         if (uriString != null) {
-            imageView.setImageURI(Uri.parse(uriString));
+            Picasso.get().load(Uri.parse("file://"+uriString)).into(imageView);
         }
-
         scaleDetector = new ScaleGestureDetector(requireContext(),
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     @Override
