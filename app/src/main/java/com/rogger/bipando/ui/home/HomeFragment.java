@@ -30,7 +30,6 @@ import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.databinding.FragmentHomeBinding;
 import com.rogger.bipando.notification.NotificationPrefs;
 import com.rogger.bipando.ui.base.Utils;
-import com.rogger.bipando.ui.scanner.BarcodeScan;
 import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
 
@@ -60,7 +59,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
         
         // Instanciar o AdapterHome com o valor dinâmico do slider
-        adapte = new AdapterHome(requireContext(), 3, diasAmarelo);
+        adapte = new AdapterHome(requireContext(), diasAmarelo);
 
         recyclerView.setAdapter(adapte);
         adapte.setOnItemClickListener(this);
