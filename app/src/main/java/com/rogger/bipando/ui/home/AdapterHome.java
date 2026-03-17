@@ -9,16 +9,15 @@ import static java.lang.Math.ceil;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bipando.R;
@@ -159,7 +158,8 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         String uri = modelo.getImagem();
         if (uri != null && !uri.isEmpty()) {
-            Picasso.get().load(uri).into(holder.imageView);
+            Picasso.get().load(Uri.parse("file://"+uri)).into(holder.imageView);
+           // holder.imageView.setImageURI(Uri.parse(uri));
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }
@@ -186,7 +186,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         public ViewHolder(View itemview) {
             super(itemview);
             imageView = itemview.findViewById(R.id.imageview_home);
-            LinearLayout cardHomeItem = itemview.findViewById(R.id.card_layout_home);
             imageCircle = itemview.findViewById(R.id.image_home_circle);
             txtLight = itemview.findViewById(R.id.txt_home_left);
             txtRight = itemview.findViewById(R.id.txt_home_right);
@@ -194,7 +193,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             txtSubTitle = itemview.findViewById(R.id.home_subTitle);
             txtBarcode = itemview.findViewById(R.id.home_barcode);
 
-            cardHomeItem.setOnClickListener(new View.OnClickListener() {
+            itemview.setOnClickListener(new View.OnClickListener() {
                 @SuppressLint("SuspiciousIndentation")
                 @Override
                 public void onClick(View v) {
@@ -213,6 +212,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                     Intent intent = new Intent(context, ImageBarcode.class);
                     intent.putExtra("ids", ids);
                     intent.putExtra("uri",uri);
+                    Log.d("ImageUri","uri->"+uri);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
                 }
