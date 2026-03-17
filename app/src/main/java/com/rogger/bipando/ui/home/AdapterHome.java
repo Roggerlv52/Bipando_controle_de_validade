@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -185,7 +186,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         public ViewHolder(View itemview) {
             super(itemview);
             imageView = itemview.findViewById(R.id.imageview_home);
-            CardView cardHomeItem = itemview.findViewById(R.id.card_layout_home);
+            LinearLayout cardHomeItem = itemview.findViewById(R.id.card_layout_home);
             imageCircle = itemview.findViewById(R.id.image_home_circle);
             txtLight = itemview.findViewById(R.id.txt_home_left);
             txtRight = itemview.findViewById(R.id.txt_home_right);
