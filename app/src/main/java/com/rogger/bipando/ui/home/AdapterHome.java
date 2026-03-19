@@ -123,13 +123,9 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 		Se data for menor ou igual a 10 dias cinal amarelo
 		Se data for menor que 3 dias cinal vermelho.
 		*/
-        if (dias <= 1) {
+        if (dias < 1) {
             holder.imageCircle.setImageResource(R.drawable.red_circle);
-            holder.txtLight.setText(ds + "Dias restante");
-            if (dias < 1) {
-                holder.imageCircle.setImageResource(R.drawable.red_circle);
-                holder.txtLight.setText(" VENCIDO ");
-            }
+            holder.txtLight.setText(" VENCIDO ");
         }
         if (dias <= n2 && dias > 1) {
 
@@ -139,7 +135,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         }
         if (dias > n2) {
             holder.imageCircle.setImageResource(R.drawable.circle);
-            holder.txtLight.setText(String.valueOf(ds));
+            holder.txtLight.setText(String.valueOf(ds) +" dias");
         }
 
         // Verificações de null para os campos de texto
@@ -147,7 +143,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.txtTitle.setText(modelo.getNome());
         }
         if (modelo.getAnotacoes() != null) {
-            holder.txtSubTitle.setText(modelo.getAnotacoes());
+            holder.txtSubTitle.setText(modelo.getCategory());
         }
         if (modelo.getCodigoBarras() != null) {
             holder.txtBarcode.setText(modelo.getCodigoBarras());
