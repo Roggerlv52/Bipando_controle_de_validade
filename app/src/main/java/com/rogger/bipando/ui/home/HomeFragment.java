@@ -227,18 +227,10 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         Produto produto = data.get(position);
 
         // Verificações de null
-        String imageUrl = produto.getImagem() != null ? produto.getImagem() : "";
-        String productName = produto.getNome() != null ? produto.getNome() : "";
-        String barcode = produto.getCodigoBarras() != null ? produto.getCodigoBarras() : "";
-        String dataFormatada = produto.getTimestamp() > 0 ? String.valueOf(produto.getTimestamp()) : "";
-        String note = produto.getAnotacoes() != null ? produto.getAnotacoes() : "";
+        int id = produto.getId() !=  0 ? produto.getId() :0;
         bundle = new Bundle();
         navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
-        bundle.putString("imageUrl", imageUrl);
-        bundle.putString("productName", productName);
-        bundle.putString("barcode", barcode);
-        bundle.putString("data", dataFormatada);
-        bundle.putString("note", note);
+        bundle.putInt("id",id);
         navController.navigate(R.id.action_nav_home_to_nav_edit_fragment, bundle);
     }
 

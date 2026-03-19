@@ -147,7 +147,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.txtTitle.setText(modelo.getNome());
         }
         if (modelo.getAnotacoes() != null) {
-            holder.txtSubTitle.setText(modelo.getAnotacoes());
+            holder.txtSubTitle.setText(modelo.getCategory());
         }
         if (modelo.getCodigoBarras() != null) {
             holder.txtBarcode.setText(modelo.getCodigoBarras());
