@@ -120,7 +120,6 @@ public class EditFragment extends Fragment {
                     File processed =
                             ImageUtils.processImage(requireContext(), uri, file);
                     editVM.onNewImage(processed);
-                    //imgUpload.setImageURI(Uri.fromFile(processed));
                     Picasso.get().load(Uri.parse("file://"+processed)).into(imgUpload);
                 } catch (Exception e) {
                     e.printStackTrace();

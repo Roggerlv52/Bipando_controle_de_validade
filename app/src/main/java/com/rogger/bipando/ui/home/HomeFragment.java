@@ -2,6 +2,7 @@ package com.rogger.bipando.ui.home;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.databinding.FragmentHomeBinding;
 import com.rogger.bipando.notification.NotificationPrefs;
+import com.rogger.bipando.ui.base.CategoriaDialogUtil;
 import com.rogger.bipando.ui.base.Utils;
 import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
@@ -121,6 +123,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
      * Exibe um diálogo com um Spinner listando as categorias disponíveis
      */
     private void mostrarDialogoComSpinner(List<Categoria> categorias) {
+        /*
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Selecione uma Categoria");
 
@@ -128,7 +131,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         List<Categoria> listaComOpcao = new ArrayList<>();
         Categoria opcaoAdicionar = new Categoria();
         opcaoAdicionar.setId(-1);
-        opcaoAdicionar.setNome("+ Adicionar uma categoria");
+        opcaoAdicionar.setNome(" Selecione uma categoria");
         listaComOpcao.add(opcaoAdicionar);
         listaComOpcao.addAll(categorias);
 
@@ -161,6 +164,23 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
 
         builder.show();
+
+         */
+        CategoriaDialogUtil.mostrarDialogo(
+                requireContext(),
+                categorias,
+                new CategoriaDialogUtil.CategoriaCallback() {
+                    @Override
+                    public void onCategoriaSelecionada(int categoriaId) {
+                        irParaScanner(categoriaId);
+                    }
+
+                    @Override
+                    public void onAdicionarCategoria() {
+                        mostrarDialogoAdicionarCategoria();
+                    }
+                }
+        );
     }
 
     /**
