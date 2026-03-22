@@ -20,14 +20,15 @@ public interface ProdutoDao {
     @Update
     void update(Produto produto);
 
-    @Query("SELECT * FROM produtos WHERE deleted = 0 ORDER BY timestamp ASC")
-    LiveData<List<Produto>> listarProdutosAtivos();
+    @Query("SELECT * FROM produtos WHERE deleted = 0 AND userId = :userId ORDER BY timestamp ASC")
+    LiveData<List<Produto>> listarProdutosAtivos(String userId);
 
-    @Query("SELECT * FROM produtos WHERE category = :categoria ORDER BY nome ASC")
-    LiveData<List<Produto>> listarPorCategoria(String categoria);
+    @Query("SELECT * FROM produtos WHERE category = :categoria AND userId = :userId ORDER BY nome ASC")
+    LiveData<List<Produto>> listarPorCategoria(String categoria, String userId);
 
-    @Query("SELECT * FROM produtos WHERE deleted = 1 ORDER BY timestamp ASC")
-    LiveData<List<Produto>> listarProdutosDeletados();
+
+    @Query("SELECT * FROM produtos WHERE deleted = 1 AND userId = :userId ORDER BY timestamp ASC")
+    LiveData<List<Produto>> listarProdutosDeletados(String userId);
 
     @Query("UPDATE produtos SET deleted = 1, deletedAt = :deletedAt WHERE id = :id")
     void moverParaLixeira(int id, long deletedAt);

@@ -18,10 +18,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bipando.R;
 import com.rogger.bipando.data.model.Produto;
 import com.rogger.bipando.ui.base.Utils;
-import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -151,7 +151,14 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         String uri = modelo.getImagem();
         if (uri != null && !uri.isEmpty()) {
-            Picasso.get().load(Uri.parse("file://" + uri)).into(holder.imageView);
+            Glide.with(holder.itemView.getContext())
+                    .load(uri)
+                    .override(350, 350) // reduz tamanho
+                    .placeholder(R.drawable.ic_launcher_foreground)   // enquanto carrega
+                    .error(R.drawable.no_picture)         // se der erro
+                    //.circleCrop()// deixa redondo
+                    .centerCrop()
+                    .into(holder.imageView);
         } else {
             holder.imageView.setImageResource(R.drawable.no_picture);
         }

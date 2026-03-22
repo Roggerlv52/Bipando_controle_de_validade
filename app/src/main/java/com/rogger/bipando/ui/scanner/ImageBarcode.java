@@ -15,10 +15,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bipando.R;
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-import com.squareup.picasso.Picasso;
 
 public class ImageBarcode extends AppCompatActivity {
 
@@ -75,12 +75,9 @@ public class ImageBarcode extends AppCompatActivity {
 	}
 
     private void imageViewUri(int id,String uri) {
-        /*
-        Registro modelo = SqlHelper.getInstance(this).buscarId(id);
-        if (modelo.byteArray != null) {
-        	imageView.setImageBitmap(ConvertTo.byteArrayToBitmap(modelo.byteArray));
-        }
-         */
-		Picasso.get().load(uri).into(imageView);
+		Glide.with(this)
+				.load(uri)
+				.error(R.drawable.ic_live_help)
+				.into(imageView);
     }
 }

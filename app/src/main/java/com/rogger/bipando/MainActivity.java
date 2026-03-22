@@ -17,16 +17,15 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.databinding.ActivityMainBinding;
 import com.rogger.bipando.ui.base.BaseActivity;
 import com.rogger.bipando.ui.base.Utils;
 import com.rogger.bipando.ui.commun.SharedPreferencesManager;
 import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -56,28 +55,19 @@ public class MainActivity extends BaseActivity {
         imgProfile = viewProfile.findViewById(R.id.img_profile_navigation);
         txtProfileName = viewProfile.findViewById(R.id.name_profile_navigation);
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user != null) {
-            List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
-            String profileUri = userInfo.get(1);
-            if (profileUri != null) {
-                txtProfileName.setText(userInfo.get(0));
-                Picasso.get()
-                        .load(profileUri)
-                        .placeholder(R.drawable.ic_launcher_foreground)
-                        .into(imgProfile);
-            } else {
-                Uri photoUrl = user.getPhotoUrl();
-                String n = user.getDisplayName();
-                txtProfileName.setText(n);
-                Picasso.get()
-                        .load(photoUrl)
-                        .placeholder(R.drawable.ic_launcher_foreground)
-                        .into(imgProfile);
-                assert photoUrl != null && n != null;
-                SharedPreferencesManager.saveUserInfo(this, n, photoUrl.toString());
-            }
 
+
+        List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
+        String profileUri = userInfo.get(2);
+        if (profileUri != null) {
+            txtProfileName.setText(userInfo.get(0));
+            Glide.with(this)
+                    .load(profileUri)
+                    .override(200, 200) // reduz tamanho
+                    .placeholder(R.drawable.ic_launcher_foreground)   // enquanto carrega
+                    .error(R.drawable.ic_person_24)         // se der erro
+                    .circleCrop()                      // deixa redondo
+                    .into(imgProfile);
         }
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_item_deleted_fragment, R.id.nav_category)

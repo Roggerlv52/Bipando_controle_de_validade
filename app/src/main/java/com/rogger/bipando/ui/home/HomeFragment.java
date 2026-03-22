@@ -123,49 +123,6 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
      * Exibe um diálogo com um Spinner listando as categorias disponíveis
      */
     private void mostrarDialogoComSpinner(List<Categoria> categorias) {
-        /*
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Selecione uma Categoria");
-
-        // Criar lista com opção "Adicionar categoria" no início
-        List<Categoria> listaComOpcao = new ArrayList<>();
-        Categoria opcaoAdicionar = new Categoria();
-        opcaoAdicionar.setId(-1);
-        opcaoAdicionar.setNome(" Selecione uma categoria");
-        listaComOpcao.add(opcaoAdicionar);
-        listaComOpcao.addAll(categorias);
-
-        // Criar adapter para o spinner
-        ArrayAdapter<Categoria> adapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_spinner_item,
-                listaComOpcao
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Criar e configurar o spinner
-        Spinner spinner = new Spinner(requireContext());
-        spinner.setAdapter(adapter);
-
-        builder.setView(spinner);
-
-        // Botões do diálogo
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            Categoria selecionada = (Categoria) spinner.getSelectedItem();
-            if (selecionada.getId() == -1) {
-                // Opção "Adicionar categoria" foi selecionada
-                mostrarDialogoAdicionarCategoria();
-            } else {
-                // Categoria válida selecionada, ir para o scanner
-                irParaScanner(selecionada.getId());
-            }
-        });
-
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
-
-        builder.show();
-
-         */
         CategoriaDialogUtil.mostrarDialogo(
                 requireContext(),
                 categorias,

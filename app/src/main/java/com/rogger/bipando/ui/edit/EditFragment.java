@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bipando.R;
 import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.data.model.Produto;
@@ -37,7 +38,6 @@ import com.rogger.bipando.ui.gallery.ImagePikerUtil;
 import com.rogger.bipando.ui.gallery.ImageUtils;
 import com.rogger.bipando.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bipando.ui.viewmodel.DataViewModel;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -120,7 +120,7 @@ public class EditFragment extends Fragment {
                     File processed =
                             ImageUtils.processImage(requireContext(), uri, file);
                     editVM.onNewImage(processed);
-                    Picasso.get().load(Uri.parse("file://"+processed)).into(imgUpload);
+                    setImageView("file://" + processed);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -144,12 +144,12 @@ public class EditFragment extends Fragment {
                     try {
                         Uri uri = Uri.parse(bundle.getString("imageUri"));
                         File out = ImagePikerUtil.createImageFile(requireContext());
-                      File  processed =
+                        File processed =
                                 ImageUtils.processImage(requireContext(), uri, out);
 
                         editVM.onNewImage(processed);
-                        imgUpload.setImageURI(Uri.fromFile(processed));
-                        Picasso.get().load(Uri.parse("file://"+processed)).into(imgUpload);
+                        //imgUpload.setImageURI(Uri.fromFile(processed));
+                       setImageView(processed.getAbsolutePath());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -277,11 +277,7 @@ public class EditFragment extends Fragment {
         btnData.setText(timestampParaData(timestamp));
         editVM.setOldImagePath(produto.getImagem());
         if (!editVM.hasNewImage()) {
-            if (p.getImagem() != null) {
-                Picasso.get().load(Uri.parse("file://"+p.getImagem())).into(imgUpload);
-            } else {
-                imgUpload.setImageResource(R.drawable.up_picture);
-            }
+           setImageView(p.getImagem());
         }
         if (!carregandoSpinner) selecionarCategoria(p.getCategory());
     }
@@ -334,6 +330,14 @@ public class EditFragment extends Fragment {
     }
 
     // -------------------- UTILS --------------------
+    private void setImageView(String imgUri) {
+        Glide.with(requireContext())
+                .load(imgUri)
+                .override(350, 350)
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.ic_person_24)
+                .into(imgUpload);
+    }
 
     private static String timestampParaData(long ts) {
         return new SimpleDateFormat(

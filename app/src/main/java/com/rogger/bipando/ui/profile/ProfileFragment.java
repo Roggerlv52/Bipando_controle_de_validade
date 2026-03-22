@@ -14,13 +14,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.rogger.bipando.R;
 import com.rogger.bipando.notification.NotificationPrefs;
 import com.rogger.bipando.notification.NotificationScheduler;
 import com.rogger.bipando.ui.commun.SharedPreferencesManager;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -69,16 +69,17 @@ public class ProfileFragment extends Fragment {
         txtYellow.setText((int) sliderYellow.getValue() + " dias");
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(requireContext());
-        String imageUrl = userInfo.get(1);
         String name = userInfo.get(0);
         txtName.setText(name);
         txtTitle.setText(name);
-        if (imageUrl != null) {
-            Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .into(circleImageView);
-        }
+
+            Glide.with(requireContext())
+                    .load(userInfo.get(2))
+                    .override(350, 350) // reduz tamanho
+                    .placeholder(R.drawable.ic_person_24)   // enquanto carrega
+                    .error(R.drawable.ic_person_24)         // se der erro
+                    .into(circleImageView);;
+
         boxBeep.setChecked(stateBeep);
         switch (themeNumber) {
             case 1:

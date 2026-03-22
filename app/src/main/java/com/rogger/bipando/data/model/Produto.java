@@ -1,5 +1,6 @@
 package com.rogger.bipando.data.model;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -7,7 +8,8 @@ import androidx.room.PrimaryKey;
 public class Produto {
     @PrimaryKey(autoGenerate = true)
     private int id;
-
+    @NonNull
+    private String userId;
     private String nome;
     private String codigoBarras;
     private String category;
@@ -15,11 +17,17 @@ public class Produto {
     private String anotacoes;
     private String imagem;
 
-    // 🔥 NOVOS CAMPOS (LIXEIRA)
     private boolean deleted;     // false = ativo | true = lixeira
     private Long deletedAt;      // timestamp da exclusão (pode ser null)
 
     // ================= GETTERS / SETTERS =================
+
+    public String getUserId() {
+        return userId;
+    }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     public int getId() {
         return id;

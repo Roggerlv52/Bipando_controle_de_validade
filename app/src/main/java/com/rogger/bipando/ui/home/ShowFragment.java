@@ -15,8 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bipando.R;
-import com.squareup.picasso.Picasso;
 
 public class ShowFragment extends Fragment {
 
@@ -50,9 +50,11 @@ public class ShowFragment extends Fragment {
                 ? getArguments().getString(ARG_IMAGE_URI)
                 : null;
 
-        if (uriString != null) {
-            Picasso.get().load(Uri.parse("file://"+uriString)).into(imageView);
-        }
+        Glide.with(requireContext())
+                .load(uriString)
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.ic_person_24)
+                .into(imageView);
         scaleDetector = new ScaleGestureDetector(requireContext(),
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     @Override

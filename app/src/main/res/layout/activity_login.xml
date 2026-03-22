@@ -52,18 +52,6 @@
             android:indeterminate="true"
             android:visibility="invisible" />
 
-        <Button
-            android:id="@+id/login_with_face"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginTop="5dp"
-            android:background="@drawable/custo_button"
-            android:backgroundTint="@color/skyBlue"
-            android:padding="10dp"
-            android:text="@string/fazer_login_com_facebook"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:theme="@style/Theme.Bpd" />
 
         <Button
             android:id="@+id/login_with_gmail"
@@ -90,13 +78,4 @@
         android:scaleType="centerCrop"
         android:src="@drawable/google_small" />
 
-    <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="bottom"
-        android:layout_marginStart="36dp"
-        android:layout_marginBottom="105dp"
-        android:contentDescription="@string/todo"
-        android:scaleType="centerCrop"
-        android:src="@drawable/facebook" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bipando.data.dao.ProdutoDao;
 import com.rogger.bipando.data.database.BpdDatabase;
 import com.rogger.bipando.data.model.Produto;
@@ -24,8 +25,9 @@ public class ExpirationWorker extends Worker {
         ProdutoDao dao =
                 BpdDatabase.getDatabase(getApplicationContext())
                         .produtoDao();
+        String  userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        List<Produto> produtos = dao.listarProdutosAtivos().getValue();
+        List<Produto> produtos = dao.listarProdutosAtivos(userId).getValue();
 
         long agora = System.currentTimeMillis();
         int diasAlerta = NotificationPrefs.getDays(getApplicationContext());

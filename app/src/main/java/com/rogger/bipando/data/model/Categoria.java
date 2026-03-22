@@ -15,6 +15,11 @@ public class Categoria {
     public int getId() {
         return id;
     }
+    @NonNull
+    private String userId;
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public void setId(int id) {
         this.id = id;

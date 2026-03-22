@@ -11,8 +11,6 @@ lifecycleViewmodelKtx = "2.8.7"
 navigationFragment = "2.8.2"
 navigationUi = "2.8.2"
 okhttp = "4.9.1"
-photoview = "2.3.0"
-picasso = "2.71828"
 playServicesAuth = "21.4.0"
 zxingAndroidEmbedded = "4.3.0"
 googleGmsGoogleServices = "4.4.4"
@@ -33,8 +31,7 @@ lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-view
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-photoview = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoview" }
-picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
+
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }

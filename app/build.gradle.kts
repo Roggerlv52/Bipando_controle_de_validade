@@ -57,12 +57,14 @@ android {
 }
 
 dependencies {
-
     //Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.work:work-runtime:2.9.0")
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -79,7 +81,7 @@ dependencies {
     implementation(libs.coordinatorlayout)
     //implementation(libs.play.services.ads) gerar anuncios
     testImplementation(libs.junit)
-    implementation(libs.picasso)
+
     implementation(libs.okhttp)
     implementation(libs.zxing.android.embedded)
     androidTestImplementation(libs.ext.junit)

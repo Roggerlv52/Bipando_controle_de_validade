@@ -3,6 +3,7 @@ package com.rogger.bipando.ui.commun;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,18 +46,20 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }
-    public static void saveUserInfo(Context context,String name,String imageUrl){
+    public static void saveUserInfo(Context context,String uid, String name, String imageUrl){
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("userUid",uid);
         editor.putString("nameUser",name);
-        editor.putString("profile_image_url", imageUrl);
+        editor.putString("profile_image_url",imageUrl );
         editor.apply();
     }
     public static List<String> getUserInfo(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         List<String> userInfo = new ArrayList<>();
-        userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));
-        userInfo.add(sharedPreferences.getString("profile_image_url", null));
+        userInfo.add(sharedPreferences.getString("userUid",null));//  3
+        userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));// 0
+        userInfo.add(sharedPreferences.getString("profile_image_url", null)); // 2
         return userInfo;
     }
 }
