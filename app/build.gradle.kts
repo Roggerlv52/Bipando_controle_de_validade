@@ -57,7 +57,6 @@ android {
 }
 
 dependencies {
-
     //Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
