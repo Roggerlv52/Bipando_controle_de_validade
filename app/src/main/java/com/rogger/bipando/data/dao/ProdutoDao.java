@@ -20,14 +20,27 @@ public interface ProdutoDao {
     @Update
     void update(Produto produto);
 
-    @Query("SELECT * FROM produtos WHERE deleted = 0 AND userId = :userId ORDER BY timestamp ASC")
+    // 🔑 JOIN com categorias para buscar o nomeCategoria atualizado
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.deleted = 0 AND p.userId = :userId " +
+            "ORDER BY p.timestamp ASC")
     LiveData<List<Produto>> listarProdutosAtivos(String userId);
 
-    @Query("SELECT * FROM produtos WHERE category = :categoria AND userId = :userId ORDER BY nome ASC")
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.categoryId = :categoria AND p.userId = :userId " +
+            "ORDER BY p.nome ASC")
     LiveData<List<Produto>> listarPorCategoria(String categoria, String userId);
 
 
-    @Query("SELECT * FROM produtos WHERE deleted = 1 AND userId = :userId ORDER BY timestamp ASC")
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.deleted = 1 AND p.userId = :userId " +
+            "ORDER BY p.timestamp ASC")
     LiveData<List<Produto>> listarProdutosDeletados(String userId);
 
     @Query("UPDATE produtos SET deleted = 1, deletedAt = :deletedAt WHERE id = :id")

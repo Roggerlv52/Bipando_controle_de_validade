@@ -2,6 +2,7 @@ package com.rogger.bipando.data.model;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "produtos")
@@ -12,13 +13,17 @@ public class Produto {
     private String userId;
     private String nome;
     private String codigoBarras;
-    private String category;
+    private int categoryId;
     private long timestamp;
     private String anotacoes;
     private String imagem;
 
     private boolean deleted;     // false = ativo | true = lixeira
     private Long deletedAt;      // timestamp da exclusão (pode ser null)
+
+    // Campo transiente: preenchido pelo JOIN no DAO, NÃO salvo no banco
+    @Ignore
+    private String nomeCategoria;
 
     // ================= GETTERS / SETTERS =================
 
@@ -53,13 +58,17 @@ public class Produto {
         this.codigoBarras = codigoBarras;
     }
 
-    public String getCategory() {
-        return category;
+    public int getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategoryId(int id) {
+        this.categoryId = id;
     }
+
+    // 🔑 Nome da categoria vindo do JOIN (não persiste no banco)
+    public String getNomeCategoria() { return nomeCategoria; }
+    public void setNomeCategoria(String nomeCategoria) { this.nomeCategoria = nomeCategoria; }
 
     public long getTimestamp() {
         return timestamp;

@@ -53,7 +53,7 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
         holder.txt_left.setText(sdf.format(new Date(produto.getTimestamp())));
-        holder.txt_rigth.setText(produto.getCategory());
+        holder.txt_rigth.setText(produto.getNomeCategoria());
         holder.txt_home.setText(produto.getNome());
         holder.txt_bcd.setText(produto.getCodigoBarras());
         if (produto.getImagem() == null || produto.getImagem().isEmpty()) {

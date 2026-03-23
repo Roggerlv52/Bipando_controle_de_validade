@@ -16,15 +16,11 @@ public class ProdutoRepository {
 
     private final ProdutoDao produtoDao;
     private final String userId;
-    //private final LiveData<List<Produto>> produtosAtivos;
-    //private final LiveData<List<Produto>> produtosDeletados;
 
     public ProdutoRepository(Application application) {
         BpdDatabase db = BpdDatabase.getDatabase(application);
         produtoDao = db.produtoDao();
 
-        //produtosAtivos = produtoDao.listarProdutosAtivos();
-        //produtosDeletados = produtoDao.listarProdutosDeletados();
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 

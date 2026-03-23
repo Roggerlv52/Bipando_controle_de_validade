@@ -148,7 +148,6 @@ public class EditFragment extends Fragment {
                                 ImageUtils.processImage(requireContext(), uri, out);
 
                         editVM.onNewImage(processed);
-                        //imgUpload.setImageURI(Uri.fromFile(processed));
                        setImageView(processed.getAbsolutePath());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -232,7 +231,7 @@ public class EditFragment extends Fragment {
 
                     spinner.setAdapter(categoriaAdapter);
 
-                    if (produto != null) selecionarCategoria(produto.getCategory());
+                    if (produto != null) selecionarCategoria(produto.getCategoryId());
                     carregandoSpinner = false;
                 }
         );
@@ -245,7 +244,7 @@ public class EditFragment extends Fragment {
                 if (carregandoSpinner || produto == null) return;
 
                 Categoria c = listaCategorias.get(position);
-                produto.setCategory(c.getId() == -1 ? null : c.getNome());
+                produto.setCategoryId(c.getId() == -1 ? 0 : c.getId());
             }
 
             @Override
@@ -279,7 +278,7 @@ public class EditFragment extends Fragment {
         if (!editVM.hasNewImage()) {
            setImageView(p.getImagem());
         }
-        if (!carregandoSpinner) selecionarCategoria(p.getCategory());
+        if (!carregandoSpinner) selecionarCategoria(p.getCategoryId());
     }
 
     private void collectInputs() {
@@ -290,10 +289,9 @@ public class EditFragment extends Fragment {
         editVM.applyImageToProduto(produto);
     }
 
-    private void selecionarCategoria(String nome) {
-        if (nome == null) return;
+    private void selecionarCategoria(int id) {
         for (int i = 0; i < listaCategorias.size(); i++) {
-            if (nome.equals(listaCategorias.get(i).getNome())) {
+            if (listaCategorias.get(i).getId() == id) {
                 spinner.setSelection(i);
                 break;
             }
@@ -334,8 +332,8 @@ public class EditFragment extends Fragment {
         Glide.with(requireContext())
                 .load(imgUri)
                 .override(350, 350)
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .error(R.drawable.ic_person_24)
+                .placeholder(R.drawable.gradient_one)
+                .error(R.drawable.up_picture)
                 .into(imgUpload);
     }
 
