@@ -120,7 +120,7 @@ public class EditFragment extends Fragment {
                     File processed =
                             ImageUtils.processImage(requireContext(), uri, file);
                     editVM.onNewImage(processed);
-                    setImageView("file://" + processed);
+                    setImageView( processed.getAbsolutePath());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
