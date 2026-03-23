@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -57,6 +58,11 @@ android {
 }
 
 dependencies {
+
+    // 🔥 Firebase BOM (CORRETO)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
     //Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
@@ -65,6 +71,7 @@ dependencies {
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -75,7 +82,6 @@ dependencies {
     implementation(libs.navigation.ui)
 
 
-    implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
 
     implementation(libs.coordinatorlayout)

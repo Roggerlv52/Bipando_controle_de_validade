@@ -18,7 +18,7 @@ public class EditPresenterViewModel extends ViewModel {
 
     // 📦 Estado do produto
     private final MutableLiveData<Produto> produtoLive = new MutableLiveData<>();
-    private final MutableLiveData<String> categoriaSelecionada = new MutableLiveData<>();
+    private final MutableLiveData<Integer> categoriaSelecionadaId = new MutableLiveData<>();
 
     // -------------------- GETTERS --------------------
 
@@ -26,8 +26,8 @@ public class EditPresenterViewModel extends ViewModel {
         return produtoLive;
     }
 
-    public LiveData<String> getCategoriaSelecionada() {
-        return categoriaSelecionada;
+    public LiveData<Integer> getCategoriaSelecionada() {
+        return categoriaSelecionadaId;
     }
 
     public boolean hasNewImage() {
@@ -38,7 +38,7 @@ public class EditPresenterViewModel extends ViewModel {
 
     public void setProduto(@NonNull Produto produto) {
         produtoLive.setValue(produto);
-        categoriaSelecionada.setValue(produto.getCategory());
+        categoriaSelecionadaId.setValue(produto.getCategoryId());
         oldImagePath = produto.getImagem();
     }
 
@@ -119,12 +119,11 @@ public class EditPresenterViewModel extends ViewModel {
         }
     }
 
-    public void onCategoriaEscolhida(@Nullable String categoria) {
-        categoriaSelecionada.setValue(categoria);
-
+    public void onCategoriaEscolhida(int categoriaId) {
+        categoriaSelecionadaId.setValue(categoriaId);
         Produto p = produtoLive.getValue();
         if (p != null) {
-            p.setCategory(categoria);
+            p.setCategoryId(categoriaId);
             produtoLive.setValue(p);
         }
     }

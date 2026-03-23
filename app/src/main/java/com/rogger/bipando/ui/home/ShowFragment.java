@@ -2,7 +2,6 @@ package com.rogger.bipando.ui.home;
 
 import android.annotation.SuppressLint;
 import android.graphics.Matrix;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -52,7 +51,7 @@ public class ShowFragment extends Fragment {
 
         Glide.with(requireContext())
                 .load(uriString)
-                .placeholder(R.drawable.ic_launcher_foreground)
+                .placeholder(R.drawable.gradiente_two)
                 .error(R.drawable.ic_person_24)
                 .into(imageView);
         scaleDetector = new ScaleGestureDetector(requireContext(),

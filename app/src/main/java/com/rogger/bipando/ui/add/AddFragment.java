@@ -180,13 +180,8 @@ public class AddFragment extends Fragment {
 
                 Categoria selecionada = listaCategorias.get(position);
 
-                if (selecionada.getId() == -1) {
-                    // Placeholder → não salva
-                    produto.setCategory(null);
-                    return;
-                }
                 // ✅ Salva no produto
-                produto.setCategory(selecionada.getNome());
+                produto.setCategoryId(selecionada.getId());
             }
 
             @Override
@@ -280,11 +275,11 @@ public class AddFragment extends Fragment {
         startActivity(intent);
     }
 
-    private void selecionarCategoriaPorId(int categoriaId) {
+    private void selecionarCategoriaPorId(int id) {
         for (int i = 0; i < listaCategorias.size(); i++) {
-            if (listaCategorias.get(i).getId() == categoriaId) {
+            if (listaCategorias.get(i).getId() == id) {
                 spinner.setSelection(i);
-                produto.setCategory(listaCategorias.get(i).getNome());
+                produto.setCategoryId(id);
                 return;
             }
         }

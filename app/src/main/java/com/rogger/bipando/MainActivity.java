@@ -1,7 +1,6 @@
 package com.rogger.bipando;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +19,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.rogger.bipando.data.database.FirebaseDataSource;
 import com.rogger.bipando.data.model.Categoria;
 import com.rogger.bipando.databinding.ActivityMainBinding;
 import com.rogger.bipando.ui.base.BaseActivity;
@@ -36,6 +36,7 @@ public class MainActivity extends BaseActivity {
     private ImageView imgProfile;
     private TextView txtProfileName;
     private TextView txtProfileEmail;
+    private FirebaseDataSource firebaseDataSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class MainActivity extends BaseActivity {
         txtProfileName = viewProfile.findViewById(R.id.name_profile_navigation);
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
 
+        firebaseDataSource = FirebaseDataSource.getInstance();
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
         String profileUri = userInfo.get(2);
@@ -90,10 +92,11 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.menu_logout) {
+           // 🔑 Limpa cache de sessão e flags de sync antes de deslogar
+
             mAuth.signOut();
             SharedPreferencesManager.setLoginState(this, "state", false);
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
         if (id == R.id.menu_add_category) {
@@ -115,4 +118,9 @@ public class MainActivity extends BaseActivity {
                 || super.onSupportNavigateUp();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        firebaseDataSource.stopAllListeners();
+    }
 }

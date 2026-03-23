@@ -8,7 +8,6 @@ import static java.lang.Math.ceil;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -135,16 +134,16 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         }
         if (dias > n2) {
             holder.imageCircle.setImageResource(R.drawable.circle);
-            holder.txtLight.setText(String.valueOf(ds) +" dias");
+            holder.txtLight.setText(String.valueOf(ds) + " dias");
         }
 
         // Verificações de null para os campos de texto
         if (modelo.getNome() != null) {
             holder.txtTitle.setText(modelo.getNome());
         }
-        if (modelo.getAnotacoes() != null) {
-            holder.txtSubTitle.setText(modelo.getCategory());
-        }
+        String nomeCategoria = modelo.getNomeCategoria();
+        holder.txtSubTitle.setText(nomeCategoria != null ? nomeCategoria : "");
+
         if (modelo.getCodigoBarras() != null) {
             holder.txtBarcode.setText(modelo.getCodigoBarras());
         }
@@ -165,7 +164,9 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         holder.imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onImageClick(modelo.getImagem());
+                if (modelo.getImagem() != null) {
+                    mListener.onImageClick(modelo.getImagem());
+                }
             }
         });
     }

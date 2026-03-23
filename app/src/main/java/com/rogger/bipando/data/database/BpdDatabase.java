@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {Produto.class, Categoria.class}, version = 2, exportSchema = false)
+@Database(entities = {Produto.class, Categoria.class}, version = 3, exportSchema = false)
 public abstract class BpdDatabase extends RoomDatabase {
     public static final Executor databaseWriteExecutor = Executors.newSingleThreadExecutor();
 
@@ -27,7 +27,7 @@ public abstract class BpdDatabase extends RoomDatabase {
     public abstract CategoriaDao categoriaDao();
 
     // 🔑 Migration: adiciona coluna userId nas duas tabelas
-    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+    static final Migration MIGRATION_1_2 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL(

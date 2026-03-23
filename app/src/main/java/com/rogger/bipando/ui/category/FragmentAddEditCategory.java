@@ -62,6 +62,7 @@ public class FragmentAddEditCategory extends Fragment {
                         nome -> {
                             Categoria c = new Categoria();
                             c.setId(categoria.getId());
+                            c.setUserId(categoria.getUserId());
                             c.setNome(nome);
                             categoriaViewModel.update(c);
                         });
