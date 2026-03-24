@@ -11,32 +11,38 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bipando.data.dao.ProdutoDao;
 import com.rogger.bipando.data.database.BpdDatabase;
 import com.rogger.bipando.data.database.FirebaseDataSource;
+import com.rogger.bipando.data.database.FirebaseStorageDataSource;
 import com.rogger.bipando.data.database.LocalCache;
 import com.rogger.bipando.data.model.Produto;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * ProdutoRepository
  *
- * Orquestrador entre Room (local) e Firestore (nuvem).
+ * Orquestrador entre Room (local), Firestore (nuvem) e Storage (imagens).
  *
  * Estratégia:
  *  - Leitura: Room é a fonte de verdade para a UI (via LiveData).
  *             Firestore sincroniza em segundo plano e atualiza o Room.
  *  - Escrita: Room primeiro (UI reage instantaneamente),
- *             depois Firestore em paralelo.
+ *             depois Firestore + Storage em paralelo.
+ *  - Imagens: Upload para Storage ao inserir/atualizar com imagem.
+ *             Delete do Storage ao excluir permanentemente.
  *  - Cache:   LocalCache evita buscas desnecessárias no Firestore
  *             ao navegar entre telas. TTL = 5 minutos.
  */
 public class ProdutoRepository {
 
     private static final String TAG = "ProdutoRepository";
-    private final ProdutoDao           produtoDao;
-    private final FirebaseDataSource   firebaseDataSource;
-    private final LocalCache localCache;
-    private final String               userId;
+
+    private final ProdutoDao                produtoDao;
+    private final FirebaseDataSource        firebaseDataSource;
+    private final FirebaseStorageDataSource storageDataSource;
+    private final LocalCache                localCache;
+    private final String                    userId;
 
     // LiveData observada pela UI — vem do Room
     private final LiveData<List<Produto>> produtosAtivos;
@@ -46,12 +52,13 @@ public class ProdutoRepository {
         BpdDatabase db = BpdDatabase.getDatabase(application);
         produtoDao         = db.produtoDao();
         firebaseDataSource = FirebaseDataSource.getInstance();
+        storageDataSource  = FirebaseStorageDataSource.getInstance();
         localCache         = LocalCache.getInstance();
         userId             = FirebaseAuth.getInstance().getCurrentUser() != null
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : "";
 
-        produtosAtivos   = produtoDao.listarProdutosAtivos(userId);
+        produtosAtivos    = produtoDao.listarProdutosAtivos(userId);
         produtosDeletados = produtoDao.listarProdutosDeletados(userId);
 
         // Sincroniza dados do Firestore para o Room na primeira abertura
@@ -74,7 +81,6 @@ public class ProdutoRepository {
      * Útil para pull-to-refresh ou ao retornar para a tela principal.
      */
     public void sincronizarDoFirestore() {
-        // Verifica cache antes de ir ao Firestore
         List<Produto> cached = localCache.getProdutosAtivos();
         if (cached != null) {
             Log.d(TAG, "Cache válido, pulando busca no Firestore. " +
@@ -88,11 +94,10 @@ public class ProdutoRepository {
             public void onSuccess(List<Produto> produtos) {
                 Log.d(TAG, "Sincronizado " + produtos.size() + " produtos do Firestore");
                 localCache.setProdutosAtivos(produtos);
-                // Insere/atualiza no Room em background
                 BpdDatabase.databaseWriteExecutor.execute(() -> {
                     for (Produto p : produtos) {
                         p.setUserId(userId);
-                        produtoDao.insert(p); // REPLACE cuida de duplicatas
+                        produtoDao.insert(p);
                     }
                 });
             }
@@ -100,7 +105,6 @@ public class ProdutoRepository {
             @Override
             public void onFailure(Exception e) {
                 Log.e(TAG, "Erro ao sincronizar produtos: " + e.getMessage());
-                // UI continua funcionando com dados do Room local
             }
         });
     }
@@ -108,56 +112,151 @@ public class ProdutoRepository {
     // ======================== INSERIR ========================
 
     /**
-     * Insere produto no Room imediatamente (UI reage rápido)
-     * e salva no Firestore em paralelo.
+     * Insere produto no Room imediatamente e salva no Firestore em paralelo.
+     * Se o produto tiver imagem local, faz upload para o Storage
+     * e atualiza a URL no Room e no Firestore após o upload.
+     *
+     * @param produto    Produto a ser inserido
+     * @param callback   Callback de progresso e resultado do upload de imagem.
+     *                   Pode ser null se o produto não tiver imagem.
      */
-    public void inserir(Produto produto) {
+    public void inserir(Produto produto,
+                        FirebaseStorageDataSource.UploadCallback callback) {
         produto.setUserId(userId);
+
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             long newId = produtoDao.insert(produto);
             produto.setId((int) newId);
-
-            // Invalida cache para forçar re-sync na próxima navegação
             localCache.invalidarProdutos();
 
-            // Salva no Firestore com o ID real do Room
-            firebaseDataSource.salvarProduto(produto, produto.getImagem().getBytes(StandardCharsets.UTF_8),new FirebaseDataSource.FirestoreCallback<String>() {
-                @Override
-                public void onSuccess(String docId) {
-                    Log.d(TAG, "Produto sincronizado no Firestore: " + docId);
-                }
+            String caminhoImagemLocal = produto.getImagem();
+            boolean temImagem = caminhoImagemLocal != null && !caminhoImagemLocal.isEmpty();
 
-                @Override
-                public void onFailure(Exception e) {
-                    Log.e(TAG, "Falha ao salvar no Firestore (dado está no Room): " + e.getMessage());
-                    // Produto continua salvo localmente — será sincronizado depois
-                }
-            });
+            if (temImagem && callback != null) {
+                // Tem imagem: faz upload para o Storage
+                File arquivoLocal = new File(caminhoImagemLocal);
+                storageDataSource.uploadImagem(produto.getId(), arquivoLocal,
+                        new FirebaseStorageDataSource.UploadCallback() {
+                            @Override
+                            public void onProgresso(int porcentagem) {
+                                callback.onProgresso(porcentagem);
+                            }
+
+                            @Override
+                            public void onSucesso(String urlDownload) {
+                                // Atualiza produto com a URL do Storage
+                                produto.setImagem(urlDownload);
+
+                                // Persiste URL atualizada no Room
+                                BpdDatabase.databaseWriteExecutor.execute(() ->
+                                        produtoDao.update(produto)
+                                );
+
+                                // Salva no Firestore com a URL do Storage
+                                sincronizarProdutoNoFirestore(produto);
+
+                                callback.onSucesso(urlDownload);
+                            }
+
+                            @Override
+                            public void onErro(Exception e) {
+                                Log.e(TAG, "Falha no upload da imagem: " + e.getMessage());
+                                // Produto continua salvo localmente com caminho local
+                                sincronizarProdutoNoFirestore(produto);
+                                callback.onErro(e);
+                            }
+                        });
+            } else {
+                // Sem imagem: salva direto no Firestore
+                sincronizarProdutoNoFirestore(produto);
+            }
         });
+    }
+
+    /**
+     * Versão simplificada do inserir para produtos sem imagem.
+     */
+    public void inserir(Produto produto) {
+        inserir(produto, null);
     }
 
     // ======================== ATUALIZAR ========================
 
     /**
      * Atualiza produto no Room e no Firestore.
+     * Se houver nova imagem local, faz upload para o Storage,
+     * deleta a imagem antiga e atualiza a URL.
+     *
+     * @param produto         Produto com dados atualizados
+     * @param urlImagemAntiga URL da imagem anterior no Storage (para deletar). Null se não havia.
+     * @param callback        Callback de progresso e resultado. Null se não há nova imagem.
      */
-    public void atualizar(Produto produto) {
+    public void atualizar(Produto produto,
+                          String urlImagemAntiga,
+                          FirebaseStorageDataSource.UploadCallback callback) {
+
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.update(produto);
             localCache.invalidarProdutos();
 
-            firebaseDataSource.atualizarProduto(produto,produto.getImagem().getBytes(StandardCharsets.UTF_8), new FirebaseDataSource.FirestoreCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
-                    Log.d(TAG, "Produto atualizado no Firestore: " + produto.getId());
+            String caminhoImagem = produto.getImagem();
+            boolean ehUrlStorage = caminhoImagem != null && caminhoImagem.startsWith("https://");
+            boolean temImagemLocal = caminhoImagem != null
+                    && !caminhoImagem.isEmpty()
+                    && !ehUrlStorage;
+
+            if (temImagemLocal && callback != null) {
+                // Deleta imagem antiga do Storage (se existia)
+                if (urlImagemAntiga != null && !urlImagemAntiga.isEmpty()) {
+                    storageDataSource.deletarImagemPorUrl(urlImagemAntiga,
+                            new FirebaseStorageDataSource.StorageCallback() {
+                                @Override public void onSucesso() {
+                                    Log.d(TAG, "Imagem antiga deletada do Storage.");
+                                }
+                                @Override public void onErro(Exception e) {
+                                    Log.w(TAG, "Falha ao deletar imagem antiga: " + e.getMessage());
+                                }
+                            });
                 }
 
-                @Override
-                public void onFailure(Exception e) {
-                    Log.e(TAG, "Falha ao atualizar no Firestore: " + e.getMessage());
-                }
-            });
+                // Upload da nova imagem
+                File arquivoLocal = new File(caminhoImagem);
+                storageDataSource.uploadImagem(produto.getId(), arquivoLocal,
+                        new FirebaseStorageDataSource.UploadCallback() {
+                            @Override
+                            public void onProgresso(int porcentagem) {
+                                callback.onProgresso(porcentagem);
+                            }
+
+                            @Override
+                            public void onSucesso(String urlDownload) {
+                                produto.setImagem(urlDownload);
+                                BpdDatabase.databaseWriteExecutor.execute(() ->
+                                        produtoDao.update(produto)
+                                );
+                                sincronizarAtualizacaoNoFirestore(produto);
+                                callback.onSucesso(urlDownload);
+                            }
+
+                            @Override
+                            public void onErro(Exception e) {
+                                Log.e(TAG, "Falha no upload ao atualizar: " + e.getMessage());
+                                sincronizarAtualizacaoNoFirestore(produto);
+                                callback.onErro(e);
+                            }
+                        });
+            } else {
+                // Sem nova imagem: atualiza direto no Firestore
+                sincronizarAtualizacaoNoFirestore(produto);
+            }
         });
+    }
+
+    /**
+     * Versão simplificada do atualizar sem troca de imagem.
+     */
+    public void atualizar(Produto produto) {
+        atualizar(produto, null, null);
     }
 
     // ======================== LIXEIRA ========================
@@ -167,10 +266,15 @@ public class ProdutoRepository {
             produtoDao.moverParaLixeira(id, System.currentTimeMillis());
             localCache.invalidarProdutos();
 
-            firebaseDataSource.moverProdutoParaLixeira(id, new FirebaseDataSource.FirestoreCallback<Void>() {
-                @Override public void onSuccess(Void r) { Log.d(TAG, "Lixeira sync OK: " + id); }
-                @Override public void onFailure(Exception e) { Log.e(TAG, "Lixeira sync fail: " + e.getMessage()); }
-            });
+            firebaseDataSource.moverProdutoParaLixeira(id,
+                    new FirebaseDataSource.FirestoreCallback<Void>() {
+                        @Override public void onSuccess(Void r) {
+                            Log.d(TAG, "Lixeira sync OK: " + id);
+                        }
+                        @Override public void onFailure(Exception e) {
+                            Log.e(TAG, "Lixeira sync fail: " + e.getMessage());
+                        }
+                    });
         });
     }
 
@@ -179,24 +283,100 @@ public class ProdutoRepository {
             produtoDao.restaurarProduto(id);
             localCache.invalidarProdutos();
 
-            firebaseDataSource.restaurarProduto(id, new FirebaseDataSource.FirestoreCallback<Void>() {
-                @Override public void onSuccess(Void r) { Log.d(TAG, "Restaurar sync OK: " + id); }
-                @Override public void onFailure(Exception e) { Log.e(TAG, "Restaurar sync fail: " + e.getMessage()); }
-            });
+            firebaseDataSource.restaurarProduto(id,
+                    new FirebaseDataSource.FirestoreCallback<Void>() {
+                        @Override public void onSuccess(Void r) {
+                            Log.d(TAG, "Restaurar sync OK: " + id);
+                        }
+                        @Override public void onFailure(Exception e) {
+                            Log.e(TAG, "Restaurar sync fail: " + e.getMessage());
+                        }
+                    });
         });
     }
 
     // ======================== EXCLUIR ========================
 
-    public void excluirDefinitivoPorId(int id) {
+    /**
+     * Exclui produto permanentemente do Room, Firestore e Storage (imagem).
+     *
+     * @param id              ID do produto
+     * @param urlImagemStorage URL da imagem no Storage (para deletar). Null se não tinha imagem.
+     */
+    public void excluirDefinitivoPorId(int id, String urlImagemStorage) {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.removerPorId(id);
             localCache.invalidarProdutos();
 
-            firebaseDataSource.excluirProdutoPermanente(id, new FirebaseDataSource.FirestoreCallback<Void>() {
-                @Override public void onSuccess(Void r) { Log.d(TAG, "Exclusão sync OK: " + id); }
-                @Override public void onFailure(Exception e) { Log.e(TAG, "Exclusão sync fail: " + e.getMessage()); }
-            });
+            // Deleta do Firestore
+            firebaseDataSource.excluirProdutoPermanente(id,
+                    new FirebaseDataSource.FirestoreCallback<Void>() {
+                        @Override public void onSuccess(Void r) {
+                            Log.d(TAG, "Exclusão Firestore OK: " + id);
+                        }
+                        @Override public void onFailure(Exception e) {
+                            Log.e(TAG, "Exclusão Firestore fail: " + e.getMessage());
+                        }
+                    });
+
+            // Deleta imagem do Storage (se existia)
+            if (urlImagemStorage != null && !urlImagemStorage.isEmpty()) {
+                storageDataSource.deletarImagemPorUrl(urlImagemStorage,
+                        new FirebaseStorageDataSource.StorageCallback() {
+                            @Override public void onSucesso() {
+                                Log.d(TAG, "Imagem deletada do Storage: produto " + id);
+                            }
+                            @Override public void onErro(Exception e) {
+                                Log.e(TAG, "Falha ao deletar imagem do Storage: " + e.getMessage());
+                            }
+                        });
+            } else {
+                // Tenta deletar pelo ID mesmo sem URL conhecida
+                storageDataSource.deletarImagem(id,
+                        new FirebaseStorageDataSource.StorageCallback() {
+                            @Override public void onSucesso() {
+                                Log.d(TAG, "Imagem deletada do Storage pelo ID: " + id);
+                            }
+                            @Override public void onErro(Exception e) {
+                                Log.d(TAG, "Sem imagem no Storage para produto " + id);
+                            }
+                        });
+            }
+        });
+    }
+
+    /**
+     * Versão simplificada do excluir sem URL de imagem conhecida.
+     */
+    public void excluirDefinitivoPorId(int id) {
+        excluirDefinitivoPorId(id, null);
+    }
+
+    // ======================== HELPERS PRIVADOS ========================
+
+    private void sincronizarProdutoNoFirestore(Produto produto) {
+        firebaseDataSource.salvarProduto(produto, new FirebaseDataSource.FirestoreCallback<String>() {
+            @Override
+            public void onSuccess(String docId) {
+                Log.d(TAG, "Produto sincronizado no Firestore: " + docId);
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.e(TAG, "Falha ao salvar no Firestore: " + e.getMessage());
+            }
+        });
+    }
+
+    private void sincronizarAtualizacaoNoFirestore(Produto produto) {
+        firebaseDataSource.atualizarProduto(produto, new FirebaseDataSource.FirestoreCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Log.d(TAG, "Produto atualizado no Firestore: " + produto.getId());
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.e(TAG, "Falha ao atualizar no Firestore: " + e.getMessage());
+            }
         });
     }
 }
