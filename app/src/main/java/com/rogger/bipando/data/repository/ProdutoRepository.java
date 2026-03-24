@@ -1,5 +1,7 @@
 package com.rogger.bipando.data.repository;
 
+import static android.content.ContentValues.TAG;
+
 import android.app.Application;
 import android.util.Log;
 
@@ -12,6 +14,7 @@ import com.rogger.bipando.data.database.FirebaseDataSource;
 import com.rogger.bipando.data.database.LocalCache;
 import com.rogger.bipando.data.model.Produto;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -30,7 +33,6 @@ import java.util.List;
 public class ProdutoRepository {
 
     private static final String TAG = "ProdutoRepository";
-
     private final ProdutoDao           produtoDao;
     private final FirebaseDataSource   firebaseDataSource;
     private final LocalCache localCache;
@@ -119,7 +121,7 @@ public class ProdutoRepository {
             localCache.invalidarProdutos();
 
             // Salva no Firestore com o ID real do Room
-            firebaseDataSource.salvarProduto(produto, new FirebaseDataSource.FirestoreCallback<String>() {
+            firebaseDataSource.salvarProduto(produto, produto.getImagem().getBytes(StandardCharsets.UTF_8),new FirebaseDataSource.FirestoreCallback<String>() {
                 @Override
                 public void onSuccess(String docId) {
                     Log.d(TAG, "Produto sincronizado no Firestore: " + docId);
@@ -144,7 +146,7 @@ public class ProdutoRepository {
             produtoDao.update(produto);
             localCache.invalidarProdutos();
 
-            firebaseDataSource.atualizarProduto(produto, new FirebaseDataSource.FirestoreCallback<Void>() {
+            firebaseDataSource.atualizarProduto(produto,produto.getImagem().getBytes(StandardCharsets.UTF_8), new FirebaseDataSource.FirestoreCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
                     Log.d(TAG, "Produto atualizado no Firestore: " + produto.getId());
