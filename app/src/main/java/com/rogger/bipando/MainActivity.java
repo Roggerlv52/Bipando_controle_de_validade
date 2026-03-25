@@ -62,7 +62,8 @@ public class MainActivity extends BaseActivity {
         List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
         String profileUri = userInfo.get(2);
         if (profileUri != null) {
-            txtProfileName.setText(userInfo.get(0));
+            txtProfileName.setText(userInfo.get(1));
+            txtProfileEmail.setText(userInfo.get(3));
             Glide.with(this)
                     .load(profileUri)
                     .override(200, 200) // reduz tamanho

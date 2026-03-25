@@ -131,9 +131,13 @@ public class LoginActivity extends BaseActivity {
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
-                        Log.d("ACTIVITY_LOGIN", "signInWithCredential:success, User: " + user.getPhotoUrl());
+                        Log.d("ACTIVITY_LOGIN", "signInWithCredential:success, User: " + user.getEmail());
                         if (!Objects.equals(userId, user.getUid())){
-                            SharedPreferencesManager.saveUserInfo(this, user.getUid(), user.getDisplayName(), user.getPhotoUrl().toString());
+                            SharedPreferencesManager.saveUserInfo(this,
+                                    user.getUid(),
+                                    user.getDisplayName(),
+                                    user.getPhotoUrl().toString(),
+                                    user.getEmail());
                         }
                         SharedPreferencesManager.setLoginState(this, "state", true);
                         progressBar.setVisibility(View.GONE);

@@ -46,12 +46,13 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }
-    public static void saveUserInfo(Context context,String uid, String name, String imageUrl){
+    public static void saveUserInfo(Context context,String uid, String name, String imageUrl,String email){
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("userUid",uid);
         editor.putString("nameUser",name);
         editor.putString("profile_image_url",imageUrl );
+        editor.putString("email_",email);
         editor.apply();
     }
     public static List<String> getUserInfo(Context context){
@@ -59,7 +60,8 @@ public class SharedPreferencesManager {
         List<String> userInfo = new ArrayList<>();
         userInfo.add(sharedPreferences.getString("userUid",null));//  3
         userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));// 0
-        userInfo.add(sharedPreferences.getString("profile_image_url", null)); // 2
+        userInfo.add(sharedPreferences.getString("profile_image_url", null));
+        userInfo.add(sharedPreferences.getString("email_", "No email"));
         return userInfo;
     }
 }
