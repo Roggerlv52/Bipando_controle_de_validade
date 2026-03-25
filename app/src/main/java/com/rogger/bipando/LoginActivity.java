@@ -81,11 +81,7 @@ public class LoginActivity extends BaseActivity {
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
-        btn_gmail.setOnClickListener(
-                v -> {
-                    signIn();
-                    SharedPreferencesManager.setLoginState(this, "state", true);
-                });
+        btn_gmail.setOnClickListener(v -> signIn());
         startSlideshow();
     }
 
@@ -137,8 +133,9 @@ public class LoginActivity extends BaseActivity {
                         FirebaseUser user = mAuth.getCurrentUser();
                         Log.d("ACTIVITY_LOGIN", "signInWithCredential:success, User: " + user.getPhotoUrl());
                         if (!Objects.equals(userId, user.getUid())){
-                            SharedPreferencesManager.saveUserInfo(this,user.getDisplayName(),user.getUid(), user.getPhotoUrl().toString());
+                            SharedPreferencesManager.saveUserInfo(this, user.getUid(), user.getDisplayName(), user.getPhotoUrl().toString());
                         }
+                        SharedPreferencesManager.setLoginState(this, "state", true);
                         progressBar.setVisibility(View.GONE);
                         openMainActivity();
                     } else {

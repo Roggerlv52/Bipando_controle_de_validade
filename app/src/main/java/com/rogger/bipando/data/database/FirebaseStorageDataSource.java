@@ -88,8 +88,8 @@ public class FirebaseStorageDataSource {
      *       public void onErro(Exception e) { ... }
      *   });
      */
-    public void obterOAuth2Token(boolean forceRefresh,
-                                 @NonNull TokenCallback callback) {
+    public void obterFirebaseIdToken(boolean forceRefresh,
+                                   @NonNull TokenCallback callback) {
 
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
@@ -119,7 +119,7 @@ public class FirebaseStorageDataSource {
      *
      * Use este método quando não quiser gerenciar o forceRefresh manualmente.
      */
-    public void obterOAuth2TokenSeguro(@NonNull TokenCallback callback) {
+    public void obterFirebaseIdTokenSeguro(@NonNull TokenCallback callback) {
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
             callback.onErro(new IllegalStateException("Nenhum usuário autenticado."));
@@ -139,7 +139,7 @@ public class FirebaseStorageDataSource {
                     if (proximoDeExpirar) {
                         Log.d(TAG, "Token próximo de expirar. Forçando refresh...");
                         // Força novo token
-                        obterOAuth2Token(true, callback);
+                        obterFirebaseIdToken(true, callback);
                     } else {
                         Log.d(TAG, "Token válido. Expira em " +
                                 ((expiracaoMs - agoraMs) / 60000) + " min.");
@@ -173,13 +173,13 @@ public class FirebaseStorageDataSource {
                              @NonNull File arquivoLocal,
                              @NonNull UploadCallback callback) {
 
-        // Primeiro valida o token OAuth2
-        obterOAuth2TokenSeguro(new TokenCallback() {
+        // Primeiro valida o token de autenticação
+        obterFirebaseIdTokenSeguro(new TokenCallback() {
             @Override
             public void onTokenObtido(@NonNull String token) {
                 // Token válido → prossegue com o upload
-                Log.d(TAG, "Token validado. Iniciando upload do produto " + produtoId);
-                executarUpload(produtoId, arquivoLocal, callback);
+                Log.d(TAG, "Sessão validada. Iniciando upload do produto " + produtoId);
+                executarUpload(produtoId, arquivoLocal, callback, false);
             }
 
             @Override
@@ -196,7 +196,8 @@ public class FirebaseStorageDataSource {
      */
     private void executarUpload(int produtoId,
                                 @NonNull File arquivoLocal,
-                                @NonNull UploadCallback callback) {
+                                @NonNull UploadCallback callback,
+                                boolean isRetry) {
 
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
@@ -254,13 +255,17 @@ public class FirebaseStorageDataSource {
         uploadTask.addOnFailureListener(e -> {
             Log.e(TAG, "Falha no upload: " + e.getMessage());
 
-            // Se falhou por token expirado, tenta renovar e fazer o upload novamente (1 retry)
-            if (e.getMessage() != null && e.getMessage().contains("not authenticated")) {
-                Log.d(TAG, "Token expirado detectado. Tentando renovar e repetir upload...");
-                obterOAuth2Token(true, new TokenCallback() {
+            // Se falhou por falta de autenticação, tenta renovar e repetir o upload uma única vez
+            boolean isAuthError = (e instanceof com.google.firebase.storage.StorageException)
+                    && ((com.google.firebase.storage.StorageException) e).getErrorCode()
+                    == com.google.firebase.storage.StorageException.ERROR_NOT_AUTHENTICATED;
+
+            if (isAuthError && !isRetry) {
+                Log.d(TAG, "Erro de autenticação detectado. Tentando renovar sessão e repetir upload...");
+                obterFirebaseIdToken(true, new TokenCallback() {
                     @Override
                     public void onTokenObtido(@NonNull String token) {
-                        executarUpload(produtoId, arquivoLocal, callback);
+                        executarUpload(produtoId, arquivoLocal, callback, true);
                     }
 
                     @Override

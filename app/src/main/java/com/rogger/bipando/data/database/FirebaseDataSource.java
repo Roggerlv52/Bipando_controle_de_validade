@@ -59,7 +59,6 @@ public class FirebaseDataSource {
     private static final String FIELD_FIRESTORE_ID = "firestoreId";
 
     private final FirebaseFirestore db;
-    private final String uid;
 
     // Listeners ativos (para remover ao destruir)
     private ListenerRegistration produtosListener;
@@ -82,21 +81,24 @@ public class FirebaseDataSource {
 
     private FirebaseDataSource() {
         db  = FirebaseFirestore.getInstance();
-        uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
-                : "";
+    }
+
+    /** Obtém o UID do usuário logado dinamicamente */
+    private String getUid() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        return user != null ? user.getUid() : "";
     }
 
     // ======================== REFERÊNCIAS ========================
 
     /** Coleção de produtos do usuário atual */
     private com.google.firebase.firestore.CollectionReference produtosRef() {
-        return db.collection(COL_USERS).document(uid).collection(COL_PRODUTOS);
+        return db.collection(COL_USERS).document(getUid()).collection(COL_PRODUTOS);
     }
 
     /** Coleção de categorias do usuário atual */
     private com.google.firebase.firestore.CollectionReference categoriasRef() {
-        return db.collection(COL_USERS).document(uid).collection(COL_CATEGORIAS);
+        return db.collection(COL_USERS).document(getUid()).collection(COL_CATEGORIAS);
     }
 
     // ======================== PRODUTOS — ESCRITA ========================
@@ -110,7 +112,7 @@ public class FirebaseDataSource {
                               @NonNull FirestoreCallback<String> callback) {
 
         // Documento com ID determinístico baseado no uid do Room
-        String docId = uid + "_produto_" + produto.getId();
+        String docId = getUid() + "_produto_" + produto.getId();
         Map<String, Object> data = produtoParaMap(produto, docId);
 
         produtosRef().document(docId)
@@ -132,7 +134,7 @@ public class FirebaseDataSource {
     public void atualizarProduto(@NonNull Produto produto,
                                  @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_produto_" + produto.getId();
+        String docId = getUid() + "_produto_" + produto.getId();
         Map<String, Object> data = produtoParaMap(produto, docId);
 
         produtosRef().document(docId)
@@ -154,7 +156,7 @@ public class FirebaseDataSource {
     public void moverProdutoParaLixeira(int produtoId,
                                         @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_produto_" + produtoId;
+        String docId = getUid() + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
         update.put(FIELD_DELETED,    true);
         update.put(FIELD_DELETED_AT, System.currentTimeMillis());
@@ -171,7 +173,7 @@ public class FirebaseDataSource {
     public void restaurarProduto(int produtoId,
                                  @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_produto_" + produtoId;
+        String docId = getUid() + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
         update.put(FIELD_DELETED,    false);
         update.put(FIELD_DELETED_AT, null);
@@ -188,7 +190,7 @@ public class FirebaseDataSource {
     public void excluirProdutoPermanente(int produtoId,
                                          @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_produto_" + produtoId;
+        String docId = getUid() + "_produto_" + produtoId;
 
         produtosRef().document(docId)
                 .delete()
@@ -286,7 +288,7 @@ public class FirebaseDataSource {
     public void salvarCategoria(@NonNull Categoria categoria,
                                 @NonNull FirestoreCallback<String> callback) {
 
-        String docId = uid + "_categoria_" + categoria.getId();
+        String docId = getUid() + "_categoria_" + categoria.getId();
         Map<String, Object> data = categoriaParaMap(categoria, docId);
 
         categoriasRef().document(docId)
@@ -307,7 +309,7 @@ public class FirebaseDataSource {
     public void atualizarCategoria(@NonNull Categoria categoria,
                                    @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_categoria_" + categoria.getId();
+        String docId = getUid() + "_categoria_" + categoria.getId();
         Map<String, Object> data = categoriaParaMap(categoria, docId);
 
         categoriasRef().document(docId)
@@ -328,7 +330,7 @@ public class FirebaseDataSource {
     public void excluirCategoria(int categoriaId,
                                  @NonNull FirestoreCallback<Void> callback) {
 
-        String docId = uid + "_categoria_" + categoriaId;
+        String docId = getUid() + "_categoria_" + categoriaId;
 
         categoriasRef().document(docId)
                 .delete()
@@ -411,7 +413,7 @@ public class FirebaseDataSource {
         m.put(FIELD_IMAGEM,       p.getImagem());
         m.put(FIELD_DELETED,      p.isDeleted());
         m.put(FIELD_DELETED_AT,   p.getDeletedAt());
-        m.put(FIELD_USER_ID,      uid);
+        m.put(FIELD_USER_ID,      getUid());
         return m;
     }
 
@@ -440,7 +442,7 @@ public class FirebaseDataSource {
         m.put(FIELD_FIRESTORE_ID, docId);
         m.put(FIELD_ID,           c.getId());
         m.put(FIELD_NOME,         c.getNome());
-        m.put(FIELD_USER_ID,      uid);
+        m.put(FIELD_USER_ID,      getUid());
         return m;
     }
 
