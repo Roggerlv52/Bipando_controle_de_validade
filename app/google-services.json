@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "449087711343",
+    "firebase_url": "https://bipando-2f84a-default-rtdb.firebaseio.com",
     "project_id": "bipando-2f84a",
-    "storage_bucket": "bipando-2f84a.appspot.com"
+    "storage_bucket": "bipando-2f84a.firebasestorage.app"
   },
   "client": [
     {
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "449087711343-nsvdea2o7gj6eehnuvfi660ce243g9bs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rogger.bipando",
+            "certificate_hash": "ef0abbda6e4904ed0991fe000025e21381ca275c"
+          }
+        },
         {
           "client_id": "449087711343-k16461buvfn53c0cvte33sdkdsqbvpim.apps.googleusercontent.com",
           "client_type": 3

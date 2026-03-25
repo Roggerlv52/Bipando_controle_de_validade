@@ -97,6 +97,7 @@ public class MainActivity extends BaseActivity {
 
             mAuth.signOut();
             SharedPreferencesManager.setLoginState(this, "state", false);
+            SharedPreferencesManager.clearUserInfo(this);
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }

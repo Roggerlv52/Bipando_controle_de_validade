@@ -129,12 +129,17 @@ public class LoginActivity extends BaseActivity {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        Log.d("ACTIVITY_LOGIN", "signInWithCredential:success, User: " + user.getEmail());
-                        if (!Objects.equals(userId, user.getUid())){
-                            SharedPreferencesManager.saveUserInfo(this,
-                                    user.getUid(),
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                Log.d("ACTIVITY_LOGIN", "signInWithCredential:success");
+                                Log.d("ACTIVITY_LOGIN", "name: " + user.getDisplayName());
+                                Log.d("ACTIVITY_LOGIN", "Email: " + user.getEmail());
+                                Log.d("ACTIVITY_LOGIN", "Phone: " + user.getPhoneNumber());
+                                Log.d("ACTIVITY_LOGIN", "Photo: " + user.getPhotoUrl());
+                            }
+                            if (user != null && !Objects.equals(userId, user.getUid())){
+                            SharedPreferencesManager.saveUserInfo(this, user.getUid(),
                                     user.getDisplayName(),
                                     user.getPhotoUrl().toString(),
                                     user.getEmail());
@@ -143,7 +148,7 @@ public class LoginActivity extends BaseActivity {
                         progressBar.setVisibility(View.GONE);
                         openMainActivity();
                     } else {
-                        Log.e("LoginActivity", "signInWithCredential:failure", task.getException());
+                        Log.e("LoginActivity_", "signInWithCredential:failure", task.getException());
                         Toast.makeText(this, R.string.error_login_gmail, Toast.LENGTH_LONG).show();
                     }
                 });

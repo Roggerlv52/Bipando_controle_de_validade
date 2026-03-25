@@ -64,4 +64,11 @@ public class SharedPreferencesManager {
         userInfo.add(sharedPreferences.getString("email_", "No email"));
         return userInfo;
     }
+    public static void clearUserInfo(Context context){
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear(); // remove tudo
+        editor.apply();
+    }
+
 }
