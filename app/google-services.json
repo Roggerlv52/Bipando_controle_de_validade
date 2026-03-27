@@ -1,42 +1,33 @@
 {
   "project_info": {
-    "project_number": "449087711343",
-    "firebase_url": "https://bipando-2f84a-default-rtdb.firebaseio.com",
-    "project_id": "bipando-2f84a",
-    "storage_bucket": "bipando-2f84a.firebasestorage.app"
+    "project_number": "959834005776",
+    "project_id": "stock-230b7",
+    "storage_bucket": "stock-230b7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:449087711343:android:11702ac8205ae5a92b859a",
+        "mobilesdk_app_id": "1:959834005776:android:2d36bbc8d19996f535c595",
         "android_client_info": {
-          "package_name": "com.rogger.bipando"
+          "package_name": "com.rogger.bp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "449087711343-nsvdea2o7gj6eehnuvfi660ce243g9bs.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.rogger.bipando",
-            "certificate_hash": "ef0abbda6e4904ed0991fe000025e21381ca275c"
-          }
-        },
-        {
-          "client_id": "449087711343-k16461buvfn53c0cvte33sdkdsqbvpim.apps.googleusercontent.com",
+          "client_id": "959834005776-2847l3lafbdhjak2nh2klk4j86vo0ouh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCVbUPEDJGF2Lq6R9EDxdIPJCup1_4R8fU"
+          "current_key": "AIzaSyAGUg4wWOWHgh7-j3SSu9yjRDZHM2-t6k4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "449087711343-k16461buvfn53c0cvte33sdkdsqbvpim.apps.googleusercontent.com",
+              "client_id": "959834005776-2847l3lafbdhjak2nh2klk4j86vo0ouh.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

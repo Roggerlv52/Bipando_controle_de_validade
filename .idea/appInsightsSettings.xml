@@ -9,17 +9,11 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.rogger.bipando" />
-                  <option name="mobileSdkAppId" value="1:449087711343:android:11702ac8205ae5a92b859a" />
-                  <option name="projectId" value="bipando-2f84a" />
-                  <option name="projectNumber" value="449087711343" />
+                  <option name="appId" value="com.rogger.bp" />
+                  <option name="mobileSdkAppId" value="1:959834005776:android:2d36bbc8d19996f535c595" />
+                  <option name="projectId" value="stock-230b7" />
+                  <option name="projectNumber" value="959834005776" />
                 </ConnectionSetting>
-              </option>
-              <option name="failureTypes">
-                <list>
-                  <option value="FATAL" />
-                  <option value="NON_FATAL" />
-                </list>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
               <option name="timeIntervalDays" value="THIRTY_DAYS" />

@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.rogger.bipando.ui.home.HomeFragment"
+        android:name="com.rogger.bp.ui.home.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home">
         <action
@@ -19,7 +19,7 @@
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"
-        android:name="com.rogger.bipando.ui.edit.EditFragment"
+        android:name="com.rogger.bp.ui.edit.EditFragment"
         android:label="@string/edit"
         tools:layout="@layout/fragment_edit">
         <argument
@@ -44,7 +44,7 @@
     </fragment>
     <fragment
         android:id="@+id/nav_add_fragment"
-        android:name="com.rogger.bipando.ui.add.AddFragment"
+        android:name="com.rogger.bp.ui.add.AddFragment"
         android:label="Adicionar Produto">
 
         <argument
@@ -65,7 +65,7 @@
     </fragment>
     <fragment
         android:id="@+id/nav_show_fragment"
-        android:name="com.rogger.bipando.ui.home.ShowFragment"
+        android:name="com.rogger.bp.ui.home.ShowFragment"
         android:label=""
         tools:layout="@layout/fragment_show">
         <argument
@@ -74,12 +74,12 @@
     </fragment>
     <fragment
         android:id="@+id/nav_item_deleted_fragment"
-        android:name="com.rogger.bipando.ui.deleteitem.ItemDeletedFragment"
+        android:name="com.rogger.bp.ui.deleteitem.ItemDeletedFragment"
         android:label="@string/delete_item"
         tools:layout="@layout/fragment_item_deleted" />
     <fragment
         android:id="@+id/nav_barcode_scan_fragment"
-        android:name="com.rogger.bipando.ui.scanner.BarcodeScanFragment"
+        android:name="com.rogger.bp.ui.scanner.BarcodeScanFragment"
         android:label="Scanner">
         <argument
             android:name="categoria_nome"
@@ -92,7 +92,7 @@
     </fragment>
     <fragment
         android:id="@+id/nav_barcode_show"
-        android:name="com.rogger.bipando.ui.edit.ImageBarcodeShow"
+        android:name="com.rogger.bp.ui.edit.ImageBarcodeShow"
         android:label="Codigo de barras">
         <argument
             android:name="barcode"
@@ -102,18 +102,18 @@
 
     <fragment
         android:id="@+id/nav_gallery_fragment"
-        android:name="com.rogger.bipando.ui.gallery.GalleryFragment"
+        android:name="com.rogger.bp.ui.gallery.GalleryFragment"
         android:label="@string/menu_gallery"
         tools:layout="@layout/fragment_gallery" />
     <fragment
         android:id="@+id/nav_category"
-        android:name="com.rogger.bipando.ui.category.FragmentAddEditCategory"
+        android:name="com.rogger.bp.ui.category.FragmentAddEditCategory"
         android:label="@string/category"
         tools:layout="@layout/fragment_add_edit_category" />
 
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.rogger.bipando.ui.profile.ProfileFragment"
+        android:name="com.rogger.bp.ui.profile.ProfileFragment"
         android:label="@string/menu_profile_config"
         tools:layout="@layout/fragment_profile">
         <action
@@ -122,7 +122,7 @@
     </fragment>
     <activity
         android:id="@+id/mainActivity"
-        android:name="com.rogger.bipando.MainActivity"
+        android:name="com.rogger.bp.MainActivity"
         android:label="app_bar_main"
         tools:layout="@layout/app_bar_main" />
 </navigation>

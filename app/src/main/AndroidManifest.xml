@@ -34,13 +34,13 @@
         android:theme="@style/Theme.Bpd"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.rogger.bp.MainActivity"
             android:exported="false"
             android:theme="@style/Theme.Bpd">
 
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name="com.rogger.bp.LoginActivity"
             android:exported="true">
 
             <intent-filter>
@@ -49,7 +49,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.scanner.ImageBarcode"
+            android:name="com.rogger.bp.ui.scanner.ImageBarcode"
             android:exported="false" />
 
         <provider

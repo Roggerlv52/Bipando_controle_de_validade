@@ -23,11 +23,11 @@ android {
             }
         }
     }
-    namespace = "com.rogger.bipando"
+    namespace = "com.rogger.bp"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.rogger.bipando"
+        applicationId = "com.rogger.bp"
         minSdk = 28
         targetSdk = 34
         versionCode = 1
@@ -49,8 +49,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding = true
