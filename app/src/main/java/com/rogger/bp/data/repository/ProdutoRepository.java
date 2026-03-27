@@ -128,7 +128,6 @@ public class ProdutoRepository {
             localCache.invalidarProdutos();
 
             String caminhoImagemLocal = produto.getImagem();
-            Log.d("ProdutoRepository","Caminho da imagem->"+caminhoImagemLocal);
             boolean temImagem = caminhoImagemLocal != null && !caminhoImagemLocal.isEmpty();
 
             if (temImagem && callback != null) {
