@@ -102,14 +102,20 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         // Inicializar o CategoriaViewModel
         categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
 
-        // Observar as categorias
-        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categorias -> {
-            if (categorias == null || categorias.isEmpty()) {
-                // Sem categorias, mostrar opção de criar
-                mostrarDialogoAdicionarCategoria();
-            } else {
-                // Mostrar diálogo com spinner de categorias
-                mostrarDialogoComSpinner(categorias);
+        // Observar as categorias apenas uma vez para evitar múltiplas aberturas de diálogo
+        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<List<Categoria>>() {
+            @Override
+            public void onChanged(List<Categoria> categorias) {
+                // Remove o observer imediatamente para que o diálogo não abra novamente se a lista mudar
+                categoriaViewModel.getCategories().removeObserver(this);
+
+                if (categorias == null || categorias.isEmpty()) {
+                    // Sem categorias, mostrar opção de criar
+                    mostrarDialogoAdicionarCategoria();
+                } else {
+                    // Mostrar diálogo com spinner de categorias
+                    mostrarDialogoComSpinner(categorias);
+                }
             }
         });
     }
@@ -148,14 +154,20 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
                     novaCategoria.setNome(nomeCat);
                     categoriaViewModel.insert(novaCategoria);
 
-                    // Aguardar um pouco para a categoria ser inserida e depois ir para o scanner
-                    // Observar novamente as categorias para obter o ID da categoria criada
-                    categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categorias -> {
-                        if (categorias != null && !categorias.isEmpty()) {
-                            // Procurar a categoria criada (última da lista)
-                            Categoria categoriaCriada = categorias.get(categorias.size() - 1);
-                            if (categoriaCriada.getNome().equals(nomeCat)) {
-                                irParaScanner(categoriaCriada.getId());
+                    // Aguardar a inserção e navegar para o scanner com a nova categoria
+                    categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<List<Categoria>>() {
+                        @Override
+                        public void onChanged(List<Categoria> categorias) {
+                            if (categorias != null && !categorias.isEmpty()) {
+                                // Procurar a categoria criada pelo nome
+                                for (Categoria c : categorias) {
+                                    if (c.getNome().equals(nomeCat)) {
+                                        // Remove o observer antes de navegar
+                                        categoriaViewModel.getCategories().removeObserver(this);
+                                        irParaScanner(c.getId());
+                                        break;
+                                    }
+                                }
                             }
                         }
                     });
@@ -169,7 +181,9 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     private void irParaScanner(int categoriaId) {
         Bundle bundle = new Bundle();
         bundle.putInt("categoria_id", categoriaId);
-        Navigation.findNavController(requireView()).navigate(R.id.nav_barcode_scan_fragment, bundle);
+        if (getView() != null) {
+            Navigation.findNavController(requireView()).navigate(R.id.nav_barcode_scan_fragment, bundle);
+        }
     }
 
     private void atualizarView(List<Produto> dados) {
