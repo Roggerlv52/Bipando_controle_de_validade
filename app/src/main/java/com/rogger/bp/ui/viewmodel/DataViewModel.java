@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.rogger.bp.data.database.FirebaseStorageDataSource;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.data.repository.ProdutoRepository;
 
@@ -44,11 +45,19 @@ public class DataViewModel extends AndroidViewModel {
 
 
     public void insert(Produto p) {
-        repository.inserir(p);
+        repository.inserir(p, null);
+    }
+
+    public void insert(Produto p, FirebaseStorageDataSource.UploadCallback callback) {
+        repository.inserir(p, callback);
     }
 
     public void update(Produto p) {
-        repository.atualizar(p);
+        repository.atualizar(p, null, null);
+    }
+
+    public void update(Produto p, String urlAntiga, FirebaseStorageDataSource.UploadCallback callback) {
+        repository.atualizar(p, urlAntiga, callback);
     }
 
     public void moverParaLixeira(int id) {
@@ -66,4 +75,3 @@ public class DataViewModel extends AndroidViewModel {
     }
 
 }
-
