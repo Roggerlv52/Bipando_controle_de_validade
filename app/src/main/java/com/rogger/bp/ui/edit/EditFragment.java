@@ -3,6 +3,7 @@ package com.rogger.bp.ui.edit;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,6 +29,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
+import com.rogger.bp.data.database.FirebaseStorageDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.ui.base.DialogUtil;
@@ -148,7 +150,7 @@ public class EditFragment extends Fragment {
                                 ImageUtils.processImage(requireContext(), uri, out);
 
                         editVM.onNewImage(processed);
-                       setImageView(processed.getAbsolutePath());
+                        setImageView(processed.getAbsolutePath());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -188,8 +190,28 @@ public class EditFragment extends Fragment {
         btnSave.setOnClickListener(v -> {
             if (!Utils.validEditText(edtName)) return;
 
+            // Pega a URL antiga ANTES de aplicar a nova imagem local
+            String urlAntiga = editVM.getOldImagePath();
+
             collectInputs();
-            dataViewModel.update(produto);
+
+            // Agora chama o update com callback para garantir o upload para o Storage
+            dataViewModel.update(produto, urlAntiga, new FirebaseStorageDataSource.UploadCallback() {
+                @Override
+                public void onProgresso(int porcentagem) {
+                    Log.d("EditFragment", "Upload progresso: " + porcentagem + "%");
+                }
+
+                @Override
+                public void onSucesso(String urlDownload) {
+                    Log.d("EditFragment", "Upload concluído: " + urlDownload);
+                }
+
+                @Override
+                public void onErro(Exception e) {
+                    Log.e("EditFragment", "Falha no upload da imagem: " + e.getMessage());
+                }
+            });
 
             Toast.makeText(getContext(),
                     "Produto salvo com sucesso",

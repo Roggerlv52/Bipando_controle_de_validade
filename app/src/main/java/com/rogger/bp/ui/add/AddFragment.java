@@ -29,6 +29,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.rogger.bp.R;
+import com.rogger.bp.data.database.FirebaseStorageDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.ui.base.DialogUtil;
@@ -265,8 +266,23 @@ public class AddFragment extends Fragment {
         if (photoFile != null) {
             produto.setImagem(photoFile.getAbsolutePath());
         }
-        // ✅ Só salva imagem se o usuário selecionou
-        dataViewModel.insert(produto);
+        // ✅ Só salva imagem se o usuário selecionou, passando o callback para upload no Storage
+        dataViewModel.insert(produto, new FirebaseStorageDataSource.UploadCallback() {
+            @Override
+            public void onProgresso(int porcentagem) {
+                Log.d("AddFragment", "Upload progresso: " + porcentagem + "%");
+            }
+
+            @Override
+            public void onSucesso(String urlDownload) {
+                Log.d("AddFragment", "Upload concluído: " + urlDownload);
+            }
+
+            @Override
+            public void onErro(Exception e) {
+                Log.e("AddFragment", "Falha no upload da imagem: " + e.getMessage());
+            }
+        });
     }
 
     private void startImageBarcode(String barcode) {
