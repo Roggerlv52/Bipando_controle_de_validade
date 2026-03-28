@@ -5,6 +5,8 @@ import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -14,14 +16,13 @@ import java.util.concurrent.TimeUnit;
 public class NotificationScheduler {
     private static final String TAG = "NotificationScheduler";
     private static final String WORK_NAME = "expiration_worker";
+    private static final String ONE_TIME_WORK_NAME = "expiration_worker_immediate";
 
     /**
      * Inicia o agendamento das notificações de validade.
-     * O agendamento é feito para rodar uma vez por dia.
      */
     public static void start(Context c) {
-        // Horário padrão para execução: 09:00 da manhã (ou o horário que preferir)
-        // Você pode tornar isso configurável se desejar.
+        // Horário padrão para execução (pode ser configurado via UI no futuro)
         int hour = 9;
         int minute = 0;
 
@@ -31,10 +32,11 @@ public class NotificationScheduler {
         NotificationUtil.createChannel(c);
 
         Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(false) // Mudado para false para ser mais resiliente
+                .setRequiresBatteryNotLow(false)
                 .build();
 
-        PeriodicWorkRequest work =
+        // 1. Agendamento Periódico (Diário)
+        PeriodicWorkRequest periodicWork =
                 new PeriodicWorkRequest.Builder(
                         ExpirationWorker.class,
                         1,
@@ -45,12 +47,25 @@ public class NotificationScheduler {
                         .addTag(TAG)
                         .build();
 
-        Log.d(TAG, "Agendando worker para rodar em " + (initialDelay / 60000) + " minutos.");
+        Log.d(TAG, "Agendando worker periódico para rodar em " + (initialDelay / 60000) + " minutos.");
 
+        // ✅ Usando UPDATE para que mudanças no código/configuração reflitam imediatamente
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP, // Mantém o agendamento existente se já houver um
-                work
+                ExistingPeriodicWorkPolicy.UPDATE, 
+                periodicWork
+        );
+
+        // 2. Agendamento Imediato (Apenas para testes ou primeira execução)
+        // Isso ajuda a ver se a lógica está funcionando sem esperar o delay do sistema
+        OneTimeWorkRequest immediateWork = new OneTimeWorkRequest.Builder(ExpirationWorker.class)
+                .setConstraints(constraints)
+                .build();
+        
+        WorkManager.getInstance(c).enqueueUniqueWork(
+                ONE_TIME_WORK_NAME,
+                ExistingWorkPolicy.KEEP, // Só roda se não houver um imediato pendente
+                immediateWork
         );
     }
 
@@ -60,11 +75,9 @@ public class NotificationScheduler {
     public static void stop(Context c) {
         Log.d(TAG, "Cancelando agendamento de notificações.");
         WorkManager.getInstance(c).cancelUniqueWork(WORK_NAME);
+        WorkManager.getInstance(c).cancelUniqueWork(ONE_TIME_WORK_NAME);
     }
 
-    /**
-     * Calcula quanto tempo falta até a próxima execução no horário escolhido.
-     */
     private static long calculateInitialDelay(int hour, int minute) {
         Calendar now = Calendar.getInstance();
         Calendar nextRun = Calendar.getInstance();
