@@ -16,12 +16,12 @@ public class NotificationScheduler {
     private static final String WORK_NAME = "expiration_worker";
 
     /**
-     * Inicia o agendamento das notificações de validade no horário definido.
+     * Inicia o agendamento das notificações de validade no horário definido pelo usuário.
      */
     public static void start(Context c) {
-        // 🕒 DEFINA O HORÁRIO AQUI (Ex: 14:52)
-        int hour = 14;
-        int minute = 52;
+        // ✅ Agora busca o horário dinamicamente das preferências
+        int hour = NotificationPrefs.getHour(c);
+        int minute = NotificationPrefs.getMinute(c);
 
         long initialDelay = calculateInitialDelay(hour, minute);
         
@@ -44,7 +44,7 @@ public class NotificationScheduler {
                         .addTag(TAG)
                         .build();
 
-        Log.d(TAG, "Agendando verificação para as " + hour + ":" + minute + 
+        Log.d(TAG, "Agendando verificação para as " + String.format("%02d:%02d", hour, minute) + 
               ". O worker rodará em " + (initialDelay / 60000) + " minutos.");
 
         // ✅ Usando UPDATE para que a mudança de horário seja aplicada imediatamente

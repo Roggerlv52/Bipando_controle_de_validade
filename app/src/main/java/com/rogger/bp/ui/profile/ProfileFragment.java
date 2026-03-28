@@ -1,6 +1,7 @@
 package com.rogger.bp.ui.profile;
 
 import android.annotation.SuppressLint;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,10 +24,13 @@ import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 
 import java.util.List;
+import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private SwitchMaterial box1, box2, box3, box4, boxBeep, swNotification;
+    private TextView txtNotifTime;
+    private View btnSetNotifTime;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,6 +60,9 @@ public class ProfileFragment extends Fragment {
         box4 = view.findViewById(R.id.box_profile_4);
         boxBeep = view.findViewById(R.id.box_off_beep);
         swNotification = view.findViewById(R.id.swNotification);
+        
+        btnSetNotifTime = view.findViewById(R.id.btnSetNotifTime);
+        txtNotifTime = view.findViewById(R.id.txtNotifTime);
 
         ImageView circleImageView = view.findViewById(R.id.profileImage);
         TextView txtName = view.findViewById(R.id.userNameProfile);
@@ -67,6 +74,9 @@ public class ProfileFragment extends Fragment {
         sliderYellow.setValue(NotificationPrefs.getDays(requireContext()));
 
         txtYellow.setText((int) sliderYellow.getValue() + " dias");
+        
+        // Atualiza o texto do horário com o valor salvo
+        updateTimeText();
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(requireContext());
         String name = userInfo.get(1);
@@ -106,6 +116,8 @@ public class ProfileFragment extends Fragment {
             }
         });
 
+        btnSetNotifTime.setOnClickListener(v -> showTimePickerDialog());
+
         CompoundButton.OnCheckedChangeListener listener = this::onCheckedChanged;
         CompoundButton.OnCheckedChangeListener listenerBeep = this::onCheckedBeep;
         // Adicionando o listener aos CheckBoxes
@@ -123,6 +135,29 @@ public class ProfileFragment extends Fragment {
         });
 
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    private void showTimePickerDialog() {
+        int hour = NotificationPrefs.getHour(requireContext());
+        int minute = NotificationPrefs.getMinute(requireContext());
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(requireContext(),
+                (view, hourOfDay, minuteOfHour) -> {
+                    NotificationPrefs.saveTime(requireContext(), hourOfDay, minuteOfHour);
+                    updateTimeText();
+                    
+                    // Se as notificações estiverem ativadas, reinicia o agendador para aplicar o novo horário
+                    if (NotificationPrefs.getAlert(requireContext())) {
+                        NotificationScheduler.start(requireContext());
+                    }
+                }, hour, minute, true);
+        timePickerDialog.show();
+    }
+
+    private void updateTimeText() {
+        int hour = NotificationPrefs.getHour(requireContext());
+        int minute = NotificationPrefs.getMinute(requireContext());
+        txtNotifTime.setText(String.format(Locale.getDefault(), "%02d:%02d", hour, minute));
     }
 
     private void onCheckedBeep(CompoundButton compoundButton, boolean beep) {
