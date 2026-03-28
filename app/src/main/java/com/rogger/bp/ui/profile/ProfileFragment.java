@@ -69,7 +69,7 @@ public class ProfileFragment extends Fragment {
         txtYellow.setText((int) sliderYellow.getValue() + " dias");
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(requireContext());
-        String name = userInfo.get(0);
+        String name = userInfo.get(1);
         txtName.setText(name);
         txtTitle.setText(name);
 
