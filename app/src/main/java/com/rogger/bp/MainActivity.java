@@ -83,7 +83,7 @@ public class MainActivity extends BaseActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         // ✅ Inicia o agendamento de notificações de validade
-        NotificationScheduler.start(this);
+        NotificationScheduler.start(MainActivity.this);
     }
 
     @Override

@@ -20,8 +20,8 @@ public class NotificationScheduler {
      */
     public static void start(Context c) {
         // 🕒 DEFINA O HORÁRIO AQUI (Ex: 14:52)
-        int hour = 15;
-        int minute = 28;
+        int hour = NotificationPrefs.getHour(c);
+        int minute = NotificationPrefs.getMinute(c);
 
         long initialDelay = calculateInitialDelay(hour, minute);
         
