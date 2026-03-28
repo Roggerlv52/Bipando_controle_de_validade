@@ -28,6 +28,14 @@ public interface ProdutoDao {
             "ORDER BY p.timestamp ASC")
     LiveData<List<Produto>> listarProdutosAtivos(String userId);
 
+    // ✅ Versão síncrona para o ExpirationWorker
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.deleted = 0 AND p.userId = :userId " +
+            "ORDER BY p.timestamp ASC")
+    List<Produto> listarProdutosAtivosSync(String userId);
+
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +

@@ -1,6 +1,7 @@
 package com.rogger.bp.notification;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -11,15 +12,26 @@ import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 public class NotificationScheduler {
+    private static final String TAG = "NotificationScheduler";
+    private static final String WORK_NAME = "expiration_worker";
 
+    /**
+     * Inicia o agendamento das notificações de validade.
+     * O agendamento é feito para rodar uma vez por dia.
+     */
     public static void start(Context c) {
-        int hour = 23;
-        int minute = 44;
+        // Horário padrão para execução: 09:00 da manhã (ou o horário que preferir)
+        // Você pode tornar isso configurável se desejar.
+        int hour = 9;
+        int minute = 0;
 
         long initialDelay = calculateInitialDelay(hour, minute);
+        
+        // Garante que o canal de notificação esteja criado
         NotificationUtil.createChannel(c);
+
         Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
+                .setRequiresBatteryNotLow(false) // Mudado para false para ser mais resiliente
                 .build();
 
         PeriodicWorkRequest work =
@@ -30,22 +42,28 @@ public class NotificationScheduler {
                 )
                         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
                         .setConstraints(constraints)
+                        .addTag(TAG)
                         .build();
 
+        Log.d(TAG, "Agendando worker para rodar em " + (initialDelay / 60000) + " minutos.");
+
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
-                "expiration_worker",
-                ExistingPeriodicWorkPolicy.UPDATE,
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP, // Mantém o agendamento existente se já houver um
                 work
         );
     }
 
+    /**
+     * Para o agendamento das notificações.
+     */
     public static void stop(Context c) {
-        WorkManager.getInstance(c)
-                .cancelUniqueWork("expiration_worker");
+        Log.d(TAG, "Cancelando agendamento de notificações.");
+        WorkManager.getInstance(c).cancelUniqueWork(WORK_NAME);
     }
 
     /**
-     * Calcula quanto tempo falta até a próxima execução no horário escolhido
+     * Calcula quanto tempo falta até a próxima execução no horário escolhido.
      */
     private static long calculateInitialDelay(int hour, int minute) {
         Calendar now = Calendar.getInstance();
@@ -54,6 +72,7 @@ public class NotificationScheduler {
         nextRun.set(Calendar.HOUR_OF_DAY, hour);
         nextRun.set(Calendar.MINUTE, minute);
         nextRun.set(Calendar.SECOND, 0);
+        nextRun.set(Calendar.MILLISECOND, 0);
 
         if (nextRun.before(now)) {
             nextRun.add(Calendar.DAY_OF_MONTH, 1);
@@ -62,4 +81,3 @@ public class NotificationScheduler {
         return nextRun.getTimeInMillis() - now.getTimeInMillis();
     }
 }
-
