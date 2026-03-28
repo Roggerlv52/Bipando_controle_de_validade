@@ -16,47 +16,56 @@ public class NotificationScheduler {
     private static final String WORK_NAME = "expiration_worker";
 
     /**
-     * Inicia o agendamento das notificações de validade no horário definido.
+     * Agenda (ou reagenda) o worker diário no horário definido pelo usuário.
+     *
+     * Deve ser chamado:
+     *  - ao ativar o switch de notificações
+     *  - ao alterar o horário no TimePicker
+     *  - ao alterar os dias de alerta no slider     ← BUG 1 corrigido
+     *  - no MainActivity.onCreate() se notificações estiverem ativas
+     *
+     * Usa CANCEL_AND_REENQUEUE para garantir que o novo initialDelay
+     * seja respeitado imediatamente, sem esperar o ciclo anterior acabar.
+     * Isso corrige o drift de horário (Bug 2).
      */
     public static void start(Context c) {
-        // 🕒 DEFINA O HORÁRIO AQUI (Ex: 14:52)
-        int hour = 15;
-        int minute = 28;
+        // Garante que o canal de notificação existe ANTES de agendar
+        // (Bug 5 corrigido: canal criado aqui e na Application)
+        NotificationUtil.createChannel(c);
+
+        int hour   = NotificationPrefs.getHour(c);
+        int minute = NotificationPrefs.getMinute(c);
 
         long initialDelay = calculateInitialDelay(hour, minute);
-        
-        // Garante que o canal de notificação esteja criado
-        NotificationUtil.createChannel(c);
 
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(false)
                 .build();
 
-        // Agendamento Periódico (Diário)
-        PeriodicWorkRequest periodicWork =
-                new PeriodicWorkRequest.Builder(
-                        ExpirationWorker.class,
-                        1,
-                        TimeUnit.DAYS
-                )
-                        .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
-                        .setConstraints(constraints)
-                        .addTag(TAG)
-                        .build();
+        PeriodicWorkRequest periodicWork = new PeriodicWorkRequest.Builder(
+                ExpirationWorker.class,
+                24, TimeUnit.HOURS          // intervalo diário
+        )
+                .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+                .setConstraints(constraints)
+                .addTag(TAG)
+                .build();
 
-        Log.d(TAG, "Agendando verificação para as " + hour + ":" + minute + 
-              ". O worker rodará em " + (initialDelay / 60000) + " minutos.");
+        long minutesUntilRun = initialDelay / 60_000;
+        Log.d(TAG, "Agendando para " + hour + ":" + String.format("%02d", minute)
+                + ". Próximo disparo em " + minutesUntilRun + " minuto(s).");
 
-        // ✅ Usando UPDATE para que a mudança de horário seja aplicada imediatamente
+        // CANCEL_AND_REENQUEUE garante que o initialDelay calculado acima
+        // seja aplicado imediatamente, corrigindo o drift de horário (Bug 2/3).
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE, 
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 periodicWork
         );
     }
 
     /**
-     * Para o agendamento das notificações.
+     * Cancela o agendamento de notificações.
      */
     public static void stop(Context c) {
         Log.d(TAG, "Cancelando agendamento de notificações.");
@@ -64,22 +73,27 @@ public class NotificationScheduler {
     }
 
     /**
-     * Calcula o delay exato até o próximo horário definido.
+     * Calcula o delay em ms até o próximo disparo no horário configurado.
+     * Se o horário já passou hoje, agenda para o mesmo horário amanhã.
+     * Adiciona 5s de margem para evitar edge cases de arredondamento.
      */
-    private static long calculateInitialDelay(int hour, int minute) {
-        Calendar now = Calendar.getInstance();
+    public static long calculateInitialDelay(int hour, int minute) {
+        Calendar now     = Calendar.getInstance();
         Calendar nextRun = Calendar.getInstance();
 
         nextRun.set(Calendar.HOUR_OF_DAY, hour);
-        nextRun.set(Calendar.MINUTE, minute);
-        nextRun.set(Calendar.SECOND, 0);
+        nextRun.set(Calendar.MINUTE,      minute);
+        nextRun.set(Calendar.SECOND,      0);
         nextRun.set(Calendar.MILLISECOND, 0);
 
-        // Se o horário já passou hoje, agenda para o mesmo horário amanhã
-        if (nextRun.before(now)) {
+        // Se o horário já passou hoje, empurra para amanhã
+        if (!nextRun.after(now)) {
             nextRun.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        return nextRun.getTimeInMillis() - now.getTimeInMillis();
+        long delayMs = nextRun.getTimeInMillis() - now.getTimeInMillis();
+
+        // Margem de segurança de 5 segundos
+        return delayMs + 5_000;
     }
 }
