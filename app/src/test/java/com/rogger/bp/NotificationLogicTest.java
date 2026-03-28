@@ -28,7 +28,7 @@ public class NotificationLogicTest {
         long prodMs = calProd.getTimeInMillis();
 
         // Lógica de cálculo simplificada (mesma do ExpirationWorker corrigido)
-        
+
         // Zera horas para comparação apenas por dia
         Calendar c1 = Calendar.getInstance();
         c1.setTimeInMillis(hojeMs);
