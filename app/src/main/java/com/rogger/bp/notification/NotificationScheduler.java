@@ -20,8 +20,10 @@ public class NotificationScheduler {
      * O agendamento é feito para rodar uma vez por dia.
      */
     public static void start(Context c) {
-        int hour = 14;
-        int minute = 52;
+        // Horário padrão para execução: 09:00 da manhã (ou o horário que preferir)
+        // Você pode tornar isso configurável se desejar.
+        int hour = 9;
+        int minute = 0;
 
         long initialDelay = calculateInitialDelay(hour, minute);
         
