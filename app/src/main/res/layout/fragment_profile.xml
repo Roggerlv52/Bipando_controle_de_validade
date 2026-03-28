@@ -113,9 +113,13 @@
                         android:background="@color/silver" />
 
                     <FrameLayout
+                        android:id="@+id/btnSetNotifTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground"
                         android:orientation="horizontal">
 
                         <TextView
@@ -127,11 +131,12 @@
                             android:textSize="18sp" />
 
                         <TextView
+                            android:id="@+id/txtNotifTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
                             android:layout_marginBottom="8dp"
-                            android:text="12 pm, 18 pm"
+                            android:text="09:00"
                             android:textColor="@color/black"
                             android:textSize="18sp" />
                     </FrameLayout>
