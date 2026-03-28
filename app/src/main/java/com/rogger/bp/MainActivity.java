@@ -27,6 +27,7 @@ import com.rogger.bp.ui.base.BaseActivity;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
+import com.rogger.bp.notification.NotificationScheduler;
 
 import java.util.List;
 
@@ -81,6 +82,8 @@ public class MainActivity extends BaseActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
+        // ✅ Inicia o agendamento de notificações de validade
+        NotificationScheduler.start(this);
     }
 
     @Override
