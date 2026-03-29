@@ -351,10 +351,10 @@ public class EditFragment extends Fragment {
 
     // -------------------- UTILS --------------------
     private void setImageView(String imgUri) {
+        imgUpload.setImageResource(R.drawable.carregando);
         Glide.with(requireContext())
                 .load(imgUri)
                 .override(350, 350)
-                .placeholder(R.drawable.carregando)
                 .error(R.drawable.up_picture)
                 .into(imgUpload);
     }

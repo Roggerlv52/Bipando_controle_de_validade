@@ -149,17 +149,14 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         }
 
         String uri = modelo.getImagem();
-        if (uri != null && !uri.isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(uri)
-                    .override(350, 350) // reduz tamanho
-                    .placeholder(R.drawable.carregando)   // enquanto carrega
-                    .error(R.drawable.imagem_error)
-                    .centerCrop()
-                    .into(holder.imageView);
-        } else {
-            holder.imageView.setImageResource(R.drawable.no_picture);
-        }
+
+        Glide.with(holder.itemView.getContext())
+                .load(uri)
+                .override(350, 350) // reduz tamanho
+                .error(R.drawable.imagem_error)
+                .into(holder.imageView);
+
+
         holder.imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
