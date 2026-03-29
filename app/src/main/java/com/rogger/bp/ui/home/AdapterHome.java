@@ -111,10 +111,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             }
         }
 
-        if (1 == 0 && n2 == 0) {
-            n2 = 10;
-        }
-
         holder.txtRight.setText(Agora);
         int ds = (int) dias;
 		/*
