@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -87,10 +88,22 @@ public class NotificationUtil {
                 .setAutoCancel(true)
                 .build();
 
+        if (ActivityCompat.checkSelfPermission(c,
+                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         NotificationManagerCompat.from(c).notify(1001, n);
         Log.d(TAG, "Notificação 'vencendo' exibida: " + produtos.size() + " produto(s)");
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     public static void showVencidos(Context c, List<Produto> produtos) {
         if (produtos == null || produtos.isEmpty()) return;
 

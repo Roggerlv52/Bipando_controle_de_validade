@@ -90,6 +90,10 @@ public class AddFragment extends Fragment {
         cameraUtil = new ImagePikerUtil();
         btnData.setText(Utils.getCurrentDateFormatted());
         txtData.setText(Utils.getCurrentDateFormatted());
+
+        timestamp = Utils.getCurrentTimestamp();
+        btnData.setText(Utils.getCurrentDateFormatted());
+        txtData.setText(Utils.getCurrentDateFormatted());
         return view;
     }
 
