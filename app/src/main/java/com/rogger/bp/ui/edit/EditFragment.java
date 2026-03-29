@@ -354,7 +354,7 @@ public class EditFragment extends Fragment {
         Glide.with(requireContext())
                 .load(imgUri)
                 .override(350, 350)
-                .placeholder(R.drawable.gradient_one)
+                .placeholder(R.drawable.carregando)
                 .error(R.drawable.up_picture)
                 .into(imgUpload);
     }

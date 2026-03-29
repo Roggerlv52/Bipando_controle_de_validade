@@ -49,7 +49,7 @@ public class ImageBarcode extends AppCompatActivity {
 			String uri = intent.getStringExtra("uri");
 			if (ids != null && uri != null) {
 				int id = Integer.parseInt(ids);
-				imageViewUri(id,uri);
+				imageViewUri(uri);
 			}
 		}
 
@@ -71,10 +71,10 @@ public class ImageBarcode extends AppCompatActivity {
 		txtCode.setText(code);
 	}
 
-    private void imageViewUri(int id,String uri) {
+    private void imageViewUri(String uri) {
 		Glide.with(this)
 				.load(uri)
-				.error(R.drawable.ic_live_help)
+				.error(R.drawable.imagem_error)
 				.into(imageView);
     }
 }
