@@ -57,7 +57,7 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
         holder.txt_home.setText(produto.getNome());
         holder.txt_bcd.setText(produto.getCodigoBarras());
         if (produto.getImagem() == null || produto.getImagem().isEmpty()) {
-            holder.img_home.setImageResource(R.drawable.no_picture);
+            holder.img_home.setImageResource(R.drawable.imagem_error);
         } else {
             holder.img_home.setImageURI(Uri.parse(produto.getImagem()));
         }

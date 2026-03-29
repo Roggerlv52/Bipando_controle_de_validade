@@ -54,8 +54,7 @@ public class ShowFragment extends Fragment {
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(imageView);
-        scaleDetector = new ScaleGestureDetector(requireContext(),
-                new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener(){
                     @Override
                     public boolean onScale(ScaleGestureDetector detector) {
                         scale *= detector.getScaleFactor();

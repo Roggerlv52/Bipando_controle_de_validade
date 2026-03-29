@@ -1,10 +1,11 @@
 package com.rogger.bp.ui.deleteitem;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.ViewFlipper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,11 +20,13 @@ import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.ui.gallery.ImagePikerUtil;
 
 import java.io.File;
+import java.util.List;
 
 public class ItemDeletedFragment extends Fragment {
-
+    private ViewFlipper viewFlipper;
     private ItemDeletedViewModel viewModel;
     private ItemDeletedAdapter adapter;
+    private ImageView imageView;
 
     @Override
     public View onCreateView(
@@ -41,7 +44,8 @@ public class ItemDeletedFragment extends Fragment {
         // 1️⃣ ViewModel
         viewModel = new ViewModelProvider(this)
                 .get(ItemDeletedViewModel.class);
-
+        viewFlipper = view.findViewById(R.id.view_flipper);
+        imageView = view.findViewById(R.id.img_deleted);
         // 2️⃣ RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.recycler_deleted);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -53,9 +57,23 @@ public class ItemDeletedFragment extends Fragment {
         // 4️⃣ Observer
         viewModel.getProdutosDeletados()
                 .observe(getViewLifecycleOwner(), deleted -> {
-                    Log.d("TAG", "Produtos deletados: " + deleted.toString());
                     adapter.submitList(deleted);
+                    if (deleted != null && !deleted.isEmpty()) {
+                        atualizarView(deleted);
+                    } else {
+                        atualizarView(null);
+                    }
                 });
+    }
+    private void atualizarView(List<Produto> dados) {
+        if (dados == null || dados.isEmpty()) {
+            viewFlipper.setDisplayedChild(1); // Mostra a imagem
+            imageView.setImageResource(R.drawable.stop_item);
+            //progressBar.setVisibility(View.GONE);
+        } else {
+            viewFlipper.setDisplayedChild(0); // Mostra o RecyclerView
+           // progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void mostrarDialogo(Produto produto) {

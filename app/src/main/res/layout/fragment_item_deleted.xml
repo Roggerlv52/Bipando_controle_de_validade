@@ -1,13 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.rogger.bp.ui.deleteitem.ItemDeletedFragment">
 
-   <androidx.recyclerview.widget.RecyclerView
-       android:id="@+id/recycler_deleted"
+   <ViewFlipper
+       android:id="@+id/view_flipper"
        android:layout_width="match_parent"
-       android:layout_height="match_parent"/>
+       android:layout_height="match_parent">
+      <androidx.constraintlayout.widget.ConstraintLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent">
 
-</LinearLayout>
+         <androidx.recyclerview.widget.RecyclerView
+             android:id="@+id/recycler_deleted"
+             android:layout_width="0dp"
+             android:layout_height="0dp"
+             app:layout_constraintBottom_toBottomOf="parent"
+             app:layout_constraintEnd_toEndOf="parent"
+             app:layout_constraintStart_toStartOf="parent"
+             app:layout_constraintTop_toTopOf="parent" />
+      </androidx.constraintlayout.widget.ConstraintLayout>
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:orientation="vertical"
+          android:gravity="center">
+
+         <ImageView
+             android:id="@+id/img_deleted"
+             android:layout_width="150dp"
+             android:layout_height="150dp"
+             android:padding="10dp"
+             android:contentDescription="@string/todo" />
+
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:padding="10dp"
+             android:textColor="@color/gray"
+             android:text="Nenhum item excluído" />
+
+      </LinearLayout>
+   </ViewFlipper>
+
+</FrameLayout>
