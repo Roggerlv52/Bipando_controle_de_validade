@@ -153,9 +153,8 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             Glide.with(holder.itemView.getContext())
                     .load(uri)
                     .override(350, 350) // reduz tamanho
-                    .placeholder(R.drawable.ic_launcher_foreground)   // enquanto carrega
-                    .error(R.drawable.no_picture)         // se der erro
-                    //.circleCrop()// deixa redondo
+                    .placeholder(R.drawable.carregando)   // enquanto carrega
+                    .error(R.drawable.imagem_error)
                     .centerCrop()
                     .into(holder.imageView);
         } else {

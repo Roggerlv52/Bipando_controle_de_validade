@@ -51,8 +51,8 @@ public class ShowFragment extends Fragment {
 
         Glide.with(requireContext())
                 .load(uriString)
-                .placeholder(R.drawable.gradiente_two)
-                .error(R.drawable.ic_person_24)
+                .placeholder(R.drawable.carregando)
+                .error(R.drawable.imagem_error)
                 .into(imageView);
         scaleDetector = new ScaleGestureDetector(requireContext(),
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
