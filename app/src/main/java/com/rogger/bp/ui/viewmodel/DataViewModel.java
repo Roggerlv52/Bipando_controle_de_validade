@@ -28,6 +28,13 @@ public class DataViewModel extends AndroidViewModel {
         return produtos;
     }
 
+    /**
+     * ✅ Retorna o estado de carregamento do repositório
+     */
+    public LiveData<Boolean> getIsLoading() {
+        return repository.getIsLoading();
+    }
+
     public LiveData<Produto> getProdutoByIdInMemory(int id) {
         MutableLiveData<Produto> resultado = new MutableLiveData<>();
         produtos.observeForever(lista -> {

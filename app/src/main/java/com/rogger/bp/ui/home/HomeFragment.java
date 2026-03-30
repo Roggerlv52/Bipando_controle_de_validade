@@ -57,7 +57,9 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         RecyclerView recyclerView = binding.rcViewListHome;
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
-        progressBar = binding.profileProgress;
+        
+        // ✅ Agora usando o ID correto do novo ProgressBar no layout
+        progressBar = binding.homeProgressBar;
 
         // Recuperar o valor do slider de dias amarelo do SharedPreferences
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
@@ -70,6 +72,13 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
 
         // Inicializar DataViewModel
         dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
+
+        // ✅ Observar o estado de carregamento (Firebase Sync)
+        dataViewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            if (isLoading != null) {
+                progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            }
+        });
 
         // Observar os dados do banco de dados
         dataViewModel.getProdutos().observe(getViewLifecycleOwner(), produtos -> {
@@ -187,12 +196,11 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
 
     private void atualizarView(List<Produto> dados) {
         if (dados == null || dados.isEmpty()) {
-            viewFlipper.setDisplayedChild(1); // Mostra a imagem
+            viewFlipper.setDisplayedChild(1); // Mostra a imagem de lista vazia
             imageView.setImageResource(R.drawable.empty_list);
-            progressBar.setVisibility(View.GONE);
+            // ✅ Não escondemos o progressBar aqui, deixamos o observer de isLoading cuidar disso
         } else {
             viewFlipper.setDisplayedChild(0); // Mostra o RecyclerView
-            progressBar.setVisibility(View.GONE);
         }
     }
 
