@@ -4,6 +4,8 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
@@ -15,20 +17,20 @@ import java.io.File;
 
 /**
  * FirebaseStorageDataSource
- *
+ * <p>
  * Responsável por:
- *  1. Obter o OAuth2 Access Token do usuário autenticado via Firebase Auth
- *  2. Fazer upload de imagens para o Firebase Storage
- *  3. Deletar imagens do Firebase Storage
- *  4. Gerar a URL pública de download após o upload
- *
+ * 1. Obter o OAuth2 Access Token do usuário autenticado via Firebase Auth
+ * 2. Fazer upload de imagens para o Firebase Storage
+ * 3. Deletar imagens do Firebase Storage
+ * 4. Gerar a URL pública de download após o upload
+ * <p>
  * Estrutura de pastas no Storage:
- *   produtos/{uid}/{produtoId}/imagem.jpg
- *
+ * produtos/{uid}/{produtoId}/imagem.jpg
+ * <p>
  * Todos os métodos são assíncronos e retornam resultado via callbacks.
- *
+ * <p>
  * DEPENDÊNCIA: adicionar no build.gradle.kts:
- *   implementation("com.google.firebase:firebase-storage:21.0.1")
+ * implementation("com.google.firebase:firebase-storage:21.0.1")
  */
 public class FirebaseStorageDataSource {
 
@@ -82,7 +84,7 @@ public class FirebaseStorageDataSource {
      *   });
      */
     public void obterFirebaseIdToken(boolean forceRefresh,
-                                   @NonNull TokenCallback callback) {
+                                     @NonNull TokenCallback callback) {
 
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
@@ -325,10 +327,10 @@ public class FirebaseStorageDataSource {
      * @param callback    Callbacks de sucesso e erro
      */
     public void deletarImagemPorUrl(@NonNull String urlDownload,
-                                    @NonNull StorageCallback callback) {
+                                    @Nullable StorageCallback callback) {
 
         if (urlDownload.isEmpty()) {
-            callback.onSucesso(); // Nada para deletar
+            if (callback != null) callback.onSucesso();
             return;
         }
 
@@ -339,19 +341,19 @@ public class FirebaseStorageDataSource {
             ref.delete()
                     .addOnSuccessListener(aVoid -> {
                         Log.d(TAG, "Imagem deletada por URL com sucesso.");
-                        callback.onSucesso();
+                        if (callback != null) callback.onSucesso();
                     })
                     .addOnFailureListener(e -> {
                         if (e.getMessage() != null && e.getMessage().contains("does not exist")) {
-                            callback.onSucesso();
+                            if (callback != null) callback.onSucesso();
                         } else {
                             Log.e(TAG, "Erro ao deletar por URL: " + e.getMessage());
-                            callback.onErro(e);
+                            if (callback != null) callback.onErro(e);
                         }
                     });
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "URL inválida para deletar: " + urlDownload);
-            callback.onErro(e);
+            if (callback != null) callback.onErro(e);
         }
     }
 
@@ -397,3 +399,4 @@ public class FirebaseStorageDataSource {
         void onErro(@NonNull Exception e);
     }
 }
+

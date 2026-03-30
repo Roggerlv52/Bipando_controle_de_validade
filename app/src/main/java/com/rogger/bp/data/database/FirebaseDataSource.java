@@ -3,6 +3,7 @@ package com.rogger.bp.data.database;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -107,7 +108,7 @@ public class FirebaseDataSource {
      * O firestoreId gerado é devolvido via callback.
      */
     public void salvarProduto(@NonNull Produto produto,
-                              @NonNull FirestoreCallback<String> callback) {
+                              @Nullable FirestoreCallback<String> callback) {
 
         // Documento com ID determinístico baseado no uid do Room
         String docId = getUid() + "_produto_" + produto.getId();
@@ -117,11 +118,11 @@ public class FirebaseDataSource {
                 .set(data)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Produto salvo: " + docId);
-                    callback.onSuccess(docId);
+                    if (callback != null) callback.onSuccess(docId);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Erro ao salvar produto: " + e.getMessage());
-                    callback.onFailure(e);
+                    if (callback != null) callback.onFailure(e);
                 });
     }
 
@@ -130,7 +131,7 @@ public class FirebaseDataSource {
      * Não sobrescreve campos que não foram passados.
      */
     public void atualizarProduto(@NonNull Produto produto,
-                                 @NonNull FirestoreCallback<Void> callback) {
+                                 @Nullable FirestoreCallback<Void> callback) {
 
         String docId = getUid() + "_produto_" + produto.getId();
         Map<String, Object> data = produtoParaMap(produto, docId);
@@ -139,11 +140,11 @@ public class FirebaseDataSource {
                 .update(data)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Produto atualizado: " + docId);
-                    callback.onSuccess(null);
+                    if (callback != null) callback.onSuccess(null);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Erro ao atualizar produto: " + e.getMessage());
-                    callback.onFailure(e);
+                    if (callback != null) callback.onFailure(e);
                 });
     }
 
@@ -152,7 +153,7 @@ public class FirebaseDataSource {
      * O documento permanece no Firestore (útil para sync entre dispositivos).
      */
     public void moverProdutoParaLixeira(int produtoId,
-                                        @NonNull FirestoreCallback<Void> callback) {
+                                        @Nullable FirestoreCallback<Void> callback) {
 
         String docId = getUid() + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
@@ -161,15 +162,15 @@ public class FirebaseDataSource {
 
         produtosRef().document(docId)
                 .update(update)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                .addOnFailureListener(callback::onFailure);
+                .addOnSuccessListener(aVoid -> { if (callback != null) callback.onSuccess(null); })
+                .addOnFailureListener(e -> { if (callback != null) callback.onFailure(e); });
     }
 
     /**
      * Restaura produto da lixeira (deleted=false).
      */
     public void restaurarProduto(int produtoId,
-                                 @NonNull FirestoreCallback<Void> callback) {
+                                 @Nullable FirestoreCallback<Void> callback) {
 
         String docId = getUid() + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
@@ -178,15 +179,15 @@ public class FirebaseDataSource {
 
         produtosRef().document(docId)
                 .update(update)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                .addOnFailureListener(callback::onFailure);
+                .addOnSuccessListener(aVoid -> { if (callback != null) callback.onSuccess(null); })
+                .addOnFailureListener(e -> { if (callback != null) callback.onFailure(e); });
     }
 
     /**
      * Exclusão permanente do documento no Firestore.
      */
     public void excluirProdutoPermanente(int produtoId,
-                                         @NonNull FirestoreCallback<Void> callback) {
+                                         @Nullable FirestoreCallback<Void> callback) {
 
         String docId = getUid() + "_produto_" + produtoId;
 
@@ -194,9 +195,9 @@ public class FirebaseDataSource {
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Produto excluído: " + docId);
-                    callback.onSuccess(null);
+                    if (callback != null) callback.onSuccess(null);
                 })
-                .addOnFailureListener(callback::onFailure);
+                .addOnFailureListener(e -> { if (callback != null) callback.onFailure(e); });
     }
 
     // ======================== PRODUTOS — LEITURA ========================

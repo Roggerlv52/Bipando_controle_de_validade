@@ -51,7 +51,7 @@ public class ItemDeletedFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         // 3️⃣ Adapter
-        adapter = new ItemDeletedAdapter(this::mostrarDialogo);
+        adapter = new ItemDeletedAdapter(requireContext(),this::mostrarDialogo);
         recyclerView.setAdapter(adapter);
 
         // 4️⃣ Observer

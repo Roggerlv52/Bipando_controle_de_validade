@@ -4,6 +4,7 @@ package com.rogger.bp.data.repository;
 import android.app.Application;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -180,7 +181,15 @@ public class ProdutoRepository {
 
             if (temImagemLocal && callback != null) {
                 if (urlImagemAntiga != null && !urlImagemAntiga.isEmpty()) {
-                    storageDataSource.deletarImagemPorUrl(urlImagemAntiga, null);
+                    storageDataSource.deletarImagemPorUrl(urlImagemAntiga,
+                            new FirebaseStorageDataSource.StorageCallback() {
+                                @Override public void onSucesso() {
+                                    Log.d(TAG, "Imagem antiga deletada com sucesso.");
+                                }
+                                @Override public void onErro(@NonNull Exception e) {
+                                    Log.w(TAG, "Falha ao deletar imagem antiga (não crítico): " + e.getMessage());
+                                }
+                            });
                 }
 
                 File arquivoLocal = new File(caminhoImagem);
@@ -247,13 +256,42 @@ public class ProdutoRepository {
      */
     public void excluirDefinitivoPorId(int id) {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
-            // Primeiro buscamos para saber se tem imagem no Storage
-            // Nota: No ProdutoDao, buscarPorId não existia no histórico anterior, mas é necessário.
-            // Vou assumir que o DAO tem ou adicionar se falhar.
+            // 1. Busca o produto antes de deletar para pegar a URL da imagem
+            Produto produto = produtoDao.buscarPorIdSync(id);
+
+            // 2. Remove do Room e invalida cache
             produtoDao.removerPorId(id);
             localCache.invalidarProdutos();
+
+            // 3. Remove do Firestore
             firebaseDataSource.excluirProdutoPermanente(id, null);
-            // Opcional: deletar imagem do storage se houver URL salva
+
+            // 4. Remove a imagem do Firebase Storage (se houver URL)
+            if (produto != null) {
+                String urlImagem = produto.getImagem();
+                if (urlImagem != null && !urlImagem.isEmpty() && urlImagem.startsWith("https://")) {
+                    Log.d(TAG, "Deletando imagem do Storage para produto id=" + id);
+                    storageDataSource.deletarImagemPorUrl(urlImagem, new FirebaseStorageDataSource.StorageCallback() {
+                        @Override
+                        public void onSucesso() {
+                            Log.d(TAG, "Imagem do produto " + id + " deletada do Storage.");
+                        }
+                        @Override
+                        public void onErro(@NonNull Exception e) {
+                            Log.w(TAG, "Falha ao deletar imagem do Storage (produto " + id + "): " + e.getMessage());
+                        }
+                    });
+                } else {
+                    // Imagem local (caminho de arquivo) — apaga do disco
+                    if (urlImagem != null && !urlImagem.isEmpty()) {
+                        File arquivoLocal = new File(urlImagem);
+                        if (arquivoLocal.exists()) {
+                            arquivoLocal.delete();
+                            Log.d(TAG, "Imagem local deletada: " + urlImagem);
+                        }
+                    }
+                }
+            }
         });
     }
 

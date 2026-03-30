@@ -1,6 +1,6 @@
 package com.rogger.bp.ui.deleteitem;
 
-import android.net.Uri;
+import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.Produto;
 
@@ -21,11 +22,12 @@ import java.util.List;
 import java.util.Locale;
 
 public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.ViewHolder> {
-
+    private Context context;
     private List<Produto> lista = new ArrayList<>();
     private OnItemDeletedClick listener;
 
-    public ItemDeletedAdapter(OnItemDeletedClick listener) {
+    public ItemDeletedAdapter(Context c, OnItemDeletedClick listener) {
+        this.context = c;
         this.listener = listener;
     }
 
@@ -56,11 +58,12 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
         holder.txt_rigth.setText(produto.getNomeCategoria());
         holder.txt_home.setText(produto.getNome());
         holder.txt_bcd.setText(produto.getCodigoBarras());
-        if (produto.getImagem() == null || produto.getImagem().isEmpty()) {
-            holder.img_home.setImageResource(R.drawable.imagem_error);
-        } else {
-            holder.img_home.setImageURI(Uri.parse(produto.getImagem()));
-        }
+
+        Glide.with(context)
+                .load(produto.getImagem())
+                .override(350, 350)
+                .error(R.drawable.imagem_error)
+                .into(holder.img_home);
 
 
         holder.itemView.setOnClickListener(v -> listener.onClick(produto));

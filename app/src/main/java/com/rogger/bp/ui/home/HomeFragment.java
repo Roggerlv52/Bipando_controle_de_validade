@@ -1,6 +1,7 @@
 package com.rogger.bp.ui.home;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +58,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         RecyclerView recyclerView = binding.rcViewListHome;
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
-        
+
         // ✅ Agora usando o ID correto do novo ProgressBar no layout
         progressBar = binding.homeProgressBar;
 
@@ -96,6 +97,9 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        // ✅ ViewModel inicializado uma única vez aqui, não dentro de mostrarDialogoSelecaoCategoria()
+        categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
+
         FloatingActionButton fab = binding.fab;
         fab.setOnClickListener(view1 -> {
             mostrarDialogoSelecaoCategoria();
@@ -104,26 +108,29 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     }
 
     /**
-     * Exibe um diálogo para o utilizador selecionar uma categoria antes de ir para o scanner
+     * Exibe um diálogo para o utilizador selecionar uma categoria antes de ir para o scanner.
+     * Usa observeOnce para garantir que o diálogo abre apenas uma vez por clique,
+     * sem acumular observers a cada chamada.
      */
     private void mostrarDialogoSelecaoCategoria() {
-        // Inicializar o CategoriaViewModel
-        categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
+        observeOnce(categoriaViewModel.getCategories(), categorias -> {
+            if (categorias == null || categorias.isEmpty()) {
+                mostrarDialogoAdicionarCategoria();
+            } else {
+                mostrarDialogoComSpinner(categorias);
+            }
+        });
+    }
 
-        // Observar as categorias apenas uma vez para evitar múltiplas aberturas de diálogo
-        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<List<Categoria>>() {
+    /**
+     * Observa um LiveData apenas uma vez e remove o observer automaticamente.
+     */
+    private <T> void observeOnce(androidx.lifecycle.LiveData<T> liveData, androidx.lifecycle.Observer<T> observer) {
+        liveData.observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<T>() {
             @Override
-            public void onChanged(List<Categoria> categorias) {
-                // Remove o observer imediatamente para que o diálogo não abra novamente se a lista mudar
-                categoriaViewModel.getCategories().removeObserver(this);
-
-                if (categorias == null || categorias.isEmpty()) {
-                    // Sem categorias, mostrar opção de criar
-                    mostrarDialogoAdicionarCategoria();
-                } else {
-                    // Mostrar diálogo com spinner de categorias
-                    mostrarDialogoComSpinner(categorias);
-                }
+            public void onChanged(T t) {
+                liveData.removeObserver(this);
+                observer.onChanged(t);
             }
         });
     }
@@ -157,24 +164,17 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
                 requireContext(),
                 "Criar nova categoria",
                 nomeCat -> {
-                    // Criar a categoria
                     Categoria novaCategoria = new Categoria();
                     novaCategoria.setNome(nomeCat);
                     categoriaViewModel.insert(novaCategoria);
 
-                    // Aguardar a inserção e navegar para o scanner com a nova categoria
-                    categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<List<Categoria>>() {
-                        @Override
-                        public void onChanged(List<Categoria> categorias) {
-                            if (categorias != null && !categorias.isEmpty()) {
-                                // Procurar a categoria criada pelo nome
-                                for (Categoria c : categorias) {
-                                    if (c.getNome().equals(nomeCat)) {
-                                        // Remove o observer antes de navegar
-                                        categoriaViewModel.getCategories().removeObserver(this);
-                                        irParaScanner(c.getId());
-                                        break;
-                                    }
+                    // ✅ observeOnce evita múltiplas navegações se o LiveData emitir mais de uma vez
+                    observeOnce(categoriaViewModel.getCategories(), categorias -> {
+                        if (categorias != null) {
+                            for (Categoria c : categorias) {
+                                if (c.getNome().equals(nomeCat)) {
+                                    irParaScanner(c.getId());
+                                    break;
                                 }
                             }
                         }

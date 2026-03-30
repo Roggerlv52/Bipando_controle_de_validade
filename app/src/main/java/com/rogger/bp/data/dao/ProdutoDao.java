@@ -51,6 +51,12 @@ public interface ProdutoDao {
             "ORDER BY p.timestamp ASC")
     LiveData<List<Produto>> listarProdutosDeletados(String userId);
 
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.id = :id LIMIT 1")
+    Produto buscarPorIdSync(int id);
+
     @Query("UPDATE produtos SET deleted = 1, deletedAt = :deletedAt WHERE id = :id")
     void moverParaLixeira(int id, long deletedAt);
     // ♻️ Restaurar

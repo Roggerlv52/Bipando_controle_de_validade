@@ -19,10 +19,22 @@ public class CategoriaViewModel extends AndroidViewModel {
     private CategoriaRepository repository;
     private LiveData<List<CategoriaWithCount>> categoriasComContagem;
 
+    private final LiveData<List<Categoria>> categorias;
+
     public CategoriaViewModel(@NonNull Application application) {
         super(application);
         repository = new CategoriaRepository(application);
         categoriasComContagem = repository.getCategoriasComContagem();
+
+        categorias = Transformations.map(categoriasComContagem, input -> {
+            List<Categoria> list = new ArrayList<>();
+            for (CategoriaWithCount item : input) {
+                Categoria c = item.categoria;
+                c.setCount(item.count);
+                list.add(c);
+            }
+            return list;
+        });
     }
 
     /**
@@ -33,18 +45,10 @@ public class CategoriaViewModel extends AndroidViewModel {
     }
 
     /**
-     * ✅ Mantém compatibilidade com código que espera apenas List<Categoria>
+     * ✅ Retorna sempre o mesmo LiveData — estável entre chamadas
      */
     public LiveData<List<Categoria>> getCategories() {
-        return Transformations.map(categoriasComContagem, input -> {
-            List<Categoria> list = new ArrayList<>();
-            for (CategoriaWithCount item : input) {
-                Categoria c = item.categoria;
-                c.setCount(item.count); // Mantém o count no objeto categoria
-                list.add(c);
-            }
-            return list;
-        });
+        return categorias;
     }
 
     public void insert(Categoria c) {
