@@ -9,6 +9,7 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.CategoriaWithCount;
 
 import java.util.List;
 
@@ -27,5 +28,16 @@ public interface CategoriaDao {
 
     @Query("SELECT * FROM categorias WHERE userId = :userId ORDER BY nome ASC")
     LiveData<List<Categoria>> listarCategorias(String userId);
-}
 
+    /**
+     * ✅ Query otimizada que já traz a contagem de produtos ativos por categoria.
+     * Faz um LEFT JOIN para garantir que categorias sem produtos também apareçam com count 0.
+     */
+    @Query("SELECT c.*, COUNT(p.id) as count " +
+            "FROM categorias c " +
+            "LEFT JOIN produtos p ON c.id = p.categoryId AND p.deleted = 0 " +
+            "WHERE c.userId = :userId " +
+            "GROUP BY c.id " +
+            "ORDER BY c.nome ASC")
+    LiveData<List<CategoriaWithCount>> listarCategoriasComContagem(String userId);
+}

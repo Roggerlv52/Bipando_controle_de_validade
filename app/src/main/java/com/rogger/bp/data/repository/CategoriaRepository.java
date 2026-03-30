@@ -4,7 +4,6 @@ import android.app.Application;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Transformations;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bp.data.dao.CategoriaDao;
@@ -13,6 +12,7 @@ import com.rogger.bp.data.database.BpdDatabase;
 import com.rogger.bp.data.database.FirebaseDataSource;
 import com.rogger.bp.data.database.LocalCache;
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.CategoriaWithCount;
 
 import java.util.List;
 
@@ -20,43 +20,29 @@ import java.util.List;
  * CategoriaRepository
  *
  * Orquestrador entre Room (local) e Firestore (nuvem) para categorias.
- * Mesma estratégia do ProdutoRepository:
- *  - Room é a fonte de verdade para a UI
- *  - Firestore é o backup/sync em nuvem
- *  - LocalCache evita buscas repetidas ao navegar
  */
 public class CategoriaRepository {
 
     private static final String TAG = "CategoriaRepository";
 
     private final CategoriaDao       categoriaDao;
-    private final ProdutoDao         produtoDao;
     private final FirebaseDataSource firebaseDataSource;
     private final LocalCache localCache;
     private final String             userId;
 
-    private final LiveData<List<Categoria>> categorias;
+    private final LiveData<List<CategoriaWithCount>> categoriasComContagem;
 
     public CategoriaRepository(Application app) {
         BpdDatabase db = BpdDatabase.getDatabase(app);
         categoriaDao       = db.categoriaDao();
-        produtoDao         = db.produtoDao();
         firebaseDataSource = FirebaseDataSource.getInstance();
         localCache         = LocalCache.getInstance();
         userId             = FirebaseAuth.getInstance().getCurrentUser() != null
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : "";
 
-        // ✅ Usamos Transformations para preencher a contagem de produtos de forma reativa
-        categorias = Transformations.map(categoriaDao.listarCategorias(userId), lista -> {
-            for (Categoria c : lista) {
-                // Como estamos em um LiveData, o Room executa isso na thread do banco de dados
-                // No entanto, para evitar bloqueios, o ideal seria uma query SQL que já trouxesse o COUNT.
-                // Mas para manter a simplicidade do modelo atual, faremos a contagem aqui.
-                c.setCount(produtoDao.contarProdutosPorCategoria(c.getId(), userId));
-            }
-            return lista;
-        });
+        // ✅ Agora usamos a query otimizada do banco de dados (sem IllegalStateException)
+        categoriasComContagem = categoriaDao.listarCategoriasComContagem(userId);
 
         // Sincroniza do Firestore na inicialização
         sincronizarDoFirestore();
@@ -64,8 +50,8 @@ public class CategoriaRepository {
 
     // ======================== LEITURA ========================
 
-    public LiveData<List<Categoria>> getCategorias() {
-        return categorias;
+    public LiveData<List<CategoriaWithCount>> getCategoriasComContagem() {
+        return categoriasComContagem;
     }
 
     /**
