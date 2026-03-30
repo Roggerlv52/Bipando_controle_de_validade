@@ -63,10 +63,9 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
 
         // Instanciar o AdapterHome com o valor dinâmico do slider
-        adapte = new AdapterHome(requireContext(), diasAmarelo);
+        adapte = new AdapterHome(requireContext(), diasAmarelo,this);
 
         recyclerView.setAdapter(adapte);
-        adapte.setOnItemClickListener(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         // Inicializar DataViewModel
