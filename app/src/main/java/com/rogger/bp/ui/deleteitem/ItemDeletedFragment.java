@@ -85,7 +85,10 @@ public class ItemDeletedFragment extends Fragment {
                         viewModel.restaurar(produto.getId()))
                 .setPositiveButton("Excluir definitivamente", (d, w) -> {
                     viewModel.remover(produto.getId());
-                    ImagePikerUtil.cleanUpTempFiles(new File(produto.getImagem()));
+                    if(produto.getImagem() != null && !produto.getImagem().isEmpty() ){
+                        ImagePikerUtil.cleanUpTempFiles(new File(produto.getImagem()));
+                    }
+
                 })
                 .show();
     }

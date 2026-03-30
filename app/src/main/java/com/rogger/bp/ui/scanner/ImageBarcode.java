@@ -1,10 +1,8 @@
 package com.rogger.bp.ui.scanner;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.OrientationEventListener;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,11 +16,8 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.rogger.bp.R;
 
 public class ImageBarcode extends AppCompatActivity {
-
 	private ImageView imageView, imageBack;
 	private TextView txtCode;
-	private Configuration newConfig;
-	private OrientationEventListener orientationEventListener;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
