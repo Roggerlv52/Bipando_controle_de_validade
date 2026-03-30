@@ -117,9 +117,6 @@ public class FragmentAddEditCategory extends Fragment {
                     if (item.getItemId() == R.id.action_delete) {
                         DialogUtil.showConfirmDialog(requireActivity(),
                                 "Tem certeza que deseja excluir?", () -> {
-                                    //adapter.getSelecionadas()
-                                    //       .forEach(categoriaViewModel::remover);
-                                    // mode.finish();
                                     List<Categoria> selecionadas =
                                             adapter.getSelecionadas();
                                     for (Categoria c : selecionadas) {

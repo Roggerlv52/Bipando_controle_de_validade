@@ -238,7 +238,7 @@ public class ProdutoRepository {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.restaurarProduto(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.restaurarProdutoDaLixeira(id, null);
+            firebaseDataSource.restaurarProduto(id, null);
         });
     }
 
@@ -252,7 +252,7 @@ public class ProdutoRepository {
             // Vou assumir que o DAO tem ou adicionar se falhar.
             produtoDao.removerPorId(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.excluirProduto(id, null);
+            firebaseDataSource.excluirProdutoPermanente(id, null);
             // Opcional: deletar imagem do storage se houver URL salva
         });
     }
