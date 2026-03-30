@@ -1,11 +1,5 @@
 package com.rogger.bp.ui.home;
 
-/*
-/*@Roger de oliveira 
-*/
-
-import static java.lang.Math.ceil;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -32,7 +26,12 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     private OnItemClickListener mListener;
     private List<Produto> dados;
     private final Context context;
-    private int n2;
+    private int diasLimiteAmarelo;
+
+    public interface OnItemClickListener {
+        void onItemClick(int position, List<Produto> dados);
+        void onImageClick(String imageUrl);
+    }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.mListener = listener;
@@ -41,7 +40,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     public void clear() {
         if (dados != null) {
             dados.clear();
-
             notifyDataSetChanged();
         }
     }
@@ -49,23 +47,14 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     @SuppressLint("NotifyDataSetChanged")
     public void ordenarPorDiferencaDeDias() {
         if (dados != null) {
-            dados.sort(new Comparator<Produto>() {
-                @Override
-                public int compare(Produto item1, Produto item2) {
-                    long diferencaDiasItem1 = Utils.calcDifferencInDays(String.valueOf(item1.getTimestamp()));
-                    long diferencaDiasItem2 = Utils.calcDifferencInDays(String.valueOf(item2.getTimestamp()));
-
-                    // Ordena em ordem crescente
-                    return Long.compare(diferencaDiasItem1, diferencaDiasItem2);
-                }
-            });
-            notifyDataSetChanged(); // Notifica o Adapter sobre a mudança na ordem dos dados
+            dados.sort(Comparator.comparingLong(item -> Utils.calcDifferencInDays(item.getTimestamp())));
+            notifyDataSetChanged();
         }
     }
 
-    public AdapterHome(Context context, int n2) {
+    public AdapterHome(Context context, int diasLimiteAmarelo) {
         this.context = context;
-        this.n2 = n2;
+        this.diasLimiteAmarelo = diasLimiteAmarelo > 0 ? diasLimiteAmarelo : 10;
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -80,135 +69,92 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int arg1) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        if (dados == null || position >= dados.size()) {
-            return;
-        }
+        if (dados == null || position >= dados.size()) return;
 
         Produto modelo = dados.get(position);
+        
+        // 1. Cálculo de dias usando a nova lógica de Utils
+        long diasRestantes = Utils.calcDifferencInDays(modelo.getTimestamp());
 
-        // Verificação de null para timestamp
-        long horas = 0;
+        // 2. Formatação da data de vencimento
+        String dataFormatada = "";
         if (modelo.getTimestamp() > 0) {
-            horas = Utils.calcDifferencInDays(String.valueOf(modelo.getTimestamp()));
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+            dataFormatada = sdf.format(new Date(modelo.getTimestamp()));
         }
-        double dias = ceil(horas / 24.0f);
+        holder.txtRight.setText(dataFormatada);
 
-        String Agora = "";
-        if (modelo.getTimestamp() > 0) {
-            try {
-                Date datasalva = new Date(modelo.getTimestamp());
-                SimpleDateFormat minhadata = new SimpleDateFormat("dd-MM-yyyy", new Locale("pt", "BR"));
-                Agora = minhadata.format(datasalva);
-            } catch (Exception e) {
-                // Log de erro se necessário
-            }
-        }
-
-        if (1 == 0 && n2 == 0) {
-            n2 = 10;
-        }
-
-        holder.txtRight.setText(Agora);
-        int ds = (int) dias;
-		/*
-		Se data for maior que  10 dias cinal verde
-		Se data for menor ou igual a 10 dias cinal amarelo
-		Se data for menor que 3 dias cinal vermelho.
-		*/
-        if (dias < 1) {
+        // 3. Lógica de cores do indicador (Círculo)
+        /*
+           - Vencido ou Vence Hoje (dias <= 0): Vermelho
+           - Próximo do Vencimento (1 <= dias <= limite): Amarelo
+           - Longe do Vencimento (dias > limite): Verde/Azul (Padrão)
+        */
+        if (diasRestantes < 1) {
             holder.imageCircle.setImageResource(R.drawable.red_circle);
-            holder.txtLight.setText(" VENCIDO ");
-        }
-        if (dias <= n2 && dias > 1) {
-
+            holder.txtLight.setText(diasRestantes < 0 ? "VENCIDO" : "VENCE HOJE");
+        } else if (diasRestantes <= diasLimiteAmarelo) {
             holder.imageCircle.setImageResource(R.drawable.yellow_circle);
-            holder.txtLight.setText(ds + "Dias");
-            //NotificationReceiver.showNotification(context);
-        }
-        if (dias > n2) {
+            holder.txtLight.setText(diasRestantes + (diasRestantes == 1 ? " Dia" : " Dias"));
+        } else {
             holder.imageCircle.setImageResource(R.drawable.circle);
-            holder.txtLight.setText(String.valueOf(ds) + " dias");
+            holder.txtLight.setText(diasRestantes + " dias");
         }
 
-        // Verificações de null para os campos de texto
-        if (modelo.getNome() != null) {
-            holder.txtTitle.setText(modelo.getNome());
-        }
-        String nomeCategoria = modelo.getNomeCategoria();
-        holder.txtSubTitle.setText(nomeCategoria != null ? nomeCategoria : "");
+        // 4. Preenchimento de textos
+        holder.txtTitle.setText(modelo.getNome() != null ? modelo.getNome() : "");
+        holder.txtSubTitle.setText(modelo.getNomeCategoria() != null ? modelo.getNomeCategoria() : "");
+        holder.txtBarcode.setText(modelo.getCodigoBarras() != null ? modelo.getCodigoBarras() : "");
 
-        if (modelo.getCodigoBarras() != null) {
-            holder.txtBarcode.setText(modelo.getCodigoBarras());
-        }
-
-        String uri = modelo.getImagem();
-
-        Glide.with(holder.itemView.getContext())
-                .load(uri)
-                .override(350, 350) // reduz tamanho
+        // 5. Carregamento da imagem
+        Glide.with(context)
+                .load(modelo.getImagem())
+                .override(350, 350)
                 .error(R.drawable.imagem_error)
                 .into(holder.imageView);
 
-
-        holder.imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (modelo.getImagem() != null) {
-                    mListener.onImageClick(modelo.getImagem());
-                }
+        // 6. Clique na imagem
+        holder.imageView.setOnClickListener(v -> {
+            if (mListener != null && modelo.getImagem() != null) {
+                mListener.onImageClick(modelo.getImagem());
             }
         });
     }
 
+    @Override
     public int getItemCount() {
         return dados != null ? dados.size() : 0;
-
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private final ImageView imageCircle;
-        private final ImageView imageView;
-        private final TextView txtRight;
-        private final TextView txtLight;
-        private final TextView txtTitle;
-        private final TextView txtSubTitle;
-        private final TextView txtBarcode;
-        private String uri;
-        private int id;
+        private final ImageView imageCircle, imageView;
+        private final TextView txtRight, txtLight, txtTitle, txtSubTitle, txtBarcode;
 
-        public ViewHolder(View itemview) {
-            super(itemview);
-            imageView = itemview.findViewById(R.id.imageview_home);
-            imageCircle = itemview.findViewById(R.id.image_home_circle);
-            txtLight = itemview.findViewById(R.id.txt_home_left);
-            txtRight = itemview.findViewById(R.id.txt_home_right);
-            txtTitle = itemview.findViewById(R.id.home_title);
-            txtSubTitle = itemview.findViewById(R.id.home_subTitle);
-            txtBarcode = itemview.findViewById(R.id.home_barcode);
+        public ViewHolder(View itemView) {
+            super(itemView);
+            imageView = itemView.findViewById(R.id.imageview_home);
+            imageCircle = itemView.findViewById(R.id.image_home_circle);
+            txtLight = itemView.findViewById(R.id.txt_home_left);
+            txtRight = itemView.findViewById(R.id.txt_home_right);
+            txtTitle = itemView.findViewById(R.id.home_title);
+            txtSubTitle = itemView.findViewById(R.id.home_subTitle);
+            txtBarcode = itemView.findViewById(R.id.home_barcode);
 
-            itemview.setOnClickListener(new View.OnClickListener() {
-                @SuppressLint("SuspiciousIndentation")
-                @Override
-                public void onClick(View v) {
-                    if (mListener != null) {
-                        int position = getAdapterPosition();
-                        if (position != RecyclerView.NO_POSITION) {
-                            mListener.onItemClick(position, dados);
-                        }
+            itemView.setOnClickListener(v -> {
+                if (mListener != null) {
+                    int pos = getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        mListener.onItemClick(pos, dados);
                     }
                 }
-
             });
-
         }
-
     }
-
 }

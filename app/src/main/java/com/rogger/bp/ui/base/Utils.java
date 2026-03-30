@@ -15,24 +15,41 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
 
     public interface OnDateSelectedListener {
         void onDateSelected(long timestamp, String dataFormatada);
     }
+
+    /**
+     * Calcula a diferença em dias entre o timestamp fornecido e o momento atual.
+     * Retorna a diferença em dias inteiros.
+     */
     public static long calcDifferencInDays(long timestamp) {
+        // Zera as horas do momento atual para comparação justa por data
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
 
-        long agora = System.currentTimeMillis();
+        // Zera as horas do timestamp alvo
+        Calendar target = Calendar.getInstance();
+        target.setTimeInMillis(timestamp);
+        target.set(Calendar.HOUR_OF_DAY, 0);
+        target.set(Calendar.MINUTE, 0);
+        target.set(Calendar.SECOND, 0);
+        target.set(Calendar.MILLISECOND, 0);
 
-        // diferença em milissegundos
-        long diferenca = timestamp - agora;
-
-        // converter para horas
-        long horas = diferenca / (1000 * 60 * 60);
-
-        return horas;
+        long diffInMillis = target.getTimeInMillis() - today.getTimeInMillis();
+        return TimeUnit.MILLISECONDS.toDays(diffInMillis);
     }
+
+    /**
+     * Retorna o timestamp do início do dia atual (00:00:00).
+     */
     public static long getCurrentTimestamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -45,11 +62,13 @@ public class Utils {
     public interface CategoryCallback {
         void onCategoryCreated(String name);
     }
+
     public static String getCurrentDateFormatted() {
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         return sdf.format(new Date(System.currentTimeMillis()));
     }
+
     public static void showDatePicker(
             Context context,
             OnDateSelectedListener listener
@@ -94,11 +113,13 @@ public class Utils {
         datePickerDialog.show();
     }
 
+    /**
+     * Sobrecarga para aceitar String (compatibilidade com código antigo).
+     */
     public static long calcDifferencInDays(String timestampStr) {
         try {
             long timestamp = Long.parseLong(timestampStr);
-            long diffInMillis = timestamp - System.currentTimeMillis();
-            return diffInMillis / (1000 * 60 * 60); // Retorna em horas conforme usado no Adapter
+            return calcDifferencInDays(timestamp);
         } catch (Exception e) {
             return 0;
         }
