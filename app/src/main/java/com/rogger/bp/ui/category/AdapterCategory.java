@@ -97,7 +97,14 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         }
 
         void bind(Categoria categoria) {
-            nome.setText(categoria.getNome());
+            // ✅ Exibe o nome concatenado com a quantidade de produtos
+            String textoExibicao = categoria.getNome();
+            if (categoria.getCount() > 0) {
+                textoExibicao += " (" + categoria.getCount() + ")";
+            } else {
+                textoExibicao += " (0)";
+            }
+            nome.setText(textoExibicao);
 
             checkBox.setVisibility(modoSelecao ? View.VISIBLE : View.GONE);
             checkBox.setChecked(selecionadas.contains(categoria));
@@ -138,4 +145,3 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         }
     }
 }
-

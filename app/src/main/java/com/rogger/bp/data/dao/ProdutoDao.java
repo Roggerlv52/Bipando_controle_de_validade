@@ -59,4 +59,7 @@ public interface ProdutoDao {
 
     @Query("DELETE FROM produtos WHERE id = :id")
     void removerPorId(int id);
+
+    @Query("SELECT COUNT(*) FROM produtos WHERE categoryId = :categoryId AND deleted = 0 AND userId = :userId")
+    int contarProdutosPorCategoria(int categoryId, String userId);
 }
