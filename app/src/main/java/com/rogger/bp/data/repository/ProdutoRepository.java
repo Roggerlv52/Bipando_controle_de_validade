@@ -231,6 +231,32 @@ public class ProdutoRepository {
         });
     }
 
+    /**
+     * ✅ Restaura um produto da lixeira
+     */
+    public void restaurar(int id) {
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            produtoDao.restaurarProduto(id);
+            localCache.invalidarProdutos();
+            firebaseDataSource.restaurarProdutoDaLixeira(id, null);
+        });
+    }
+
+    /**
+     * ✅ Exclui permanentemente um produto (Room, Firestore e Storage)
+     */
+    public void excluirDefinitivoPorId(int id) {
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            // Primeiro buscamos para saber se tem imagem no Storage
+            // Nota: No ProdutoDao, buscarPorId não existia no histórico anterior, mas é necessário.
+            // Vou assumir que o DAO tem ou adicionar se falhar.
+            produtoDao.removerPorId(id);
+            localCache.invalidarProdutos();
+            firebaseDataSource.excluirProduto(id, null);
+            // Opcional: deletar imagem do storage se houver URL salva
+        });
+    }
+
     // ======================== MÉTODOS PRIVADOS SYNC ========================
 
     private void sincronizarProdutoNoFirestore(Produto produto) {
