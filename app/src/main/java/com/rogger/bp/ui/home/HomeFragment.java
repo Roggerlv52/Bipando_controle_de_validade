@@ -1,7 +1,9 @@
 package com.rogger.bp.ui.home;
 
+import static com.rogger.bp.ui.home.CustomProgressBarKt.hideLoadingDialog;
+import static com.rogger.bp.ui.home.CustomProgressBarKt.showLoadingDialog;
+
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +37,6 @@ import java.util.List;
 public class HomeFragment extends Fragment implements OnItemClickListener {
     private ViewFlipper viewFlipper;
     private ImageView imageView;
-    private ProgressBar progressBar;
     private FragmentHomeBinding binding;
     private DataViewModel dataViewModel;
     private CategoriaViewModel categoriaViewModel;
@@ -59,14 +60,11 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         viewFlipper = binding.viewFlipper;
         imageView = binding.imgHomeFragment;
 
-        // ✅ Agora usando o ID correto do novo ProgressBar no layout
-        progressBar = binding.homeProgressBar;
-
         // Recuperar o valor do slider de dias amarelo do SharedPreferences
         int diasAmarelo = NotificationPrefs.getDays(requireContext());
 
         // Instanciar o AdapterHome com o valor dinâmico do slider
-        adapte = new AdapterHome(requireContext(), diasAmarelo,this);
+        adapte = new AdapterHome(requireContext(), diasAmarelo, this);
 
         recyclerView.setAdapter(adapte);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -76,8 +74,10 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
 
         // ✅ Observar o estado de carregamento (Firebase Sync)
         dataViewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            if (isLoading != null) {
-                progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (Boolean.TRUE.equals(isLoading)) {
+                showLoadingDialog(requireContext());
+            } else {
+                hideLoadingDialog();
             }
         });
 
@@ -197,7 +197,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     private void atualizarView(List<Produto> dados) {
         if (dados == null || dados.isEmpty()) {
             viewFlipper.setDisplayedChild(1); // Mostra a imagem de lista vazia
-            imageView.setImageResource(R.drawable.empty_list);
+            imageView.setImageResource(R.drawable.lista_vazia);
             // ✅ Não escondemos o progressBar aqui, deixamos o observer de isLoading cuidar disso
         } else {
             viewFlipper.setDisplayedChild(0); // Mostra o RecyclerView
@@ -220,10 +220,10 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         Produto produto = data.get(position);
 
         // Verificações de null
-        int id = produto.getId() !=  0 ? produto.getId() :0;
+        int id = produto.getId() != 0 ? produto.getId() : 0;
         bundle = new Bundle();
         navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment_content_main);
-        bundle.putInt("id",id);
+        bundle.putInt("id", id);
         navController.navigate(R.id.action_nav_home_to_nav_edit_fragment, bundle);
     }
 

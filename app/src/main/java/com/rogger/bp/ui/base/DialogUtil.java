@@ -58,9 +58,5 @@ public class DialogUtil {
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
-
-    public static void setIndicator() {
-
-    }
 }
 
