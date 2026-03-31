@@ -20,15 +20,16 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.data.database.FirebaseDataSource;
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.databinding.ActivityMainBinding;
+import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.notification.NotificationUtil;
+import com.rogger.bp.ui.animation.GradientAnimator;
 import com.rogger.bp.ui.base.BaseActivity;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
-import com.rogger.bp.notification.NotificationScheduler;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ public class MainActivity extends BaseActivity {
     private TextView txtProfileName;
     private TextView txtProfileEmail;
     private FirebaseDataSource firebaseDataSource;
+    private GradientAnimator animator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,12 @@ public class MainActivity extends BaseActivity {
         imgProfile = viewProfile.findViewById(R.id.img_profile_navigation);
         txtProfileName = viewProfile.findViewById(R.id.name_profile_navigation);
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
+
+        View bgView = viewProfile.findViewById(R.id.header_background);
+
+// 🔥 iniciar animação
+        animator = new GradientAnimator(bgView);
+        animator.start();
 
         firebaseDataSource = FirebaseDataSource.getInstance();
 
@@ -129,5 +137,8 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         firebaseDataSource.stopAllListeners();
+        if (animator != null) {
+            animator.stop();
+        }
     }
 }
