@@ -5,6 +5,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.kotlin.android)
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
 val keystoreProperties = Properties()
@@ -55,6 +56,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -67,6 +71,7 @@ dependencies {
     //Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
+    implementation(libs.core.ktx)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.work:work-runtime:2.9.0")
 
