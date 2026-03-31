@@ -12,11 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -28,10 +24,15 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
 import com.rogger.bp.data.database.FirebaseStorageDataSource;
+import com.rogger.bp.data.database.ProdutoImagemDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.ProdutoImagem;
+import com.rogger.bp.data.repository.ProdutoImagemRepository;
+import com.rogger.bp.databinding.FragmentAddBinding;
 import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.commun.ShowSelectDialog;
@@ -47,25 +48,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AddFragment extends Fragment {
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private TextView txtBarcode, txtData;
-    private EditText edtName, edtNote;
+
+    private static final String TAG = "AddFragment";
+    private FragmentAddBinding binding;
+    // ── Estado ───────────────────────────────────────────────────
     private long timestamp;
-    private Button btnData, btnSave;
-    private ImageView imgUpload;
-    private Uri newImageUri;
-    private CategoriaViewModel categoriaViewModel;
-    private DataViewModel dataViewModel;
     private Produto produto;
-    private Spinner spinner;
+    private File photoFile;
+    private boolean confirmed = false;
+    private boolean carregandoSpinner = true;
+    private int categoriaId = -1;
+
+    /**
+     * URL da imagem vinda do banco global (imagens_produtos).
+     * Se preenchida, significa que a imagem já existe e NÃO será feito upload.
+     */
+    private String imagemUrlGlobal = null;
     private ArrayAdapter<Categoria> categoriaAdapter;
     private List<Categoria> listaCategorias = new ArrayList<>();
-    private ActivityResultLauncher<Intent> cameraLauncher;
-    private boolean carregandoSpinner = true;
     private ImagePikerUtil cameraUtil;
-    private boolean confirmed;
-    private File photoFile;
-    private int categoriaId = -1;
+    private ActivityResultLauncher<Intent> cameraLauncher;
+    private CategoriaViewModel categoriaViewModel;
+    private DataViewModel dataViewModel;
+    private ProdutoImagemRepository produtoImagemRepository;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,94 +78,262 @@ public class AddFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_add, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
+        binding = FragmentAddBinding.inflate(inflater, container, false);
+
         categoriaViewModel = new ViewModelProvider(requireActivity()).get(CategoriaViewModel.class);
         dataViewModel = new ViewModelProvider(requireActivity()).get(DataViewModel.class);
-
-        imgUpload = view.findViewById(R.id.fragment_img_add);
-        txtBarcode = view.findViewById(R.id.txt_add_barcode);
-        txtData = view.findViewById(R.id.txt_add_data);
-        edtName = view.findViewById(R.id.edt_name_fragment_add);
-        btnData = view.findViewById(R.id.datePickerBtn_add);
-        edtNote = view.findViewById(R.id.edit_fragment_note_add);
-        spinner = view.findViewById(R.id.spinner_add);
-        btnSave = view.findViewById(R.id.btn_fgm_save_add);
+        produtoImagemRepository = ProdutoImagemRepository.getInstance();
         produto = new Produto();
         cameraUtil = new ImagePikerUtil();
-        btnData.setText(Utils.getCurrentDateFormatted());
-        txtData.setText(Utils.getCurrentDateFormatted());
 
+        String dataAtual = Utils.getCurrentDateFormatted();
+        binding.datePickerBtnAdd.setText(dataAtual);
+        binding.txtAddData.setText(dataAtual);
         timestamp = Utils.getCurrentTimestamp();
-        btnData.setText(Utils.getCurrentDateFormatted());
-        txtData.setText(Utils.getCurrentDateFormatted());
-        return view;
+
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        configurarSpinner();
+        configurarGalleryResult();
+        configurarCamera();
+        configurarListeners();
+        configurarMenu();
+
+        // Recebe o código de barras vindo do scanner
         Bundle args = getArguments();
         if (args != null) {
             String barcode = args.getString("key_barcode");
             categoriaId = args.getInt("categoria_id", -1);
 
-            txtBarcode.setText(barcode);
-        }
-        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categories -> {
-
-            listaCategorias.clear();
-            // (Opcional) placeholder
-            if (categories != null) {
-                listaCategorias.addAll(categories);
+            if (barcode != null && !barcode.isEmpty()) {
+                binding.txtAddBarcode.setText(barcode);
+                // ─── NOVO FLUXO: consulta imagem global antes de exibir formulário
+                consultarImagemGlobal(barcode);
             }
+        }
+    }
+
+    // ============================================================
+    // NOVO FLUXO — CONSULTA DE IMAGEM GLOBAL
+    // ============================================================
+
+    /**
+     * Consulta a coleção global "imagens_produtos" pelo código de barras.
+     * <p>
+     * Resultado A — barcode JÁ existe:
+     * → Preenche imgUpload com a imagem via Glide (sem download manual)
+     * → Preenche edtName com o nome sugerido (editável pelo usuário)
+     * → Bloqueia o botão de imagem (não precisa capturar nova foto)
+     * → Ao salvar, NÃO faz upload — usa a imagemUrlGlobal diretamente
+     * <p>
+     * Resultado B — barcode NÃO existe:
+     * → Formulário permanece em branco (comportamento original)
+     * → Usuário captura imagem normalmente
+     * → Ao salvar, faz upload global em imagens_produtos/{barcode}/imagem.jpg
+     * e depois grava o documento no Firestore
+     */
+    private void consultarImagemGlobal(@NonNull String barcode) {
+        mostrarProgressoConsulta(true);
+
+        produtoImagemRepository.buscarPorCodigoBarras(barcode,
+                new ProdutoImagemDataSource.BuscaCallback() {
+
+                    @Override
+                    public void onEncontrado(@NonNull ProdutoImagem produtoImagem) {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            mostrarProgressoConsulta(false);
+                            preencherComImagemExistente(produtoImagem);
+                        });
+                    }
+
+                    @Override
+                    public void onNaoEncontrado() {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            mostrarProgressoConsulta(false);
+                            // Formulário permanece em branco — usuário cadastra normalmente
+                            Log.d(TAG, "Barcode novo. Usuário deve capturar imagem.");
+                        });
+                    }
+
+                    @Override
+                    public void onErro(@NonNull Exception e) {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            mostrarProgressoConsulta(false);
+                            Log.e(TAG, "Erro ao consultar imagem global: " + e.getMessage());
+                            // Falha silenciosa — formulário permanece em branco,
+                            // usuário pode continuar normalmente
+                        });
+                    }
+                });
+    }
+
+    /**
+     * Preenche o formulário com os dados da imagem já existente no banco global.
+     * Chamado apenas quando o barcode já foi cadastrado por algum usuário.
+     */
+    private void preencherComImagemExistente(@NonNull ProdutoImagem produtoImagem) {
+        imagemUrlGlobal = produtoImagem.getImagemUrl();
+        if (produtoImagem.temImagem()) {
+            Glide.with(this)
+                    .load(imagemUrlGlobal)
+                    .placeholder(R.drawable.carregando)
+                    .error(R.drawable.imagem_error)
+                    .centerCrop()
+                    .into(binding.fragmentImgAdd);
+
+            // Bloqueia o botão de imagem — não faz sentido trocar uma imagem global
+            binding.fragmentImgAdd.setClickable(false);
+            binding.fragmentImgAdd.setAlpha(0.85f);
+        }
+
+        // Preenche o nome sugerido se disponível (editável — usuário pode ajustar)
+        if (produtoImagem.temNome()) {
+            binding.edtNameFragmentAdd.setText(produtoImagem.getNomeProduto());
+            binding.edtNameFragmentAdd.setSelection(
+                    binding.edtNameFragmentAdd.getText().length());
+        }
+
+        Log.d(TAG, "Formulário preenchido com imagem global: " + produtoImagem.getCodigoBarras());
+    }
+
+    /**
+     * Salva o produto no banco.
+     * <p>
+     * Caso A — imagemUrlGlobal preenchida (barcode já existia):
+     * → Salva produto com a URL global diretamente. Zero upload.
+     * <p>
+     * Caso B — imagemUrlGlobal nula + photoFile disponível (barcode novo):
+     * → Faz upload global em imagens_produtos/{barcode}/imagem.jpg
+     * → Grava documento em imagens_produtos/{barcode}
+     * → Salva produto com a URL retornada
+     * <p>
+     * Caso C — sem imagem nenhuma:
+     * → Salva produto normalmente sem imagem
+     */
+    private void saveData() {
+        produto.setNome(binding.edtNameFragmentAdd.getText().toString().trim());
+        produto.setAnotacoes(binding.editFragmentNoteAdd.getText().toString());
+        produto.setTimestamp(timestamp);
+        produto.setCodigoBarras(binding.txtAddBarcode.getText().toString().trim());
+
+        // Caso A: imagem global já existia — usa URL direto, sem upload
+        if (imagemUrlGlobal != null && !imagemUrlGlobal.isEmpty()) {
+            produto.setImagem(imagemUrlGlobal);
+            dataViewModel.insert(produto, null);
+            Log.d(TAG, "Produto salvo com imagem global existente. Sem upload.");
+            return;
+        }
+
+        // Caso B: barcode novo com imagem local capturada — faz upload global
+        if (photoFile != null && !produto.getCodigoBarras().isEmpty()) {
+            produto.setImagem(photoFile.getAbsolutePath());
+            mostrarProgressoUpload(true);
+
+            dataViewModel.insert(produto, new FirebaseStorageDataSource.UploadCallback() {
+
+                @Override
+                public void onProgresso(int porcentagem) {
+                    if (!isAdded()) return;
+                    requireActivity().runOnUiThread(() ->
+                            binding.progressUploadAdd.setProgress(porcentagem));
+                }
+
+                @Override
+                public void onSucesso(String urlDownload) {
+                    if (!isAdded()) return;
+                    requireActivity().runOnUiThread(() -> {
+                        mostrarProgressoUpload(false);
+                        Log.d(TAG, "Upload global concluído: " + urlDownload);
+                    });
+                }
+
+                @Override
+                public void onErro(Exception e) {
+                    if (!isAdded()) return;
+                    requireActivity().runOnUiThread(() -> {
+                        mostrarProgressoUpload(false);
+                        Log.e(TAG, "Falha no upload global: " + e.getMessage());
+                    });
+                }
+            });
+            return;
+        }
+
+        // Caso C: sem imagem — salva produto normalmente
+        dataViewModel.insert(produto, null);
+        Log.d(TAG, "Produto salvo sem imagem.");
+    }
+
+    private void configurarSpinner() {
+        categoriaViewModel.getCategories().observe(getViewLifecycleOwner(), categories -> {
+            listaCategorias.clear();
+            if (categories != null) listaCategorias.addAll(categories);
+
             categoriaAdapter = new ArrayAdapter<>(
                     requireContext(),
                     android.R.layout.simple_spinner_item,
-                    listaCategorias
-            );
+                    listaCategorias);
             categoriaAdapter.setDropDownViewResource(
-                    android.R.layout.simple_spinner_dropdown_item
-            );
-            spinner.setAdapter(categoriaAdapter);
-            // 🔥 AGORA SIM pode selecionar
-            if (categoriaId != -1) {
-                selecionarCategoriaPorId(categoriaId);
-            }
+                    android.R.layout.simple_spinner_dropdown_item);
+            binding.spinnerAdd.setAdapter(categoriaAdapter);
+
+            if (categoriaId != -1) selecionarCategoriaPorId(categoriaId);
             carregandoSpinner = false;
         });
 
-        // Recupera o argumento
+        binding.spinnerAdd.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                if (carregandoSpinner) return;
+                produto.setCategoryId(listaCategorias.get(position).getId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    private void configurarGalleryResult() {
         getParentFragmentManager().setFragmentResultListener(
                 "gallery_result",
                 getViewLifecycleOwner(),
                 (key, bundle) -> {
-
                     try {
                         Uri img = Uri.parse(bundle.getString("imageUri"));
                         File file = ImagePikerUtil.createImageFile(requireContext());
-                        photoFile = ImageUtils.processImage(
-                                requireContext(),
-                                img,
-                                file
-                        );
+                        photoFile = ImageUtils.processImage(requireContext(), img, file);
+                        // Imagem local selecionada — descarta qualquer URL global anterior
+                        imagemUrlGlobal = null;
+                        binding.fragmentImgAdd.setImageURI(Uri.fromFile(photoFile));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    imgUpload.setImageURI(Uri.fromFile(photoFile));
-                }
-        );
-//
-        cameraLauncher = cameraUtil.register(this, new CameraCallback() {
+                });
+    }
 
+    private void configurarCamera() {
+        cameraLauncher = cameraUtil.register(this, new CameraCallback() {
             @Override
             public void onImageCaptured(@NonNull Uri imageUri, @NonNull File imageFile) {
                 try {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile);
+                    // Imagem local capturada — descarta qualquer URL global anterior
+                    imagemUrlGlobal = null;
+                    binding.fragmentImgAdd.setImageURI(Uri.fromFile(photoFile));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                imgUpload.setImageURI(Uri.fromFile(photoFile));
             }
 
             @Override
@@ -170,71 +343,52 @@ public class AddFragment extends Fragment {
             @Override
             public void onError(@NonNull Exception e) {
                 Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                Log.e("CameraError", e.getMessage());
             }
         });
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id) {
+    }
 
-                if (carregandoSpinner) return;
+    private void configurarListeners() {
+        binding.datePickerBtnAdd.setOnClickListener(v ->
+                Utils.showDatePicker(requireContext(), (ts, dataFormatada) -> {
+                    binding.datePickerBtnAdd.setText(dataFormatada);
+                    binding.txtAddData.setText(dataFormatada);
+                    timestamp = ts;
+                }));
 
-                Categoria selecionada = listaCategorias.get(position);
+        binding.txtAddBarcode.setOnClickListener(v ->
+                startImageBarcode(binding.txtAddBarcode.getText().toString()));
 
-                // ✅ Salva no produto
-                produto.setCategoryId(selecionada.getId());
-            }
+        binding.fragmentImgAdd.setOnClickListener(v -> {
+            // Só permite trocar imagem se NÃO veio do banco global
+            if (imagemUrlGlobal != null) return;
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
-
-        btnData.setOnClickListener(v -> {
-            Utils.showDatePicker(requireContext(), new Utils.OnDateSelectedListener() {
-                @Override
-                public void onDateSelected(long timestamp, String dataFormatada) {
-                    btnData.setText(dataFormatada);
-                    txtData.setText(dataFormatada);
-                    AddFragment.this.timestamp = timestamp;
-                }
-            });
-        });
-        txtBarcode.setOnClickListener(view1 -> {
-            startImageBarcode(txtBarcode.getText().toString());
-        });
-        imgUpload.setOnClickListener(v -> {
             confirmed = false;
             ShowSelectDialog.show(getContext(), new ShowSelectDialog.selectedCallback() {
-
                 @Override
                 public void openGallery() {
-                    Navigation.findNavController(requireView()).navigate(R.id.action_addFragment_to_nav_gallery_fragment);
+                    Navigation.findNavController(requireView())
+                            .navigate(R.id.action_addFragment_to_nav_gallery_fragment);
                 }
 
                 @Override
                 public void openCamera() {
+                    if (photoFile != null) photoFile.delete();
                     cameraUtil.openCamera(requireContext(), cameraLauncher);
-                    if (photoFile != null) {
-                        photoFile.delete();
-                    }
                 }
             });
         });
-        btnSave.setOnClickListener(v -> {
-            if (Utils.validEditText(edtName)) {
+
+        binding.btnFgmSaveAdd.setOnClickListener(v -> {
+            if (Utils.validEditText(binding.edtNameFragmentAdd)) {
                 saveData();
                 confirmed = true;
                 Toast.makeText(getContext(), "Produto salvo com sucesso", Toast.LENGTH_SHORT).show();
                 Navigation.findNavController(requireView()).popBackStack();
             }
         });
+    }
 
+    private void configurarMenu() {
         requireActivity().addMenuProvider(new MenuProvider() {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
@@ -249,44 +403,25 @@ public class AddFragment extends Fragment {
                             requireContext(),
                             "Deseja realmente excluir este produto?",
                             () -> {
-                                //dataViewModel.moverParaLixeira(produto.getId());
                                 ImagePikerUtil.cleanUpTempFiles(photoFile);
                                 Navigation.findNavController(requireView()).popBackStack();
-                            }
-                    );
+                            });
                     return true;
                 }
                 return false;
             }
-
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
-    private void saveData() {
-        produto.setNome(edtName.getText().toString().trim());
-        produto.setAnotacoes(edtNote.getText().toString());
-        produto.setTimestamp(timestamp);
-        produto.setCodigoBarras(txtBarcode.getText().toString());
-        if (photoFile != null) {
-            produto.setImagem(photoFile.getAbsolutePath());
-        }
-        // ✅ Só salva imagem se o usuário selecionou, passando o callback para upload no Storage
-        dataViewModel.insert(produto, new FirebaseStorageDataSource.UploadCallback() {
-            @Override
-            public void onProgresso(int porcentagem) {
-                Log.d("AddFragment", "Upload progresso: " + porcentagem + "%");
-            }
+    private void mostrarProgressoConsulta(boolean mostrar) {
+        binding.progressUploadAdd.setVisibility(mostrar ? View.VISIBLE : View.GONE);
+        binding.btnFgmSaveAdd.setEnabled(!mostrar);
+    }
 
-            @Override
-            public void onSucesso(String urlDownload) {
-                Log.d("AddFragment", "Upload concluído: " + urlDownload);
-            }
-
-            @Override
-            public void onErro(Exception e) {
-                Log.e("AddFragment", "Falha no upload da imagem: " + e.getMessage());
-            }
-        });
+    private void mostrarProgressoUpload(boolean mostrar) {
+        binding.progressUploadAdd.setVisibility(mostrar ? View.VISIBLE : View.GONE);
+        binding.progressUploadAdd.setIndeterminate(!mostrar);
+        binding.btnFgmSaveAdd.setEnabled(!mostrar);
     }
 
     private void startImageBarcode(String barcode) {
@@ -298,7 +433,7 @@ public class AddFragment extends Fragment {
     private void selecionarCategoriaPorId(int id) {
         for (int i = 0; i < listaCategorias.size(); i++) {
             if (listaCategorias.get(i).getId() == id) {
-                spinner.setSelection(i);
+                binding.spinnerAdd.setSelection(i);
                 produto.setCategoryId(id);
                 return;
             }
@@ -308,7 +443,9 @@ public class AddFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (!confirmed && photoFile != null) {
+        // Limpa arquivo temporário local apenas se o usuário cancelou
+        // e a imagem não veio do banco global
+        if (!confirmed && photoFile != null && imagemUrlGlobal == null) {
             ImagePikerUtil.cleanUpTempFiles(photoFile);
         }
     }

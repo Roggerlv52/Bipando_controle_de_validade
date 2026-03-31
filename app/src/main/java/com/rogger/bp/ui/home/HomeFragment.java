@@ -49,12 +49,10 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         super.onCreate(savedInstanceState);
     }
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
 
         RecyclerView recyclerView = binding.rcViewListHome;
         viewFlipper = binding.viewFlipper;
@@ -92,7 +90,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
             }
         });
 
-        return root;
+        return binding.getRoot();
     }
 
     @Override
