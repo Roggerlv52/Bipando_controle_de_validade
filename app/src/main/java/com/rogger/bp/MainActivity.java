@@ -107,7 +107,9 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if(id==R.id.menu_search){
-            Toast.makeText(this,"Pesquisar", Toast.LENGTH_SHORT).show();
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            navController.navigate(R.id.nav_search);
+            return true;
         }
         if (id == R.id.menu_logout) {
             // 🔑 Limpa cache de sessão e flags de sync antes de deslogar

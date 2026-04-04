@@ -22,6 +22,9 @@
         android:name="com.rogger.bp.ui.search.SearchFragment"
         android:label="@string/menu_search"
         tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_search_to_barcode_scanner"
+            app:destination="@id/nav_barcode_scan_fragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"

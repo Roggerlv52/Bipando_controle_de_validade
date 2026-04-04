@@ -81,4 +81,15 @@ public class DataViewModel extends AndroidViewModel {
         update(produto);
     }
 
+
+    // 🔍 Busca por nome
+    public LiveData<List<Produto>> buscarPorNome(String query) {
+        return repository.buscarPorNome(query);
+    }
+
+    // 🔍 Busca por código de barras
+    public LiveData<List<Produto>> buscarPorCodigoBarras(String barcode) {
+        return repository.buscarPorCodigoBarras(barcode);
+    }
+
 }

@@ -19,6 +19,21 @@ public interface ProdutoDao {
 
     @Update
     void update(Produto produto);
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.deleted = 0 AND p.userId = :userId " +
+            "AND p.nome LIKE '%' || :query || '%' " +
+            "ORDER BY p.nome ASC")
+    LiveData<List<Produto>> buscarPorNome(String userId, String query);
+    // 🔍 Busca exata por código de barras
+    @Query("SELECT p.*, c.nome AS nomeCategoria " +
+            "FROM produtos p " +
+            "LEFT JOIN categorias c ON p.categoryId = c.id " +
+            "WHERE p.deleted = 0 AND p.userId = :userId " +
+            "AND p.codigoBarras = :barcode " +
+            "ORDER BY p.nome ASC")
+    LiveData<List<Produto>> buscarPorCodigoBarras(String userId, String barcode);
 
     // 🔑 JOIN com categorias para buscar o nomeCategoria atualizado
     @Query("SELECT p.*, c.nome AS nomeCategoria " +

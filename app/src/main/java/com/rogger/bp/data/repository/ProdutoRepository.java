@@ -64,6 +64,14 @@ public class ProdutoRepository {
     public LiveData<List<Produto>> getProdutosAtivos()  { return produtosAtivos; }
     public LiveData<List<Produto>> getProdutosDeletados(){ return produtosDeletados; }
 
+    public LiveData<List<Produto>> buscarPorNome(String query) {
+        return produtoDao.buscarPorNome(userId, query);
+    }
+
+    public LiveData<List<Produto>> buscarPorCodigoBarras(String barcode) {
+        return produtoDao.buscarPorCodigoBarras(userId, barcode);
+    }
+
     public void sincronizarDoFirestore() {
         if (localCache.getProdutosAtivos() != null) {
             Log.d(TAG, "Cache válido, pulando busca no Firestore.");
