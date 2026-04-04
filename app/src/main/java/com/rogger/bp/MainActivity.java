@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -105,6 +106,9 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+        if(id==R.id.menu_search){
+            Toast.makeText(this,"Pesquisar", Toast.LENGTH_SHORT).show();
+        }
         if (id == R.id.menu_logout) {
             // 🔑 Limpa cache de sessão e flags de sync antes de deslogar
 

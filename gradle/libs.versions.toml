@@ -21,6 +21,7 @@ legacySupportV4 = "1.0.0"
 firebaseStorage = "22.0.1"
 kotlin = "2.0.21"
 coreKtx = "1.12.0"
+recyclerview = "1.4.0"
 
 [libraries]
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -45,6 +46,7 @@ coordinatorlayout = { group = "androidx.coordinatorlayout", name = "coordinatorl
 legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -25,7 +25,7 @@ android {
         }
     }
     namespace = "com.rogger.bp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.rogger.bp"
@@ -72,6 +72,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
+    implementation(libs.recyclerview)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.work:work-runtime:2.9.0")
 

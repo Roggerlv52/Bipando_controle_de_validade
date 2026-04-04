@@ -18,6 +18,12 @@
             app:destination="@id/nav_show_fragment" />
     </fragment>
     <fragment
+        android:id="@+id/nav_search"
+        android:name="com.rogger.bp.ui.search.SearchFragment"
+        android:label="@string/menu_search"
+        tools:layout="@layout/fragment_search">
+    </fragment>
+    <fragment
         android:id="@+id/nav_edit_fragment"
         android:name="com.rogger.bp.ui.edit.EditFragment"
         android:label="@string/edit"
