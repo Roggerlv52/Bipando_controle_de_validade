@@ -19,6 +19,13 @@
             android:orientation="horizontal"
             android:paddingStart="4dp"
             android:paddingEnd="8dp">
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Voltar"
+                android:src="@drawable/seta_left" />
 
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/search_view"

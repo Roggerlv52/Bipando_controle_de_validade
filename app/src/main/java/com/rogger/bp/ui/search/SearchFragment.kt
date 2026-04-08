@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -21,6 +22,7 @@ import com.rogger.bp.data.model.Produto
 import com.rogger.bp.ui.scanner.BarcodeScanFragment
 import com.rogger.bp.ui.viewmodel.DataViewModel
 
+
 class SearchFragment : Fragment() {
 
     private var dataViewModel: DataViewModel? = null
@@ -32,6 +34,23 @@ class SearchFragment : Fragment() {
     private var activeObserver: Observer<List<Produto>>? = null
     private var activeLiveData: LiveData<List<Produto>>? = null
 
+    // Referência à toolbar global do MainActivity
+    private val mainToolbar: Toolbar?
+        get() = requireActivity().findViewById(R.id.toolbar)
+
+    override fun onResume() {
+        super.onResume()
+        // Esconde a toolbar do MainActivity sempre que este fragment estiver visível,
+        // inclusive após rotação de tela
+        mainToolbar?.visibility = View.GONE
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Restaura ao sair do fragment (navegação ou rotação)
+        mainToolbar?.visibility = View.VISIBLE
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -39,20 +58,19 @@ class SearchFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
 
-        (requireActivity() as AppCompatActivity).supportActionBar?.hide()
-
         dataViewModel = ViewModelProvider(this).get(DataViewModel::class.java)
 
-        // Bind views
         recyclerSearch = view.findViewById(R.id.recycler_search)
-        layoutEmpty = view.findViewById(R.id.layout_search_empty)
-        txtHint = view.findViewById(R.id.txt_search_hint)
+        layoutEmpty    = view.findViewById(R.id.layout_search_empty)
+        txtHint        = view.findViewById(R.id.txt_search_hint)
 
-        // Adapter
         adapter = SearchAdapter(requireContext())
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
         recyclerSearch?.adapter = adapter
-
+        // Seta de voltar
+        view.findViewById<ImageButton>(R.id.btn_back)?.setOnClickListener {
+            findNavController().popBackStack()
+        }
         // SearchView
         view.findViewById<SearchView>(R.id.search_view)
             ?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -60,12 +78,11 @@ class SearchFragment : Fragment() {
                     query?.trim()?.takeIf { it.isNotEmpty() }?.let { buscarPorNome(it) }
                     return true
                 }
-
                 override fun onQueryTextChange(newText: String?): Boolean {
                     val q = newText?.trim() ?: ""
                     when {
                         q.length >= 2 -> buscarPorNome(q)
-                        q.isEmpty() -> mostrarEstadoVazio("Digite um nome ou escaneie um código de barras")
+                        q.isEmpty()   -> mostrarEstadoVazio("Digite um nome ou escaneie um código de barras")
                     }
                     return true
                 }
@@ -99,12 +116,11 @@ class SearchFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        (requireActivity() as AppCompatActivity).supportActionBar?.show()
         activeObserver?.let { activeLiveData?.removeObserver(it) }
         recyclerSearch = null
-        layoutEmpty = null
-        txtHint = null
-        adapter = null
+        layoutEmpty    = null
+        txtHint        = null
+        adapter        = null
     }
 
     // ── Busca ────────────────────────────────────────────────────
