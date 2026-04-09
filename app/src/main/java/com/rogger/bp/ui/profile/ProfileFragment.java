@@ -27,6 +27,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.rogger.bp.R;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
+import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 
 import java.util.List;
@@ -68,6 +69,8 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+
+
         int themeNumber = SharedPreferencesManager.getThemeNumber(requireContext(), "chave");
         boolean stateBeep = SharedPreferencesManager.getBeepState(requireContext(), "beep");
 

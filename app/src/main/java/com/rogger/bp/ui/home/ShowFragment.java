@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 
 public class ShowFragment extends Fragment {
 

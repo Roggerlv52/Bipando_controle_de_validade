@@ -18,6 +18,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 
 public class ImageBarcodeShow extends Fragment {
 

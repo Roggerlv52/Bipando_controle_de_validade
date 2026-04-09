@@ -28,6 +28,7 @@ import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.databinding.FragmentHomeBinding;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.ui.base.CategoriaDialogUtil;
+import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bp.ui.viewmodel.DataViewModel;
@@ -50,7 +51,7 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        MenuUtil.hideItems(this, R.id.menu_search);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
 

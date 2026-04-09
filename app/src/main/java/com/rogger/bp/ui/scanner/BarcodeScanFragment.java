@@ -29,6 +29,7 @@ import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeView;
 import com.journeyapps.barcodescanner.DefaultDecoderFactory;
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 
 import java.util.Arrays;
