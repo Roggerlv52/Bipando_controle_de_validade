@@ -5,6 +5,7 @@
         android:id="@+id/menu_search"
         android:orderInCategory="100"
         android:icon="@drawable/ic_search_24"
+        android:visible="false"
         android:title="Buscar"
         app:showAsAction="ifRoom" />
     <item
