@@ -21,11 +21,11 @@
             android:icon="@drawable/ic_profile_config"
             android:title="@string/menu_profile_config" />
 
-        <item android:title="Outros">
+        <item android:title="">
             <menu >
-                <item android:id="@+id/nav_about"
-                    android:icon="@drawable/ic_live_help"
-                    android:title="Suport"/>
+                <item android:id="@+id/nav_payment"
+                    android:icon="@drawable/ic_credit_card_24"
+                    android:title="Assinatura"/>
             </menu>
         </item>
     </group>
