@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/coordinator"
+    android:background="#24333D"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -11,8 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:scaleType="centerCrop"
-        android:src="@drawable/picture_1"
+        android:scaleType="centerInside"
+        android:src="@drawable/bipando"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,6 +39,7 @@
             android:layout_marginBottom="2dp"
             android:background="?attr/colorPrimary"
             android:padding="5dp"
+            android:visibility="invisible"
             android:text="@string/controle_de_validade"
             android:textAlignment="center"
             android:textColor="@color/white"
@@ -60,12 +62,12 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="15dp"
             android:background="@drawable/custo_button"
-            android:backgroundTint="@color/red"
+            android:backgroundTint="@color/white"
             android:drawablePadding="8dp"
             android:padding="10dp"
             android:text="Fazer login com Google"
-            android:textColor="@color/white"
-            android:theme="@style/Theme.Bpd_3" />
+            android:textColor="@color/black"
+            android:theme="@style/Theme.Bpd_7"/>
 
     </LinearLayout>
 

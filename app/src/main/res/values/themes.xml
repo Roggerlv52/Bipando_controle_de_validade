@@ -28,6 +28,10 @@
     <style name="Theme.Bpd_3" parent="Theme.Bpd">
         <item name="colorPrimary">@color/red</item>
     </style>
+    <style name="Theme.Bpd_7" parent="Theme.Bpd">
+        <item name="colorPrimary">@color/white</item>
+
+    </style>
 
     <style name="Theme.Bpd_4" parent="Theme.Bpd">
         <item name="colorPrimary">@color/black</item>
