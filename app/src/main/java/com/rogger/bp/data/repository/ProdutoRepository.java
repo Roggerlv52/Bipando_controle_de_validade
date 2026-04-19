@@ -92,28 +92,9 @@ public class ProdutoRepository {
                 localCache.setProdutosAtivos(produtos);
 
                 BpdDatabase.databaseWriteExecutor.execute(() -> {
-
-                    // Busca todas as categorias locais de forma síncrona
-                    // para montar um mapa  categoryId → nomeCategoria
-                    List<Categoria> categorias =
-                            categoriaDao.listarCategoriasSync(userId);
-
-                    java.util.Map<Integer, String> nomeMap = new java.util.HashMap<>();
-                    if (categorias != null) {
-                        for (Categoria c : categorias) {
-                            nomeMap.put(c.getId(), c.getNome());
-                        }
-                    }
-
+                    preencherNomesCategorias(produtos);
                     for (Produto p : produtos) {
                         p.setUserId(userId);
-
-                        // ✅ Seta o nomeCategoria antes de inserir no Room
-                        // Assim o cache em memória e o primeiro emit do LiveData
-                        // já trazem o nome correto, sem depender do JOIN
-                        String nome = nomeMap.get(p.getCategoryId());
-                        p.setNomeCategoria(nome != null ? nome : "");
-
                         produtoDao.insert(p);
                     }
                     isLoading.postValue(false);
@@ -127,6 +108,23 @@ public class ProdutoRepository {
         });
     }
 
+    /**
+     * ✅ Busca nomes das categorias locais e preenche nos produtos em memória
+     */
+    private void preencherNomesCategorias(List<Produto> produtos) {
+        List<Categoria> categorias = categoriaDao.listarCategoriasSync(userId);
+        java.util.Map<Integer, String> nomeMap = new java.util.HashMap<>();
+        if (categorias != null) {
+            for (Categoria c : categorias) {
+                nomeMap.put(c.getId(), c.getNome());
+            }
+        }
+        for (Produto p : produtos) {
+            String nome = nomeMap.get(p.getCategoryId());
+            p.setNomeCategoria(nome != null ? nome : "");
+        }
+    }
+
     // ======================== INSERIR ========================
 
     public void inserir(Produto produto,
@@ -135,8 +133,11 @@ public class ProdutoRepository {
         isLoading.postValue(true);
 
         BpdDatabase.databaseWriteExecutor.execute(() -> {
+            // ✅ Preenche o nome da categoria antes de salvar
+            List<Produto> listaTemp = new java.util.ArrayList<>();
+            listaTemp.add(produto);
+            preencherNomesCategorias(listaTemp);
 
-            // 1. Persiste no Room e obtém o ID gerado
             long newId = produtoDao.insert(produto);
             produto.setId((int) newId);
             localCache.invalidarProdutos();
@@ -150,21 +151,15 @@ public class ProdutoRepository {
             boolean temBarcode = barcode != null && !barcode.isEmpty();
 
             if (!temImagemLocal) {
-                // Caso C — sem imagem local: salva direto no Firestore
                 sincronizarProdutoNoFirestore(produto);
                 isLoading.postValue(false);
                 return;
             }
 
             File arquivoLocal = new File(caminhoLocal);
-
             if (temBarcode) {
-                // Casos A — produto com código de barras:
-                // verifica se imagem global já existe antes de fazer upload
                 inserirComImagemGlobal(produto, barcode, arquivoLocal, callback);
             } else {
-                // Caso B — produto sem código de barras:
-                // mantém comportamento original (upload por produtoId)
                 inserirComImagemLegada(produto, arquivoLocal, callback);
             }
         });
@@ -174,14 +169,6 @@ public class ProdutoRepository {
         inserir(produto, null);
     }
 
-    // ── Caso A: produto com barcode ───────────────────────────────
-
-    /**
-     * Verifica se já existe imagem global para o barcode.
-     *
-     * · Existe    → atualiza produto com a URL existente, zero upload
-     * · Não existe → faz upload global e grava em imagens_produtos
-     */
     private void inserirComImagemGlobal(Produto produto,
                                         String barcode,
                                         File arquivoLocal,
@@ -192,7 +179,6 @@ public class ProdutoRepository {
 
                     @Override
                     public void onEncontrado(ProdutoImagem produtoImagem) {
-                        // Imagem já existe — usa URL sem upload
                         Log.d(TAG, "Imagem global encontrada para: " + barcode);
                         produto.setImagem(produtoImagem.getImagemUrl());
 
@@ -202,25 +188,20 @@ public class ProdutoRepository {
                             isLoading.postValue(false);
                         });
 
-                        // Notifica sucesso com a URL já existente
                         if (callback != null) {
                             callback.onSucesso(produtoImagem.getImagemUrl());
                         }
-
-                        // Arquivo local não será mais necessário — limpa
                         arquivoLocal.delete();
                     }
 
                     @Override
                     public void onNaoEncontrado() {
-                        // Barcode novo — faz upload global
                         Log.d(TAG, "Barcode novo. Fazendo upload global: " + barcode);
                         uploadGlobalEGravar(produto, barcode, arquivoLocal, callback);
                     }
 
                     @Override
                     public void onErro(Exception e) {
-                        // Falha na consulta — faz upload global como fallback seguro
                         Log.e(TAG, "Erro ao consultar imagem global, prosseguindo com upload: "
                                 + e.getMessage());
                         uploadGlobalEGravar(produto, barcode, arquivoLocal, callback);
@@ -228,11 +209,6 @@ public class ProdutoRepository {
                 });
     }
 
-    /**
-     * Faz upload global em imagens_produtos/{barcode}/imagem.jpg
-     * e grava o documento em imagens_produtos/{barcode}.
-     * Após sucesso, atualiza o produto com a URL retornada.
-     */
     private void uploadGlobalEGravar(Produto produto,
                                      String barcode,
                                      File arquivoLocal,
@@ -264,45 +240,20 @@ public class ProdutoRepository {
                     }
 
                     @Override
-                    public void onJaExiste(ProdutoImagem produtoImagemExistente) {
-                        // Race condition: outro usuário cadastrou o mesmo barcode
-                        // ao mesmo tempo — usa a imagem dele
-                        String urlExistente = produtoImagemExistente.getImagemUrl();
-                        produto.setImagem(urlExistente);
-                        Log.d(TAG, "Race condition resolvida. Usando imagem existente: "
-                                + urlExistente);
-
+                    public void onErro(Exception e) {
+                        Log.e(TAG, "Falha no upload global: " + e.getMessage());
                         BpdDatabase.databaseWriteExecutor.execute(() -> {
-                            produtoDao.update(produto);
                             sincronizarProdutoNoFirestore(produto);
                             isLoading.postValue(false);
                         });
-
-                        if (callback != null) callback.onSucesso(urlExistente);
-                        arquivoLocal.delete();
-                    }
-
-                    @Override
-                    public void onErro(Exception e) {
-                        Log.e(TAG, "Falha no upload global: " + e.getMessage());
-                        // Produto já está no Room sem imagem — sincroniza assim
-                        sincronizarProdutoNoFirestore(produto);
-                        isLoading.postValue(false);
                         if (callback != null) callback.onErro(e);
                     }
                 });
     }
 
-    // ── Caso B: produto sem barcode (comportamento original) ──────
-
-    /**
-     * Upload no caminho legado: produtos/{uid}/{produtoId}/imagem.jpg
-     * Usado apenas para produtos sem código de barras.
-     */
     private void inserirComImagemLegada(Produto produto,
                                         File arquivoLocal,
                                         FirebaseStorageDataSource.UploadCallback callback) {
-
         storageDataSource.uploadImagem(produto.getId(), arquivoLocal,
                 new FirebaseStorageDataSource.UploadCallback() {
                     @Override
@@ -324,8 +275,10 @@ public class ProdutoRepository {
                     @Override
                     public void onErro(Exception e) {
                         Log.e(TAG, "Falha no upload legado: " + e.getMessage());
-                        sincronizarProdutoNoFirestore(produto);
-                        isLoading.postValue(false);
+                        BpdDatabase.databaseWriteExecutor.execute(() -> {
+                            sincronizarProdutoNoFirestore(produto);
+                            isLoading.postValue(false);
+                        });
                         if (callback != null) callback.onErro(e);
                     }
                 });
@@ -339,17 +292,21 @@ public class ProdutoRepository {
         isLoading.postValue(true);
 
         BpdDatabase.databaseWriteExecutor.execute(() -> {
+            // ✅ Preenche o nome da categoria antes de atualizar
+            List<Produto> listaTemp = new java.util.ArrayList<>();
+            listaTemp.add(produto);
+            preencherNomesCategorias(listaTemp);
+
             produtoDao.update(produto);
             localCache.invalidarProdutos();
 
             String caminhoImagem = produto.getImagem();
-            boolean ehUrlStorage  = caminhoImagem != null && caminhoImagem.startsWith("https://");
+            boolean ehUrlStorage = caminhoImagem != null && caminhoImagem.startsWith("https://");
             boolean temImagemLocal = caminhoImagem != null
                     && !caminhoImagem.isEmpty()
                     && !ehUrlStorage;
 
             if (temImagemLocal && callback != null) {
-                // Troca de imagem em produto existente — remove antiga e faz novo upload
                 if (urlImagemAntiga != null && !urlImagemAntiga.isEmpty()) {
                     storageDataSource.deletarImagemPorUrl(urlImagemAntiga, null);
                 }
@@ -358,7 +315,9 @@ public class ProdutoRepository {
                 storageDataSource.uploadImagem(produto.getId(), arquivoLocal,
                         new FirebaseStorageDataSource.UploadCallback() {
                             @Override
-                            public void onProgresso(int p) { callback.onProgresso(p); }
+                            public void onProgresso(int porcentagem) {
+                                callback.onProgresso(porcentagem);
+                            }
 
                             @Override
                             public void onSucesso(String urlDownload) {
@@ -404,7 +363,7 @@ public class ProdutoRepository {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.restaurarProduto(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.restaurarProduto(id, null);
+            firebaseDataSource.restaurarProdutoDaLixeira(id, null);
         });
     }
 
@@ -412,13 +371,11 @@ public class ProdutoRepository {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.removerPorId(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.excluirProdutoPermanente(id, null);
-            // Nota: imagem global em imagens_produtos não é deletada
-            // (pode ser usada por outros usuários com o mesmo produto)
+            firebaseDataSource.excluirProduto(id, null);
         });
     }
 
-    // ======================== SYNC PRIVADO ========================
+    // ======================== MÉTODOS PRIVADOS SYNC ========================
 
     private void sincronizarProdutoNoFirestore(Produto produto) {
         firebaseDataSource.salvarProduto(produto, null);
