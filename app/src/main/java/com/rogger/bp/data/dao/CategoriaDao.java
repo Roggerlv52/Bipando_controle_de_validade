@@ -29,6 +29,9 @@ public interface CategoriaDao {
     @Query("SELECT * FROM categorias WHERE userId = :userId ORDER BY nome ASC")
     LiveData<List<Categoria>> listarCategorias(String userId);
 
+    @Query("SELECT * FROM categorias WHERE userId = :userId ORDER BY nome ASC")
+    List<Categoria> listarCategoriasSync(String userId);
+
     /**
      * ✅ Query otimizada que já traz a contagem de produtos ativos por categoria.
      * Faz um LEFT JOIN para garantir que categorias sem produtos também apareçam com count 0.

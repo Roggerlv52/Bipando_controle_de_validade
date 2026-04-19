@@ -108,7 +108,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                 .override(350, 350)
                 .error(R.drawable.imagem_error)
                 .into(holder.imageView);
-
         // 6. Clique na imagem
         holder.imageView.setOnClickListener(v -> {
             if (mListener != null && modelo.getImagem() != null) {

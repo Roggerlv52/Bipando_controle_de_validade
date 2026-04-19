@@ -67,8 +67,10 @@ public class Produto {
     }
 
     // 🔑 Nome da categoria vindo do JOIN (não persiste no banco)
-    public String getNomeCategoria() { return nomeCategoria; }
-    public void setNomeCategoria(String nomeCategoria) { this.nomeCategoria = nomeCategoria; }
+    public String getNomeCategoria() {
+        return nomeCategoria; }
+    public void setNomeCategoria(String nomeCategoria) {
+        this.nomeCategoria = nomeCategoria; }
 
     public long getTimestamp() {
         return timestamp;

@@ -9,12 +9,14 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.rogger.bp.data.dao.CategoriaDao;
 import com.rogger.bp.data.dao.ProdutoDao;
 import com.rogger.bp.data.database.BpdDatabase;
 import com.rogger.bp.data.database.FirebaseDataSource;
 import com.rogger.bp.data.database.FirebaseStorageDataSource;
 import com.rogger.bp.data.database.LocalCache;
 import com.rogger.bp.data.database.ProdutoImagemDataSource;
+import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.data.model.ProdutoImagem;
 
@@ -31,6 +33,7 @@ public class ProdutoRepository {
     private static final String TAG = "ProdutoRepository";
 
     private final ProdutoDao                produtoDao;
+    private final CategoriaDao              categoriaDao;
     private final FirebaseDataSource        firebaseDataSource;
     private final FirebaseStorageDataSource storageDataSource;
     private final ProdutoImagemDataSource   produtoImagemDataSource;
@@ -44,6 +47,7 @@ public class ProdutoRepository {
     public ProdutoRepository(Application application) {
         BpdDatabase db      = BpdDatabase.getDatabase(application);
         produtoDao          = db.produtoDao();
+        categoriaDao        = db.categoriaDao();
         firebaseDataSource  = FirebaseDataSource.getInstance();
         storageDataSource   = FirebaseStorageDataSource.getInstance();
         produtoImagemDataSource = ProdutoImagemDataSource.getInstance();
@@ -86,9 +90,30 @@ public class ProdutoRepository {
             public void onSuccess(List<Produto> produtos) {
                 Log.d(TAG, "Sincronizado " + produtos.size() + " produtos do Firestore");
                 localCache.setProdutosAtivos(produtos);
+
                 BpdDatabase.databaseWriteExecutor.execute(() -> {
+
+                    // Busca todas as categorias locais de forma síncrona
+                    // para montar um mapa  categoryId → nomeCategoria
+                    List<Categoria> categorias =
+                            categoriaDao.listarCategoriasSync(userId);
+
+                    java.util.Map<Integer, String> nomeMap = new java.util.HashMap<>();
+                    if (categorias != null) {
+                        for (Categoria c : categorias) {
+                            nomeMap.put(c.getId(), c.getNome());
+                        }
+                    }
+
                     for (Produto p : produtos) {
                         p.setUserId(userId);
+
+                        // ✅ Seta o nomeCategoria antes de inserir no Room
+                        // Assim o cache em memória e o primeiro emit do LiveData
+                        // já trazem o nome correto, sem depender do JOIN
+                        String nome = nomeMap.get(p.getCategoryId());
+                        p.setNomeCategoria(nome != null ? nome : "");
+
                         produtoDao.insert(p);
                     }
                     isLoading.postValue(false);

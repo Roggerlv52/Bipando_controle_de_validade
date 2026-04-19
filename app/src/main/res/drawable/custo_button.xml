@@ -2,6 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
    <corners android:radius="16dp" />
    <!-- Ajuste o raio conforme necessário -->
+      <solid android:color="?attr/colorPrimary" />
 <!-- Cor de fundo do botão -->
 <padding
    android:left="10dp"
