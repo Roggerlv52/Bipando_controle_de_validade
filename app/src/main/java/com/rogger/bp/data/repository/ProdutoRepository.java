@@ -240,6 +240,11 @@ public class ProdutoRepository {
                     }
 
                     @Override
+                    public void onJaExiste(@NonNull ProdutoImagem produtoImagemExistente) {
+
+                    }
+
+                    @Override
                     public void onErro(Exception e) {
                         Log.e(TAG, "Falha no upload global: " + e.getMessage());
                         BpdDatabase.databaseWriteExecutor.execute(() -> {
@@ -363,7 +368,7 @@ public class ProdutoRepository {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.restaurarProduto(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.restaurarProdutoDaLixeira(id, null);
+            //firebaseDataSource.restaurarProdutoDaLixeira(id, null);
         });
     }
 
@@ -371,7 +376,7 @@ public class ProdutoRepository {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
             produtoDao.removerPorId(id);
             localCache.invalidarProdutos();
-            firebaseDataSource.excluirProduto(id, null);
+            //firebaseDataSource.excluirProduto(id, null);
         });
     }
 

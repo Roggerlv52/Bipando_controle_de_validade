@@ -37,7 +37,6 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         this.listener = listener;
     }
 
-    // 🔹 Atualiza lista
     public void setItems(List<Categoria> list) {
         categorias.clear();
         categorias.addAll(list);

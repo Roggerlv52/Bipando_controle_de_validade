@@ -6,6 +6,7 @@ package com.rogger.bp.ui.home;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,17 +70,12 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
      */
     private void carregarCategorias() {
         BpdDatabase.databaseWriteExecutor.execute(() -> {
-            // Busca o userId do Firebase ou assume que o DAO já filtra se necessário
-            // Como o AdapterHome é criado na UI, buscamos todas as categorias disponíveis
-            // Para simplificar, pegamos as categorias e preenchemos o mapa.
-            // Nota: O ideal é que o Produto já venha com o nomeCategoria via JOIN no DAO.
             List<Categoria> categorias = categoriaDao.listarCategoriasSync(""); // Passando vazio para pegar o que estiver local
             if (categorias != null) {
                 for (Categoria c : categorias) {
                     categoriaMap.put(c.getId(), c.getNome());
+
                 }
-                // Notifica a mudança na UI thread se necessário, mas como o onBind vai ler o mapa, 
-                // a próxima reciclagem já mostrará os nomes.
             }
         });
     }
@@ -136,6 +132,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         String nomeCat = modelo.getNomeCategoria();
         if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId() != 0) {
             nomeCat = categoriaMap.get(modelo.getCategoryId());
+            Log.d("AdpterHome","categoria "+ modelo.getNomeCategoria());
         }
         holder.txtSubTitle.setText(nomeCat != null ? nomeCat : "");
         
