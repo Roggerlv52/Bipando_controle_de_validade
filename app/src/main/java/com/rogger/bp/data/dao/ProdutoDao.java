@@ -52,7 +52,7 @@ public interface ProdutoDao {
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 0 AND p.userId = :userId " +
             "ORDER BY p.timestamp ASC")
-    List<ProdutoWithCategory> listarProdutosAtivosSync(String userId);
+    List<Produto> listarProdutosAtivosSync(String userId);
 
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
