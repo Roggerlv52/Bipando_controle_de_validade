@@ -17,29 +17,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
-import com.rogger.bp.data.dao.CategoriaDao;
-import com.rogger.bp.data.database.BpdDatabase;
-import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.ui.base.Utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     private OnItemClickListener mListener;
     private List<Produto> dados;
     private final Context context;
     private int diasLimiteAmarelo;
-    
-    // Cache de categorias para evitar consultas repetitivas ao banco
-    private final Map<Integer, String> categoriaMap = new HashMap<>();
-    private final CategoriaDao categoriaDao;
 
     public void clear() {
         if (dados != null) {
@@ -60,28 +51,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         this.mListener = listener;
         this.context = context;
         this.diasLimiteAmarelo = diasLimiteAmarelo > 0 ? diasLimiteAmarelo : 10;
-        this.categoriaDao = BpdDatabase.getDatabase(context).categoriaDao();
-        carregarCategorias();
-    }
-
-    /**
-     * Carrega as categorias do banco para o mapa de cache
-     */
-    private void carregarCategorias() {
-        BpdDatabase.databaseWriteExecutor.execute(() -> {
-            // Busca o userId do Firebase ou assume que o DAO já filtra se necessário
-            // Como o AdapterHome é criado na UI, buscamos todas as categorias disponíveis
-            // Para simplificar, pegamos as categorias e preenchemos o mapa.
-            // Nota: O ideal é que o Produto já venha com o nomeCategoria via JOIN no DAO.
-            List<Categoria> categorias = categoriaDao.listarCategoriasSync(""); // Passando vazio para pegar o que estiver local
-            if (categorias != null) {
-                for (Categoria c : categorias) {
-                    categoriaMap.put(c.getId(), c.getNome());
-                }
-                // Notifica a mudança na UI thread se necessário, mas como o onBind vai ler o mapa, 
-                // a próxima reciclagem já mostrará os nomes.
-            }
-        });
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -107,7 +76,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         Produto modelo = dados.get(position);
 
-        // 1. Cálculo de dias usando a nova lógica de Utils
+        // 1. Cálculo de dias usando a lógica de Utils
         long diasRestantes = Utils.calcDifferencInDays(modelo.getTimestamp());
 
         // 2. Formatação da data de vencimento
@@ -132,12 +101,8 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         // 4. Preenchimento de textos
         holder.txtTitle.setText(modelo.getNome() != null ? modelo.getNome() : "");
         
-        // 🔑 NOME DA CATEGORIA: Tenta pegar do modelo, se vazio tenta do cache local
-        String nomeCat = modelo.getNomeCategoria();
-        if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId() != 0) {
-            nomeCat = categoriaMap.get(modelo.getCategoryId());
-        }
-        holder.txtSubTitle.setText(nomeCat != null ? nomeCat : "");
+        // 🔑 NOME DA CATEGORIA: Agora vem preenchido via JOIN no Repository
+        holder.txtSubTitle.setText(modelo.getNomeCategoria() != null ? modelo.getNomeCategoria() : "");
         
         holder.txtBarcode.setText(modelo.getCodigoBarras() != null ? modelo.getCodigoBarras() : "");
 

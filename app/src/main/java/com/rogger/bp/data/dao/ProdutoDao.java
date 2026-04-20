@@ -8,6 +8,7 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.ProdutoWithCategory;
 
 import java.util.List;
 
@@ -19,13 +20,15 @@ public interface ProdutoDao {
 
     @Update
     void update(Produto produto);
+
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 0 AND p.userId = :userId " +
             "AND p.nome LIKE '%' || :query || '%' " +
             "ORDER BY p.nome ASC")
-    LiveData<List<Produto>> buscarPorNome(String userId, String query);
+    LiveData<List<ProdutoWithCategory>> buscarPorNome(String userId, String query);
+
     // 🔍 Busca exata por código de barras
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
@@ -33,7 +36,7 @@ public interface ProdutoDao {
             "WHERE p.deleted = 0 AND p.userId = :userId " +
             "AND p.codigoBarras = :barcode " +
             "ORDER BY p.nome ASC")
-    LiveData<List<Produto>> buscarPorCodigoBarras(String userId, String barcode);
+    LiveData<List<ProdutoWithCategory>> buscarPorCodigoBarras(String userId, String barcode);
 
     // 🔑 JOIN com categorias para buscar o nomeCategoria atualizado
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
@@ -41,7 +44,7 @@ public interface ProdutoDao {
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 0 AND p.userId = :userId " +
             "ORDER BY p.timestamp ASC")
-    LiveData<List<Produto>> listarProdutosAtivos(String userId);
+    LiveData<List<ProdutoWithCategory>> listarProdutosAtivos(String userId);
 
     // ✅ Versão síncrona para o ExpirationWorker
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
@@ -49,14 +52,14 @@ public interface ProdutoDao {
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 0 AND p.userId = :userId " +
             "ORDER BY p.timestamp ASC")
-    List<Produto> listarProdutosAtivosSync(String userId);
+    List<ProdutoWithCategory> listarProdutosAtivosSync(String userId);
 
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.categoryId = :categoria AND p.userId = :userId " +
             "ORDER BY p.nome ASC")
-    LiveData<List<Produto>> listarPorCategoria(String categoria, String userId);
+    LiveData<List<ProdutoWithCategory>> listarPorCategoria(String categoria, String userId);
 
 
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
@@ -64,16 +67,17 @@ public interface ProdutoDao {
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 1 AND p.userId = :userId " +
             "ORDER BY p.timestamp ASC")
-    LiveData<List<Produto>> listarProdutosDeletados(String userId);
+    LiveData<List<ProdutoWithCategory>> listarProdutosDeletados(String userId);
 
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.id = :id LIMIT 1")
-    Produto buscarPorIdSync(int id);
+    ProdutoWithCategory buscarPorIdSync(int id);
 
     @Query("UPDATE produtos SET deleted = 1, deletedAt = :deletedAt WHERE id = :id")
     void moverParaLixeira(int id, long deletedAt);
+
     // ♻️ Restaurar
     @Query("UPDATE produtos SET deleted = 0, deletedAt = NULL WHERE id = :id")
     void restaurarProduto(int id);
