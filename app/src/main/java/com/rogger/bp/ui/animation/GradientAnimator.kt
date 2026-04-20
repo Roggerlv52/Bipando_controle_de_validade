@@ -7,6 +7,16 @@ import android.view.View
 class GradientAnimator(private val view: View) {
 
     private var animator: ValueAnimator? = null
+    private val colors = intArrayOf(
+        0xFF1DBA00.toInt(),
+        0xFF5EDC00.toInt(),
+        0xFFB7F000.toInt(),
+        0xFFFFFF00.toInt(),
+        0xFFFFC107.toInt(),
+        0xFFFF9800.toInt(),
+        0xFFFF5722.toInt(),
+        0xFFF44336.toInt()
+    )
 
     fun start() {
         val drawable = view.background
@@ -21,8 +31,8 @@ class GradientAnimator(private val view: View) {
             addUpdateListener {
                 val value = it.animatedValue as Float
 
-                val color1 = blendColors(0xFF4CAF50.toInt(), 0xFF3F51B5.toInt(), value)
-                val color2 = blendColors(0xFF3F51B5.toInt(), 0xFFE91E63.toInt(), value)
+                val color1 = blendColors(0x008000.toInt(), 0x008000.toInt(), value)
+                val color2 = blendColors(0xFFFFC107.toInt(), 0xFFF44336.toInt(), value)
 
                 // 🔥 RECRIAR DRAWABLE (SOLUÇÃO PARA API ANTIGA)
                 val newDrawable = GradientDrawable(
