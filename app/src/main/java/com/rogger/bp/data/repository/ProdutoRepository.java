@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bp.data.dao.CategoriaDao;
@@ -19,9 +20,12 @@ import com.rogger.bp.data.database.ProdutoImagemDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.data.model.ProdutoImagem;
+import com.rogger.bp.data.model.ProdutoWithCategory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ProdutoRepository
@@ -56,10 +60,23 @@ public class ProdutoRepository {
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : "";
 
-        produtosAtivos    = produtoDao.listarProdutosAtivos(userId);
-        produtosDeletados = produtoDao.listarProdutosDeletados(userId);
+        // ✅ Converte ProdutoWithCategory (vido do JOIN) para Produto (com nomeCategoria preenchido)
+        produtosAtivos = Transformations.map(produtoDao.listarProdutosAtivos(userId), this::converterLista);
+        produtosDeletados = Transformations.map(produtoDao.listarProdutosDeletados(userId), this::converterLista);
 
         sincronizarDoFirestore();
+    }
+
+    /**
+     * ✅ Converte a projeção do Room (ProdutoWithCategory) para o modelo Produto
+     */
+    private List<Produto> converterLista(List<ProdutoWithCategory> input) {
+        if (input == null) return new ArrayList<>();
+        return input.stream().map(item -> {
+            Produto p = item.produto;
+            p.setNomeCategoria(item.nomeCategoria);
+            return p;
+        }).collect(Collectors.toList());
     }
 
     // ======================== LEITURA ========================
@@ -69,11 +86,11 @@ public class ProdutoRepository {
     public LiveData<List<Produto>> getProdutosDeletados(){ return produtosDeletados; }
 
     public LiveData<List<Produto>> buscarPorNome(String query) {
-        return produtoDao.buscarPorNome(userId, query);
+        return Transformations.map(produtoDao.buscarPorNome(userId, query), this::converterLista);
     }
 
     public LiveData<List<Produto>> buscarPorCodigoBarras(String barcode) {
-        return produtoDao.buscarPorCodigoBarras(userId, barcode);
+        return Transformations.map(produtoDao.buscarPorCodigoBarras(userId, barcode), this::converterLista);
     }
 
     public void sincronizarDoFirestore() {
