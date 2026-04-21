@@ -27,15 +27,38 @@
                 android:contentDescription="Voltar"
                 android:src="@drawable/seta_left" />
 
-            <androidx.appcompat.widget.SearchView
-                android:id="@+id/search_view"
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                app:iconifiedByDefault="false"
-                app:queryHint="Pesquisar produtos..."
-                app:searchHintIcon="@drawable/ic_search_24"
-                app:queryBackground="@android:color/transparent" />
+                android:layout_weight="1">
+
+                <!-- SearchView original -->
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/search_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:iconifiedByDefault="false"
+                    app:queryHint=""
+                    app:searchHintIcon="@drawable/ic_search_24"
+                    app:queryBackground="@android:color/transparent" />
+
+                <!-- Hint com MARQUEE -->
+                <TextView
+                    android:id="@+id/txt_marquee_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="8dp"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="14sp"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true" />
+            </FrameLayout>
 
             <ImageButton
                 android:id="@+id/btn_scan_barcode"

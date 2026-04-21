@@ -39,13 +39,11 @@ class SearchFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Esconde a toolbar do MainActivity sempre que este fragment estiver visível
         mainToolbar?.visibility = View.GONE
     }
 
     override fun onPause() {
         super.onPause()
-        // Restaura ao sair do fragment
         mainToolbar?.visibility = View.VISIBLE
     }
 
@@ -61,44 +59,57 @@ class SearchFragment : Fragment() {
         recyclerSearch = view.findViewById(R.id.recycler_search)
         layoutEmpty    = view.findViewById(R.id.layout_search_empty)
         txtHint        = view.findViewById(R.id.txt_search_hint)
+        val marquee = view.findViewById<TextView>(R.id.txt_marquee_hint)
 
         adapter = SearchAdapter(requireContext()) { produto ->
-            // Clique no item da busca -> Ir para edição
             val bundle = Bundle().apply { putInt("id", produto.id) }
             findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
         }
-        
+
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
         recyclerSearch?.adapter = adapter
-        
+
         // Seta de voltar
         view.findViewById<ImageButton>(R.id.btn_back)?.setOnClickListener {
             findNavController().popBackStack()
         }
-        
+
         // SearchView
         val searchView = view.findViewById<SearchView>(R.id.search_view)
+
+        // ──────────────────────────────────────────────────────────────
+        // Atualiza o hint para indicar ao usuário o atalho de categoria
+        // ──────────────────────────────────────────────────────────────
+        searchView?.queryHint = "Nome do produto ou @categoria…"
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            marquee.visibility = if (hasFocus) View.GONE else View.VISIBLE
+        }
         searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.trim()?.takeIf { it.isNotEmpty() }?.let { buscarPorNome(it) }
+                query?.trim()?.takeIf { it.isNotEmpty() }?.let { despacharBusca(it) }
                 return true
             }
+
             override fun onQueryTextChange(newText: String?): Boolean {
+                marquee.visibility = if (newText.isNullOrEmpty()) View.VISIBLE else View.GONE
                 val q = newText?.trim() ?: ""
                 when {
-                    q.length >= 2 -> buscarPorNome(q)
-                    q.isEmpty()   -> mostrarEstadoVazio("Digite um nome ou escaneie um código de barras")
+                    q.length >= 2 -> despacharBusca(q)
+                    q.isEmpty()   -> mostrarEstadoVazio(getString(R.string.search_hint_default))
                 }
                 return true
             }
         })
+        // Quando começa a digitar → esconde
 
-        // 🔑 VERIFICAÇÃO DE FILTRO INICIAL (Categoria)
+        // ── Filtro inicial via argumento de navegação (Categoria) ──────
         val categoriaNome = arguments?.getString("categoria_nome")
         if (!categoriaNome.isNullOrEmpty()) {
-            searchView?.setQuery(categoriaNome, false)
-            buscarPorNome(categoriaNome)
-            txtHint?.text = "Filtrando categoria: $categoriaNome"
+            // Preenche a SearchView com "@NomeCategoria" para deixar claro o modo
+            val queryInicial = "@$categoriaNome"
+            searchView?.setQuery(queryInicial, false)
+            buscarPorCategoria(categoriaNome)
+            txtHint?.text = "📂 Categoria: $categoriaNome"
         }
 
         // Botão câmera → abre scanner no modo "search"
@@ -136,10 +147,45 @@ class SearchFragment : Fragment() {
         adapter        = null
     }
 
-    // ── Busca ────────────────────────────────────────────────────
+    // ── Despachador principal ─────────────────────────────────────────
+    //
+    // Regra de roteamento:
+    //   • Query começa com "@"  →  busca por CATEGORIA (remove o "@")
+    //   • Caso contrário        →  busca por NOME do produto (comportamento original)
+    //
+    // Exemplos:
+    //   "@laticinios"  → lista todos os produtos da categoria "laticinios"
+    //   "@beb"         → lista produtos de categorias que contêm "beb" (bebidas, etc.)
+    //   "leite"        → lista produtos cujo nome contém "leite"
+    // ─────────────────────────────────────────────────────────────────
+    private fun despacharBusca(query: String) {
+        if (query.startsWith("@")) {
+            val nomeCategoria = query.removePrefix("@").trim()
+            if (nomeCategoria.length >= 1) {
+                buscarPorCategoria(nomeCategoria)
+            } else {
+                mostrarEstadoVazio("Digite o nome da categoria após @")
+            }
+        } else {
+            buscarPorNome(query)
+        }
+    }
+
+    // ── Métodos de busca ──────────────────────────────────────────────
 
     private fun buscarPorNome(query: String) {
+        txtHint?.text = "Buscando produto: $query"
         substituirObserver(dataViewModel!!.buscarPorNome(query))
+    }
+
+    /**
+     * 🆕 Busca todos os produtos que pertencem a categorias cujo nome
+     * contenha [query]. A correspondência é parcial e case-insensitive
+     * (implementada no SQL via LOWER + LIKE).
+     */
+    private fun buscarPorCategoria(query: String) {
+        txtHint?.text = "📂 Categoria: $query"
+        substituirObserver(dataViewModel!!.buscarPorNomeCategoria(query))
     }
 
     private fun buscarPorCodigoBarras(barcode: String) {
@@ -155,7 +201,7 @@ class SearchFragment : Fragment() {
         novoLiveData.observe(viewLifecycleOwner, observer)
     }
 
-    // ── UI ───────────────────────────────────────────────────────
+    // ── UI ────────────────────────────────────────────────────────────
 
     private fun mostrarResultados(produtos: List<Produto>?) {
         if (produtos.isNullOrEmpty()) {

@@ -57,4 +57,5 @@
     <string name="hello_blank_fragment">Escolha uma forma de pagamento</string>
     <string name="menu_search">Buscar</string>
     <string name="menu_payment">Pagamento</string>
+    <string name="search_hint_default">Digite um nome, @categoria ou escaneie um código de barras\n</string>
 </resources>

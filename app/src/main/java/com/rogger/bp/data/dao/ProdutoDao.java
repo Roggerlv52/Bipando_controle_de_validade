@@ -54,12 +54,18 @@ public interface ProdutoDao {
             "ORDER BY p.timestamp ASC")
     List<Produto> listarProdutosAtivosSync(String userId);
 
+    // ────────────────────────────────────────────────────────────────
+    // 🆕 BUSCA POR NOME DE CATEGORIA
+    // Retorna todos os produtos cujo nome da categoria contenha :query
+    // (case-insensitive via LIKE, sem acentos comparados literalmente)
+    // ────────────────────────────────────────────────────────────────
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
-            "WHERE p.categoryId = :categoria AND p.userId = :userId " +
+            "WHERE p.deleted = 0 AND p.userId = :userId " +
+            "AND LOWER(c.nome) LIKE LOWER('%' || :query || '%') " +
             "ORDER BY p.nome ASC")
-    LiveData<List<ProdutoWithCategory>> listarPorCategoria(String categoria, String userId);
+    LiveData<List<ProdutoWithCategory>> buscarPorNomeCategoria(String userId, String query);
 
 
     @Query("SELECT p.*, c.nome AS nomeCategoria " +

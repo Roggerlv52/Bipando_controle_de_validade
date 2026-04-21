@@ -141,7 +141,15 @@ public class ProdutoRepository {
             p.setNomeCategoria(nome != null ? nome : "");
         }
     }
-
+    // ────────────────────────────────────────────────────────────────
+    // 🆕 Busca produtos pelo nome da categoria (parcial, case-insensitive)
+    // ────────────────────────────────────────────────────────────────
+    public LiveData<List<Produto>> buscarPorNomeCategoria(String query) {
+        return Transformations.map(
+                produtoDao.buscarPorNomeCategoria(userId, query),
+                this::converterLista
+        );
+    }
     // ======================== INSERIR ========================
 
     public void inserir(Produto produto,
