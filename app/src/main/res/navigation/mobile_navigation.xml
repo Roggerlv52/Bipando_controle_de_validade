@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_search_to_barcode_scanner"
             app:destination="@id/nav_barcode_scan_fragment" />
+        <action
+            android:id="@+id/action_nav_search_to_nav_edit_fragment"
+            app:destination="@id/nav_edit_fragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"
@@ -118,7 +121,11 @@
         android:id="@+id/nav_category"
         android:name="com.rogger.bp.ui.category.FragmentAddEditCategory"
         android:label="@string/category"
-        tools:layout="@layout/fragment_add_edit_category" />
+        tools:layout="@layout/fragment_add_edit_category">
+        <action
+            android:id="@+id/action_nav_category_to_nav_search"
+            app:destination="@id/nav_search" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_profile"
