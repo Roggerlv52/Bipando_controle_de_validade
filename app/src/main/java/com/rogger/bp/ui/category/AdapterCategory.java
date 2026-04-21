@@ -30,6 +30,8 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
     public interface OnCategoriaListener {
         void onClick(Categoria categoria);
 
+        void onMenuEditClick(Categoria categoria); // 🔑 Novo método para o clique nos três pontos
+
         void onSelectionChanged(int totalSelecionados);
     }
 
@@ -108,6 +110,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
             checkBox.setVisibility(modoSelecao ? View.VISIBLE : View.GONE);
             checkBox.setChecked(selecionadas.contains(categoria));
 
+            // 🔑 Clique no item inteiro -> Listar produtos desta categoria
             itemView.setOnClickListener(v -> {
                 if (modoSelecao) {
                     toggleSelecionado(categoria);
@@ -115,8 +118,10 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
                     listener.onClick(categoria);
                 }
             });
+
+            // 🔑 Clique no menu (três pontos) -> Editar nome da categoria
             imgMenu.setOnClickListener(v -> {
-                listener.onClick(categoria);
+                listener.onMenuEditClick(categoria);
             });
 
             itemView.setOnLongClickListener(v -> {

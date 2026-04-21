@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
@@ -40,14 +39,13 @@ class SearchFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Esconde a toolbar do MainActivity sempre que este fragment estiver visível,
-        // inclusive após rotação de tela
+        // Esconde a toolbar do MainActivity sempre que este fragment estiver visível
         mainToolbar?.visibility = View.GONE
     }
 
     override fun onPause() {
         super.onPause()
-        // Restaura ao sair do fragment (navegação ou rotação)
+        // Restaura ao sair do fragment
         mainToolbar?.visibility = View.VISIBLE
     }
 
@@ -64,29 +62,44 @@ class SearchFragment : Fragment() {
         layoutEmpty    = view.findViewById(R.id.layout_search_empty)
         txtHint        = view.findViewById(R.id.txt_search_hint)
 
-        adapter = SearchAdapter(requireContext())
+        adapter = SearchAdapter(requireContext()) { produto ->
+            // Clique no item da busca -> Ir para edição
+            val bundle = Bundle().apply { putInt("id", produto.id) }
+            findNavController().navigate(R.id.action_nav_search_fragment_to_nav_edit_fragment, bundle)
+        }
+        
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
         recyclerSearch?.adapter = adapter
+        
         // Seta de voltar
         view.findViewById<ImageButton>(R.id.btn_back)?.setOnClickListener {
             findNavController().popBackStack()
         }
+        
         // SearchView
-        view.findViewById<SearchView>(R.id.search_view)
-            ?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    query?.trim()?.takeIf { it.isNotEmpty() }?.let { buscarPorNome(it) }
-                    return true
+        val searchView = view.findViewById<SearchView>(R.id.search_view)
+        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.trim()?.takeIf { it.isNotEmpty() }?.let { buscarPorNome(it) }
+                return true
+            }
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val q = newText?.trim() ?: ""
+                when {
+                    q.length >= 2 -> buscarPorNome(q)
+                    q.isEmpty()   -> mostrarEstadoVazio("Digite um nome ou escaneie um código de barras")
                 }
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    val q = newText?.trim() ?: ""
-                    when {
-                        q.length >= 2 -> buscarPorNome(q)
-                        q.isEmpty()   -> mostrarEstadoVazio("Digite um nome ou escaneie um código de barras")
-                    }
-                    return true
-                }
-            })
+                return true
+            }
+        })
+
+        // 🔑 VERIFICAÇÃO DE FILTRO INICIAL (Categoria)
+        val categoriaNome = arguments?.getString("categoria_nome")
+        if (!categoriaNome.isNullOrEmpty()) {
+            searchView?.setQuery(categoriaNome, false)
+            buscarPorNome(categoriaNome)
+            txtHint?.text = "Filtrando categoria: $categoriaNome"
+        }
 
         // Botão câmera → abre scanner no modo "search"
         view.findViewById<ImageButton>(R.id.btn_scan_barcode)?.setOnClickListener {
