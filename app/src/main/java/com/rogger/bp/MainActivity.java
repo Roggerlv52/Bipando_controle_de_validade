@@ -42,6 +42,7 @@ public class MainActivity extends BaseActivity {
     private TextView txtProfileEmail;
     private FirebaseDataSource firebaseDataSource;
     private GradientAnimator animator;
+    //private ScannerView scannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +64,6 @@ public class MainActivity extends BaseActivity {
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
 
         View bgView = viewProfile.findViewById(R.id.header_background);
-
 // 🔥 iniciar animação
         animator = new GradientAnimator(bgView);
         animator.start();
@@ -105,7 +105,7 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if(id==R.id.menu_search){
+        if (id == R.id.menu_search) {
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
             navController.navigate(R.id.nav_search);
             return true;
