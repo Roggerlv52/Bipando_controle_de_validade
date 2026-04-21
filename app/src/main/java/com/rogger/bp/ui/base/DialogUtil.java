@@ -19,6 +19,23 @@ public class DialogUtil {
         void onSelected(Categoria categoria);
     }
 
+    public static void showConfirmDialog(
+            @NonNull Context context,
+            @NonNull String mensagem,
+            @NonNull OnConfirmListener listener
+    ) {
+        new AlertDialog.Builder(context)
+                .setTitle("Confirmação")
+                .setMessage(mensagem)
+                .setCancelable(false)
+                .setPositiveButton("Confirmar", (dialog, which) -> {
+                    dialog.dismiss();
+                    listener.onConfirm();
+                })
+                .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
     /**
      * Dialog padrão de confirmação para deletar item
      */
