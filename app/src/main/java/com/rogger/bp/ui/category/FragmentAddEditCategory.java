@@ -15,11 +15,13 @@ import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
 
@@ -55,7 +57,19 @@ public class FragmentAddEditCategory extends Fragment {
 
             @Override
             public void onClick(Categoria categoria) {
-                // Clique normal (opcional)
+                // 🔑 Clique no item -> Listar produtos desta categoria
+                // Navega para a tela de busca (ou uma tela de listagem) filtrando por esta categoria
+                Bundle bundle = new Bundle();
+                bundle.putString("categoria_nome", categoria.getNome());
+                bundle.putInt("categoria_id", categoria.getId());
+                
+                // Usamos a navegação para a tela de busca que já tem lógica de filtro
+                Navigation.findNavController(view).navigate(R.id.nav_search_fragment, bundle);
+            }
+
+            @Override
+            public void onMenuEditClick(Categoria categoria) {
+                // 🔑 Clique nos três pontos -> Editar nome da categoria
                 Utils.dialogCategory(
                         requireContext(),
                         "Editar categoria",
