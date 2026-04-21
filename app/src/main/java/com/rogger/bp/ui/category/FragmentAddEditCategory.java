@@ -64,7 +64,7 @@ public class FragmentAddEditCategory extends Fragment {
                 bundle.putInt("categoria_id", categoria.getId());
                 
                 // Usamos a navegação para a tela de busca que já tem lógica de filtro
-                Navigation.findNavController(view).navigate(R.id.nav_search_fragment, bundle);
+                Navigation.findNavController(view).navigate(R.id.action_nav_category_to_nav_search, bundle);
             }
 
             @Override

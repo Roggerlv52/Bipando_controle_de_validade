@@ -65,7 +65,7 @@ class SearchFragment : Fragment() {
         adapter = SearchAdapter(requireContext()) { produto ->
             // Clique no item da busca -> Ir para edição
             val bundle = Bundle().apply { putInt("id", produto.id) }
-            findNavController().navigate(R.id.action_nav_search_fragment_to_nav_edit_fragment, bundle)
+            findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
         }
         
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
