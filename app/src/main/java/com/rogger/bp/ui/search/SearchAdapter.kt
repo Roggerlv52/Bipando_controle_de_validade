@@ -18,6 +18,7 @@ import java.util.Locale
 
 class SearchAdapter(
     private val context: Context,
+    private val dayYellow: Int,
     private val onItemClick: ((Produto) -> Unit)? = null
 ) : RecyclerView.Adapter<SearchAdapter.ViewHolder>() {
 
@@ -59,12 +60,21 @@ class SearchAdapter(
 
         // Indicador de cor (dias restantes)
         val dias = Utils.calcDifferencInDays(produto.timestamp)
+
         val corCirculo = when {
-            dias <= 0  -> context.getColor(R.color.red)
-            dias <= 10 -> context.getColor(R.color.yellow)
-            else       -> context.getColor(R.color.green)
+            dias <= 0 -> context.getColor(R.color.red)
+            dias <= dayYellow -> context.getColor(R.color.yellow)
+            else -> context.getColor(R.color.green)
         }
-        holder.imgCircle.setColorFilter(corCirculo)
+
+        if (dias < 1) {
+            holder.txtContDay.text = if (dias < 0) "VENCIDO" else "VENCE HOJE"
+        } else if (dias <= dayYellow) {
+            holder.txtContDay.text = dias.toString() + if (dias.toInt() == 1) " Dia" else " Dias"
+        } else {
+            holder.txtContDay.text = "$dias dias"
+        }
+         holder.imgCircle.setColorFilter(corCirculo)
 
         // Imagem via Glide
         Glide.with(context)
@@ -79,11 +89,12 @@ class SearchAdapter(
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val txtTitle    : TextView  = view.findViewById(R.id.home_title)
-        val txtSubTitle : TextView  = view.findViewById(R.id.home_subTitle)
-        val txtBarcode  : TextView  = view.findViewById(R.id.home_barcode)
-        val txtDate     : TextView  = view.findViewById(R.id.txt_home_left)
-        val imgCircle   : ImageView = view.findViewById(R.id.image_home_circle)
-        val imgProduto  : ImageView = view.findViewById(R.id.imageview_home)
+        val txtTitle: TextView = view.findViewById(R.id.home_title)
+        val txtSubTitle: TextView = view.findViewById(R.id.home_subTitle)
+        val txtBarcode: TextView = view.findViewById(R.id.home_barcode)
+        val txtDate: TextView = view.findViewById(R.id.txt_home_right)
+        val txtContDay: TextView = view.findViewById(R.id.txt_home_left)
+        val imgCircle: ImageView = view.findViewById(R.id.image_home_circle)
+        val imgProduto: ImageView = view.findViewById(R.id.imageview_home)
     }
 }

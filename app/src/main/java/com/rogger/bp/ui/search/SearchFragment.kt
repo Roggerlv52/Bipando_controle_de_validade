@@ -18,11 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.rogger.bp.R
 import com.rogger.bp.data.model.Produto
+import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.scanner.BarcodeScanFragment
 import com.rogger.bp.ui.viewmodel.DataViewModel
 
 
-class  SearchFragment : Fragment() {
+class SearchFragment : Fragment() {
 
     private var dataViewModel: DataViewModel? = null
     private var adapter: SearchAdapter? = null
@@ -57,11 +58,13 @@ class  SearchFragment : Fragment() {
         dataViewModel = ViewModelProvider(this).get(DataViewModel::class.java)
 
         recyclerSearch = view.findViewById(R.id.recycler_search)
-        layoutEmpty    = view.findViewById(R.id.layout_search_empty)
-        txtHint        = view.findViewById(R.id.txt_search_hint)
+        layoutEmpty = view.findViewById(R.id.layout_search_empty)
+        txtHint = view.findViewById(R.id.txt_search_hint)
         val marquee = view.findViewById<TextView>(R.id.txt_marquee_hint)
 
-        adapter = SearchAdapter(requireContext()) { produto ->
+        val diasAmarelo = NotificationPrefs.getDays(requireContext())
+
+        adapter = SearchAdapter(requireContext(),diasAmarelo) { produto ->
             val bundle = Bundle().apply { putInt("id", produto.id) }
             findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
         }
@@ -74,9 +77,7 @@ class  SearchFragment : Fragment() {
             findNavController().popBackStack()
         }
 
-        // SearchView
         val searchView = view.findViewById<SearchView>(R.id.search_view)
-
         // ──────────────────────────────────────────────────────────────
         // Atualiza o hint para indicar ao usuário os modos de busca
         // ──────────────────────────────────────────────────────────────
@@ -95,7 +96,7 @@ class  SearchFragment : Fragment() {
                 val q = newText?.trim() ?: ""
                 when {
                     q.length >= 2 -> despacharBusca(q)
-                    q.isEmpty()   -> mostrarEstadoVazio("Digite o nome ou o código de barras")
+                    q.isEmpty() -> mostrarEstadoVazio("Digite o nome ou o código de barras")
                 }
                 return true
             }
@@ -140,9 +141,9 @@ class  SearchFragment : Fragment() {
         super.onDestroyView()
         activeObserver?.let { activeLiveData?.removeObserver(it) }
         recyclerSearch = null
-        layoutEmpty    = null
-        txtHint        = null
-        adapter        = null
+        layoutEmpty = null
+        txtHint = null
+        adapter = null
     }
 
     // ── Despachador principal ─────────────────────────────────────────
@@ -159,9 +160,11 @@ class  SearchFragment : Fragment() {
                 if (nomeCategoria.isNotEmpty()) buscarPorCategoria(nomeCategoria)
                 else mostrarEstadoVazio("Digite o nome da categoria após @")
             }
+
             query.all { it.isDigit() } -> {
                 buscarPorCodigoBarras(query)
             }
+
             else -> {
                 buscarPorNome(query)
             }
