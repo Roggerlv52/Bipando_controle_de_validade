@@ -89,6 +89,10 @@ public class ProdutoRepository {
         return produtoDao.getCountAtivos(userId);
     }
 
+    public LiveData<Integer> getCountDeletados() {
+        return produtoDao.getCountDeletados(userId);
+    }
+
     public LiveData<List<Produto>> buscarPorNome(String query) {
         return Transformations.map(produtoDao.buscarPorNome(userId, query), this::converterLista);
     }
