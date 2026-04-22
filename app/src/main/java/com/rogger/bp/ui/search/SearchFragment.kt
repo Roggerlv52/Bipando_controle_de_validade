@@ -78,9 +78,9 @@ class  SearchFragment : Fragment() {
         val searchView = view.findViewById<SearchView>(R.id.search_view)
 
         // ──────────────────────────────────────────────────────────────
-        // Atualiza o hint para indicar ao usuário o atalho de categoria
+        // Atualiza o hint para indicar ao usuário os modos de busca
         // ──────────────────────────────────────────────────────────────
-        searchView?.queryHint = "Nome do produto ou @categoria…"
+        searchView?.queryHint = "Nome, Código ou @categoria…"
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             marquee.visibility = if (hasFocus) View.GONE else View.VISIBLE
         }
@@ -95,17 +95,15 @@ class  SearchFragment : Fragment() {
                 val q = newText?.trim() ?: ""
                 when {
                     q.length >= 2 -> despacharBusca(q)
-                    q.isEmpty()   -> mostrarEstadoVazio(getString(R.string.search_hint_default))
+                    q.isEmpty()   -> mostrarEstadoVazio("Digite o nome ou o código de barras")
                 }
                 return true
             }
         })
-        // Quando começa a digitar → esconde
 
         // ── Filtro inicial via argumento de navegação (Categoria) ──────
         val categoriaNome = arguments?.getString("categoria_nome")
         if (!categoriaNome.isNullOrEmpty()) {
-            // Preenche a SearchView com "@NomeCategoria" para deixar claro o modo
             val queryInicial = "@$categoriaNome"
             searchView?.setQuery(queryInicial, false)
             buscarPorCategoria(categoriaNome)
@@ -127,7 +125,7 @@ class  SearchFragment : Fragment() {
             ?.getLiveData<String>(BarcodeScanFragment.KEY_SCANNED_BARCODE)
             ?.observe(viewLifecycleOwner) { barcode ->
                 if (!barcode.isNullOrEmpty()) {
-                    buscarPorCodigoBarras(barcode)
+                    searchView?.setQuery(barcode, true) // Preenche e dispara a busca
                     findNavController()
                         .currentBackStackEntry
                         ?.savedStateHandle
@@ -150,24 +148,23 @@ class  SearchFragment : Fragment() {
     // ── Despachador principal ─────────────────────────────────────────
     //
     // Regra de roteamento:
-    //   • Query começa com "@"  →  busca por CATEGORIA (remove o "@")
-    //   • Caso contrário        →  busca por NOME do produto (comportamento original)
-    //
-    // Exemplos:
-    //   "@laticinios"  → lista todos os produtos da categoria "laticinios"
-    //   "@beb"         → lista produtos de categorias que contêm "beb" (bebidas, etc.)
-    //   "leite"        → lista produtos cujo nome contém "leite"
+    //   • Query começa com "@"  →  busca por CATEGORIA
+    //   • Query contém apenas números → busca por CÓDIGO DE BARRAS (LIKE)
+    //   • Caso contrário        →  busca por NOME do produto
     // ─────────────────────────────────────────────────────────────────
     private fun despacharBusca(query: String) {
-        if (query.startsWith("@")) {
-            val nomeCategoria = query.removePrefix("@").trim()
-            if (nomeCategoria.length >= 1) {
-                buscarPorCategoria(nomeCategoria)
-            } else {
-                mostrarEstadoVazio("Digite o nome da categoria após @")
+        when {
+            query.startsWith("@") -> {
+                val nomeCategoria = query.removePrefix("@").trim()
+                if (nomeCategoria.isNotEmpty()) buscarPorCategoria(nomeCategoria)
+                else mostrarEstadoVazio("Digite o nome da categoria após @")
             }
-        } else {
-            buscarPorNome(query)
+            query.all { it.isDigit() } -> {
+                buscarPorCodigoBarras(query)
+            }
+            else -> {
+                buscarPorNome(query)
+            }
         }
     }
 
@@ -178,18 +175,13 @@ class  SearchFragment : Fragment() {
         substituirObserver(dataViewModel!!.buscarPorNome(query))
     }
 
-    /**
-     * 🆕 Busca todos os produtos que pertencem a categorias cujo nome
-     * contenha [query]. A correspondência é parcial e case-insensitive
-     * (implementada no SQL via LOWER + LIKE).
-     */
     private fun buscarPorCategoria(query: String) {
         txtHint?.text = "📂 Categoria: $query"
         substituirObserver(dataViewModel!!.buscarPorNomeCategoria(query))
     }
 
     private fun buscarPorCodigoBarras(barcode: String) {
-        txtHint?.text = "Buscando por código: $barcode"
+        txtHint?.text = "🔢 Código de barras: $barcode"
         substituirObserver(dataViewModel!!.buscarPorCodigoBarras(barcode))
     }
 

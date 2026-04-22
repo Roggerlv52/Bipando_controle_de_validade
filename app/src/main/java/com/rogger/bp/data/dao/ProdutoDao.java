@@ -29,12 +29,12 @@ public interface ProdutoDao {
             "ORDER BY p.nome ASC")
     LiveData<List<ProdutoWithCategory>> buscarPorNome(String userId, String query);
 
-    // 🔍 Busca exata por código de barras
+    // 🔍 Busca por código de barras (suporta busca parcial via LIKE)
     @Query("SELECT p.*, c.nome AS nomeCategoria " +
             "FROM produtos p " +
             "LEFT JOIN categorias c ON p.categoryId = c.id " +
             "WHERE p.deleted = 0 AND p.userId = :userId " +
-            "AND p.codigoBarras = :barcode " +
+            "AND p.codigoBarras LIKE '%' || :barcode || '%' " +
             "ORDER BY p.nome ASC")
     LiveData<List<ProdutoWithCategory>> buscarPorCodigoBarras(String userId, String barcode);
 
