@@ -62,4 +62,8 @@ public class CategoriaViewModel extends AndroidViewModel {
     public void remover(Categoria c) {
         repository.remover(c);
     }
+
+    public LiveData<Integer> getCountCategorias() {
+        return repository.getCountCategorias();
+    }
 }

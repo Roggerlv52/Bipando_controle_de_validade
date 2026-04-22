@@ -93,6 +93,34 @@ public class MainActivity extends BaseActivity {
 
         // ✅ Inicia o agendamento de notificações de validade
         NotificationScheduler.start(MainActivity.this);
+
+        // 📊 Atualizar contadores no menu lateral (Navigation Drawer)
+        setupNavigationDrawerCounters(navigationView);
+    }
+
+    private void setupNavigationDrawerCounters(NavigationView navigationView) {
+        DataViewModel dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
+        CategoriaViewModel categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
+
+        Menu menu = navigationView.getMenu();
+        MenuItem homeItem = menu.findItem(R.id.nav_home);
+        MenuItem categoryItem = menu.findItem(R.id.nav_category);
+
+        // Observar total de produtos ativos
+        dataViewModel.getCountAtivos().observe(this, count -> {
+            if (homeItem != null) {
+                int total = count != null ? count : 0;
+                homeItem.setTitle("Home (" + total + ")");
+            }
+        });
+
+        // Observar total de categorias
+        categoriaViewModel.getCountCategorias().observe(this, count -> {
+            if (categoryItem != null) {
+                int total = count != null ? count : 0;
+                categoryItem.setTitle("Categorias (" + total + ")");
+            }
+        });
     }
 
     @Override

@@ -93,4 +93,7 @@ public interface ProdutoDao {
 
     @Query("SELECT COUNT(*) FROM produtos WHERE categoryId = :categoryId AND deleted = 0 AND userId = :userId")
     int contarProdutosPorCategoria(int categoryId, String userId);
+
+    @Query("SELECT COUNT(*) FROM produtos WHERE deleted = 0 AND userId = :userId")
+    LiveData<Integer> getCountAtivos(String userId);
 }

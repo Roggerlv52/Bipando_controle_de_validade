@@ -54,6 +54,10 @@ public class CategoriaRepository {
         return categoriasComContagem;
     }
 
+    public LiveData<Integer> getCountCategorias() {
+        return categoriaDao.getCountCategorias(userId);
+    }
+
     /**
      * Sincroniza categorias do Firestore → Room.
      * Usa cache para evitar chamadas desnecessárias.

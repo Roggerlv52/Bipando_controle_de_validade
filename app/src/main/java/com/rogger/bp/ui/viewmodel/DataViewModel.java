@@ -94,4 +94,7 @@ public class DataViewModel extends AndroidViewModel {
         return repository.buscarPorCodigoBarras(barcode);
     }
 
+    public LiveData<Integer> getCountAtivos() {
+        return repository.getCountAtivos();
+    }
 }

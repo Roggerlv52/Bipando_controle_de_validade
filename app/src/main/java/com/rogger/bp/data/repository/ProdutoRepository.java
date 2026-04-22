@@ -85,6 +85,10 @@ public class ProdutoRepository {
     public LiveData<List<Produto>> getProdutosAtivos()  { return produtosAtivos; }
     public LiveData<List<Produto>> getProdutosDeletados(){ return produtosDeletados; }
 
+    public LiveData<Integer> getCountAtivos() {
+        return produtoDao.getCountAtivos(userId);
+    }
+
     public LiveData<List<Produto>> buscarPorNome(String query) {
         return Transformations.map(produtoDao.buscarPorNome(userId, query), this::converterLista);
     }

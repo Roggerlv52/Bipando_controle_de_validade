@@ -43,4 +43,7 @@ public interface CategoriaDao {
             "GROUP BY c.id " +
             "ORDER BY c.nome ASC")
     LiveData<List<CategoriaWithCount>> listarCategoriasComContagem(String userId);
+
+    @Query("SELECT COUNT(*) FROM categorias WHERE userId = :userId")
+    LiveData<Integer> getCountCategorias(String userId);
 }
