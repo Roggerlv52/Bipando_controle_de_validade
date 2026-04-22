@@ -105,6 +105,7 @@ public class MainActivity extends BaseActivity {
         Menu menu = navigationView.getMenu();
         MenuItem homeItem = menu.findItem(R.id.nav_home);
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
+        MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
         // Observar total de produtos ativos
         dataViewModel.getCountAtivos().observe(this, count -> {
@@ -119,6 +120,14 @@ public class MainActivity extends BaseActivity {
             if (categoryItem != null) {
                 int total = count != null ? count : 0;
                 categoryItem.setTitle("Categorias (" + total + ")");
+            }
+        });
+
+        // Observar total de itens deletados
+        dataViewModel.getCountDeletados().observe(this, count -> {
+            if (deletedItem != null) {
+                int total = count != null ? count : 0;
+                deletedItem.setTitle("Lixeira (" + total + ")");
             }
         });
     }

@@ -97,4 +97,8 @@ public class DataViewModel extends AndroidViewModel {
     public LiveData<Integer> getCountAtivos() {
         return repository.getCountAtivos();
     }
+
+    public LiveData<Integer> getCountDeletados() {
+        return repository.getCountDeletados();
+    }
 }
