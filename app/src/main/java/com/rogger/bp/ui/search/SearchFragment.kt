@@ -22,7 +22,7 @@ import com.rogger.bp.ui.scanner.BarcodeScanFragment
 import com.rogger.bp.ui.viewmodel.DataViewModel
 
 
-class SearchFragment : Fragment() {
+class  SearchFragment : Fragment() {
 
     private var dataViewModel: DataViewModel? = null
     private var adapter: SearchAdapter? = null
