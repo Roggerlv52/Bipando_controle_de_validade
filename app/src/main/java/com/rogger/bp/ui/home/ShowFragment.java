@@ -43,6 +43,8 @@ public class ShowFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         imageView = view.findViewById(R.id.imgPreview);
+        // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+        imageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         imageView.setImageMatrix(matrix);
 
         String uriString = getArguments() != null
@@ -50,8 +52,10 @@ public class ShowFragment extends Fragment {
                 : null;
 
         Glide.with(requireContext())
+                .asBitmap()
                 .load(uriString)
                 .override(1024, 1024)
+                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .fitCenter()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)

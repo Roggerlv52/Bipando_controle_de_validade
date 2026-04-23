@@ -140,8 +140,10 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         // 5. Carregamento da imagem
         Glide.with(context)
+                .asBitmap()
                 .load(modelo.getImagem())
                 .override(200, 200)
+                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
@@ -167,6 +169,8 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         public ViewHolder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageview_home);
+            // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+            imageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             imageCircle = itemView.findViewById(R.id.image_home_circle);
             txtLight = itemView.findViewById(R.id.txt_home_left);
             txtRight = itemView.findViewById(R.id.txt_home_right);

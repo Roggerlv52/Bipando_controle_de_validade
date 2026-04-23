@@ -60,8 +60,10 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
         holder.txt_bcd.setText(produto.getCodigoBarras());
 
         Glide.with(context)
+                .asBitmap()
                 .load(produto.getImagem())
                 .override(200, 200)
+                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
@@ -89,6 +91,8 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
             txt_home = itemView.findViewById(R.id.home_title);
             txt_bcd = itemView.findViewById(R.id.txt_item_bcd);
             img_home = itemView.findViewById(R.id.imageview_home);
+            // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+            img_home.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
     }
 }
