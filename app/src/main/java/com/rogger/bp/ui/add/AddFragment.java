@@ -262,7 +262,7 @@ public class AddFragment extends Fragment {
                 try {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile);
                     imagemUrlGlobal = null;
-                    Glide.with(this).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
+                    Glide.with(requireActivity()).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
