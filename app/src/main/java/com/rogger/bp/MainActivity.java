@@ -77,7 +77,7 @@ public class MainActivity extends BaseActivity {
             txtProfileEmail.setText(userInfo.get(3));
             Glide.with(this)
                     .load(profileUri)
-                    .override(200, 200) // reduz tamanho
+                    .override(100, 100) // reduz tamanho
                     .placeholder(R.drawable.ic_launcher_foreground)   // enquanto carrega
                     .error(R.drawable.ic_person_24)         // se der erro
                     .circleCrop()                      // deixa redondo

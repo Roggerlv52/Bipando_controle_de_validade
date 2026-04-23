@@ -51,6 +51,8 @@ public class ShowFragment extends Fragment {
 
         Glide.with(requireContext())
                 .load(uriString)
+                .override(1024, 1024)
+                .fitCenter()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(imageView);

@@ -141,7 +141,9 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         // 5. Carregamento da imagem
         Glide.with(context)
                 .load(modelo.getImagem())
-                .override(350, 350)
+                .override(200, 200)
+                .centerCrop()
+                .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(holder.imageView);
         

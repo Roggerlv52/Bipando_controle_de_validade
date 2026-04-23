@@ -19,10 +19,10 @@ public class ImageUtils {
     private static final String TAG = "ImageUtils";
 
     // Dimensão máxima do lado maior da imagem (px)
-    private static final int MAX_DIMENSION = 800;
+    private static final int MAX_DIMENSION = 720;
 
-    // Tamanho máximo do arquivo final em bytes (100 KB)
-    private static final int MAX_FILE_SIZE_BYTES = 100 * 1024;
+    // Tamanho máximo do arquivo final em bytes (80 KB)
+    private static final int MAX_FILE_SIZE_BYTES = 80 * 1024;
 
     // Qualidade inicial e mínima permitida
     private static final int QUALIDADE_INICIAL = 85;

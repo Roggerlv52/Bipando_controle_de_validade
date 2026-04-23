@@ -61,7 +61,9 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
 
         Glide.with(context)
                 .load(produto.getImagem())
-                .override(350, 350)
+                .override(200, 200)
+                .centerCrop()
+                .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(holder.img_home);
 

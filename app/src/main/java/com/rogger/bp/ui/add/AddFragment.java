@@ -147,6 +147,7 @@ public class AddFragment extends Fragment {
         if (produtoImagem.temImagem()) {
             Glide.with(this)
                     .load(imagemUrlGlobal)
+                    .override(500, 500)
                     .placeholder(R.drawable.carregando)
                     .error(R.drawable.imagem_error)
                     .centerCrop()
@@ -247,7 +248,7 @@ public class AddFragment extends Fragment {
                         photoFile = ImageUtils.processImage(requireContext(), img, file);
                         // Imagem local selecionada — descarta qualquer URL global anterior
                         imagemUrlGlobal = null;
-                        binding.fragmentImgAdd.setImageURI(Uri.fromFile(photoFile));
+                        Glide.with(this).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -261,7 +262,7 @@ public class AddFragment extends Fragment {
                 try {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile);
                     imagemUrlGlobal = null;
-                    binding.fragmentImgAdd.setImageURI(Uri.fromFile(photoFile));
+                    Glide.with(this).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

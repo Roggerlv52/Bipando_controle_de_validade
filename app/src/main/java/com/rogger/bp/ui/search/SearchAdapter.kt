@@ -79,6 +79,7 @@ class SearchAdapter(
         // Imagem via Glide
         Glide.with(context)
             .load(produto.imagem)
+            .override(200, 200)
             .placeholder(R.drawable.no_picture)
             .error(R.drawable.no_picture)
             .centerCrop()

@@ -348,7 +348,9 @@ public class EditFragment extends Fragment {
         imgUpload.setImageResource(R.drawable.carregando);
         Glide.with(requireContext())
                 .load(imgUri)
-                .override(350, 350)
+                .override(500, 500)
+                .centerCrop()
+                .placeholder(R.drawable.carregando)
                 .error(R.drawable.up_picture)
                 .into(imgUpload);
     }
