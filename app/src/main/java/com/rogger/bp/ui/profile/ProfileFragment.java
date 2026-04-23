@@ -27,7 +27,6 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.rogger.bp.R;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
-import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 
 import java.util.List;
@@ -80,20 +79,20 @@ public class ProfileFragment extends Fragment {
             activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        box1           = view.findViewById(R.id.box_profile_1);
-        box2           = view.findViewById(R.id.box_profile_2);
-        box3           = view.findViewById(R.id.box_profile_3);
-        box4           = view.findViewById(R.id.box_profile_4);
-        boxBeep        = view.findViewById(R.id.box_off_beep);
+        box1 = view.findViewById(R.id.box_profile_1);
+        box2 = view.findViewById(R.id.box_profile_2);
+        box3 = view.findViewById(R.id.box_profile_3);
+        box4 = view.findViewById(R.id.box_profile_4);
+        boxBeep = view.findViewById(R.id.box_off_beep);
         swNotification = view.findViewById(R.id.swNotification);
         btnSetNotifTime = view.findViewById(R.id.btnSetNotifTime);
-        txtNotifTime   = view.findViewById(R.id.txtNotifTime);
+        txtNotifTime = view.findViewById(R.id.txtNotifTime);
 
         ImageView circleImageView = view.findViewById(R.id.profileImage);
-        TextView txtName          = view.findViewById(R.id.userNameProfile);
-        TextView txtTitle         = view.findViewById(R.id.profile_title_name);
-        Slider sliderYellow       = view.findViewById(R.id.sliderYellow);
-        TextView txtYellow        = view.findViewById(R.id.txtYellow);
+        TextView txtName = view.findViewById(R.id.userNameProfile);
+        TextView txtTitle = view.findViewById(R.id.profile_title_name);
+        Slider sliderYellow = view.findViewById(R.id.sliderYellow);
+        TextView txtYellow = view.findViewById(R.id.txtYellow);
 
         // Carrega valores salvos
         swNotification.setChecked(NotificationPrefs.getAlert(requireContext()));
@@ -116,10 +115,18 @@ public class ProfileFragment extends Fragment {
         boxBeep.setChecked(stateBeep);
         switch (themeNumber) {
             case 1:
-            case 0: box1.setChecked(true); break;
-            case 2: box2.setChecked(true); break;
-            case 3: box3.setChecked(true); break;
-            case 4: box4.setChecked(true); break;
+            case 0:
+                box1.setChecked(true);
+                break;
+            case 2:
+                box2.setChecked(true);
+                break;
+            case 3:
+                box3.setChecked(true);
+                break;
+            case 4:
+                box4.setChecked(true);
+                break;
         }
 
         // Switch de notificação — com pedido de permissão no Android 13+
@@ -174,7 +181,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void showTimePickerDialog() {
-        int hour   = NotificationPrefs.getHour(requireContext());
+        int hour = NotificationPrefs.getHour(requireContext());
         int minute = NotificationPrefs.getMinute(requireContext());
 
         TimePickerDialog dialog = new TimePickerDialog(requireContext(),
@@ -191,7 +198,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateTimeText() {
-        int hour   = NotificationPrefs.getHour(requireContext());
+        int hour = NotificationPrefs.getHour(requireContext());
         int minute = NotificationPrefs.getMinute(requireContext());
         txtNotifTime.setText(String.format(Locale.getDefault(), "%02d:%02d", hour, minute));
     }

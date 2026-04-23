@@ -3,11 +3,12 @@ package com.rogger.bp.ui.edit;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+
 import com.rogger.bp.data.model.Produto;
+
 import java.io.File;
 
 public class EditPresenterViewModel extends ViewModel {
@@ -24,10 +25,6 @@ public class EditPresenterViewModel extends ViewModel {
 
     public LiveData<Produto> getProduto() {
         return produtoLive;
-    }
-
-    public LiveData<Integer> getCategoriaSelecionada() {
-        return categoriaSelecionadaId;
     }
 
     public boolean hasNewImage() {
@@ -94,19 +91,10 @@ public class EditPresenterViewModel extends ViewModel {
     }
 
     // -------------------- CAMPOS --------------------
-
     public void setNome(@NonNull String nome) {
         Produto p = produtoLive.getValue();
         if (p != null) {
             p.setNome(nome);
-            produtoLive.setValue(p);
-        }
-    }
-
-    public void setAnotacoes(@Nullable String anotacoes) {
-        Produto p = produtoLive.getValue();
-        if (p != null) {
-            p.setAnotacoes(anotacoes);
             produtoLive.setValue(p);
         }
     }
@@ -118,18 +106,7 @@ public class EditPresenterViewModel extends ViewModel {
             produtoLive.setValue(p);
         }
     }
-
-    public void onCategoriaEscolhida(int categoriaId) {
-        categoriaSelecionadaId.setValue(categoriaId);
-        Produto p = produtoLive.getValue();
-        if (p != null) {
-            p.setCategoryId(categoriaId);
-            produtoLive.setValue(p);
-        }
-    }
-
     // -------------------- LIFECYCLE --------------------
-
     @Override
     protected void onCleared() {
         deleteTempImage();

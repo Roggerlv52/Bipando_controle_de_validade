@@ -27,9 +27,6 @@ public interface CategoriaDao {
     void removerCategoria(Categoria categoria);
 
     @Query("SELECT * FROM categorias WHERE userId = :userId ORDER BY nome ASC")
-    LiveData<List<Categoria>> listarCategorias(String userId);
-
-    @Query("SELECT * FROM categorias WHERE userId = :userId ORDER BY nome ASC")
     List<Categoria> listarCategoriasSync(String userId);
 
     /**

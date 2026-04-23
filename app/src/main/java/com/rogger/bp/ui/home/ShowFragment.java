@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -17,7 +16,6 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
-import com.rogger.bp.ui.base.MenuUtil;
 
 public class ShowFragment extends Fragment {
 
@@ -56,22 +54,22 @@ public class ShowFragment extends Fragment {
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(imageView);
-        scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener(){
-                    @Override
-                    public boolean onScale(ScaleGestureDetector detector) {
-                        scale *= detector.getScaleFactor();
-                        scale = Math.max(1f, Math.min(scale, 5f));
+        scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                scale *= detector.getScaleFactor();
+                scale = Math.max(1f, Math.min(scale, 5f));
 
-                        matrix.setScale(
-                                scale,
-                                scale,
-                                detector.getFocusX(),
-                                detector.getFocusY()
-                        );
-                        imageView.setImageMatrix(matrix);
-                        return true;
-                    }
-                });
+                matrix.setScale(
+                        scale,
+                        scale,
+                        detector.getFocusX(),
+                        detector.getFocusY()
+                );
+                imageView.setImageMatrix(matrix);
+                return true;
+            }
+        });
 
         imageView.setOnTouchListener(new View.OnTouchListener() {
             float lastX, lastY;

@@ -3,7 +3,6 @@ package com.rogger.bp.ui.edit;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -199,17 +198,14 @@ public class EditFragment extends Fragment {
             dataViewModel.update(produto, urlAntiga, new FirebaseStorageDataSource.UploadCallback() {
                 @Override
                 public void onProgresso(int porcentagem) {
-                    Log.d("EditFragment", "Upload progresso: " + porcentagem + "%");
                 }
 
                 @Override
                 public void onSucesso(String urlDownload) {
-                    Log.d("EditFragment", "Upload concluído: " + urlDownload);
                 }
 
                 @Override
                 public void onErro(Exception e) {
-                    Log.e("EditFragment", "Falha no upload da imagem: " + e.getMessage());
                 }
             });
 
@@ -250,7 +246,6 @@ public class EditFragment extends Fragment {
                     );
                     categoriaAdapter.setDropDownViewResource(
                             android.R.layout.simple_spinner_dropdown_item);
-
                     spinner.setAdapter(categoriaAdapter);
 
                     if (produto != null) selecionarCategoria(produto.getCategoryId());
@@ -264,7 +259,6 @@ public class EditFragment extends Fragment {
                     AdapterView<?> parent, View view, int position, long id
             ) {
                 if (carregandoSpinner || produto == null) return;
-
                 Categoria c = listaCategorias.get(position);
                 produto.setCategoryId(c.getId() == -1 ? 0 : c.getId());
             }

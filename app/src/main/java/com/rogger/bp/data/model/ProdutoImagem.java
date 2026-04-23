@@ -27,9 +27,6 @@ public class ProdutoImagem {
 
     // ======================== CONSTRUTORES ========================
 
-    public ProdutoImagem() {
-        // Necessário para desserialização
-    }
 
     public ProdutoImagem(String codigoBarras, String nomeProduto, String imagemUrl) {
         this.codigoBarras = codigoBarras;
@@ -43,24 +40,12 @@ public class ProdutoImagem {
         return codigoBarras;
     }
 
-    public void setCodigoBarras(String codigoBarras) {
-        this.codigoBarras = codigoBarras;
-    }
-
     public String getNomeProduto() {
         return nomeProduto;
     }
 
-    public void setNomeProduto(String nomeProduto) {
-        this.nomeProduto = nomeProduto;
-    }
-
     public String getImagemUrl() {
         return imagemUrl;
-    }
-
-    public void setImagemUrl(String imagemUrl) {
-        this.imagemUrl = imagemUrl;
     }
 
     // ======================== HELPERS ========================

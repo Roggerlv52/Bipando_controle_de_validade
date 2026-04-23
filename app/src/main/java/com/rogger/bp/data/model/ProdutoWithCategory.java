@@ -15,7 +15,4 @@ public class ProdutoWithCategory {
         return produto;
     }
 
-    public String getNomeCategoria() {
-        return nomeCategoria != null ? nomeCategoria : "";
-    }
 }

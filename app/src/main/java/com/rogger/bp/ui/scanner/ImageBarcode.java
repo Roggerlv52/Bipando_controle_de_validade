@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.scanner;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -29,8 +30,6 @@ public class ImageBarcode extends AppCompatActivity {
 		imageBack = findViewById(R.id.image_back);
 		Window window = getWindow();
 
-		// Verificar a versão do Android
-        // Configurar a cor da StatusBar para preto
         window.setStatusBarColor(getResources().getColor(android.R.color.black)); // Substitua android.R.color.black pela cor desejada
         // Dentro do método onCreate() ou onResume() da segunda atividade
 		Intent intent = getIntent();
@@ -53,7 +52,8 @@ public class ImageBarcode extends AppCompatActivity {
 		});
 	}
 
-	private void ImageBarcode(String code) {
+	@SuppressLint("NotConstructor")
+    private void ImageBarcode(String code) {
 		
 		try {
 			BarcodeEncoder barcodeEncoder = new BarcodeEncoder();

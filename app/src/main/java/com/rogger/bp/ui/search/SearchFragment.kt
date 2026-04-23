@@ -78,9 +78,7 @@ class SearchFragment : Fragment() {
         }
 
         val searchView = view.findViewById<SearchView>(R.id.search_view)
-        // ──────────────────────────────────────────────────────────────
-        // Atualiza o hint para indicar ao usuário os modos de busca
-        // ──────────────────────────────────────────────────────────────
+
         searchView?.queryHint = "Nome, Código ou @categoria…"
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             marquee.visibility = if (hasFocus) View.GONE else View.VISIBLE

@@ -7,17 +7,6 @@ import android.view.View
 class GradientAnimator(private val view: View) {
 
     private var animator: ValueAnimator? = null
-    private val colors = intArrayOf(
-        0xFF1DBA00.toInt(),
-        0xFF5EDC00.toInt(),
-        0xFFB7F000.toInt(),
-        0xFFFFFF00.toInt(),
-        0xFFFFC107.toInt(),
-        0xFFFF9800.toInt(),
-        0xFFFF5722.toInt(),
-        0xFFF44336.toInt()
-    )
-
     fun start() {
         val drawable = view.background
 

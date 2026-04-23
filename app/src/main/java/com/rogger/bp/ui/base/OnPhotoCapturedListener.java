@@ -4,6 +4,6 @@ import android.net.Uri;
 
 public interface OnPhotoCapturedListener {
 	 void onOpenCamera();
-	 void onPassUri(Uri uri);
+	 //void onPassUri(Uri uri);
 
 }

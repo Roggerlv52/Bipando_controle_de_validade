@@ -12,7 +12,4 @@ public class CategoriaWithCount {
         return categoria;
     }
 
-    public int getCount() {
-        return count;
-    }
 }

@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.Produto;
-import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.gallery.ImagePikerUtil;
 
 import java.io.File;

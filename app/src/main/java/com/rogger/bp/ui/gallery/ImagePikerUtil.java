@@ -23,7 +23,6 @@ public class ImagePikerUtil {
     private Uri photoUri;
     private File photoFile;
     private CameraCallback callback;
-    private static final String TAG = "ImagePickerUtil";
     /**
      * Registra o launcher (chamar no onCreate ou onViewCreated)
      */

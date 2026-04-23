@@ -29,34 +29,34 @@ import java.util.stream.Collectors;
 
 /**
  * ProdutoRepository
- *
+ * <p>
  * Orquestrador entre Room (local), Firestore (nuvem) e Storage (imagens).
  */
 public class ProdutoRepository {
 
     private static final String TAG = "ProdutoRepository";
 
-    private final ProdutoDao                produtoDao;
-    private final CategoriaDao              categoriaDao;
-    private final FirebaseDataSource        firebaseDataSource;
+    private final ProdutoDao produtoDao;
+    private final CategoriaDao categoriaDao;
+    private final FirebaseDataSource firebaseDataSource;
     private final FirebaseStorageDataSource storageDataSource;
-    private final ProdutoImagemDataSource   produtoImagemDataSource;
-    private final LocalCache                localCache;
-    private final String                    userId;
+    private final ProdutoImagemDataSource produtoImagemDataSource;
+    private final LocalCache localCache;
+    private final String userId;
 
     private final LiveData<List<Produto>> produtosAtivos;
     private final LiveData<List<Produto>> produtosDeletados;
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
 
     public ProdutoRepository(Application application) {
-        BpdDatabase db      = BpdDatabase.getDatabase(application);
-        produtoDao          = db.produtoDao();
-        categoriaDao        = db.categoriaDao();
-        firebaseDataSource  = FirebaseDataSource.getInstance();
-        storageDataSource   = FirebaseStorageDataSource.getInstance();
+        BpdDatabase db = BpdDatabase.getDatabase(application);
+        produtoDao = db.produtoDao();
+        categoriaDao = db.categoriaDao();
+        firebaseDataSource = FirebaseDataSource.getInstance();
+        storageDataSource = FirebaseStorageDataSource.getInstance();
         produtoImagemDataSource = ProdutoImagemDataSource.getInstance();
-        localCache          = LocalCache.getInstance();
-        userId              = FirebaseAuth.getInstance().getCurrentUser() != null
+        localCache = LocalCache.getInstance();
+        userId = FirebaseAuth.getInstance().getCurrentUser() != null
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : "";
 
@@ -81,9 +81,17 @@ public class ProdutoRepository {
 
     // ======================== LEITURA ========================
 
-    public LiveData<Boolean> getIsLoading()             { return isLoading; }
-    public LiveData<List<Produto>> getProdutosAtivos()  { return produtosAtivos; }
-    public LiveData<List<Produto>> getProdutosDeletados(){ return produtosDeletados; }
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+
+    public LiveData<List<Produto>> getProdutosAtivos() {
+        return produtosAtivos;
+    }
+
+    public LiveData<List<Produto>> getProdutosDeletados() {
+        return produtosDeletados;
+    }
 
     public LiveData<Integer> getCountAtivos() {
         return produtoDao.getCountAtivos(userId);
@@ -125,6 +133,7 @@ public class ProdutoRepository {
                     isLoading.postValue(false);
                 });
             }
+
             @Override
             public void onFailure(Exception e) {
                 Log.e(TAG, "Erro ao sincronizar: " + e.getMessage());
@@ -149,6 +158,7 @@ public class ProdutoRepository {
             p.setNomeCategoria(nome != null ? nome : "");
         }
     }
+
     // ────────────────────────────────────────────────────────────────
     // 🆕 Busca produtos pelo nome da categoria (parcial, case-insensitive)
     // ────────────────────────────────────────────────────────────────
@@ -197,11 +207,6 @@ public class ProdutoRepository {
             }
         });
     }
-
-    public void inserir(Produto produto) {
-        inserir(produto, null);
-    }
-
     private void inserirComImagemGlobal(Produto produto,
                                         String barcode,
                                         File arquivoLocal,
@@ -382,11 +387,6 @@ public class ProdutoRepository {
             }
         });
     }
-
-    public void atualizar(Produto produto) {
-        atualizar(produto, null, null);
-    }
-
     // ======================== LIXEIRA ========================
 
     public void moverParaLixeira(int id) {

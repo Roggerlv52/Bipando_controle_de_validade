@@ -3,7 +3,6 @@ package com.rogger.bp.ui.add;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -48,21 +46,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AddFragment extends Fragment {
-
-    private static final String TAG = "AddFragment";
     private FragmentAddBinding binding;
-    // ── Estado ───────────────────────────────────────────────────
     private long timestamp;
     private Produto produto;
     private File photoFile;
     private boolean confirmed = false;
     private boolean carregandoSpinner = true;
     private int categoriaId = -1;
-
-    /**
-     * URL da imagem vinda do banco global (imagens_produtos).
-     * Se preenchida, significa que a imagem já existe e NÃO será feito upload.
-     */
     private String imagemUrlGlobal = null;
     private ArrayAdapter<Categoria> categoriaAdapter;
     private List<Categoria> listaCategorias = new ArrayList<>();
@@ -78,7 +68,7 @@ public class AddFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentAddBinding.inflate(inflater, container, false);
 
         categoriaViewModel = new ViewModelProvider(requireActivity()).get(CategoriaViewModel.class);
@@ -119,25 +109,6 @@ public class AddFragment extends Fragment {
         }
     }
 
-    // ============================================================
-    // NOVO FLUXO — CONSULTA DE IMAGEM GLOBAL
-    // ============================================================
-
-    /**
-     * Consulta a coleção global "imagens_produtos" pelo código de barras.
-     * <p>
-     * Resultado A — barcode JÁ existe:
-     * → Preenche imgUpload com a imagem via Glide (sem download manual)
-     * → Preenche edtName com o nome sugerido (editável pelo usuário)
-     * → Bloqueia o botão de imagem (não precisa capturar nova foto)
-     * → Ao salvar, NÃO faz upload — usa a imagemUrlGlobal diretamente
-     * <p>
-     * Resultado B — barcode NÃO existe:
-     * → Formulário permanece em branco (comportamento original)
-     * → Usuário captura imagem normalmente
-     * → Ao salvar, faz upload global em imagens_produtos/{barcode}/imagem.jpg
-     * e depois grava o documento no Firestore
-     */
     private void consultarImagemGlobal(@NonNull String barcode) {
         mostrarProgressoConsulta(true);
 
@@ -158,8 +129,6 @@ public class AddFragment extends Fragment {
                         if (!isAdded()) return;
                         requireActivity().runOnUiThread(() -> {
                             mostrarProgressoConsulta(false);
-                            // Formulário permanece em branco — usuário cadastra normalmente
-                            Log.d(TAG, "Barcode novo. Usuário deve capturar imagem.");
                         });
                     }
 
@@ -168,18 +137,11 @@ public class AddFragment extends Fragment {
                         if (!isAdded()) return;
                         requireActivity().runOnUiThread(() -> {
                             mostrarProgressoConsulta(false);
-                            Log.e(TAG, "Erro ao consultar imagem global: " + e.getMessage());
-                            // Falha silenciosa — formulário permanece em branco,
-                            // usuário pode continuar normalmente
                         });
                     }
                 });
     }
 
-    /**
-     * Preenche o formulário com os dados da imagem já existente no banco global.
-     * Chamado apenas quando o barcode já foi cadastrado por algum usuário.
-     */
     private void preencherComImagemExistente(@NonNull ProdutoImagem produtoImagem) {
         imagemUrlGlobal = produtoImagem.getImagemUrl();
         if (produtoImagem.temImagem()) {
@@ -189,51 +151,26 @@ public class AddFragment extends Fragment {
                     .error(R.drawable.imagem_error)
                     .centerCrop()
                     .into(binding.fragmentImgAdd);
-
-            // Bloqueia o botão de imagem — não faz sentido trocar uma imagem global
             binding.fragmentImgAdd.setClickable(false);
-            binding.fragmentImgAdd.setAlpha(0.85f);
         }
-
-        // Preenche o nome sugerido se disponível (editável — usuário pode ajustar)
         if (produtoImagem.temNome()) {
             binding.edtNameFragmentAdd.setText(produtoImagem.getNomeProduto());
             binding.edtNameFragmentAdd.setSelection(
                     binding.edtNameFragmentAdd.getText().length());
         }
-
-        Log.d(TAG, "Formulário preenchido com imagem global: " + produtoImagem.getCodigoBarras());
     }
 
-    /**
-     * Salva o produto no banco.
-     * <p>
-     * Caso A — imagemUrlGlobal preenchida (barcode já existia):
-     * → Salva produto com a URL global diretamente. Zero upload.
-     * <p>
-     * Caso B — imagemUrlGlobal nula + photoFile disponível (barcode novo):
-     * → Faz upload global em imagens_produtos/{barcode}/imagem.jpg
-     * → Grava documento em imagens_produtos/{barcode}
-     * → Salva produto com a URL retornada
-     * <p>
-     * Caso C — sem imagem nenhuma:
-     * → Salva produto normalmente sem imagem
-     */
     private void saveData() {
         produto.setNome(binding.edtNameFragmentAdd.getText().toString().trim());
         produto.setAnotacoes(binding.editFragmentNoteAdd.getText().toString());
         produto.setTimestamp(timestamp);
         produto.setCodigoBarras(binding.txtAddBarcode.getText().toString().trim());
-
-        // Caso A: imagem global já existia — usa URL direto, sem upload
         if (imagemUrlGlobal != null && !imagemUrlGlobal.isEmpty()) {
             produto.setImagem(imagemUrlGlobal);
             dataViewModel.insert(produto, null);
-            Log.d(TAG, "Produto salvo com imagem global existente. Sem upload.");
             return;
         }
 
-        // Caso B: barcode novo com imagem local capturada — faz upload global
         if (photoFile != null && !produto.getCodigoBarras().isEmpty()) {
             produto.setImagem(photoFile.getAbsolutePath());
             mostrarProgressoUpload(true);
@@ -252,7 +189,6 @@ public class AddFragment extends Fragment {
                     if (!isAdded()) return;
                     requireActivity().runOnUiThread(() -> {
                         mostrarProgressoUpload(false);
-                        Log.d(TAG, "Upload global concluído: " + urlDownload);
                     });
                 }
 
@@ -261,16 +197,12 @@ public class AddFragment extends Fragment {
                     if (!isAdded()) return;
                     requireActivity().runOnUiThread(() -> {
                         mostrarProgressoUpload(false);
-                        Log.e(TAG, "Falha no upload global: " + e.getMessage());
                     });
                 }
             });
             return;
         }
-
-        // Caso C: sem imagem — salva produto normalmente
         dataViewModel.insert(produto, null);
-        Log.d(TAG, "Produto salvo sem imagem.");
     }
 
     private void configurarSpinner() {
@@ -328,7 +260,6 @@ public class AddFragment extends Fragment {
             public void onImageCaptured(@NonNull Uri imageUri, @NonNull File imageFile) {
                 try {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile);
-                    // Imagem local capturada — descarta qualquer URL global anterior
                     imagemUrlGlobal = null;
                     binding.fragmentImgAdd.setImageURI(Uri.fromFile(photoFile));
                 } catch (Exception e) {
@@ -359,9 +290,7 @@ public class AddFragment extends Fragment {
                 startImageBarcode(binding.txtAddBarcode.getText().toString()));
 
         binding.fragmentImgAdd.setOnClickListener(v -> {
-            // Só permite trocar imagem se NÃO veio do banco global
             if (imagemUrlGlobal != null) return;
-
             confirmed = false;
             ShowSelectDialog.show(getContext(), new ShowSelectDialog.selectedCallback() {
                 @Override
@@ -443,8 +372,6 @@ public class AddFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Limpa arquivo temporário local apenas se o usuário cancelou
-        // e a imagem não veio do banco global
         if (!confirmed && photoFile != null && imagemUrlGlobal == null) {
             ImagePikerUtil.cleanUpTempFiles(photoFile);
         }

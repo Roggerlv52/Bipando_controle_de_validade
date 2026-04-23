@@ -43,7 +43,6 @@ public class MainActivity extends BaseActivity {
     private TextView txtProfileEmail;
     private FirebaseDataSource firebaseDataSource;
     private GradientAnimator animator;
-    //private ScannerView scannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,7 +134,6 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -149,8 +147,6 @@ public class MainActivity extends BaseActivity {
             return true;
         }
         if (id == R.id.menu_logout) {
-            // 🔑 Limpa cache de sessão e flags de sync antes de deslogar
-
             mAuth.signOut();
             SharedPreferencesManager.setLoginState(this, "state", false);
             SharedPreferencesManager.clearUserInfo(this);

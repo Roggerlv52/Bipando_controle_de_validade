@@ -75,12 +75,6 @@ public interface ProdutoDao {
             "ORDER BY p.timestamp ASC")
     LiveData<List<ProdutoWithCategory>> listarProdutosDeletados(String userId);
 
-    @Query("SELECT p.*, c.nome AS nomeCategoria " +
-            "FROM produtos p " +
-            "LEFT JOIN categorias c ON p.categoryId = c.id " +
-            "WHERE p.id = :id LIMIT 1")
-    ProdutoWithCategory buscarPorIdSync(int id);
-
     @Query("UPDATE produtos SET deleted = 1, deletedAt = :deletedAt WHERE id = :id")
     void moverParaLixeira(int id, long deletedAt);
 
@@ -90,9 +84,6 @@ public interface ProdutoDao {
 
     @Query("DELETE FROM produtos WHERE id = :id")
     void removerPorId(int id);
-
-    @Query("SELECT COUNT(*) FROM produtos WHERE categoryId = :categoryId AND deleted = 0 AND userId = :userId")
-    int contarProdutosPorCategoria(int categoryId, String userId);
 
     @Query("SELECT COUNT(*) FROM produtos WHERE deleted = 0 AND userId = :userId")
     LiveData<Integer> getCountAtivos(String userId);

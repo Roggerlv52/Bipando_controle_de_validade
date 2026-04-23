@@ -53,10 +53,6 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         notifyDataSetChanged();
     }
 
-    public boolean isModoSelecao() {
-        return modoSelecao;
-    }
-
     // 🔹 Retorna selecionadas
     public List<Categoria> getSelecionadas() {
         return new ArrayList<>(selecionadas);
