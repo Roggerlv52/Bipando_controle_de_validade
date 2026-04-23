@@ -20,18 +20,21 @@ class GradientAnimator(private val view: View) {
             addUpdateListener {
                 val value = it.animatedValue as Float
 
-                val color1 = blendColors(0x008000.toInt(), 0x008000.toInt(), value)
+                val color1 = blendColors(0xFF008000.toInt(), 0xFF006400.toInt(), value)
                 val color2 = blendColors(0xFFFFC107.toInt(), 0xFFF44336.toInt(), value)
 
-                // 🔥 RECRIAR DRAWABLE (SOLUÇÃO PARA API ANTIGA)
-                val newDrawable = GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(color1, color2)
-                )
-
-                newDrawable.cornerRadius = 0f
-
-                view.background = newDrawable
+                // 🔥 Atualiza as cores do drawable existente em vez de criar um novo
+                val drawable = view.background as? GradientDrawable
+                if (drawable != null) {
+                    drawable.colors = intArrayOf(color1, color2)
+                } else {
+                    val newDrawable = GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,
+                        intArrayOf(color1, color2)
+                    )
+                    newDrawable.cornerRadius = 0f
+                    view.background = newDrawable
+                }
             }
             start()
         }
