@@ -78,8 +78,10 @@ class SearchAdapter(
 
         // Imagem via Glide
         Glide.with(context)
+            .asBitmap()
             .load(produto.imagem)
             .override(200, 200)
+            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
             .placeholder(R.drawable.no_picture)
             .error(R.drawable.no_picture)
             .centerCrop()
@@ -96,6 +98,9 @@ class SearchAdapter(
         val txtDate: TextView = view.findViewById(R.id.txt_home_right)
         val txtContDay: TextView = view.findViewById(R.id.txt_home_left)
         val imgCircle: ImageView = view.findViewById(R.id.image_home_circle)
-        val imgProduto: ImageView = view.findViewById(R.id.imageview_home)
+        val imgProduto: ImageView = view.findViewById(R.id.imageview_home).apply {
+            // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        }
     }
 }

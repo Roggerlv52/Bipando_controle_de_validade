@@ -60,6 +60,8 @@ public class MainActivity extends BaseActivity {
 
         View viewProfile = navigationView.getHeaderView(0);
         imgProfile = viewProfile.findViewById(R.id.img_profile_navigation);
+        // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+        imgProfile.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         txtProfileName = viewProfile.findViewById(R.id.name_profile_navigation);
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
 
@@ -76,11 +78,13 @@ public class MainActivity extends BaseActivity {
             txtProfileName.setText(userInfo.get(1));
             txtProfileEmail.setText(userInfo.get(3));
             Glide.with(this)
+                    .asBitmap()
                     .load(profileUri)
-                    .override(100, 100) // reduz tamanho
-                    .placeholder(R.drawable.ic_launcher_foreground)   // enquanto carrega
-                    .error(R.drawable.ic_person_24)         // se der erro
-                    .circleCrop()                      // deixa redondo
+                    .override(128, 128)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_person_24)
+                    .circleCrop()
                     .into(imgProfile);
         }
         mAppBarConfiguration = new AppBarConfiguration.Builder(

@@ -85,6 +85,8 @@ public class EditFragment extends Fragment {
         btnData = v.findViewById(R.id.datePickerButton);
         btnSave = v.findViewById(R.id.btn_fgm_save);
         imgUpload = v.findViewById(R.id.image_edit);
+        // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+        imgUpload.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         spinner = v.findViewById(R.id.spinner_edit);
 
         dataViewModel = new ViewModelProvider(requireActivity())
@@ -347,8 +349,10 @@ public class EditFragment extends Fragment {
     private void setImageView(String imgUri) {
         imgUpload.setImageResource(R.drawable.carregando);
         Glide.with(requireContext())
+                .asBitmap()
                 .load(imgUri)
-                .override(500, 500)
+                .override(512, 512)
+                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.up_picture)

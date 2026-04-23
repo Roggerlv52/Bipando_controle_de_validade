@@ -70,6 +70,8 @@ public class AddFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentAddBinding.inflate(inflater, container, false);
+        // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+        binding.fragmentImgAdd.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
         categoriaViewModel = new ViewModelProvider(requireActivity()).get(CategoriaViewModel.class);
         dataViewModel = new ViewModelProvider(requireActivity()).get(DataViewModel.class);
@@ -146,8 +148,10 @@ public class AddFragment extends Fragment {
         imagemUrlGlobal = produtoImagem.getImagemUrl();
         if (produtoImagem.temImagem()) {
             Glide.with(this)
+                    .asBitmap()
                     .load(imagemUrlGlobal)
-                    .override(500, 500)
+                    .override(512, 512)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                     .placeholder(R.drawable.carregando)
                     .error(R.drawable.imagem_error)
                     .centerCrop()
@@ -248,7 +252,13 @@ public class AddFragment extends Fragment {
                         photoFile = ImageUtils.processImage(requireContext(), img, file);
                         // Imagem local selecionada — descarta qualquer URL global anterior
                         imagemUrlGlobal = null;
-                        Glide.with(this).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
+                        Glide.with(this)
+                                .asBitmap()
+                                .load(photoFile)
+                                .override(512, 512)
+                                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                                .centerCrop()
+                                .into(binding.fragmentImgAdd);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -262,7 +272,13 @@ public class AddFragment extends Fragment {
                 try {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile);
                     imagemUrlGlobal = null;
-                    Glide.with(this).load(photoFile).override(500, 500).centerCrop().into(binding.fragmentImgAdd);
+                    Glide.with(AddFragment.this)
+                            .asBitmap()
+                            .load(photoFile)
+                            .override(512, 512)
+                            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                            .centerCrop()
+                            .into(binding.fragmentImgAdd);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
