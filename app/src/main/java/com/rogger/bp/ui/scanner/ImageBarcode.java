@@ -60,6 +60,7 @@ public class ImageBarcode extends AppCompatActivity {
 			Bitmap bitmap = barcodeEncoder.encodeBitmap(code, BarcodeFormat.CODE_128, 400, 200);
 			imageView.setImageBitmap(bitmap);
 
+
 		} catch (Exception e) {
 			Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
 		}
@@ -69,6 +70,8 @@ public class ImageBarcode extends AppCompatActivity {
     private void imageViewUri(String uri) {
 		Glide.with(this)
 				.load(uri)
+				.override(800, 800) // 🔥 LIMITA TAMANHO
+				.centerCrop()
 				.error(R.drawable.imagem_error)
 				.into(imageView);
     }

@@ -76,12 +76,10 @@ public class LoginActivity extends BaseActivity {
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
         Button btn_gmail = findViewById(R.id.login_with_gmail);
-        imgshow = findViewById(R.id.img_activity_login);
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
         btn_gmail.setOnClickListener(v -> signIn());
-        //startSlideshow();
     }
 
     private void startSlideshow() {
