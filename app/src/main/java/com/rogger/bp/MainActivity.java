@@ -66,7 +66,11 @@ public class MainActivity extends BaseActivity {
         txtProfileEmail = viewProfile.findViewById(R.id.txt_profile_email_navigation);
 
         View bgView = viewProfile.findViewById(R.id.header_background);
-// 🔥 iniciar animação
+        // 🔥 Correção para Android 11: Desativa aceleração de hardware no fundo do header
+        if (bgView != null) {
+            bgView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+        // 🔥 iniciar animação
         animator = new GradientAnimator(bgView);
         animator.start();
 
