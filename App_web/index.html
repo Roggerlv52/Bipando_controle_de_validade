@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bipando - Controle de Validade</title>
+    <link rel="stylesheet" href="src/util/globalStyle.css">
+    <!-- Importação de ícones (similar ao Material Design do Android) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- Container principal onde as telas (Login, Home, etc) serão injetadas -->
+    <div id="app-container">
+        <div id="main-content">
+            <!-- O conteúdo será carregado dinamicamente pelo MainActivity.js -->
+            <div class="loading-screen">
+                <div class="spinner"></div>
+                <p>Carregando Bipando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script principal que gerencia a navegação e o estado da aplicação -->
+    <script type="module" src="src/MainActivity.js"></script>
+</body>
+</html>
