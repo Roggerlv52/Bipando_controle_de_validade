@@ -23,7 +23,6 @@ import com.rogger.bp.data.model.Produto;
 import java.util.List;
 
 public class NotificationUtil {
-    private static final String TAG = "NotificationUtil";
     public static final String CHANNEL_ID = "validade_channel";
 
     /**
@@ -45,7 +44,6 @@ public class NotificationUtil {
             NotificationManager nm = c.getSystemService(NotificationManager.class);
             if (nm != null) {
                 nm.createNotificationChannel(channel);
-                Log.d(TAG, "Canal de notificação criado/confirmado.");
             }
         }
     }
@@ -80,13 +78,11 @@ public class NotificationUtil {
         if (produtos == null || produtos.isEmpty()) return;
 
         if (!temPermissao(c)) {
-            Log.w(TAG, "Permissão POST_NOTIFICATIONS não concedida. Notificação ignorada.");
             return;
         }
 
         // Garante que o canal existe antes de notificar
         createChannel(c);
-
         String title = produtos.size() == 1
                 ? "Produto vencendo"
                 : produtos.size() + " produtos vencendo";
@@ -109,7 +105,6 @@ public class NotificationUtil {
             return;
         }
         NotificationManagerCompat.from(c).notify(1001, n);
-        Log.d(TAG, "Notificação 'vencendo' exibida: " + produtos.size() + " produto(s)");
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -117,13 +112,11 @@ public class NotificationUtil {
         if (produtos == null || produtos.isEmpty()) return;
 
         if (!temPermissao(c)) {
-            Log.w(TAG, "Permissão POST_NOTIFICATIONS não concedida. Notificação ignorada.");
             return;
         }
 
         // Garante que o canal existe antes de notificar
         createChannel(c);
-
         String title = produtos.size() == 1
                 ? "Produto vencido"
                 : produtos.size() + " produtos vencidos";
@@ -140,8 +133,6 @@ public class NotificationUtil {
                 .setContentIntent(getPendingIntent(c))
                 .setAutoCancel(true)
                 .build();
-
         NotificationManagerCompat.from(c).notify(1002, n);
-        Log.d(TAG, "Notificação 'vencidos' exibida: " + produtos.size() + " produto(s)");
     }
 }
