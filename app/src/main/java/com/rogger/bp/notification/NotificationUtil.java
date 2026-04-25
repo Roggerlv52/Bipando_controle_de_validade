@@ -30,7 +30,7 @@ public class NotificationUtil {
      * existe não causa efeito colateral.
      */
     public static void createChannel(Context c) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION_CODES.P >= Build.VERSION.SDK_INT) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Validade de Produtos",
@@ -124,7 +124,7 @@ public class NotificationUtil {
                 : "Você tem " + produtos.size() + " produtos que já venceram!";
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.bp_logo_small)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
