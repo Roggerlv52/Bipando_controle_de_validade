@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
@@ -14,6 +16,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.rogger.bp.MainActivity;
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.Produto;
 
@@ -30,7 +33,7 @@ public class NotificationUtil {
      * existe não causa efeito colateral.
      */
     public static void createChannel(Context c) {
-        if (Build.VERSION_CODES.P >= Build.VERSION.SDK_INT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Validade de Produtos",
@@ -61,6 +64,18 @@ public class NotificationUtil {
         return true;
     }
 
+    private static PendingIntent getPendingIntent(Context c) {
+        Intent intent = new Intent(c, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        
+        return PendingIntent.getActivity(c, 0, intent, flags);
+    }
+
     public static void showVencendo(Context c, List<Produto> produtos) {
         if (produtos == null || produtos.isEmpty()) return;
 
@@ -85,18 +100,12 @@ public class NotificationUtil {
                 .setContentTitle(title)
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(getPendingIntent(c))
                 .setAutoCancel(true)
                 .build();
 
         if (ActivityCompat.checkSelfPermission(c,
                 Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         NotificationManagerCompat.from(c).notify(1001, n);
@@ -128,6 +137,7 @@ public class NotificationUtil {
                 .setContentTitle(title)
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(getPendingIntent(c))
                 .setAutoCancel(true)
                 .build();
 
