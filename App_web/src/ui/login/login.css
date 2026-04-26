@@ -318,16 +318,6 @@ html, body {
   animation: fadeUp .6s .6s ease both;
 }
 
-/* Barcode SVG decoration */
-.barcode-deco {
-  position: absolute;
-  right: -20px;
-  bottom: 80px;
-  opacity: .04;
-  width: 180px;
-  pointer-events: none;
-}
-
 /* ── RIGHT PANEL ──────────────────────────────────────────── */
 .right-panel {
   display: flex;
