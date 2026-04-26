@@ -46,21 +46,7 @@ const DOM = {
   toastMsg: document.getElementById('toastMsg'),
 };
 
-/* ── 2. DECORAÇÃO DE BARCODE ──────────────────────────────── */
-const BAR_HEIGHTS = [28, 18, 40, 22, 35, 15, 42, 25, 30, 20, 38, 18, 44, 22, 32, 16, 40, 28, 36, 20, 44, 18, 30, 24];
-
-function buildBarcodeDecoration() {
-  BAR_HEIGHTS.forEach((height, index) => {
-    const bar = document.createElement('div');
-    bar.className = 'bc-bar';
-    bar.style.height = height + 'px';
-    bar.style.animationDelay = (index * 0.08) + 's';
-    DOM.bcLines.appendChild(bar);
-  });
-}
-
 /* ── 3. CONTROLE DE VISIBILIDADE ─────────────────────────── */
-
 /**
  * Exibe o formulário de e-mail e oculta o bloco Google.
  */
@@ -201,7 +187,7 @@ function isValidEmail(email) {
  * compatibilidade com os atributos onclick do HTML.
  */
 function init() {
-  buildBarcodeDecoration();
+
   document.addEventListener('keydown', handleKeydown);
 
   /* Expõe funções para os handlers onclick inline do HTML */
