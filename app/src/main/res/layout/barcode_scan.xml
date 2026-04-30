@@ -66,7 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="20dp"
             android:src="@drawable/line_down_left" />
 
         <LinearLayout
@@ -76,18 +76,17 @@
             android:layout_alignParentBottom="true"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="45dp"
                 android:layout_gravity="bottom"
-                android:text="Bipando"
-                android:textColor="@color/red"
-                android:textStyle="italic|bold" />
+                android:scaleType="centerInside"
+                android:src="@drawable/bp_title"
+                />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
                 android:src="@drawable/line_down_right" />
         </LinearLayout>
     </RelativeLayout>
