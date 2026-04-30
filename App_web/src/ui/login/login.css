@@ -112,7 +112,7 @@ html, body {
 .left-panel {
   display: flex;
   flex-direction: column;
-  padding: 48px 48px;
+  padding: 100px 150px;
 }
 
 /* Brand */
@@ -161,7 +161,7 @@ html, body {
 .hero-eyebrow::before {
   content: '';
   display: block;
-  width: 32px;
+  width: 30px;
   height: 1px;
   background: var(--accent-sky);
   opacity: .6;
