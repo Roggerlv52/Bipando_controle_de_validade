@@ -126,8 +126,8 @@ html, body {
 
 
 .brand-logo-img {
-  width: 48px;
-  height: 48px;
+  width: 150px;
+  height: 150px;
   border-radius: 10px;
   object-fit: cover;
 }
@@ -135,13 +135,13 @@ html, body {
 .brand-name {
   font-family: 'Syne', sans-serif;
   font-weight: 100;
-  font-size: 22px;
+  font-size: 32px;
   letter-spacing: .02em;
   color: var(--text-primary);
 }
 
 .brand-tag {
-  font-size: 11px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -194,11 +194,11 @@ html, body {
 
 .hero-sub {
   margin-top: 24px;
-  font-size: 16px;
-  font-weight: 300;
+  font-size: 20px;
+  font-weight: 350;
   line-height: 1.7;
   color: var(--text-muted);
-  max-width: 420px;
+  max-width: 520px;
   animation: fadeUp .6s .35s ease both;
 }
 
