@@ -7,7 +7,7 @@
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
+  padding: 3px;
 }
 
 /* ── DESIGN TOKENS ────────────────────────────────────────── */
@@ -102,17 +102,15 @@ html, body {
 /* ── LAYOUT SHELL ─────────────────────────────────────────── */
 .shell {
   position: relative;
-  
   display: grid;
   grid-template-columns: 2fr 450px;
-  
 }
 
 /* ── LEFT PANEL ───────────────────────────────────────────── */
 .left-panel {
   display: flex;
   flex-direction: column;
-  padding: 100px 150px;
+  padding: 100px 100px 48px 100px;
 }
 
 /* Brand */
@@ -151,30 +149,8 @@ html, body {
 
 /* Hero copy */
 
-
-.hero-eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: var(--accent-sky);
-  margin-bottom: 20px;
-  animation: fadeUp .6s .15s ease both;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.hero-eyebrow::before {
-  content: '';
-  display: block;
-  width: 30px;
-  height: 1px;
-  background: var(--accent-sky);
-  opacity: .6;
-}
-
 .hero-title {
+  width: 30px;
   font-family: 'Syne', sans-serif;
   font-weight: 800;
   font-size: clamp(40px, 4.5vw, 64px);
@@ -206,7 +182,7 @@ html, body {
 .stats-row {
   display: flex;
   gap: 40px;
-  margin-top: 48px;
+  margin-top: 60px;
   animation: fadeUp .6s .45s ease both;
 }
 
@@ -282,7 +258,7 @@ html, body {
 
 /* Left footer */
 .left-footer {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-dim);
   animation: fadeUp .6s .6s ease both;
 }
@@ -292,7 +268,6 @@ html, body {
   display:flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 48px 48px 48px;
   background: rgba(255, 255, 255, .025);
   border-left: 1px solid var(--border);
   backdrop-filter: blur(20px);
@@ -302,7 +277,7 @@ html, body {
 .right-panel::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 0px;
   left: 0;
   right: 0;
   height: 5px;
@@ -316,11 +291,6 @@ html, body {
   max-width: 400px;
   animation: fadeUp .7s .2s ease both;
 }
-
-.card-header {
-  margin-bottom: 50px;
-}
-
 .card-title {
   font-family: 'Syne', sans-serif;
   font-weight: 700;
@@ -330,7 +300,7 @@ html, body {
 }
 
 .card-sub {
-  margin-top: 10px;
+  margin-bottom: 30px;
   font-size: 14px;
   font-weight: 300;
   color: var(--text-muted);
@@ -342,7 +312,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: 32px 0;
+  margin: 30px 0 0 0px;
   font-size: 12px;
   color: var(--text-dim);
   letter-spacing: .08em;
@@ -436,7 +406,7 @@ html, body {
 
 /* ── FORM ─────────────────────────────────────────────────── */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 0px;
 }
 .form-label {
   display: block;
@@ -491,7 +461,7 @@ html, body {
   display: flex;
   justify-content: flex-end;
   margin-top: -8px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .forgot-link {
@@ -508,7 +478,7 @@ html, body {
 /* ── TOGGLE & FOOTER ──────────────────────────────────────── */
 .toggle-mode {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 1px;
   font-size: 13px;
   color: var(--text-dim);
 }
@@ -527,8 +497,8 @@ html, body {
 }
 
 .card-footer {
-  margin-top: 32px;
-  padding-top: 24px;
+  margin-top: 30px;
+  padding-top: 30px;
   border-top: 1px solid var(--border);
   text-align: center;
 }
