@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════════════
+   Bipando — Privacy Policy Styles
+   Arquivo: style.css
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-deep:      #1a272f;
+  --bg-card:      #24333d;
+  --accent-green: #2e9e5b;
+  --accent-sky:   #87ceeb;
+  --text-primary: #f0f4f6;
+  --text-muted:   #8ca5b2;
+  --border:       rgba(135, 206, 235, .1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  padding: 40px 20px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.last-update {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+section {
+  margin-bottom: 32px;
+}
+
+h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  color: var(--accent-green);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h2::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 20px;
+  background: var(--accent-green);
+  border-radius: 2px;
+}
+
+p {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+ul {
+  margin-bottom: 16px;
+  padding-left: 20px;
+  color: var(--text-muted);
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.contact-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: var(--accent-green);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+  background: #248a4d;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+  h1 {
+    font-size: 24px;
+  }
+}
