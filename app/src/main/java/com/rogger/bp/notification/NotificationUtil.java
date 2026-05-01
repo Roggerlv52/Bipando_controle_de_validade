@@ -92,7 +92,7 @@ public class NotificationUtil {
                 : "Você tem " + produtos.size() + " produtos próximos do vencimento.";
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
-                .setSmallIcon(R.drawable.bp_logo_small)
+                .setSmallIcon(R.drawable.ic_bp_logo_small)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -126,7 +126,7 @@ public class NotificationUtil {
                 : "Você tem " + produtos.size() + " produtos que já venceram!";
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
-                .setSmallIcon(R.drawable.bp_logo_small)
+                .setSmallIcon(R.drawable.ic_bp_logo_small)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
