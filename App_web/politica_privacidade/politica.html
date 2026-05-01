@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Política de Privacidade - Bipando</title>
+    <link rel="icon" type="image/jpeg" href="../src/assets/ic_bp_logo_small.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -60,8 +62,15 @@
 
             <section>
                 <h2>7. Contato</h2>
-                <p>Se tiver dúvidas sobre esta Política de Privacidade, entre em contato através do botão abaixo:</p>
-                <a href="mailto:suporte@bipando.com.br" class="contact-btn">Contatar Suporte</a>
+                <p>Se tiver dúvidas sobre esta Política de Privacidade, você pode nos contatar de duas formas:</p>
+                
+                <div class="contact-box">
+                    <p class="email-text" id="email-address">bipandosuporte@gmail.com</p>
+                    <div class="contact-actions">
+                        <a href="mailto:bipandosuporte@gmail.com" class="contact-btn">Abrir E-mail</a>
+                        <button class="copy-btn" onclick="copyEmail()">Copiar E-mail</button>
+                    </div>
+                </div>
             </section>
         </main>
 
@@ -69,5 +78,30 @@
             <p>&copy; 2026 Bipando — Controle de Validade. Todos os direitos reservados.</p>
         </footer>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span class="toast-icon">✓</span>
+        <span class="toast-msg">E-mail copiado com sucesso!</span>
+    </div>
+
+    <script>
+        function copyEmail() {
+            const email = document.getElementById('email-address').innerText;
+            navigator.clipboard.writeText(email).then(() => {
+                showToast();
+            }).catch(err => {
+                console.error('Erro ao copiar: ', err);
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>

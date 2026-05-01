@@ -10,6 +10,7 @@
   --accent-sky:   #87ceeb;
   --text-primary: #f0f4f6;
   --text-muted:   #8ca5b2;
+  --text-dim:     #4d6470;
   --border:       rgba(135, 206, 235, .1);
 }
 
@@ -49,6 +50,7 @@ header {
   height: 64px;
   border-radius: 12px;
   margin-bottom: 16px;
+  object-fit: cover;
 }
 
 h1 {
@@ -102,6 +104,95 @@ li {
   margin-bottom: 8px;
 }
 
+/* ── CONTACT BOX ─────────────────────────────────────────── */
+.contact-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.email-text {
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 25px;
+  letter-spacing: 0.02em;
+}
+
+.contact-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.contact-btn, .copy-btn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.contact-btn {
+  background: var(--accent-green);
+  color: white;
+}
+
+.contact-btn:hover {
+  background: #248a4d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(46, 158, 91, 0.3);
+}
+
+.copy-btn {
+  background: transparent;
+  color: var(--accent-sky);
+  border: 1px solid var(--accent-sky);
+}
+
+.copy-btn:hover {
+  background: rgba(135, 206, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ── TOAST ───────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #2e9e5b;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000;
+  opacity: 0;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast-icon {
+  font-weight: bold;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
 footer {
   text-align: center;
   margin-top: 40px;
@@ -111,28 +202,17 @@ footer {
   color: var(--text-dim);
 }
 
-.contact-btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 12px 24px;
-  background: var(--accent-green);
-  color: white;
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: transform 0.2s, background 0.2s;
-}
-
-.contact-btn:hover {
-  transform: translateY(-2px);
-  background: #248a4d;
-}
-
 @media (max-width: 600px) {
   .container {
     padding: 20px;
   }
   h1 {
     font-size: 24px;
+  }
+  .contact-actions {
+    flex-direction: column;
+  }
+  .contact-btn, .copy-btn {
+    width: 100%;
   }
 }
