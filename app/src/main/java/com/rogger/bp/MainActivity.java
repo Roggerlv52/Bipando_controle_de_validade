@@ -2,6 +2,7 @@ package com.rogger.bp;
 
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,6 +34,7 @@ import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bp.ui.viewmodel.DataViewModel;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MainActivity extends BaseActivity {
     private AppBarConfiguration mAppBarConfiguration;
@@ -95,15 +97,21 @@ public class MainActivity extends BaseActivity {
                 R.id.nav_home, R.id.nav_item_deleted_fragment, R.id.nav_category)
                 .setOpenableLayout(drawer)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
+        AtomicReference<NavController> navController = new AtomicReference<>(Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+        NavigationUI.setupActionBarWithNavController(this, navController.get(), mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController.get());
 
         // ✅ Inicia o agendamento de notificações de validade
         NotificationScheduler.start(MainActivity.this);
 
         // 📊 Atualizar contadores no menu lateral (Navigation Drawer)
         setupNavigationDrawerCounters(navigationView);
+
+        binding.txtPolitica.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://roggerlv52.github.io/bipando/"));
+            startActivity(intent);
+        });
     }
 
     private void setupNavigationDrawerCounters(NavigationView navigationView) {
