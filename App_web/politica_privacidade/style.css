@@ -107,17 +107,17 @@ li {
 /* ── CONTACT BOX ─────────────────────────────────────────── */
 .contact-box {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
+  border: 1px salmon var(--border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   text-align: center;
   margin-top: 20px;
 }
 
 .email-text {
   font-family: 'Trebuchet MS', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 25px;
   letter-spacing: 0.02em;
