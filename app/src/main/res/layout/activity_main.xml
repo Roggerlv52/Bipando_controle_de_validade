@@ -38,8 +38,7 @@
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
                 android:padding="10dp"
-                android:textColor="@color/black"
-                android:text="Política de privacidade"
+                android:text="@string/agree_terms_policy"
                 />
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
