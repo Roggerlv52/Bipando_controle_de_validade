@@ -113,6 +113,10 @@ function handleEmailLogin() {
     showToast('⚠️  Preencha e-mail e senha.');
     return;
   }
+  if (password.length < 4 || password.length > 8) {
+    showToast('⚠️  A senha deve ter entre 4 e 8 caracteres.');
+    return;
+  }
 
   if (!isValidEmail(email)) {
     showToast('⚠️  Formato de e-mail inválido.');
