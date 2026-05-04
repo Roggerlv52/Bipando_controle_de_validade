@@ -1,0 +1,22 @@
+@charset "UTF-8";
+/* Estilos para impressão  Media Query*/
+@media print {
+    * {
+        margin: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    html{
+        font-family: 'Courier New', Courier,
+         monospace;
+         font-size: 1em;
+         line-height: 1em;
+    }
+    header, nav, footer {
+        display: none;
+    }
+    .contact-actions ,.toast {
+        display: none;
+    }
+
+}
