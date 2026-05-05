@@ -6,7 +6,7 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-     <string name="agree_terms_policy"> <b>Política de Privacidade</b></string>
+    <string name="agree_terms_policy"> <b>Política de Privacidade</b></string>
 
     <string name="menu_home">Home</string>
     <string name="menu_deleted">Gallery</string>
@@ -60,4 +60,11 @@
     <string name="menu_payment">Pagamento</string>
     <string name="search_hint_default">Digite um nome, @categoria ou escaneie um código de barras\n</string>
     <string name="menu_privacy" />
+    <string name="delete_account"><b><font color="#FF0000">Atenção:</font></b>\n \nAo confirmar a <b>exclusão da conta</b>,
+        seus dados, como itens cadastrados, serão perdidos. Esta ação não poderá ser desfeita,
+mais você pode criar uma nova conta fazendo login com o Google novamente.\n &#8226; Se voce possui um plano ativo os dados do plano serão
+        perdido e ao criar sua conta novamente usando mesmo e-mail sera necessario escolher um plano de pagamento novamente.
+    </string>
+    <string name="delete_account_confirme">Tem certeza, que deseja excluir a conta? \nSeus dados serão perdidos.
+    </string>
 </resources>

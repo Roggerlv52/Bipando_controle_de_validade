@@ -113,18 +113,6 @@ public class Utils {
         datePickerDialog.show();
     }
 
-    /**
-     * Sobrecarga para aceitar String (compatibilidade com código antigo).
-     */
-    public static long calcDifferencInDays(String timestampStr) {
-        try {
-            long timestamp = Long.parseLong(timestampStr);
-            return calcDifferencInDays(timestamp);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
     public static boolean validEditText(EditText editText) {
         if (editText == null) return false;
 

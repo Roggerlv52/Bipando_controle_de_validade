@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -25,6 +26,7 @@ import com.rogger.bp.R;
 import com.rogger.bp.databinding.FragmentProfileBinding;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
+import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 
 import java.util.List;
@@ -45,7 +47,7 @@ public class ProfileFragment extends Fragment {
                             NotificationScheduler.start(requireContext());
                         } else {
                             // Permissão negada: mantém switch desligado
-                           binding.swNotification.setChecked(false);
+                            binding.swNotification.setChecked(false);
                             NotificationPrefs.onAlert(requireContext(), false);
                         }
                     });
@@ -57,14 +59,14 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup viewGroup, Bundle arg01) {
-        binding = FragmentProfileBinding.inflate(inflater,viewGroup,false);
+        binding = FragmentProfileBinding.inflate(inflater, viewGroup, false);
         return binding.getRoot();
 
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
+        super.onViewCreated(view, savedInstanceState);
         int themeNumber = SharedPreferencesManager.getThemeNumber(requireContext(), "chave");
         boolean stateBeep = SharedPreferencesManager.getBeepState(requireContext(), "beep");
 
@@ -129,7 +131,7 @@ public class ProfileFragment extends Fragment {
             }
         });
         // Botão de horário
-       binding.btnSetNotifTime.setOnClickListener(v -> showTimePickerDialog());
+        binding.btnSetNotifTime.setOnClickListener(v -> showTimePickerDialog());
 
         // Bug 1 corrigido: slider salva E reagenda o worker com o novo limite de dias
         binding.sliderYellow.addOnChangeListener((slider, value, fromUser) -> {
@@ -154,7 +156,11 @@ public class ProfileFragment extends Fragment {
         binding.boxProfile4.setOnCheckedChangeListener(listener);
         binding.boxOffBeep.setOnCheckedChangeListener(listenerBeep);
 
-        super.onViewCreated(view, savedInstanceState);
+        binding.btnDeleteAccount.setOnClickListener(v -> {
+            DialogUtil.showCustomDialog(requireContext(),getString(R.string.delete_account_confirme) , () -> {
+                        Toast.makeText(requireContext(),"deletado",Toast.LENGTH_SHORT).show();
+                    });
+        });
     }
 
     private void showTimePickerDialog() {

@@ -2,6 +2,9 @@ package com.rogger.bp.ui.base;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Color;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
@@ -10,7 +13,7 @@ import com.rogger.bp.data.model.Categoria;
 import java.util.List;
 
 public class DialogUtil {
-    // Interface de callback
+
     public interface OnConfirmListener {
         void onConfirm();
     }
@@ -55,6 +58,35 @@ public class DialogUtil {
                 })
                 .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    public static void showCustomDialog(@NonNull Context context,
+                                        @NonNull String message,
+                                        @NonNull OnConfirmListener listener) {
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(60, 40, 60, 10);
+
+        TextView textView = new TextView(context);
+        textView.setText(message);
+        textView.setTextSize(16);
+        textView.setTextColor(Color.RED);
+        textView.setPadding(0, 0, 0, 30);
+
+        layout.addView(textView);
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(layout)
+                .setCancelable(true)
+                .setPositiveButton("Aceitar", (dialogInterface, which) -> {
+                    dialogInterface.dismiss();
+                    listener.onConfirm();
+                })
+                .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
+                .create();
+
+        dialog.show();
     }
 
     public static void show(
