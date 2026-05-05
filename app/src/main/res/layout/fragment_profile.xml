@@ -3,13 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -117,9 +120,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true"
-                        android:background="?attr/selectableItemBackground"
                         android:orientation="horizontal">
 
                         <TextView
@@ -232,6 +235,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
                         android:orientation="vertical">
+
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/box_off_beep"
                             android:layout_width="match_parent"
@@ -241,12 +245,14 @@
                             android:text=" Desativar beep  "
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                     </LinearLayout>
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
                         android:orientation="vertical">
+
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/swNotification"
                             android:layout_width="match_parent"
@@ -291,11 +297,11 @@
                             android:id="@+id/sliderYellow"
                             android:layout_width="210dp"
                             android:layout_height="wrap_content"
+                            android:padding="4dp"
+                            android:stepSize="1"
                             android:valueFrom="1"
                             android:valueTo="60"
-                            android:padding="4dp"
-                            app:thumbColor="@color/yellow"
-                            android:stepSize="1"/>
+                            app:thumbColor="@color/yellow" />
 
                         <TextView
                             android:id="@+id/txtYellow"
@@ -308,6 +314,12 @@
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <Button
+                android:id="@+id/btn_delete_account"
+                style="@style/Theme.Bpd.FormatButtom"
+                android:text="Deletar conta" />
+
         </LinearLayout>
     </ScrollView>
 </FrameLayout>
