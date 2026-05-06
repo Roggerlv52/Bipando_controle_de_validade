@@ -3,6 +3,7 @@ package com.rogger.bp.ui.profile;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,12 +29,16 @@ import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
+import com.rogger.bp.ui.login.LoginActivity;
+import com.rogger.bp.ui.profile.data.DeleteAccountCallback;
+import com.rogger.bp.ui.profile.data.ProfileRepository;
 
 import java.util.List;
 import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
+    private ProfileRepository profileRepository;
 
     // Bug 6 corrigido: launcher para solicitar POST_NOTIFICATIONS em runtime (Android 13+)
     private final ActivityResultLauncher<String> permissionLauncher =
@@ -55,13 +60,13 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        profileRepository = new ProfileRepository();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup viewGroup, Bundle arg01) {
         binding = FragmentProfileBinding.inflate(inflater, viewGroup, false);
         return binding.getRoot();
-
     }
 
     @Override
@@ -157,10 +162,34 @@ public class ProfileFragment extends Fragment {
         binding.boxOffBeep.setOnCheckedChangeListener(listenerBeep);
 
         binding.btnDeleteAccount.setOnClickListener(v -> {
-            DialogUtil.showCustomDialog(requireContext(),getString(R.string.delete_account_confirme) , () -> {
-                        Toast.makeText(requireContext(),"deletado",Toast.LENGTH_SHORT).show();
-                    });
+            DialogUtil.showCustomDialog(requireContext(), getString(R.string.delete_account_confirme), () -> {
+                showProgress(true);
+                profileRepository.deleteUserAccount(new DeleteAccountCallback() {
+                    @Override
+                    public void onFailure(@NonNull String message) {
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        Intent intent = new Intent(requireContext(), LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        requireActivity().finish();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        showProgress(false);
+                    }
+                });
+            });
         });
+    }
+
+    private void showProgress(boolean show) {
+        binding.progressBarProfile.setVisibility(show ? View.VISIBLE : View.GONE);
+        binding.btnDeleteAccount.setEnabled(!show);
     }
 
     private void showTimePickerDialog() {

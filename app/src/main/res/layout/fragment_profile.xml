@@ -169,7 +169,6 @@
 
                         <TextView
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
                             android:padding="10dp"
                             android:text="Selecione o tema"
                             android:textAlignment="center" />
@@ -242,7 +241,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginTop="5dp"
-                            android:text=" Desativar beep  "
+                            android:text="Desativar bip"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                     </LinearLayout>
 
@@ -350,4 +349,12 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/progressBarProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
 </FrameLayout>
