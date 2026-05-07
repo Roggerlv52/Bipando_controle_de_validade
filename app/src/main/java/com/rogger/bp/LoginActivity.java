@@ -3,6 +3,7 @@ package com.rogger.bp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.view.WindowCompat;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -55,8 +57,10 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle arg0) {
-        super.onCreate(arg0)
-        ;
+        super.onCreate(arg0);
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
         boolean loginState = SharedPreferencesManager.getLoginState(this, "state");
         List<String> uidList = SharedPreferencesManager.getUserInfo(this);
         userId = uidList.get(0);

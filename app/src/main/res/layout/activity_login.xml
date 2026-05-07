@@ -61,7 +61,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="10dp"
 
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="55dp"
             android:background="@drawable/custo_button"
             android:backgroundTint="@color/white"
             android:padding="10dp"
@@ -72,9 +72,9 @@
     </LinearLayout>
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_gravity="bottom"
+        android:visibility="gone"
+        android:layout_width="72dp"
+        android:layout_height="66dp"
         android:layout_margin="25dp"
         android:contentDescription="@string/todo"
         android:scaleType="centerCrop"

@@ -2,7 +2,7 @@
 
     <style name="Theme.Bpd" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/LightSkyBlue</item>
+        <item name="colorPrimary">@color/bipando_color</item>
         <item name="colorPrimaryVariant">@color/black</item>
         <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color. cursor de texto -->

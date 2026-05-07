@@ -42,6 +42,8 @@
         </activity>
         <activity
             android:name="com.rogger.bp.LoginActivity"
+            android:screenOrientation="fullSensor"
+            android:configChanges="orientation|screenSize"
             android:exported="true">
 
             <intent-filter>

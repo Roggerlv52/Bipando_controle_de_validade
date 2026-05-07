@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,13 +24,13 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.rogger.bp.LoginActivity;
 import com.rogger.bp.R;
 import com.rogger.bp.databinding.FragmentProfileBinding;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
-import com.rogger.bp.ui.login.LoginActivity;
 import com.rogger.bp.ui.profile.data.DeleteAccountCallback;
 import com.rogger.bp.ui.profile.data.ProfileRepository;
 
@@ -168,6 +169,7 @@ public class ProfileFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull String message) {
                         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        Log.e("ProfileFragment","Erro -> "+message);
                     }
 
                     @Override
