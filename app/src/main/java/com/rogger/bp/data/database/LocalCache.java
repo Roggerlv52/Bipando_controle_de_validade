@@ -157,15 +157,6 @@ public class LocalCache {
     }
 
     /**
-     * Retorna quantos ms faltam para o cache de produtos expirar.
-     * Valor negativo significa que já expirou.
-     */
-    public long getProdutosTtlRestante() {
-        if (produtosAtivosCachedAt == 0L) return -1L;
-        return ttlProdutos - (System.currentTimeMillis() - produtosAtivosCachedAt);
-    }
-
-    /**
      * Retorna quantos ms faltam para o cache de categorias expirar.
      */
     public long getCategoriasTtlRestante() {

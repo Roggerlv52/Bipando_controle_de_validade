@@ -64,7 +64,7 @@ public class DataViewModel extends AndroidViewModel {
     }
 
     public void update(Produto p, String urlAntiga, FirebaseStorageDataSource.UploadCallback callback) {
-        repository.atualizar(p, urlAntiga, callback);
+       repository.atualizar(p, urlAntiga, callback);
     }
 
     public void moverParaLixeira(int id) {
@@ -76,9 +76,9 @@ public class DataViewModel extends AndroidViewModel {
     }
 
     public void delete(Produto produto) {
-        produto.setDeleted(true);
-        produto.setDeletedAt(System.currentTimeMillis());
-        update(produto);
+       // produto.setDeleted(true);
+       // produto.setDeletedAt(System.currentTimeMillis());
+       // update(produto);
     }
 
 

@@ -1,5 +1,4 @@
 package com.rogger.bp.data.database;
-
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -20,11 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * FirebaseDataSource
- *
- * Responsável por TODAS as operações com o Firestore.
- */
 public class FirebaseDataSource {
 
     private static final String TAG = "FirebaseDataSource";
@@ -33,7 +27,6 @@ public class FirebaseDataSource {
     private static final String COL_USERS      = "users";
     private static final String COL_PRODUTOS   = "produtos";
     private static final String COL_CATEGORIAS = "categorias";
-
     // Campos dos documentos
     private static final String FIELD_ID           = "id";
     private static final String FIELD_NOME         = "nome";
@@ -43,18 +36,12 @@ public class FirebaseDataSource {
     private static final String FIELD_ANOTACOES    = "anotacoes";
     private static final String FIELD_IMAGEM       = "imagem";
     private static final String FIELD_DELETED      = "deleted";
-    private static final String FIELD_DELETED_AT   = "deletedAt";
+    private static final String DELETED_TIMESTAMP  = "delete_date";
     private static final String FIELD_USER_ID      = "userId";
     private static final String FIELD_FIRESTORE_ID = "firestoreId";
 
     private final FirebaseFirestore db;
-
-    // Listeners ativos (para remover ao destruir)
-    private ListenerRegistration produtosListener;
-    private ListenerRegistration categoriasListener;
-
     // ======================== SINGLETON ========================
-
     private static volatile FirebaseDataSource INSTANCE;
 
     public static FirebaseDataSource getInstance() {
@@ -137,7 +124,6 @@ public class FirebaseDataSource {
 
         String docId = uid + "_produto_" + produto.getId();
         Map<String, Object> data = produtoParaMap(produto, docId);
-
         ref.document(docId)
                 .update(data)
                 .addOnSuccessListener(aVoid -> {
@@ -149,7 +135,6 @@ public class FirebaseDataSource {
                     if (callback != null) callback.onFailure(e);
                 });
     }
-
     public void moverProdutoParaLixeira(int produtoId,
                                         @Nullable FirestoreCallback<Void> callback) {
         String uid = getUid();
@@ -158,11 +143,10 @@ public class FirebaseDataSource {
             if (callback != null) callback.onFailure(new Exception("Usuário não autenticado"));
             return;
         }
-
         String docId = uid + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
         update.put(FIELD_DELETED,    true);
-        update.put(FIELD_DELETED_AT, System.currentTimeMillis());
+        update.put(DELETED_TIMESTAMP, System.currentTimeMillis());
 
         ref.document(docId)
                 .update(update)
@@ -182,7 +166,7 @@ public class FirebaseDataSource {
         String docId = uid + "_produto_" + produtoId;
         Map<String, Object> update = new HashMap<>();
         update.put(FIELD_DELETED,    false);
-        update.put(FIELD_DELETED_AT, null);
+        update.put(DELETED_TIMESTAMP, null);
 
         ref.document(docId)
                 .update(update)
@@ -200,7 +184,6 @@ public class FirebaseDataSource {
         }
 
         String docId = uid + "_produto_" + produtoId;
-
         ref.document(docId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
@@ -236,63 +219,6 @@ public class FirebaseDataSource {
                     callback.onFailure(e);
                 });
     }
-
-    public void ouvirProdutosAtivos(@NonNull FirestoreCallback<List<Produto>> callback) {
-        stopProdutosListener();
-        CollectionReference ref = produtosRef();
-        if (ref == null) {
-            callback.onFailure(new Exception("Usuário não autenticado"));
-            return;
-        }
-
-        produtosListener = ref.whereEqualTo(FIELD_DELETED, false)
-                .orderBy(FIELD_TIMESTAMP, Query.Direction.ASCENDING)
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null) {
-                        callback.onFailure(error);
-                        return;
-                    }
-                    if (snapshot != null) {
-                        List<Produto> lista = new ArrayList<>();
-                        for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                            Produto p = mapParaProduto(doc.getData());
-                            if (p != null) lista.add(p);
-                        }
-                        callback.onSuccess(lista);
-                    }
-                });
-    }
-
-    public void buscarProdutosDeletados(@NonNull FirestoreCallback<List<Produto>> callback) {
-        CollectionReference ref = produtosRef();
-        if (ref == null) {
-            callback.onFailure(new Exception("Usuário não autenticado"));
-            return;
-        }
-
-        ref.whereEqualTo(FIELD_DELETED, true)
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    List<Produto> lista = new ArrayList<>();
-                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                        Produto p = mapParaProduto(doc.getData());
-                        if (p != null) lista.add(p);
-                    }
-                    callback.onSuccess(lista);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Erro ao buscar produtos deletados: " + e.getMessage());
-                    callback.onFailure(e);
-                });
-    }
-
-    public void stopProdutosListener() {
-        if (produtosListener != null) {
-            produtosListener.remove();
-            produtosListener = null;
-        }
-    }
-
     // ======================== CATEGORIAS — ESCRITA ========================
 
     public void salvarCategoria(@NonNull Categoria categoria,
@@ -359,37 +285,6 @@ public class FirebaseDataSource {
                 });
     }
 
-    public void ouvirCategorias(@NonNull FirestoreCallback<List<Categoria>> callback) {
-        stopCategoriasListener();
-        CollectionReference ref = categoriasRef();
-        if (ref == null) {
-            callback.onFailure(new Exception("Usuário não autenticado"));
-            return;
-        }
-
-        categoriasListener = ref.addSnapshotListener((snapshot, error) -> {
-            if (error != null) {
-                callback.onFailure(error);
-                return;
-            }
-            if (snapshot != null) {
-                List<Categoria> lista = new ArrayList<>();
-                for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                    Categoria c = mapParaCategoria(doc.getData());
-                    if (c != null) lista.add(c);
-                }
-                callback.onSuccess(lista);
-            }
-        });
-    }
-
-    public void stopCategoriasListener() {
-        if (categoriasListener != null) {
-            categoriasListener.remove();
-            categoriasListener = null;
-        }
-    }
-
     // ======================== AUXILIARES ========================
 
     private Map<String, Object> produtoParaMap(Produto p, String firestoreId) {
@@ -397,12 +292,12 @@ public class FirebaseDataSource {
         map.put(FIELD_ID,           p.getId());
         map.put(FIELD_NOME,         p.getNome());
         map.put(FIELD_CODIGO,       p.getCodigoBarras());
-        map.put(FIELD_CATEGORIA_ID, p.getCategoriaId());
+        map.put(FIELD_CATEGORIA_ID, p.getCategoryId());
         map.put(FIELD_TIMESTAMP,    p.getTimestamp());
         map.put(FIELD_ANOTACOES,    p.getAnotacoes());
         map.put(FIELD_IMAGEM,       p.getImagem());
         map.put(FIELD_DELETED,      p.isDeleted());
-        map.put(FIELD_DELETED_AT,   p.getDeletedAt());
+        map.put(DELETED_TIMESTAMP,   p.getDeletedAt());
         map.put(FIELD_USER_ID,      getUid());
         map.put(FIELD_FIRESTORE_ID, firestoreId);
         return map;
@@ -415,13 +310,13 @@ public class FirebaseDataSource {
             p.setId(((Long) map.get(FIELD_ID)).intValue());
             p.setNome((String) map.get(FIELD_NOME));
             p.setCodigoBarras((String) map.get(FIELD_CODIGO));
-            p.setCategoriaId(((Long) map.get(FIELD_CATEGORIA_ID)).intValue());
+            p.setCategoryId(((Long) map.get(FIELD_CATEGORIA_ID)).intValue());
             p.setTimestamp((Long) map.get(FIELD_TIMESTAMP));
             p.setAnotacoes((String) map.get(FIELD_ANOTACOES));
             p.setImagem((String) map.get(FIELD_IMAGEM));
             p.setDeleted((Boolean) map.get(FIELD_DELETED));
-            p.setDeletedAt((Long) map.get(FIELD_DELETED_AT));
-            p.setFirestoreId((String) map.get(FIELD_FIRESTORE_ID));
+            p.setDeletedAt((Long) map.get(DELETED_TIMESTAMP));
+            //p.set((String) map.get(FIELD_FIRESTORE_ID));
             return p;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao converter map para Produto: " + e.getMessage());
@@ -444,12 +339,14 @@ public class FirebaseDataSource {
             Categoria c = new Categoria();
             c.setId(((Long) map.get(FIELD_ID)).intValue());
             c.setNome((String) map.get(FIELD_NOME));
-            c.setFirestoreId((String) map.get(FIELD_FIRESTORE_ID));
             return c;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao converter map para Categoria: " + e.getMessage());
             return null;
         }
+    }
+
+    public void atualizarCategoria(Categoria categoria, FirestoreCallback<Void> firestoreCallback) {
     }
 
     public interface FirestoreCallback<T> {

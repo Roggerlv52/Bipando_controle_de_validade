@@ -182,6 +182,7 @@ public class ProfileFragment extends Fragment {
 
                     @Override
                     public void onComplete() {
+                        SharedPreferencesManager.setLoginState(requireContext(),"state",false);
                         showProgress(false);
                     }
                 });

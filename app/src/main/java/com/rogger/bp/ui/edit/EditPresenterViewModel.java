@@ -13,11 +13,9 @@ import java.io.File;
 
 public class EditPresenterViewModel extends ViewModel {
 
-    // 🖼️ Controle de imagens
     private File tempImageFile;        // imagem nova ainda não salva
     private String oldImagePath;        // imagem já persistida no produto
 
-    // 📦 Estado do produto
     private final MutableLiveData<Produto> produtoLive = new MutableLiveData<>();
     private final MutableLiveData<Integer> categoriaSelecionadaId = new MutableLiveData<>();
 
@@ -67,7 +65,6 @@ public class EditPresenterViewModel extends ViewModel {
                 Log.d("EditPresenter", "OldImagePath está nulo, nenhuma imagem para deletar.");
             }
 
-            // Aplica a nova imagem
             produto.setImagem(tempImageFile.getAbsolutePath());
             oldImagePath = tempImageFile.getAbsolutePath();
 

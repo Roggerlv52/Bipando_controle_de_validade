@@ -133,6 +133,8 @@ public class CategoriaRepository {
                     Log.e(TAG, "Falha ao atualizar categoria no Firestore: " + e.getMessage());
                 }
             });
+
+
         });
     }
 

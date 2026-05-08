@@ -73,7 +73,11 @@ public class HomeFragment extends Fragment implements OnItemClickListener {
         // ✅ Observar o estado de carregamento (Firebase Sync)
         dataViewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
             if (Boolean.TRUE.equals(isLoading)) {
-                showLoadingDialog(requireContext());
+                if (!requireActivity().isFinishing() &&
+                        !requireActivity().isDestroyed()) {
+
+                    showLoadingDialog(requireContext());
+                }
             } else {
                 hideLoadingDialog();
             }

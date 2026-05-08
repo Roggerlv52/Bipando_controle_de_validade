@@ -4,7 +4,6 @@ package com.rogger.bp.data.repository;
 import android.app.Application;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
@@ -20,7 +19,6 @@ import com.rogger.bp.data.database.LocalCache;
 import com.rogger.bp.data.database.ProdutoImagemDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
-import com.rogger.bp.data.model.ProdutoImagem;
 import com.rogger.bp.data.model.ProdutoWithCategory;
 
 import java.io.File;
@@ -57,7 +55,7 @@ public class ProdutoRepository {
         storageDataSource = FirebaseStorageDataSource.getInstance();
         produtoImagemDataSource = ProdutoImagemDataSource.getInstance();
         localCache = LocalCache.getInstance();
-        
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         userId = currentUser != null ? currentUser.getUid() : "";
 
@@ -183,7 +181,7 @@ public class ProdutoRepository {
     public void inserir(Produto produto,
                         FirebaseStorageDataSource.UploadCallback callback) {
         if (userId.isEmpty()) return;
-        
+
         produto.setUserId(userId);
         isLoading.postValue(true);
 
@@ -219,19 +217,106 @@ public class ProdutoRepository {
             }
         });
     }
-    
+
+    public void atualizar(Produto produto,
+                          String urlImagemAntiga,
+                          FirebaseStorageDataSource.UploadCallback callback) {
+        isLoading.postValue(true);
+
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            // ✅ Preenche o nome da categoria antes de atualizar
+            List<Produto> listaTemp = new java.util.ArrayList<>();
+            listaTemp.add(produto);
+            preencherNomesCategorias(listaTemp);
+
+            produtoDao.update(produto);
+            localCache.invalidarProdutos();
+
+            String caminhoImagem = produto.getImagem();
+            boolean ehUrlStorage = caminhoImagem != null && caminhoImagem.startsWith("https://");
+            boolean temImagemLocal = caminhoImagem != null
+                    && !caminhoImagem.isEmpty()
+                    && !ehUrlStorage;
+
+            if (temImagemLocal && callback != null) {
+                if (urlImagemAntiga != null && !urlImagemAntiga.isEmpty()) {
+                    storageDataSource.deletarImagemPorUrl(urlImagemAntiga, null);
+                }
+
+                File arquivoLocal = new File(caminhoImagem);
+                storageDataSource.uploadImagem(produto.getId(), arquivoLocal,
+                        new FirebaseStorageDataSource.UploadCallback() {
+                            @Override
+                            public void onProgresso(int porcentagem) {
+                                callback.onProgresso(porcentagem);
+                            }
+
+                            @Override
+                            public void onSucesso(String urlDownload) {
+                                produto.setImagem(urlDownload);
+                                BpdDatabase.databaseWriteExecutor.execute(() -> {
+                                    produtoDao.update(produto);
+                                    sincronizarAtualizacaoNoFirestore(produto);
+                                    isLoading.postValue(false);
+                                });
+                                callback.onSucesso(urlDownload);
+                            }
+
+                            @Override
+                            public void onErro(Exception e) {
+                                Log.e(TAG, "Falha no upload ao atualizar: " + e.getMessage());
+                                sincronizarAtualizacaoNoFirestore(produto);
+                                isLoading.postValue(false);
+                                callback.onErro(e);
+                            }
+                        });
+            } else {
+                sincronizarAtualizacaoNoFirestore(produto);
+                isLoading.postValue(false);
+            }
+        });
+    }
+
+    private void sincronizarAtualizacaoNoFirestore(Produto produto) {
+        firebaseDataSource.atualizarProduto(produto, null);
+    }
+
     // ... restante dos métodos permanecem iguais, apenas garantindo que não usem userId se estiver vazio
     private void sincronizarProdutoNoFirestore(Produto produto) {
         if (userId.isEmpty()) return;
         firebaseDataSource.salvarProduto(produto, null);
     }
-    
+
     // (Apenas para evitar erros de compilação no sandbox, o resto do arquivo seria mantido)
     private void inserirComImagemLegada(Produto produto, File arquivoLocal, FirebaseStorageDataSource.UploadCallback callback) {
         // Implementação simplificada para o contexto
     }
-    
+
     private void inserirComImagemGlobal(Produto produto, String barcode, File arquivoLocal, FirebaseStorageDataSource.UploadCallback callback) {
         // Implementação simplificada para o contexto
+    }
+
+    public void moverParaLixeira(int id) {
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            produtoDao.moverParaLixeira(id, System.currentTimeMillis());
+            localCache.invalidarProdutos();
+            firebaseDataSource.moverProdutoParaLixeira(id, null);
+        });
+    }
+
+    public void restaurar(int id) {
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            produtoDao.restaurarProduto(id);
+            localCache.invalidarProdutos();
+            firebaseDataSource.restaurarProduto(id, null);
+        });
+    }
+
+    public void excluirDefinitivoPorId(int id) {
+        BpdDatabase.databaseWriteExecutor.execute(() -> {
+            produtoDao.removerPorId(id);
+            localCache.invalidarProdutos();
+            firebaseDataSource.excluirProdutoPermanente(id, null);
+        });
     }
 }
