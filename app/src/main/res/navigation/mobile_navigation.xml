@@ -56,7 +56,7 @@
     </fragment>
     <fragment
         android:id="@+id/nav_add_fragment"
-        android:name="com.rogger.bp.ui.add.view.AddFragment"
+        android:name="com.rogger.bp.ui.add.view.AddItemFragment"
         android:label="Adicionar Produto">
 
         <argument
@@ -75,6 +75,7 @@
             android:id="@+id/action_addFragment_to_nav_gallery_fragment"
             app:destination="@id/nav_gallery_fragment" />
     </fragment>
+
     <fragment
         android:id="@+id/nav_show_fragment"
         android:name="com.rogger.bp.ui.home.ShowFragment"

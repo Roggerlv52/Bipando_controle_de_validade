@@ -13,9 +13,10 @@ interface RegisterAdd {
     }
 
     interface View : BaseView<Presenter> {
-        fun goToGallery()
+        fun goToHome()
         fun openCamera()
         fun showProgress(enable: Boolean)
+        fun imageExit(postImage: PostImage)
         fun onFailure(message: String)
         fun onSave()
     }

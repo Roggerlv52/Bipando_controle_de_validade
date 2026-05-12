@@ -18,6 +18,7 @@ class AddItemPresenter(
         repository.create(product, object : RegisterItemCallback {
             override fun onSuccess(image: PostImage?) {
                 // Sucesso na criação do item
+
             }
 
             override fun onFailure(message: String) {
@@ -35,23 +36,19 @@ class AddItemPresenter(
             view?.onFailure("Código de barras inválido")
             return
         }
-
         view?.showProgress(true)
         // A lógica de verificação já está no repository/datasource (saveProductImage)
         repository.createImage(image, object : SaveImageCallback {
             override fun onSuccess() {
-                // Imagem nova salva com sucesso
-            }
 
+            }
             override fun onAlreadyExists(image: PostImage) {
-                // Imagem já existe no banco, o datasource já retornou os dados dela
-                // Aqui você pode atualizar a UI informando que a imagem foi reaproveitada
+                view?.imageExit(image)
             }
 
             override fun onFailure(message: String) {
                 view?.onFailure(message)
             }
-
             override fun onComplete() {
                 view?.showProgress(false)
             }
@@ -62,11 +59,11 @@ class AddItemPresenter(
         view?.showProgress(true)
         repository.uploadImage(image, object : SaveImageCallback {
             override fun onSuccess() {
-                // Upload concluído
+
             }
 
             override fun onAlreadyExists(image: PostImage) {
-                // Caso improvável aqui, mas tratado pelo callback
+
             }
 
             override fun onFailure(message: String) {
