@@ -15,3 +15,6 @@ class RegisterItemRepository(private val dataSource: ItemDataSource) {
         dataSource.uploadImage(image,callback)
     }
 }
+
+// Alias ou Wrapper para compatibilidade com o DependencyInjector
+typealias RegisterRepository = RegisterItemRepository
