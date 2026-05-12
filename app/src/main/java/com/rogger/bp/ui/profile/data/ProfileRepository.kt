@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.profile.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.firestore.FirebaseFirestore
@@ -38,6 +39,7 @@ class ProfileRepository {
                                 val errorMessage = when (exception) {
 
                                     is FirebaseAuthRecentLoginRequiredException -> {
+                                        Log.e("DeleteUser","Error:" +exception.toString())
                                         "Por segurança, esta operação requer login recente."
                                     }
 

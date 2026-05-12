@@ -17,23 +17,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * ProdutoImagemDataSource
- *
- * Responsável por TODAS as operações da coleção global "imagens_produtos".
- *
- * Firestore:
- *   imagens_produtos/{codigoBarras}
- *     └── nomeProduto : String
- *     └── imagemUrl   : String
- *
- * Storage:
- *   imagens_produtos/{codigoBarras}/imagem.jpg
- *
- * Regra central:
- *   Só cria um documento/arquivo se o codigoBarras NÃO existe ainda.
- *   Nunca sobrescreve. Nunca atualiza.
- */
 public class ProdutoImagemDataSource {
 
     private static final String TAG = "ProdutoImagemDS";
@@ -75,17 +58,6 @@ public class ProdutoImagemDataSource {
 
     // ======================== LEITURA ========================
 
-    /**
-     * Busca o documento de imagem pelo código de barras.
-     *
-     * Retorna via callback:
-     *   onEncontrado(ProdutoImagem) → barcode existe, retorna nome + URL
-     *   onNaoEncontrado()           → barcode não existe, usuário deve cadastrar
-     *   onErro(Exception)           → falha de rede ou autenticação
-     *
-     * @param codigoBarras Código de barras escaneado
-     * @param callback     Resultado da consulta
-     */
     public void buscarPorCodigoBarras(@NonNull String codigoBarras,
                                       @NonNull BuscaCallback callback) {
 
@@ -240,8 +212,6 @@ public class ProdutoImagemDataSource {
                 });
     }
 
-    // ======================== MAPEAMENTO ========================
-
     private ProdutoImagem mapParaProdutoImagem(@NonNull String codigoBarras,
                                                @NonNull DocumentSnapshot snapshot) {
         String nome = snapshot.getString(FIELD_NOME);
@@ -249,39 +219,16 @@ public class ProdutoImagemDataSource {
         return new ProdutoImagem(codigoBarras, nome, url);
     }
 
-    // ======================== CALLBACKS ========================
-
-    /**
-     * Callback para busca por código de barras.
-     */
     public interface BuscaCallback {
-        /** Barcode encontrado — retorna nome + URL prontos para uso */
         void onEncontrado(@NonNull ProdutoImagem produtoImagem);
-
-        /** Barcode não existe ainda — usuário deve capturar imagem */
         void onNaoEncontrado();
-
-        /** Falha de rede ou autenticação */
         void onErro(@NonNull Exception e);
     }
 
-    /**
-     * Callback para salvar nova imagem global.
-     */
     public interface SalvarCallback {
-        /** Progresso do upload (0–100) */
         void onProgresso(int porcentagem);
-
-        /** Upload e gravação concluídos com sucesso */
         void onSucesso(@NonNull ProdutoImagem produtoImagem);
-
-        /**
-         * Barcode já existia (cadastrado por outro usuário entre a consulta e o save).
-         * O AddFragment deve usar os dados retornados ao invés de fazer novo upload.
-         */
         void onJaExiste(@NonNull ProdutoImagem produtoImagemExistente);
-
-        /** Falha no processo */
         void onErro(@NonNull Exception e);
     }
 }

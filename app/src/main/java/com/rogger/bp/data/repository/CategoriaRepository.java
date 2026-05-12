@@ -24,7 +24,6 @@ import java.util.List;
 public class CategoriaRepository {
 
     private static final String TAG = "CategoriaRepository";
-
     private final CategoriaDao       categoriaDao;
     private final FirebaseDataSource firebaseDataSource;
     private final LocalCache localCache;

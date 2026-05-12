@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.add;
+package com.rogger.bp.ui.add.view;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -95,7 +95,6 @@ public class AddFragment extends Fragment {
         configurarListeners();
         configurarMenu();
 
-        // Recebe o código de barras vindo do scanner
         Bundle args = getArguments();
         if (args != null) {
             String barcode = args.getString("key_barcode");
@@ -103,7 +102,7 @@ public class AddFragment extends Fragment {
 
             if (barcode != null && !barcode.isEmpty()) {
                 binding.txtAddBarcode.setText(barcode);
-                // ─── NOVO FLUXO: consulta imagem global antes de exibir formulário
+
                 consultarImagemGlobal(barcode);
             }
         }
@@ -168,7 +167,7 @@ public class AddFragment extends Fragment {
         produto.setCodigoBarras(binding.txtAddBarcode.getText().toString().trim());
         if (imagemUrlGlobal != null && !imagemUrlGlobal.isEmpty()) {
             produto.setImagem(imagemUrlGlobal);
-            dataViewModel.insert(produto, null);
+             dataViewModel.insert(produto, null);
             return;
         }
 
@@ -377,4 +376,7 @@ public class AddFragment extends Fragment {
             ImagePikerUtil.cleanUpTempFiles(photoFile);
         }
     }
+
+
+
 }

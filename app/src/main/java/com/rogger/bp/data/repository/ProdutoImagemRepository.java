@@ -10,33 +10,13 @@ import com.rogger.bp.data.model.ProdutoImagem;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * ProdutoImagemRepository
- * <p>
- * Orquestra o cache em memória e o ProdutoImagemDataSource.
- * <p>
- * Estratégia de cache:
- * - Buscas por barcode são cacheadas por TTL de 10 minutos
- * - Imagens mudam raramente (nunca após criadas), logo TTL longo é seguro
- * - Cache separado do LocalCache principal para não misturar responsabilidades
- * - Cache invalida automaticamente ao salvar novo documento
- * <p>
- * Uso no AddFragment:
- * 1. buscarPorCodigoBarras() → verifica cache → consulta Firestore se necessário
- * 2. salvarNovaImagem()      → só chamado se barcode não existia
- */
 public class ProdutoImagemRepository {
 
     private static final String TAG = "ProdutoImagemRepo";
     private static final long TTL_MS = 10 * 60 * 1000L; // 10 minutos
 
-    // Cache em memória: codigoBarras → ProdutoImagem
     private final Map<String, CacheEntry> cache = new HashMap<>();
-
     private final ProdutoImagemDataSource dataSource;
-
-    // ======================== SINGLETON ========================
-
     private static volatile ProdutoImagemRepository INSTANCE;
 
     public static ProdutoImagemRepository getInstance() {
@@ -54,18 +34,6 @@ public class ProdutoImagemRepository {
         dataSource = ProdutoImagemDataSource.getInstance();
     }
 
-    // ======================== BUSCA ========================
-
-    /**
-     * Busca a imagem global pelo código de barras.
-     * <p>
-     * Prioridade:
-     * 1. Cache em memória (zero tráfego de dados)
-     * 2. Firestore (caso cache ausente ou expirado)
-     *
-     * @param codigoBarras Código de barras escaneado
-     * @param callback     Resultado: encontrado, não encontrado ou erro
-     */
     public void buscarPorCodigoBarras(@NonNull String codigoBarras,
                                       @NonNull ProdutoImagemDataSource.BuscaCallback callback) {
 
@@ -101,7 +69,7 @@ public class ProdutoImagemRepository {
                     }
                 });
     }
-    // ======================== CACHE INTERNO ========================
+
     private void putCache(@NonNull String codigoBarras, @NonNull ProdutoImagem imagem) {
         cache.put(codigoBarras, new CacheEntry(imagem, System.currentTimeMillis()));
     }
@@ -112,8 +80,6 @@ public class ProdutoImagemRepository {
         boolean valido = (System.currentTimeMillis() - entry.cachedAt) < TTL_MS;
         return valido ? entry.imagem : null;
     }
-
-    // ======================== ENTRY INTERNA ========================
 
     private static class CacheEntry {
         final ProdutoImagem imagem;

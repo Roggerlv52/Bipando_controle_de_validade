@@ -15,38 +15,15 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 
-/**
- * FirebaseStorageDataSource
- * <p>
- * Responsável por:
- * 1. Obter o OAuth2 Access Token do usuário autenticado via Firebase Auth
- * 2. Fazer upload de imagens para o Firebase Storage
- * 3. Deletar imagens do Firebase Storage
- * 4. Gerar a URL pública de download após o upload
- * <p>
- * Estrutura de pastas no Storage:
- * produtos/{uid}/{produtoId}/imagem.jpg
- * <p>
- * Todos os métodos são assíncronos e retornam resultado via callbacks.
- * <p>
- * DEPENDÊNCIA: adicionar no build.gradle.kts:
- * implementation("com.google.firebase:firebase-storage:21.0.1")
- */
 public class FirebaseStorageDataSource {
 
     private static final String TAG = "FirebaseStorageDS";
-
-    // Bucket definido no google-services.json
     private static final String STORAGE_BUCKET = "gs://stock-230b7.firebasestorage.app";
-
-    // Pasta raiz das imagens de produtos
     private static final String PASTA_PRODUTOS  = "produtos";
     private static final String NOME_ARQUIVO    = "imagem.jpg";
 
     private final FirebaseStorage  storage;
     private final FirebaseAuth     auth;
-
-    // ======================== SINGLETON ========================
 
     private static volatile FirebaseStorageDataSource INSTANCE;
 
@@ -174,7 +151,7 @@ public class FirebaseStorageDataSource {
             public void onTokenObtido(@NonNull String token) {
                 // Token válido → prossegue com o upload
                 Log.d(TAG, "Sessão validada. Iniciando upload do produto " + produtoId);
-                executarUpload(produtoId, arquivoLocal, callback, false);
+                executarUpload(produtoId, arquivoLocal, callback, true);
             }
 
             @Override
@@ -223,7 +200,6 @@ public class FirebaseStorageDataSource {
 
         UploadTask uploadTask = ref.putFile(fileUri, metadata);
 
-        // Progresso do upload
         uploadTask.addOnProgressListener(snapshot -> {
             double progresso = (100.0 * snapshot.getBytesTransferred())
                     / snapshot.getTotalByteCount();
@@ -246,7 +222,6 @@ public class FirebaseStorageDataSource {
                         })
         );
 
-        // Falha no upload
         uploadTask.addOnFailureListener(e -> {
             Log.e(TAG, "Falha no upload: " + e.getMessage());
 
@@ -275,17 +250,6 @@ public class FirebaseStorageDataSource {
     }
 
     // ======================== DELETAR IMAGEM ========================
-
-    /**
-     * Deleta a imagem de um produto no Firebase Storage.
-     *
-     * Útil ao excluir um produto permanentemente ou ao trocar a imagem.
-     * Se a imagem não existir no Storage, o callback onSucesso é chamado
-     * normalmente (operação idempotente).
-     *
-     * @param produtoId ID do produto cuja imagem será deletada
-     * @param callback  Callbacks de sucesso e erro
-     */
     public void deletarImagem(int produtoId,
                               @NonNull StorageCallback callback) {
 
@@ -308,7 +272,6 @@ public class FirebaseStorageDataSource {
                     callback.onSucesso();
                 })
                 .addOnFailureListener(e -> {
-                    // Arquivo não existe = tudo certo (já foi deletado antes)
                     if (e.getMessage() != null && e.getMessage().contains("does not exist")) {
                         Log.d(TAG, "Imagem já não existia no Storage.");
                         callback.onSucesso();
@@ -319,16 +282,8 @@ public class FirebaseStorageDataSource {
                 });
     }
 
-    /**
-     * Deleta imagem usando a URL completa de download (alternativa ao ID).
-     * Útil quando se tem a URL mas não o produtoId.
-     *
-     * @param urlDownload URL completa retornada no momento do upload
-     * @param callback    Callbacks de sucesso e erro
-     */
     public void deletarImagemPorUrl(@NonNull String urlDownload,
                                     @Nullable StorageCallback callback) {
-
         if (urlDownload.isEmpty()) {
             if (callback != null) callback.onSucesso();
             return;
@@ -359,41 +314,16 @@ public class FirebaseStorageDataSource {
 
     // ======================== CALLBACKS (INTERFACES) ========================
 
-    /**
-     * Callback para obtenção do OAuth2 token.
-     */
     public interface TokenCallback {
-        /** Chamado quando o token foi obtido com sucesso */
         void onTokenObtido(@NonNull String token);
-
-        /** Chamado quando houve falha ao obter o token */
         void onErro(@NonNull Exception e);
     }
-
-    /**
-     * Callback para upload de imagem com progresso.
-     */
     public interface UploadCallback {
-        /**
-         * Chamado durante o upload com a porcentagem de conclusão (0–100).
-         * Ideal para atualizar uma ProgressBar.
-         */
         void onProgresso(int porcentagem);
-
-        /**
-         * Chamado quando o upload foi concluído com sucesso.
-         * @param urlDownload URL pública de download da imagem no Storage
-         */
         void onSucesso(@NonNull String urlDownload);
-
-        /** Chamado quando o upload falhou */
         void onErro(@NonNull Exception e);
 
     }
-
-    /**
-     * Callback simples para operações sem retorno de dado (delete, etc).
-     */
     public interface StorageCallback {
         void onSucesso();
         void onErro(@NonNull Exception e);

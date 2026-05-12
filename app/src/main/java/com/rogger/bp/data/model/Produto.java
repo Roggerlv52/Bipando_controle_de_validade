@@ -20,8 +20,6 @@ public class Produto {
 
     private boolean deleted;     // false = ativo | true = lixeira
     private Long deletedAt;      // timestamp da exclusão (pode ser null)
-
-    // Campo transiente: preenchido pelo JOIN no DAO, NÃO salvo no banco
     @Ignore
     private String nomeCategoria;
 
@@ -95,8 +93,6 @@ public class Produto {
     public void setImagem(String imagem) {
         this.imagem = imagem;
     }
-
-    // ======= LIXEIRA =======
 
     public boolean isDeleted() {
         return deleted;

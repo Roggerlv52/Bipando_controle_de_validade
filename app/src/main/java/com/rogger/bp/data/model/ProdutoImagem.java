@@ -34,8 +34,6 @@ public class ProdutoImagem {
         this.imagemUrl = imagemUrl;
     }
 
-    // ======================== GETTERS / SETTERS ========================
-
     public String getCodigoBarras() {
         return codigoBarras;
     }
@@ -48,19 +46,10 @@ public class ProdutoImagem {
         return imagemUrl;
     }
 
-    // ======================== HELPERS ========================
-
-    /**
-     * Verifica se este objeto tem imagem válida para exibição.
-     * Útil no AddFragment para decidir se preenche automaticamente.
-     */
     public boolean temImagem() {
         return imagemUrl != null && !imagemUrl.isEmpty();
     }
 
-    /**
-     * Verifica se este objeto tem nome sugerido válido.
-     */
     public boolean temNome() {
         return nomeProduto != null && !nomeProduto.isEmpty();
     }
