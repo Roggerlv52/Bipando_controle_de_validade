@@ -7,17 +7,19 @@ import com.rogger.bp.ui.base.BaseView
 
 interface RegisterAdd {
     interface Presenter : BasePresenter {
-        fun create(product: PostProduct)
-        fun createImage(image: PostImage)
-        fun upload(image: PostImage)
+
+        fun checkOrCreateImage(barcode: String)
+        fun uploadImage(image: PostImage)
+        fun saveProduct(product: PostProduct)
     }
 
     interface View : BaseView<Presenter> {
-        fun goToHome()
-        fun openCamera()
         fun showProgress(enable: Boolean)
-        fun imageExit(postImage: PostImage)
         fun onFailure(message: String)
-        fun onSave()
+        fun imageAlreadyExists(postImage: PostImage)
+        fun onImageNotFound()
+        fun openCamera()
+        fun openGallery()
+        fun goToHome()
     }
 }

@@ -1,25 +1,52 @@
 package com.rogger.bp.ui.add.view
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.rogger.bp.R
 import com.rogger.bp.data.model.PostImage
+import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.databinding.FragmentAddBinding
 import com.rogger.bp.ui.add.RegisterAdd
 import com.rogger.bp.ui.add.presentation.AddItemPresenter
+import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
+import com.rogger.bp.ui.commun.ShowSelectDialog
+import com.rogger.bp.ui.gallery.CameraCallback
+import com.rogger.bp.ui.gallery.ImagePikerUtil
+import com.rogger.bp.ui.gallery.ImageUtils
+import com.rogger.bp.ui.scanner.ImageBarcode
+import java.io.File
 
-class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
-    private var barcode: String = ""
+class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
+    companion object {
+        const val KEY_BARCODE     = "key_barcode"
+        const val KEY_CATEGORIA   = "categoria_id"
+    }
+    // ── MVP ───────────────────────────────────────────────────────────────
+    override lateinit var presenter: RegisterAdd.Presenter
+
     private var _binding: FragmentAddBinding? = null
     private val binding get() = _binding!!
 
-    override lateinit var presenter: RegisterAdd.Presenter
+    private var barcode: String = ""
+    private var categoriaId: Int = -1
+    private var timestamp: Long = 0L
+    private var photoFile: File? = null
+    private var remoteImageUri: String? = null   // URI da imagem já existente no Storage
+    private var confirmed: Boolean = false        // evita apagar foto se o usuário salvou
+
+    private val cameraUtil = ImagePikerUtil()
+    private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,77 +63,203 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         val repository = DependencyInjector.registerProductRepository()
         presenter = AddItemPresenter(this, repository)
 
-        val args = arguments
+        val dataAtual = Utils.getCurrentDateFormatted()
+        binding.datePickerBtnAdd.text = dataAtual
+        binding.txtAddData.text = dataAtual
+        timestamp = Utils.getCurrentTimestamp()
 
-        if (args != null) {
+        setupCamera()
+        setupGalleryResult()
+        setupListeners()
+        readArguments()
+    }
 
-            barcode = args.getString("key_barcode").toString()
-            var categoriaId = args.getInt("categoria_id", -1)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Limpa arquivo temporário se o usuário cancelou sem salvar
+        if (!confirmed && photoFile != null && remoteImageUri == null) {
+            ImagePikerUtil.cleanUpTempFiles(photoFile)
+        }
+        _binding = null
+    }
 
-            if (barcode.isNotEmpty()) {
-                binding.txtAddBarcode.text = barcode
-                val image = PostImage(barcode = barcode)
-                presenter.createImage(image)
+    override fun onDestroy() {
+        if (::presenter.isInitialized) presenter.onDestroy()
+        super.onDestroy()
+    }
+    private fun setupCamera() {
+        cameraLauncher = cameraUtil.register(this, object : CameraCallback {
+            override fun onImageCaptured(imageUri: Uri, imageFile: File) {
+                try {
+                    photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile)
+                    remoteImageUri = null    // foto local substitui qualquer URI remota
+                    showLocalImage(photoFile!!)
+
+                    // Faz upload imediatamente para o catálogo global
+                    val image = PostImage(
+                        barcode = barcode,
+                        uri = imageFile.absolutePath
+                    )
+                    presenter.uploadImage(image)
+                } catch (e: Exception) {
+                    onFailure(e.message ?: "Erro ao processar imagem")
+                }
             }
 
+            override fun onCancel() { /* nenhuma ação necessária */ }
+            override fun onError(e: Exception) {
+                onFailure(e.message ?: "Erro na câmera")
+            }
+        })
+    }
+
+    private fun setupGalleryResult() {
+        parentFragmentManager.setFragmentResultListener(
+            "gallery_result",
+            viewLifecycleOwner
+        ) { _, bundle ->
+            try {
+                val img = Uri.parse(bundle.getString("imageUri"))
+                val file = ImagePikerUtil.createImageFile(requireContext())
+                photoFile = ImageUtils.processImage(requireContext(), img, file)
+                remoteImageUri = null
+                showLocalImage(photoFile!!)
+
+                val image = PostImage(barcode = barcode, uri = file.absolutePath)
+                presenter.uploadImage(image)
+            } catch (e: Exception) {
+                onFailure(e.message ?: "Erro ao processar imagem da galeria")
+            }
         }
-        setupListeners()
     }
 
     private fun setupListeners() {
         binding.btnFgmSaveAdd.setOnClickListener {
-            onSave()
+            saveProduct()
+        }
+        binding.datePickerBtnAdd.setOnClickListener {
+            Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
+                binding.datePickerBtnAdd.text = dataFormatada
+                binding.txtAddData.text = dataFormatada
+                timestamp = ts
+            }
         }
 
-        // Adicione outros listeners conforme necessário (câmera, galeria, etc)
+        binding.txtAddBarcode.setOnClickListener {
+            openBarcodeImageScreen(binding.txtAddBarcode.text.toString())
+        }
+
+        binding.fragmentImgAdd.setOnClickListener {
+            if (remoteImageUri != null) return@setOnClickListener   // bloqueado
+            openMediaPicker()
+        }
     }
 
-    override fun showProgress(enable: Boolean) {
-        binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.GONE
-        binding.btnFgmSaveAdd.isEnabled = !enable
+    private fun readArguments() {
+        val args = arguments ?: return
+
+        barcode = args.getString(KEY_BARCODE).orEmpty()
+        categoriaId = args.getInt(KEY_CATEGORIA, -1)
+
+        if (barcode.isNotEmpty()) {
+            binding.txtAddBarcode.text = barcode
+            // Verifica se já existe imagem para este barcode no catálogo global
+            presenter.checkOrCreateImage(barcode)
+        }
     }
 
-    override fun imageExit(postImage: PostImage) {
+    /** Exibe arquivo local no ImageView. */
+    private fun showLocalImage(file: File) {
         Glide.with(requireContext())
-            .load(postImage.uri)
+            .load(file)
+            .override(500, 500)
+            .centerCrop()
+            .into(binding.fragmentImgAdd)
+    }
+
+    /** Exibe URL remota no ImageView. */
+    private fun showRemoteImage(url: String) {
+        Glide.with(requireContext())
+            .load(url)
             .override(500, 500)
             .placeholder(R.drawable.carregando)
             .error(R.drawable.imagem_error)
             .centerCrop()
             .into(binding.fragmentImgAdd)
+        binding.fragmentImgAdd.isClickable = false
     }
 
+    private fun openMediaPicker() {
+        ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
+            override fun openGallery() {
+                this@AddItemFragment.openGallery()
+            }
+            override fun openCamera() {
+                this@AddItemFragment.openCamera()
+            }
+        })
+    }
+
+    private fun saveProduct() {
+        val nome = binding.edtNameFragmentAdd.text.toString().trim()
+        if (!Utils.validEditText(binding.edtNameFragmentAdd)) return
+
+        val imageUri: Uri = when {
+            remoteImageUri != null -> Uri.parse(remoteImageUri)
+            photoFile != null      -> Uri.fromFile(photoFile)
+            else                   -> Uri.EMPTY
+        }
+
+        val product = PostProduct(
+            uuid       = barcode,
+            uri        = imageUri,
+            name       = nome,
+            note       = binding.editFragmentNoteAdd.text.toString(),
+            barcode    = barcode,
+            categoryId = categoriaId,
+            deleted    = false,
+            timestamp  = timestamp,
+            publisher  = UserAuth("", "", "", "", null)  // preenchido no DataSource com Auth atual
+        )
+
+        confirmed = true
+        presenter.saveProduct(product)
+    }
+
+    private fun openBarcodeImageScreen(barcodeValue: String) {
+        val intent = Intent(requireContext(), ImageBarcode::class.java)
+        intent.putExtra("keyBarcode", barcodeValue)
+        startActivity(intent)
+    }
+    override fun showProgress(enable: Boolean) {
+        binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.GONE
+        binding.btnFgmSaveAdd.isEnabled = !enable
+    }
     override fun onFailure(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
-
-    override fun onSave() {
-        // Exemplo de como chamar o presenter (ajuste com os dados reais dos inputs)
-        // val product = PostProduct(...)
-        // presenter.create(product)
-
-        // Se estiver salvando imagem separadamente para verificar existência:
-        val image = PostImage(barcode = barcode)
-        presenter.createImage(image)
-    }
-
-    override fun goToHome() {
-        // Lógica para navegar para Home
-    }
-
-    override fun openCamera() {
-        // Lógica para abrir câmera
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    override fun onDestroy() {
-        if (::presenter.isInitialized) {
-            presenter.onDestroy()
+    override fun imageAlreadyExists(postImage: PostImage) {
+        remoteImageUri = postImage.uri
+        showRemoteImage(postImage.uri)
+        if (postImage.name.isNotEmpty()) {
+            binding.edtNameFragmentAdd.setText(postImage.name)
+            binding.edtNameFragmentAdd.setSelection(
+                binding.edtNameFragmentAdd.text.length
+            )
         }
-        super.onDestroy()
+    }
+    override fun onImageNotFound() {
+        binding.fragmentImgAdd.isClickable = true
+    }
+    override fun openCamera() {
+        photoFile?.delete()
+        cameraUtil.openCamera(requireContext(), cameraLauncher)
+    }
+    override fun openGallery() {
+        findNavController().navigate(R.id.action_addFragment_to_nav_gallery_fragment)
+    }
+    override fun goToHome() {
+        Toast.makeText(requireContext(), "Produto salvo com sucesso", Toast.LENGTH_SHORT).show()
+        findNavController().popBackStack()
     }
 }

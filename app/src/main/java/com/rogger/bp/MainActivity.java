@@ -191,7 +191,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-       // firebaseDataSource.stopAllListeners();
         if (animator != null) {
             animator.stop();
         }
