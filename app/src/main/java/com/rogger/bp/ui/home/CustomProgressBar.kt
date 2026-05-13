@@ -9,7 +9,7 @@ import com.rogger.bp.R
 
 
 private var loadingDialog: AlertDialog? = null
-public fun showLoadingDialog(context: Context) {
+fun showLoadingDialog(context: Context) {
     if (loadingDialog == null) {
         val view = LayoutInflater.from(context)
             .inflate(R.layout.dialog_loading, null)
@@ -31,6 +31,6 @@ public fun showLoadingDialog(context: Context) {
     }
 }
 
-public fun hideLoadingDialog() {
+fun hideLoadingDialog() {
     loadingDialog?.dismiss()
 }

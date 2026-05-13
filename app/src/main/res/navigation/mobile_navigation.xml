@@ -78,7 +78,7 @@
 
     <fragment
         android:id="@+id/nav_show_fragment"
-        android:name="com.rogger.bp.ui.home.ShowFragment"
+        android:name="com.rogger.bp.ui.home.view.ShowFragment"
         android:label=""
         tools:layout="@layout/fragment_show">
         <argument
@@ -120,7 +120,7 @@
         tools:layout="@layout/fragment_gallery" />
     <fragment
         android:id="@+id/nav_category"
-        android:name="com.rogger.bp.ui.category.FragmentAddEditCategory"
+        android:name="com.rogger.bp.ui.category.view.AddEditCategoryFragment"
         android:label="@string/category"
         tools:layout="@layout/fragment_add_edit_category">
         <action

@@ -2,9 +2,8 @@ package com.rogger.bp.ui.category.data
 
 import com.rogger.bp.data.model.PostCategory
 
-interface CategoryCallback {
-    fun onSuccess(category: PostCategory)
-    fun onAlreadyExists(category: PostCategory)
+interface FetchCategoriesCallback {
+    fun onSuccess(categories: List<PostCategory>)
     fun onFailure(message: String)
     fun onComplete()
 }

@@ -37,16 +37,10 @@ public class CategoriaViewModel extends AndroidViewModel {
         });
     }
 
-    /**
-     * ✅ Retorna categorias com contagem (para o AdapterCategory)
-     */
     public LiveData<List<CategoriaWithCount>> getCategoriesWithCount() {
         return categoriasComContagem;
     }
 
-    /**
-     * ✅ Retorna sempre o mesmo LiveData — estável entre chamadas
-     */
     public LiveData<List<Categoria>> getCategories() {
         return categorias;
     }

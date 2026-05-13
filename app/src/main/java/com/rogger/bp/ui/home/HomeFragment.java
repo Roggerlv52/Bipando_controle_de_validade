@@ -29,6 +29,7 @@ import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.ui.base.CategoriaDialogUtil;
 import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.base.Utils;
+import com.rogger.bp.ui.home.view.AdapterHome;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bp.ui.viewmodel.DataViewModel;
 

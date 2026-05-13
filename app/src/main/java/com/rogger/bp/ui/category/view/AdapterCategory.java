@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.category;
+package com.rogger.bp.ui.category.view;
 
 import android.view.LayoutInflater;
 import android.view.View;

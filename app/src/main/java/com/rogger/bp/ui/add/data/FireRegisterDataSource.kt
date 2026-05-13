@@ -12,8 +12,7 @@ class FireRegisterDataSource : ItemDataSource {
         produto: PostProduct,
         callback: RegisterItemCallback
     ) {
-
-        val uid = FirebaseAuth.getInstance().uid
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
 
         if (uid != null) {
 
@@ -24,7 +23,7 @@ class FireRegisterDataSource : ItemDataSource {
                 .document()
                 .set(
                     hashMapOf(
-                        "uuid" to produto.uuid,
+                        "uid" to produto.uuid,
                         "imageUri" to produto.uri,
                         "name" to produto.name,
                         "note" to produto.note,
@@ -49,6 +48,7 @@ class FireRegisterDataSource : ItemDataSource {
             callback.onComplete()
         }
     }
+
     override fun saveProductImage(
         image: PostImage,
         callback: SaveImageCallback
@@ -95,7 +95,7 @@ class FireRegisterDataSource : ItemDataSource {
                         val productImage = PostImage(
                             barcode = image.barcode,
                             name = image.name,
-                            uri = downloadUri.toString()
+                            uri = image.uri
                         )
                         firestore
                             .collection("product_images")

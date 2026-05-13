@@ -1,11 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<!--
+    Layout do AddEditCategoryFragment.
 
+    Estrutura:
+    ┌─ FrameLayout (raiz) ──────────────────────────────────────────────────┐
+    │  ┌─ RecyclerView ──────────────────────────────────────────────────┐  │
+    │  │  lista de categorias (visível quando há itens)                  │  │
+    │  └────────────────────────────────────────────────────────────────┘   │
+    │  ┌─ LinearLayout (estado vazio) ───────────────────────────────────┐  │
+    │  │  ImageView (lista_vazia) + TextView                             │  │
+    │  │  visível apenas quando a lista está vazia                       │  │
+    │  └────────────────────────────────────────────────────────────────┘   │
+    │  ┌─ ProgressBar ───────────────────────────────────────────────────┐  │
+    │  │  centralizado, por cima de tudo, GONE por padrão                │  │
+    │  └────────────────────────────────────────────────────────────────-┘   │
+    └───────────────────────────────────────────────────────────────────────┘
+
+    Usa FrameLayout para que o ProgressBar flutue sobre o RecyclerView
+    sem deslocar o layout — padrão usado no AddFragment.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/GhostWhite">
+
+    <!-- Lista de categorias -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_category"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
+        tools:listitem="@layout/item_category" />
 
-</LinearLayout>
+    <!-- Estado vazio — mostrado quando não há categorias -->
+    <LinearLayout
+        android:id="@+id/layout_empty_category"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone"
+        tools:visibility="gone">
+
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_marginBottom="16dp"
+            android:alpha="0.55"
+            android:contentDescription="Nenhuma categoria"
+            android:src="@drawable/lista_vazia" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Nenhuma categoria cadastrada.\nToque em + para criar uma."
+            android:textColor="@color/DarkGray"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+
+    <!-- ProgressBar centralizada, sobreposta — GONE por padrão -->
+    <ProgressBar
+        android:id="@+id/progress_category"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/bipando_color"
+        android:visibility="gone" />
+
+</FrameLayout>

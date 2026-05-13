@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.home;
+package com.rogger.bp.ui.home.view;
 
 /*
 /*@Roger de oliveira 
@@ -23,6 +23,7 @@ import com.rogger.bp.data.database.BpdDatabase;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.Produto;
 import com.rogger.bp.ui.base.Utils;
+import com.rogger.bp.ui.home.OnItemClickListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;

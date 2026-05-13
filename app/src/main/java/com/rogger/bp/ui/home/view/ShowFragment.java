@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.home;
+package com.rogger.bp.ui.home.view;
 
 import android.annotation.SuppressLint;
 import android.graphics.Matrix;
