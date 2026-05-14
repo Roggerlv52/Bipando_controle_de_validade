@@ -16,7 +16,7 @@ import com.rogger.bp.ui.login.presentation.LoginPresenter
  * Data: 14/05/2026
  * Hora: 22:48
  */
-class LoginActiviry : BaseActivity(), Login.View {
+class LoginActivity : BaseActivity(), Login.View {
     override lateinit var presenter: Login.Presenter
     private lateinit var binding: ActivityLoginBinding
 
