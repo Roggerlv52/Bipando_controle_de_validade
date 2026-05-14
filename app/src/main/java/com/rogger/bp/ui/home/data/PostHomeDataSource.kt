@@ -1,9 +1,15 @@
 package com.rogger.bp.ui.home.data
 
+import com.rogger.bp.data.model.PostProduct
+
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 13/05/2026
  * Hora: 22:35
  */
-class PostHomeDataSource {
+interface PostHomeDataSource {
+    fun fetchProducts(callback: FetchProductsCallback)
+    fun fetchProductsByCategory(categoryId: Int, callback: FetchProductsCallback)
+    fun deleteProduct(product: PostProduct, callback: HomeCallback)
+    fun restoreProduct(product: PostProduct, callback: HomeCallback)
 }

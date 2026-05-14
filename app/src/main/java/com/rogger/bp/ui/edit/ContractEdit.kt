@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.home
+package com.rogger.bp.ui.edit
 
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.base.BasePresenter
@@ -6,22 +6,21 @@ import com.rogger.bp.ui.base.BaseView
 
 /*
  * Desenvolvido por Roger de Oliveira
- * Data: 13/05/2026
- * Hora: 22:40
+ * Data: 14/05/2026
+ * Hora: 19:50
  */
- interface ContractHome {
+interface ContractEdit {
  interface Presenter : BasePresenter {
-  fun fetchProducts()
-  fun fetchProductsByCategory(categoryId: Int)
-  fun deleteProduct(product: PostProduct)
-  fun restoreProduct(product: PostProduct)
+  fun loadProduct(productId: Int)
+  fun saveProduct(produto: PostProduct)
+  fun deleteProduct(produto: PostProduct)
  }
 
  interface View : BaseView<Presenter> {
   fun showProgress(enable: Boolean)
-  fun showProducts(products: List<PostProduct>)
-  fun showEmpty(isEmpty: Boolean)
+  fun bindProduct(produto: PostProduct)
   fun onSuccess(message: String)
   fun onError(message: String)
+  fun navigateBack()
  }
 }

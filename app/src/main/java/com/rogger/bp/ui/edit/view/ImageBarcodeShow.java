@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.edit;
+package com.rogger.bp.ui.edit.view;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

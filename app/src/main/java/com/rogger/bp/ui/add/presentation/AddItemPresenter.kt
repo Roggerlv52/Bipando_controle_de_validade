@@ -16,7 +16,7 @@ import com.rogger.bp.ui.add.data.SaveImageCallback
  *  2. Fazer upload de imagem capturada pela câmera/galeria (uploadImage).
  *  3. Salvar o produto no banco (saveProduct).
  *
- * A View é nullificada em onDestroy() para evitar memory leak.
+ * A View é notificada em onDestroy() para evitar memory leak.
  */
 class AddItemPresenter(
     private var view: RegisterAdd.View?,

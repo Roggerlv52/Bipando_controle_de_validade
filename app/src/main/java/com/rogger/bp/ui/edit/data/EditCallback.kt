@@ -1,14 +1,14 @@
-package com.rogger.bp.ui.home.data
+package com.rogger.bp.ui.edit.data
 
 import com.rogger.bp.data.model.PostProduct
 
 /*
  * Desenvolvido por Roger de Oliveira
- * Data: 13/05/2026
- * Hora: 22:31
+ * Data: 14/05/2026
+ * Hora: 19:52
  */
-interface HomeCallback {
-    fun onSuccess(product: PostProduct)
+interface EditCallback {
+    fun onSuccess(postProduct: PostProduct)
     fun onFailure(message: String)
     fun onComplete()
 }
