@@ -7,6 +7,8 @@ import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.edit.data.EditDataSource
 import com.rogger.bp.ui.edit.data.EditRepository
+import com.rogger.bp.ui.login.data.FireDataSource
+import com.rogger.bp.ui.login.data.LoginRepository
 
 object DependencyInjector {
     fun registerProductRepository(): RegisterItemRepository {
@@ -17,5 +19,8 @@ object DependencyInjector {
     }
     fun registerEditRepository(): EditRepository {
         return EditRepository(EditDataSource())
+    }
+    fun loginRepository() : LoginRepository{
+        return LoginRepository(FireDataSource())
     }
 }

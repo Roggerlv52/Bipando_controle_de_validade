@@ -43,7 +43,11 @@ public class LoginActivity extends BaseActivity {
     private ImageView imgshow;
     private int currentIndex = 0;
     private final int[] imageArray = {
-           R.drawable.bipando ,R.drawable.picture_2, R.drawable.picture_3, R.drawable.picture_4, R.drawable.picture_1
+            R.drawable.bipando,
+            R.drawable.picture_2,
+            R.drawable.picture_3,
+            R.drawable.picture_4,
+            R.drawable.picture_1
     };
 
     private static final int DELAY = 2000;
