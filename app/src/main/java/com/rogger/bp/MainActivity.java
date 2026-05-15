@@ -21,7 +21,6 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.rogger.bp.data.database.FirebaseDataSource;
 import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
@@ -30,6 +29,7 @@ import com.rogger.bp.ui.animation.GradientAnimator;
 import com.rogger.bp.ui.base.BaseActivity;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
+import com.rogger.bp.ui.login.view.LoginActivity;
 import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
 import com.rogger.bp.ui.viewmodel.DataViewModel;
 
@@ -43,7 +43,6 @@ public class MainActivity extends BaseActivity {
     private ImageView imgProfile;
     private TextView txtProfileName;
     private TextView txtProfileEmail;
-    private FirebaseDataSource firebaseDataSource;
     private GradientAnimator animator;
 
     @Override
@@ -75,8 +74,6 @@ public class MainActivity extends BaseActivity {
         // 🔥 iniciar animação
         animator = new GradientAnimator(bgView);
         animator.start();
-
-        firebaseDataSource = FirebaseDataSource.getInstance();
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
         String profileUri = userInfo.get(2);
@@ -167,6 +164,7 @@ public class MainActivity extends BaseActivity {
             SharedPreferencesManager.setLoginState(this, "state", false);
             SharedPreferencesManager.clearUserInfo(this);
             startActivity(new Intent(this, LoginActivity.class));
+
             finish();
         }
         if (id == R.id.menu_add_category) {

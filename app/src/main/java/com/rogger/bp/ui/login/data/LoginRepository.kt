@@ -5,8 +5,11 @@ package com.rogger.bp.ui.login.data
  * Data: 14/05/2026
  * Hora: 22:42
  */
-class LoginRepository(private val dataSource : LoginDataSource) {
-    fun logon(email : String, name:String,callback : LoginCallback){
-        dataSource.login(email,name,callback)
+class LoginRepository(private val dataSource: LoginDataSource) {
+
+    fun loginWithGoogle(idToken: String, callback: LoginCallback) {
+        // idToken é passado como 'email' para respeitar a interface existente
+        dataSource.login(email = idToken, name = "", callback = callback)
     }
+
 }

@@ -23,4 +23,5 @@ object DependencyInjector {
     fun loginRepository() : LoginRepository{
         return LoginRepository(FireDataSource())
     }
+
 }

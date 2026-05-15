@@ -13,7 +13,7 @@ import com.rogger.bp.data.model.PostProduct
    * Busca todos os produtos activos do utilizador.
    */
   fun fetchAll(callback: Any) {
-   dataSource.fetchProducts(callback)
+   dataSource.fetchProducts(callback as FetchProductsCallback)
   }
 
   /**

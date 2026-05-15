@@ -24,7 +24,7 @@ class FireRegisterDataSource : ItemDataSource {
                 .set(
                     hashMapOf(
                         "uid" to produto.uuid,
-                        "imageUri" to produto.uri,
+                        "imageUri" to produto.imageUri,
                         "name" to produto.name,
                         "note" to produto.note,
                         "barcode" to produto.barcode,

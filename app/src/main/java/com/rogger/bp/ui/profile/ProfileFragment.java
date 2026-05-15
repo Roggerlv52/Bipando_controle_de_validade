@@ -24,13 +24,13 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.rogger.bp.LoginActivity;
 import com.rogger.bp.R;
 import com.rogger.bp.databinding.FragmentProfileBinding;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.ui.base.DialogUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
+import com.rogger.bp.ui.login.view.LoginActivity;
 import com.rogger.bp.ui.profile.data.DeleteAccountCallback;
 import com.rogger.bp.ui.profile.data.ProfileRepository;
 

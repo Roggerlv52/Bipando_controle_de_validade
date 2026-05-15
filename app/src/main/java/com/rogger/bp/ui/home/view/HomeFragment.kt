@@ -21,16 +21,12 @@ import com.rogger.bp.ui.home.presentation.HomePresenter
  */
 class HomeFragment : Fragment(), ContractHome.View {
 
-    // ── MVP ───────────────────────────────────────────────────────────────
-
     override val presenter: ContractHome.Presenter by lazy {
         HomePresenter(
             view = this,
             repository = HomeRepository(HomeDataSource())
         )
     }
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,8 +44,6 @@ class HomeFragment : Fragment(), ContractHome.View {
         presenter.onDestroy()
     }
 
-    // ── ContractHome.View ─────────────────────────────────────────────────
-
     override fun showProgress(enable: Boolean) {
         if (enable) {
             CustomProgressBar.showLoadingDialog(requireContext())
@@ -59,7 +53,6 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProducts(products: List<PostProduct>) {
-        // A lista é gerida pelo AdapterHome via DataViewModel.
         // Este método pode ser usado para actualizar um adapter dedicado MVP
         // ou notificar o fragment pai, consoante a estratégia de migração.
     }

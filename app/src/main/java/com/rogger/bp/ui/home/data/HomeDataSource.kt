@@ -1,12 +1,10 @@
 package com.rogger.bp.ui.home.data
 
-import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rogger.bp.data.model.PostProduct
-import com.rogger.bp.data.model.UserAuth
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -41,21 +39,17 @@ class HomeDataSource : PostHomeDataSource {
     private fun documentToPostProduct(data: Map<String, Any?>): PostProduct? {
         return try {
             PostProduct(
-                uuid      = data["uid"] as? String ?: return null,
-                uri       = Uri.parse(data["imageUri"] as? String ?: ""),
-                name      = data["name"] as? String ?: return null,
-                note      = data["note"] as? String ?: "",
-                barcode   = data["barcode"] as? String ?: "",
+                id = (data["id"] as? Long)?.toInt() ?: 0,
+                userId = data["userId"] as? String ?: "",
+                uuid = data["uid"] as? String ?: "",
+                name = data["name"] as? String ?: return null,
+                note = data["note"] as? String ?: "",
+                barcode = data["barcode"] as? String ?: "",
                 categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
-                deleted   = data["deleted"] as? Boolean ?: false,
                 timestamp = data["timestamp"] as? Long ?: 0L,
-                publisher = UserAuth(
-                    uuid     = data["uid"] as? String ?: "",
-                    name     = "",
-                    email    = "",
-                    password = "",
-                    photoUri = null
-                )
+                imageUri = data["imageUri"] as? String ?: "",
+                deleted = data["deleted"] as? Boolean ?: false,
+                deletedAt = data["deletedAt"] as? Long
             )
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao mapear produto: ${e.message}")
@@ -164,7 +158,7 @@ class HomeDataSource : PostHomeDataSource {
 
                 docRef.update(
                     mapOf(
-                        "deleted"   to true,
+                        "deleted" to true,
                         "deletedAt" to System.currentTimeMillis()
                     )
                 )
@@ -216,7 +210,7 @@ class HomeDataSource : PostHomeDataSource {
 
                 docRef.update(
                     mapOf(
-                        "deleted"   to false,
+                        "deleted" to false,
                         "deletedAt" to null
                     )
                 )

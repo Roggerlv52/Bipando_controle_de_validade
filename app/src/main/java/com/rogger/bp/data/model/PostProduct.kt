@@ -10,20 +10,20 @@ data class PostProduct(
 
     // ── Room PrimaryKey ───────────────────────────────────────────────────
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val userId: String = "",
+    var id: Int = 0,
+    var userId: String = "",
     val uuid: String = "",
     var name: String = "",
     var note: String = "",
     var barcode: String = "",
 
-    val categoryId: Int = 0,
+    var categoryId: Int = 0,
     var timestamp: Long = 0L,
-    val imageUri: String = "",
-    val deleted: Boolean = false,
+    var imageUri: String = "",
+    var deleted: Boolean = false,
 
     /** Timestamp do momento em que foi movido para a lixeira. Null se activo. */
-    val deletedAt: Long? = null,
+    var deletedAt: Long? = null,
 
     // ── Campos calculados / transientes (@Ignore) ─────────────────────────
     @Ignore
@@ -56,6 +56,7 @@ data class PostProduct(
         note: String,
         barcode: String,
         categoryId: Int,
+        categoryName: String,
         timestamp: Long,
         imageUri: String,
         deleted: Boolean,
@@ -68,11 +69,11 @@ data class PostProduct(
         note        = note,
         barcode     = barcode,
         categoryId  = categoryId,
+        categoryName = categoryName,
         timestamp   = timestamp,
         imageUri    = imageUri,
         deleted     = deleted,
         deletedAt   = deletedAt,
-        categoryName = "",
         localUri    = null,
         publisher   = null
     )

@@ -13,7 +13,7 @@ import com.rogger.bp.data.model.PostProduct
  */
 class EditDataSource : PostEditDataSource {
     private val TAG = "EditDataSource"
-    private val db   = FirebaseFirestore.getInstance()
+    private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
     private fun getUsername(): String? {
@@ -61,11 +61,11 @@ class EditDataSource : PostEditDataSource {
                 val docRef = snapshot.documents.first().reference
 
                 val updates = mapOf(
-                    "name"        to produto.name,
-                    "note"   to (produto.note ?: ""),
-                    "timestamp"   to produto.timestamp,
+                    "name" to produto.name,
+                    "note" to (produto.note ?: ""),
+                    "timestamp" to produto.timestamp,
                     "categoryId" to produto.categoryId,
-                    "image"      to (produto.uri ?: ""),
+                    "image" to (produto.imageUri ?: ""),
                     "barcode" to (produto.barcode ?: "")
                 )
 
@@ -115,7 +115,7 @@ class EditDataSource : PostEditDataSource {
 
                 docRef.update(
                     mapOf(
-                        "deleted"   to true,
+                        "deleted" to true,
                         "deletedAt" to System.currentTimeMillis()
                     )
                 )
@@ -159,7 +159,7 @@ class EditDataSource : PostEditDataSource {
                     return@addOnSuccessListener
                 }
 
-                val doc  = snapshot.documents.first()
+                val doc = snapshot.documents.first()
                 val data = doc.data ?: run {
                     callback.onFailure("Documento inválido")
                     callback.onComplete()
@@ -168,19 +168,19 @@ class EditDataSource : PostEditDataSource {
 
                 try {
                     val produto = PostProduct().apply {
-                        id           = (data["id"] as? Long)?.toInt() ?: productId
-                        userId       = data["userId"] as? String ?: ""
-                        nome         = data["nome"] as? String ?: ""
-                        codigoBarras = data["codigoBarras"] as? String ?: ""
-                        categoryId   = (data["categoriaId"] as? Long)?.toInt() ?: 0
-                        timestamp    = data["timestamp"] as? Long ?: 0L
-                        note    = data["anotacoes"] as? String ?: ""
-                        imagem       = data["imagem"] as? String ?: ""
-                        isDeleted    = data["deleted"] as? Boolean ?: false
-                        deletedAt    = data["deletedAt"] as? Long
+                        id = (data["id"] as? Long)?.toInt() ?: productId
+                        userId = data["userId"] as? String ?: ""
+                        name = data["nome"] as? String ?: ""
+                        barcode = data["codigoBarras"] as? String ?: ""
+                        categoryId = (data["categoriaId"] as? Long)?.toInt() ?: 0
+                        timestamp = data["timestamp"] as? Long ?: 0L
+                        note = data["anotacoes"] as? String ?: ""
+                        imageUri = data["imagem"] as? String ?: ""
+                        deleted = data["deleted"] as? Boolean ?: false
+                        deletedAt = data["deletedAt"] as? Long
                     }
 
-                    Log.d(TAG, "Produto carregado: ${produto.nome}")
+                    Log.d(TAG, "Produto carregado: ${produto.name}")
                     callback.onSuccess(produto)
 
                 } catch (e: Exception) {

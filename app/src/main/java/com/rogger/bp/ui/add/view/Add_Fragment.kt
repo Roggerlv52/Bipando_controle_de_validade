@@ -211,8 +211,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         }
 
         val product = PostProduct(
-            uuid       = barcode,
-            uri        = imageUri,
+            imageUri   = imageUri.toString(),
             name       = nome,
             note       = binding.editFragmentNoteAdd.text.toString(),
             barcode    = barcode,

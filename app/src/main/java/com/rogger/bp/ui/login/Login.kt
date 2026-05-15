@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.login
 
+import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.ui.base.BasePresenter
 import com.rogger.bp.ui.base.BaseView
 
@@ -10,12 +11,14 @@ import com.rogger.bp.ui.base.BaseView
  */
 interface Login {
     interface Presenter : BasePresenter {
-        fun login(email: String, name: String)
+        fun loginWithGoogle(idToken: String)
+        fun checkSession(): Boolean
     }
 
     interface View : BaseView<Presenter> {
         fun showProgress(enabled: Boolean)
-        fun onUserAuthenticated()
+        fun startGoogleSignIn()
+        fun onUserAuthenticated(userAuth: UserAuth)
         fun onUserUnauthenticated(message: String)
     }
 }
