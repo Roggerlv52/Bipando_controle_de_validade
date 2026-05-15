@@ -15,12 +15,10 @@ import com.rogger.bp.data.model.UserAuth
 class FireDataSource : LoginDataSource {
 
     private val TAG = "FireDataSource"
-    private val auth      = FirebaseAuth.getInstance()
+    private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    override fun login(email: String, name: String, callback: LoginCallback) {
-
-        val idToken = email   // renomeado por clareza
+    override fun login(idToken: String, email: String, callback: LoginCallback) {
 
         if (idToken.isBlank()) {
             callback.onFailure("Token de autenticação inválido")
@@ -48,21 +46,16 @@ class FireDataSource : LoginDataSource {
                     return@addOnCompleteListener
                 }
 
-                val uid       = user.uid
-                val userName  = user.displayName ?: ""
-                val userEmail = user.email ?: ""
-                val photoUrl  = user.photoUrl?.toString() ?: ""
+                val uid = user.uid
+                val userName = user.displayName ?: ""
+                val photoUrl = user.photoUrl?.toString() ?: ""
 
-                Log.d(TAG, "Firebase Auth OK — uid=$uid name=$userName email=$userEmail")
+                val finalEmail = email
 
-                // ── Persiste dados no Firestore ───────────────────────────
-                // ✅ Verificação: Se o e-mail do FirebaseUser for vazio, tenta usar o que veio do Google se disponível
-                val finalEmail = if (userEmail.isNotBlank()) userEmail else email
-                
                 val firestoreData = hashMapOf(
-                    "uid"      to uid,
-                    "name"     to userName,
-                    "email"    to finalEmail,
+                    "uid" to uid,
+                    "name" to userName,
+                    "email" to finalEmail,
                     "photoUrl" to photoUrl
                 )
 
@@ -70,13 +63,11 @@ class FireDataSource : LoginDataSource {
                     .document(uid)
                     .set(firestoreData, SetOptions.merge())
                     .addOnSuccessListener {
-                        Log.d(TAG, "Dados salvos no Firestore: uid=$uid email=$finalEmail")
-
                         // ── Devolve UserAuth completo com photoUri ────────
                         val userAuth = UserAuth(
-                            uuid     = uid,
-                            name     = userName,
-                            email    = finalEmail,
+                            uuid = uid,
+                            name = userName,
+                            email = finalEmail,
                             password = "",
                             photoUri = user.photoUrl   // android.net.Uri directo do FirebaseUser
                         )
@@ -84,12 +75,10 @@ class FireDataSource : LoginDataSource {
                     }
                     .addOnFailureListener { exception ->
                         Log.e(TAG, "Erro ao salvar no Firestore: ${exception.message}")
-                        // Auth foi bem-sucedida — devolve UserAuth mesmo com erro no Firestore
-                        // para não bloquear o utilizador, mas notifica o erro
                         val userAuth = UserAuth(
-                            uuid     = uid,
-                            name     = userName,
-                            email    = finalEmail,
+                            uuid = uid,
+                            name = userName,
+                            email = finalEmail,
                             password = "",
                             photoUri = user.photoUrl
                         )
@@ -102,42 +91,4 @@ class FireDataSource : LoginDataSource {
             }
     }
 
-
-    private fun saveUserToFirestore(
-        uid: String,
-        userName: String,
-        userEmail: String,
-        callback: LoginCallback
-    ) {
-        val userData = mapOf(
-            "uid"   to uid,
-            "name"  to userName,
-            "email" to userEmail
-        )
-
-        firestore.collection("users")
-            .document(uid)
-            .set(userData, SetOptions.merge())
-            .addOnSuccessListener {
-                Log.d(TAG, "Utilizador salvo no Firestore: uid=$uid")
-
-                val userAuth = UserAuth(
-                    uuid     = uid,
-                    name     = userName,
-                    email    = userEmail,
-                    password = "",
-                    photoUri = auth.currentUser?.photoUrl
-                )
-                callback.onSuccess(userAuth)
-            }
-            .addOnFailureListener { exception ->
-                Log.e(TAG, "Erro ao salvar no Firestore: ${exception.message}")
-                // Autenticação já foi feita com sucesso — não bloqueia o login
-                // mas notifica o erro para o Presenter decidir
-                callback.onFailure(exception.message ?: "Erro ao salvar dados do utilizador")
-            }
-            .addOnCompleteListener {
-                callback.onComplete()
-            }
-    }
 }

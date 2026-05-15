@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
-import com.rogger.bp.R
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.databinding.FragmentHomeBinding
 import com.rogger.bp.ui.home.ContractHome
 import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.data.HomeDataSource
@@ -20,7 +20,8 @@ import com.rogger.bp.ui.home.presentation.HomePresenter
  * Hora: 22:36
  */
 class HomeFragment : Fragment(), ContractHome.View {
-
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
     override val presenter: ContractHome.Presenter by lazy {
         HomePresenter(
             view = this,
@@ -32,11 +33,17 @@ class HomeFragment : Fragment(), ContractHome.View {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_home, container, false)
+    ): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         presenter.fetchProducts()
+        binding.fab.setOnClickListener {
+
+        }
     }
 
     override fun onDestroyView() {
@@ -53,13 +60,11 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProducts(products: List<PostProduct>) {
-        // Este método pode ser usado para actualizar um adapter dedicado MVP
-        // ou notificar o fragment pai, consoante a estratégia de migração.
+
     }
 
     override fun showEmpty(isEmpty: Boolean) {
-        // Alterna visibilidade do estado vazio (ViewFlipper).
-        // Implementação específica depende do binding usado (ver HomeFragment.java).
+
     }
 
     override fun onSuccess(message: String) {

@@ -40,24 +40,14 @@ class LoginActivity : BaseActivity(), Login.View {
         private const val SLIDESHOW_DELAY = 2000L
     }
 
-    // ── MVP ───────────────────────────────────────────────────────────────
-
     override lateinit var presenter: Login.Presenter
-
-    // ── ViewBinding ───────────────────────────────────────────────────────
-
     private lateinit var binding: ActivityLoginBinding
-
-    // ── Google Sign-In ────────────────────────────────────────────────────
-
     private lateinit var googleSignInClient: GoogleSignInClient
 
     private val signInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             handleGoogleResult(result)
         }
-
-    // ── Slideshow ─────────────────────────────────────────────────────────
 
     private var currentIndex = 0
     private val imageArray = intArrayOf(
@@ -75,10 +65,6 @@ class LoginActivity : BaseActivity(), Login.View {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────────────────────────────
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -89,10 +75,8 @@ class LoginActivity : BaseActivity(), Login.View {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.navigationBarColor = Color.TRANSPARENT
 
-        // ── MVP ───────────────────────────────────────────────────────────
         presenter = LoginPresenter(this, DependencyInjector.loginRepository())
 
-        // ── Sessão activa → pula login ────────────────────────────────────
         // ✅ Correção: Ambos SharedPreferences e Firebase devem confirmar a sessão
         val isLoggedPref = SharedPreferencesManager.getLoginState(this, "state")
         val isLoggedFirebase = presenter.checkSession()
@@ -105,7 +89,6 @@ class LoginActivity : BaseActivity(), Login.View {
             return
         } else if (!isLoggedFirebase && isLoggedPref) {
             // Caso inconsistente: Prefs diz logado, mas Firebase não. Limpa as Prefs.
-            Log.w("LOgin_", "Inconsistência: Prefs logado mas Firebase não. Limpando dados.")
             SharedPreferencesManager.setLoginState(this, "state", false)
             SharedPreferencesManager.clearUserInfo(this)
         }
@@ -131,10 +114,6 @@ class LoginActivity : BaseActivity(), Login.View {
         super.onDestroy()
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Google Sign-In
-    // ─────────────────────────────────────────────────────────────────────
-
     override fun startGoogleSignIn() {
         showProgress(true)
         signInLauncher.launch(googleSignInClient.signInIntent)
@@ -154,18 +133,13 @@ class LoginActivity : BaseActivity(), Login.View {
             }
 
             Log.d(TAG, "idToken obtido — autenticando no Firebase")
-            presenter.loginWithGoogle(idToken)
-
+            presenter.loginWithGoogle(idToken, account.email.toString())
         } catch (e: ApiException) {
             showProgress(false)
             Log.w(TAG, "Google Sign-In falhou: ${e.statusCode}", e)
             onUserUnauthenticated("Falha no login com Google (código ${e.statusCode})")
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Slideshow
-    // ─────────────────────────────────────────────────────────────────────
 
     private fun startSlideshow() {
         handler.postDelayed(slideshowRunnable, SLIDESHOW_DELAY)
@@ -183,26 +157,11 @@ class LoginActivity : BaseActivity(), Login.View {
             })
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Login.View
-    // ─────────────────────────────────────────────────────────────────────
-
     override fun showProgress(enabled: Boolean) {
         binding.progressbarLogin.visibility = if (enabled) View.VISIBLE else View.INVISIBLE
         binding.loginWithGmail.isEnabled    = !enabled
     }
 
-    /**
-     * Recebe [UserAuth] completo com uid, name, email e photoUri.
-     *
-     * Salva TUDO no [SharedPreferencesManager]:
-     *  - uid         → "userUid"
-     *  - name        → "nameUser"
-     *  - photoUri    → "profile_image_url"   ← foto do Google
-     *  - email       → "email_"
-     *
-     * Depois marca o estado de login e abre [MainActivity].
-     */
     override fun onUserAuthenticated(userAuth: UserAuth) {
         SharedPreferencesManager.saveUserInfo(
             this,
@@ -211,8 +170,6 @@ class LoginActivity : BaseActivity(), Login.View {
             userAuth.photoUri?.toString() ?: "",   // foto do Google — nunca null aqui
             userAuth.email
         )
-        SharedPreferencesManager.setLoginState(this, "state", true)
-
         Log.d(TAG, "SharedPreferences salvo — uid=${userAuth.uuid} email=${userAuth.email}")
         openMainActivity()
     }
@@ -220,6 +177,7 @@ class LoginActivity : BaseActivity(), Login.View {
     override fun onUserUnauthenticated(message: String) {
         showProgress(false)
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        SharedPreferencesManager.clearUserInfo(this)
     }
 
     private fun openMainActivity() {
