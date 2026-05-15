@@ -93,10 +93,21 @@ class LoginActivity : BaseActivity(), Login.View {
         presenter = LoginPresenter(this, DependencyInjector.loginRepository())
 
         // ── Sessão activa → pula login ────────────────────────────────────
-        if (SharedPreferencesManager.getLoginState(this, "state") || presenter.checkSession()) {
-            Log.d("LOgin_","state: "+SharedPreferencesManager.getLoginState(this, "state")+"presenter "+presenter.checkSession())
+        // ✅ Correção: Ambos SharedPreferences e Firebase devem confirmar a sessão
+        val isLoggedPref = SharedPreferencesManager.getLoginState(this, "state")
+        val isLoggedFirebase = presenter.checkSession()
+        
+        Log.d("LOgin_", "state (Prefs): $isLoggedPref | presenter (Firebase): $isLoggedFirebase")
+        
+        if (isLoggedPref && isLoggedFirebase) {
+            Log.d("LOgin_", "Sessão válida detectada. Abrindo MainActivity.")
             openMainActivity()
             return
+        } else if (!isLoggedFirebase && isLoggedPref) {
+            // Caso inconsistente: Prefs diz logado, mas Firebase não. Limpa as Prefs.
+            Log.w("LOgin_", "Inconsistência: Prefs logado mas Firebase não. Limpando dados.")
+            SharedPreferencesManager.setLoginState(this, "state", false)
+            SharedPreferencesManager.clearUserInfo(this)
         }
 
         // ── Google Sign-In client ─────────────────────────────────────────
