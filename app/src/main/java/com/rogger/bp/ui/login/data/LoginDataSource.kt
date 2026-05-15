@@ -6,5 +6,5 @@ package com.rogger.bp.ui.login.data
  * Hora: 22:41
  */
 interface LoginDataSource {
- fun login(email : String, name : String, callback: LoginCallback)
+ fun login(idTokesn : String, email : String, callback: LoginCallback)
 }

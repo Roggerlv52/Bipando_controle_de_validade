@@ -11,7 +11,7 @@ import com.rogger.bp.ui.base.BaseView
  */
 interface Login {
     interface Presenter : BasePresenter {
-        fun loginWithGoogle(idToken: String)
+        fun loginWithGoogle(idToken: String,email : String)
         fun checkSession(): Boolean
     }
 

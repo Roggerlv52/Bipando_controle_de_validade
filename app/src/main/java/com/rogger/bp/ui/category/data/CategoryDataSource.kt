@@ -7,11 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.rogger.bp.data.model.PostCategory
 
 class CategoryDataSource : PostCategoryDataSource {
-
     private val TAG = "CategoryDataSource"
-
     private val db = FirebaseFirestore.getInstance()
-
     private val auth = FirebaseAuth.getInstance()
 
     /**

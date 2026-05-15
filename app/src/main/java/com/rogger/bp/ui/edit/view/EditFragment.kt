@@ -74,7 +74,7 @@ class EditFragment : Fragment(), ContractEdit.View {
         val repository = DependencyInjector.registerEditRepository()
         presenter = EditPresenter(this, repository)
 
-            ViewModelProvider(requireActivity()).get(CategoriaViewModel::class.java)
+            //ViewModelProvider(requireActivity()).get(CategoriaViewModel::class.java)
         dataViewModel = ViewModelProvider(requireActivity()).get(DataViewModel::class.java)
 
         binding.imageEdit.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
