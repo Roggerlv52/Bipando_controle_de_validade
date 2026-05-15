@@ -56,10 +56,13 @@ class FireDataSource : LoginDataSource {
                 Log.d(TAG, "Firebase Auth OK — uid=$uid name=$userName email=$userEmail")
 
                 // ── Persiste dados no Firestore ───────────────────────────
-                val firestoreData = mapOf(
+                // ✅ Verificação: Se o e-mail do FirebaseUser for vazio, tenta usar o que veio do Google se disponível
+                val finalEmail = if (userEmail.isNotBlank()) userEmail else email
+                
+                val firestoreData = hashMapOf(
                     "uid"      to uid,
                     "name"     to userName,
-                    "email"    to userEmail,
+                    "email"    to finalEmail,
                     "photoUrl" to photoUrl
                 )
 
@@ -67,13 +70,13 @@ class FireDataSource : LoginDataSource {
                     .document(uid)
                     .set(firestoreData, SetOptions.merge())
                     .addOnSuccessListener {
-                        Log.d(TAG, "Dados salvos no Firestore: uid=$uid")
+                        Log.d(TAG, "Dados salvos no Firestore: uid=$uid email=$finalEmail")
 
                         // ── Devolve UserAuth completo com photoUri ────────
                         val userAuth = UserAuth(
                             uuid     = uid,
                             name     = userName,
-                            email    = userEmail,
+                            email    = finalEmail,
                             password = "",
                             photoUri = user.photoUrl   // android.net.Uri directo do FirebaseUser
                         )
@@ -86,7 +89,7 @@ class FireDataSource : LoginDataSource {
                         val userAuth = UserAuth(
                             uuid     = uid,
                             name     = userName,
-                            email    = userEmail,
+                            email    = finalEmail,
                             password = "",
                             photoUri = user.photoUrl
                         )
