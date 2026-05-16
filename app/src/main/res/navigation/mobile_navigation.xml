@@ -16,6 +16,12 @@
         <action
             android:id="@+id/action_nav_home_to_nav_show_fragment"
             app:destination="@id/nav_show_fragment" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_barcode_scan_fragment"
+            app:destination="@id/nav_barcode_scan_fragment" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_add_fragment"
+            app:destination="@id/nav_add_fragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_search"
@@ -35,21 +41,9 @@
         android:label="@string/edit"
         tools:layout="@layout/fragment_edit">
         <argument
-            android:name="productName"
-            app:argType="string" />
-        <argument
-            android:name="barcode"
-            app:argType="string" />
-        <argument
-            android:name="imageUrl"
-            app:argType="string" />
-        <argument
-            android:name="data"
-            app:argType="string" />
-        <argument
-            android:name="note"
-            app:argType="string" />
-
+            android:name="id"
+            android:defaultValue="-1"
+            app:argType="integer" />
         <action
             android:id="@+id/action_editFragment_to_galerryFragment"
             app:destination="@id/nav_gallery_fragment" />

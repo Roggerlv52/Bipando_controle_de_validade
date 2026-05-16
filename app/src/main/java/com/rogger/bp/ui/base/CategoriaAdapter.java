@@ -8,19 +8,20 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
 
 public class CategoriaAdapter extends RecyclerView.Adapter<CategoriaAdapter.ViewHolder> {
 
     public interface OnItemClick {
-        void onClick(Categoria categoria);
+        void onClick(PostCategory categoria);
     }
 
-    private List<Categoria> lista;
+    private List<PostCategory> lista;
     private OnItemClick listener;
 
-    public CategoriaAdapter(List<Categoria> lista, OnItemClick listener) {
+    public CategoriaAdapter(List<PostCategory> lista, OnItemClick listener) {
         this.lista = lista;
         this.listener = listener;
     }
@@ -38,8 +39,8 @@ public class CategoriaAdapter extends RecyclerView.Adapter<CategoriaAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Categoria categoria = lista.get(position);
-        holder.textView.setText(categoria.getNome());
+        PostCategory categoria = lista.get(position);
+        holder.textView.setText(categoria.getName());
 
         holder.textView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(categoria);

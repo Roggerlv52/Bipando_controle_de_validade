@@ -21,7 +21,7 @@ import com.rogger.bp.R;
 import com.rogger.bp.data.dao.CategoriaDao;
 import com.rogger.bp.data.database.BpdDatabase;
 import com.rogger.bp.data.model.Categoria;
-import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.PostProduct;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.home.OnItemClickListener;
 
@@ -35,11 +35,10 @@ import java.util.Map;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     private OnItemClickListener mListener;
-    private List<Produto> dados;
+    private List<PostProduct> dados;
     private final Context context;
     private int diasLimiteAmarelo;
-    
-    // Cache de categorias para evitar consultas repetitivas ao banco
+
     private final Map<Integer, String> categoriaMap = new HashMap<>();
     private final CategoriaDao categoriaDao;
 
@@ -82,12 +81,12 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void setDados(List<Produto> dados) {
+    public void setDados(List<PostProduct> dados) {
         this.dados = dados;
         notifyDataSetChanged();
     }
 
-    public List<Produto> getDados() {
+    public List<PostProduct> getDados() {
         return dados;
     }
 
@@ -102,7 +101,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         if (dados == null || position >= dados.size()) return;
 
-        Produto modelo = dados.get(position);
+        PostProduct modelo = dados.get(position);
 
         // 1. Cálculo de dias usando a nova lógica de Utils
         long diasRestantes = Utils.calcDifferencInDays(modelo.getTimestamp());
@@ -127,22 +126,22 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         }
 
         // 4. Preenchimento de textos
-        holder.txtTitle.setText(modelo.getNome() != null ? modelo.getNome() : "");
+        holder.txtTitle.setText(modelo.getName() != null ? modelo.getName() : "");
         
         // 🔑 NOME DA CATEGORIA: Tenta pegar do modelo, se vazio tenta do cache local
-        String nomeCat = modelo.getNomeCategoria();
+        String nomeCat = modelo.getCategoryName();
         if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId() != 0) {
             nomeCat = categoriaMap.get(modelo.getCategoryId());
-            Log.d("AdpterHome","categoria "+ modelo.getNomeCategoria());
+            Log.d("AdpterHome","categoria "+ modelo.getCategoryName());
         }
         holder.txtSubTitle.setText(nomeCat != null ? nomeCat : "");
         
-        holder.txtBarcode.setText(modelo.getCodigoBarras() != null ? modelo.getCodigoBarras() : "");
+        holder.txtBarcode.setText(modelo.getBarcode() != null ? modelo.getBarcode() : "");
 
         // 5. Carregamento da imagem
         Glide.with(context)
                 .asBitmap()
-                .load(modelo.getImagem())
+                .load(modelo.getImageUri())
                 .override(200, 200)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
@@ -152,8 +151,8 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         
         // 6. Clique na imagem
         holder.imageView.setOnClickListener(v -> {
-            if (mListener != null && modelo.getImagem() != null) {
-                mListener.onImageClick(modelo.getImagem());
+            if (mListener != null && modelo.getImageUri() != null) {
+                mListener.onImageClick(modelo.getImageUri());
             }
         });
     }

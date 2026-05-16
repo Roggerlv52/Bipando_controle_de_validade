@@ -9,23 +9,14 @@ import com.rogger.bp.data.model.PostProduct
  */
 class EditRepository(private val dataSource: PostEditDataSource) {
 
-    /**
-     * Actualiza os campos do [produto] no Firestore.
-     */
     fun update(produto: PostProduct, callback: EditCallback) {
         dataSource.updateProduct(produto, callback)
     }
 
-    /**
-     * Soft-delete: move [produto] para a lixeira (deleted=true).
-     */
     fun delete(produto: PostProduct, callback: EditCallback) {
         dataSource.deleteProduct(produto, callback)
     }
 
-    /**
-     * Busca um produto pelo [productId] (id local Room) no Firestore.
-     */
     fun fetch(productId: Int, callback: EditCallback) {
         dataSource.fetchProduct(productId, callback)
     }

@@ -1,6 +1,9 @@
 package com.rogger.bp.ui.edit.presentation
 
+import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.ui.category.data.CategoryRepository
+import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.ui.edit.ContractEdit
 import com.rogger.bp.ui.edit.data.EditCallback
 import com.rogger.bp.ui.edit.data.EditRepository
@@ -12,7 +15,8 @@ import com.rogger.bp.ui.edit.data.EditRepository
  */
 class EditPresenter(
     private var view: ContractEdit.View?,
-    private val repository: EditRepository
+    private val repository: EditRepository,
+    private val categoryRepository: CategoryRepository
 ) : ContractEdit.Presenter {
 
     companion object {
@@ -31,34 +35,28 @@ class EditPresenter(
         view?.showProgress(true)
 
         repository.fetch(productId, object : EditCallback {
-
             override fun onSuccess(produto: PostProduct) {
                 view?.bindProduct(produto)
             }
-
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
-
             override fun onComplete() {
                 view?.showProgress(false)
             }
         })
     }
 
-    // ── 2. Guardar produto (update) ───────────────────────────────────────
+    // ── 2. Guardar produto ────────────────────────────────────────────────
 
     override fun saveProduct(produto: PostProduct) {
-
-        // Validação do nome
-        val nome = produto.name?.trim() ?: ""
+        val nome = produto.name.trim()
         when {
-            nome.isEmpty()       -> { view?.onError("Informe o nome do produto"); return }
+            nome.isEmpty()         -> { view?.onError("Informe o nome do produto"); return }
             nome.length < NOME_MIN -> { view?.onError("Nome deve ter pelo menos $NOME_MIN caracteres"); return }
             nome.length > NOME_MAX -> { view?.onError("Nome deve ter no máximo $NOME_MAX caracteres"); return }
         }
 
-        // Validação da data
         if (produto.timestamp <= 0L) {
             view?.onError("Selecione uma data de validade")
             return
@@ -67,41 +65,50 @@ class EditPresenter(
         view?.showProgress(true)
 
         repository.update(produto, object : EditCallback {
-
             override fun onSuccess(p: PostProduct) {
                 view?.onSuccess("\"${p.name}\" actualizado com sucesso")
                 view?.navigateBack()
             }
-
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
-
             override fun onComplete() {
                 view?.showProgress(false)
             }
         })
     }
 
-    // ── 3. Eliminar produto (soft-delete) ─────────────────────────────────
+    // ── 3. Soft-delete ────────────────────────────────────────────────────
 
     override fun deleteProduct(produto: PostProduct) {
         view?.showProgress(true)
 
         repository.delete(produto, object : EditCallback {
-
             override fun onSuccess(p: PostProduct) {
                 view?.onSuccess("\"${p.name}\" movido para a lixeira")
                 view?.navigateBack()
             }
-
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
-
             override fun onComplete() {
                 view?.showProgress(false)
             }
+        })
+    }
+
+    // ── 4. Buscar categorias para o Spinner ───────────────────────────────
+
+    override fun fetchCategories() {
+        categoryRepository.fetchAll(object : FetchCategoriesCallback {
+            override fun onSuccess(categories: List<PostCategory>) {
+                view?.showCategories(categories)
+            }
+            override fun onFailure(message: String) {
+                // Entrega lista vazia — Spinner mostrará só o placeholder
+                view?.showCategories(emptyList())
+            }
+            override fun onComplete() { /* silencioso */ }
         })
     }
 

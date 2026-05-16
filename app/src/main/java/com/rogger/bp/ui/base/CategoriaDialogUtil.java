@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class CategoriaDialogUtil {
 
     public static void mostrarDialogo(
             Context context,
-            List<Categoria> categorias,
+            List<PostCategory> categorias,
             CategoriaCallback callback
     ) {
 

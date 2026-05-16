@@ -12,46 +12,37 @@ import com.rogger.bp.data.model.PostProduct
  * Hora: 19:54
  */
 class EditDataSource : PostEditDataSource {
+
     private val TAG = "EditDataSource"
-    private val db = FirebaseFirestore.getInstance()
+    private val db   = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    private fun getUsername(): String? {
-        val user = auth.currentUser ?: return null
-        val display = user.displayName
-        if (!display.isNullOrEmpty()) {
-            return display.trim().lowercase().replace(" ", "_")
-        }
-        return user.email?.substringBefore("@")?.lowercase()
-    }
+    private fun getUserId(): String? = auth.currentUser?.uid
 
     /**
-     * Referência: users/{username}/produtos
+     * Referência: users/{uid}/products
+     * Igual ao HomeDataSource — mesmo utilizador, mesma colecção.
      */
-    private fun produtosRef(): CollectionReference? {
-        val username = getUsername() ?: return null
+    private fun productsRef(): CollectionReference? {
+        val uid = getUserId() ?: return null
         return db.collection("users")
-            .document(username)
-            .collection("produtos")
+            .document(uid)
+            .collection("products")
     }
 
     // ── 1. Actualizar produto ──────────────────────────────────────────────
 
     override fun updateProduct(produto: PostProduct, callback: EditCallback) {
-
-        val ref = produtosRef()
-
+        val ref = productsRef()
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
             return
         }
 
-        // Localiza o documento pelo id local (Room)
-        ref.whereEqualTo("id", produto.id)
+        ref.whereEqualTo("uid", produto.uuid)
             .get()
             .addOnSuccessListener { snapshot ->
-
                 if (snapshot.isEmpty) {
                     callback.onFailure("Produto não encontrado no Firestore")
                     callback.onComplete()
@@ -60,30 +51,29 @@ class EditDataSource : PostEditDataSource {
 
                 val docRef = snapshot.documents.first().reference
 
+                // Chaves consistentes com HomeDataSource e FireRegisterDataSource
                 val updates = mapOf(
-                    "name" to produto.name,
-                    "note" to (produto.note ?: ""),
-                    "timestamp" to produto.timestamp,
+                    "name"       to produto.name,
+                    "note"       to produto.note,
+                    "timestamp"  to produto.timestamp,
                     "categoryId" to produto.categoryId,
-                    "image" to (produto.imageUri ?: ""),
-                    "barcode" to (produto.barcode ?: "")
+                    "imageUri"   to produto.imageUri,
+                    "barcode"    to produto.barcode
                 )
 
                 docRef.update(updates)
                     .addOnSuccessListener {
-                        Log.d(TAG, "Produto actualizado: ${produto.id}")
+                        Log.d(TAG, "Produto actualizado: ${produto.uuid}")
                         callback.onSuccess(produto)
                     }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Erro ao actualizar: ${exception.message}")
-                        callback.onFailure(exception.message ?: "Erro ao actualizar produto")
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Erro ao actualizar: ${e.message}")
+                        callback.onFailure(e.message ?: "Erro ao actualizar produto")
                     }
-                    .addOnCompleteListener {
-                        callback.onComplete()
-                    }
+                    .addOnCompleteListener { callback.onComplete() }
             }
-            .addOnFailureListener { exception ->
-                callback.onFailure(exception.message ?: "Erro ao buscar produto")
+            .addOnFailureListener { e ->
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
                 callback.onComplete()
             }
     }
@@ -91,94 +81,84 @@ class EditDataSource : PostEditDataSource {
     // ── 2. Soft-delete ────────────────────────────────────────────────────
 
     override fun deleteProduct(produto: PostProduct, callback: EditCallback) {
-
-        val ref = produtosRef()
-
+        val ref = productsRef()
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
             return
         }
 
-        ref.whereEqualTo("id", produto.id)
+        ref.whereEqualTo("uid", produto.uuid)
             .get()
             .addOnSuccessListener { snapshot ->
-
                 if (snapshot.isEmpty) {
-                    // Já não existe — considera sucesso silencioso
                     callback.onSuccess(produto)
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
 
-                val docRef = snapshot.documents.first().reference
-
-                docRef.update(
-                    mapOf(
-                        "deleted" to true,
+                snapshot.documents.first().reference
+                    .update(mapOf(
+                        "deleted"   to true,
                         "deletedAt" to System.currentTimeMillis()
-                    )
-                )
+                    ))
                     .addOnSuccessListener {
-                        Log.d(TAG, "Produto movido para lixeira: ${produto.id}")
+                        Log.d(TAG, "Produto movido para lixeira: ${produto.uuid}")
                         callback.onSuccess(produto)
                     }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Erro ao eliminar: ${exception.message}")
-                        callback.onFailure(exception.message ?: "Erro ao eliminar produto")
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Erro ao eliminar: ${e.message}")
+                        callback.onFailure(e.message ?: "Erro ao eliminar produto")
                     }
-                    .addOnCompleteListener {
-                        callback.onComplete()
-                    }
+                    .addOnCompleteListener { callback.onComplete() }
             }
-            .addOnFailureListener { exception ->
-                callback.onFailure(exception.message ?: "Erro ao buscar produto")
+            .addOnFailureListener { e ->
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
                 callback.onComplete()
             }
     }
 
-    // ── 3. Buscar produto por id local ────────────────────────────────────
+    // ── 3. Buscar produto por uuid ─────────────────────────────────────────
 
     override fun fetchProduct(productId: Int, callback: EditCallback) {
-
-        val ref = produtosRef()
-
+        val ref = productsRef()
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
             return
         }
 
+        // Busca pelo id local (Room) — mesma estratégia do HomeDataSource
         ref.whereEqualTo("id", productId)
             .get()
             .addOnSuccessListener { snapshot ->
-
                 if (snapshot.isEmpty) {
                     callback.onFailure("Produto não encontrado")
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
 
-                val doc = snapshot.documents.first()
-                val data = doc.data ?: run {
+                val data = snapshot.documents.first().data ?: run {
                     callback.onFailure("Documento inválido")
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
 
                 try {
-                    val produto = PostProduct().apply {
-                        id = (data["id"] as? Long)?.toInt() ?: productId
-                        userId = data["userId"] as? String ?: ""
-                        name = data["nome"] as? String ?: ""
-                        barcode = data["codigoBarras"] as? String ?: ""
-                        categoryId = (data["categoriaId"] as? Long)?.toInt() ?: 0
-                        timestamp = data["timestamp"] as? Long ?: 0L
-                        note = data["anotacoes"] as? String ?: ""
-                        imageUri = data["imagem"] as? String ?: ""
-                        deleted = data["deleted"] as? Boolean ?: false
-                        deletedAt = data["deletedAt"] as? Long
-                    }
+                    // Chaves iguais às gravadas pelo FireRegisterDataSource / HomeDataSource
+                    val produto = PostProduct(
+                        id         = (data["id"]         as? Long)?.toInt() ?: productId,
+                        userId     = data["userId"]      as? String ?: "",
+                        uuid       = data["uid"]         as? String ?: "",
+                        name       = data["name"]        as? String ?: "",
+                        note       = data["note"]        as? String ?: "",
+                        barcode    = data["barcode"]     as? String ?: "",
+                        categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
+                        timestamp  = data["timestamp"]   as? Long ?: 0L,
+                        imageUri   = data["imageUri"]    as? String ?: "",
+                        deleted    = data["deleted"]     as? Boolean ?: false,
+                        deletedAt  = data["deletedAt"]   as? Long
+                    )
 
                     Log.d(TAG, "Produto carregado: ${produto.name}")
                     callback.onSuccess(produto)
@@ -188,11 +168,9 @@ class EditDataSource : PostEditDataSource {
                     callback.onFailure("Erro ao processar dados do produto")
                 }
             }
-            .addOnFailureListener { exception ->
-                callback.onFailure(exception.message ?: "Erro ao buscar produto")
+            .addOnFailureListener { e ->
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
             }
-            .addOnCompleteListener {
-                callback.onComplete()
-            }
+            .addOnCompleteListener { callback.onComplete() }
     }
 }

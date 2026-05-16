@@ -80,15 +80,11 @@ class LoginActivity : BaseActivity(), Login.View {
         // ✅ Correção: Ambos SharedPreferences e Firebase devem confirmar a sessão
         val isLoggedPref = SharedPreferencesManager.getLoginState(this, "state")
         val isLoggedFirebase = presenter.checkSession()
-        
-        Log.d("LOgin_", "state (Prefs): $isLoggedPref | presenter (Firebase): $isLoggedFirebase")
-        
+
         if (isLoggedPref && isLoggedFirebase) {
-            Log.d("LOgin_", "Sessão válida detectada. Abrindo MainActivity.")
             openMainActivity()
             return
         } else if (!isLoggedFirebase && isLoggedPref) {
-            // Caso inconsistente: Prefs diz logado, mas Firebase não. Limpa as Prefs.
             SharedPreferencesManager.setLoginState(this, "state", false)
             SharedPreferencesManager.clearUserInfo(this)
         }
@@ -136,7 +132,6 @@ class LoginActivity : BaseActivity(), Login.View {
             presenter.loginWithGoogle(idToken, account.email.toString())
         } catch (e: ApiException) {
             showProgress(false)
-            Log.w(TAG, "Google Sign-In falhou: ${e.statusCode}", e)
             onUserUnauthenticated("Falha no login com Google (código ${e.statusCode})")
         }
     }
@@ -159,7 +154,7 @@ class LoginActivity : BaseActivity(), Login.View {
 
     override fun showProgress(enabled: Boolean) {
         binding.progressbarLogin.visibility = if (enabled) View.VISIBLE else View.INVISIBLE
-        binding.loginWithGmail.isEnabled    = !enabled
+        binding.loginWithGmail.isEnabled = !enabled
     }
 
     override fun onUserAuthenticated(userAuth: UserAuth) {
@@ -170,7 +165,7 @@ class LoginActivity : BaseActivity(), Login.View {
             userAuth.photoUri?.toString() ?: "",   // foto do Google — nunca null aqui
             userAuth.email
         )
-        Log.d(TAG, "SharedPreferences salvo — uid=${userAuth.uuid} email=${userAuth.email}")
+        SharedPreferencesManager.setLoginState(this, "state", true)
         openMainActivity()
     }
 
