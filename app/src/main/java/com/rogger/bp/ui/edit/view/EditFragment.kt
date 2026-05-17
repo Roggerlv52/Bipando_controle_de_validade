@@ -208,8 +208,8 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     private fun loadProductFromArgs() {
-        val id = arguments?.getInt("id", -1) ?: -1
-        if (id == -1) {
+        val id = arguments?.getString("uuid")
+        if (id == null) {
             onError("Produto inválido")
             return
         }

@@ -10,6 +10,9 @@
         android:name="com.rogger.bp.ui.home.view.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home">
+        <argument
+            android:name="uuid"
+            app:argType="string" />
         <action
             android:id="@+id/action_nav_home_to_nav_edit_fragment"
             app:destination="@id/nav_edit_fragment" />
@@ -41,9 +44,8 @@
         android:label="@string/edit"
         tools:layout="@layout/fragment_edit">
         <argument
-            android:name="id"
-            android:defaultValue="-1"
-            app:argType="integer" />
+            android:name="uuid"
+            app:argType="string" />
         <action
             android:id="@+id/action_editFragment_to_galerryFragment"
             app:destination="@id/nav_gallery_fragment" />

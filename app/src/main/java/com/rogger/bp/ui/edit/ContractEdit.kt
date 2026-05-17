@@ -12,7 +12,7 @@ import com.rogger.bp.ui.base.BaseView
  */
 interface ContractEdit {
     interface Presenter : BasePresenter {
-        fun loadProduct(productId: Int)
+        fun loadProduct(productoUuid: String)
         fun saveProduct(produto: PostProduct)
         fun deleteProduct(produto: PostProduct)
         fun fetchCategories()

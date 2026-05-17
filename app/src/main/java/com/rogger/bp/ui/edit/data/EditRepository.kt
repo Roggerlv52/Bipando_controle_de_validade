@@ -16,8 +16,7 @@ class EditRepository(private val dataSource: PostEditDataSource) {
     fun delete(produto: PostProduct, callback: EditCallback) {
         dataSource.deleteProduct(produto, callback)
     }
-
-    fun fetch(productId: Int, callback: EditCallback) {
-        dataSource.fetchProduct(productId, callback)
+    fun fetchByUuid(productId: String, callback: EditCallback) {
+        dataSource.fetchProductByUuid(productId, callback)
     }
 }

@@ -26,15 +26,16 @@ class EditPresenter(
 
     // ── 1. Carregar produto ───────────────────────────────────────────────
 
-    override fun loadProduct(productId: Int) {
-        if (productId <= 0) {
-            view?.onError("ID de produto inválido")
+    override fun loadProduct(productUuid: String) {
+        if (productUuid.isBlank()) {
+            view?.onError("Identificador de produto inválido")
             return
         }
 
         view?.showProgress(true)
 
-        repository.fetch(productId, object : EditCallback {
+        // ✅ Alteração: Chamando o repositório com o UUID
+        repository.fetchByUuid(productUuid, object : EditCallback {
             override fun onSuccess(produto: PostProduct) {
                 view?.bindProduct(produto)
             }

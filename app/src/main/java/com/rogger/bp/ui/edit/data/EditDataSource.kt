@@ -118,7 +118,7 @@ class EditDataSource : PostEditDataSource {
             }
     }
 
-    // ── 3. Buscar produto por uuid ─────────────────────────────────────────
+    // ── 3. Buscar produto por ID (Legado/Local) ───────────────────────────
 
     override fun fetchProduct(productId: Int, callback: EditCallback) {
         val ref = productsRef()
@@ -128,7 +128,6 @@ class EditDataSource : PostEditDataSource {
             return
         }
 
-        // Busca pelo id local (Room) — mesma estratégia do HomeDataSource
         ref.whereEqualTo("id", productId)
             .get()
             .addOnSuccessListener { snapshot ->
@@ -137,40 +136,72 @@ class EditDataSource : PostEditDataSource {
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
-
-                val data = snapshot.documents.first().data ?: run {
-                    callback.onFailure("Documento inválido")
-                    callback.onComplete()
-                    return@addOnSuccessListener
-                }
-
-                try {
-                    // Chaves iguais às gravadas pelo FireRegisterDataSource / HomeDataSource
-                    val produto = PostProduct(
-                        id         = (data["id"]         as? Long)?.toInt() ?: productId,
-                        userId     = data["userId"]      as? String ?: "",
-                        uuid       = data["uid"]         as? String ?: "",
-                        name       = data["name"]        as? String ?: "",
-                        note       = data["note"]        as? String ?: "",
-                        barcode    = data["barcode"]     as? String ?: "",
-                        categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
-                        timestamp  = data["timestamp"]   as? Long ?: 0L,
-                        imageUri   = data["imageUri"]    as? String ?: "",
-                        deleted    = data["deleted"]     as? Boolean ?: false,
-                        deletedAt  = data["deletedAt"]   as? Long
-                    )
-
-                    Log.d(TAG, "Produto carregado: ${produto.name}")
-                    callback.onSuccess(produto)
-
-                } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao mapear produto: ${e.message}")
-                    callback.onFailure("Erro ao processar dados do produto")
-                }
+                processSnapshot(snapshot, callback, productId)
             }
             .addOnFailureListener { e ->
                 callback.onFailure(e.message ?: "Erro ao buscar produto")
             }
             .addOnCompleteListener { callback.onComplete() }
+    }
+
+    // ── 4. Buscar produto por UUID (Firestore) ────────────────────────────
+
+    override fun fetchProductByUuid(uuid: String, callback: EditCallback) {
+        val ref = productsRef()
+        if (ref == null) {
+            callback.onFailure("Usuário não autenticado")
+            callback.onComplete()
+            return
+        }
+
+        ref.whereEqualTo("uid", uuid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.isEmpty) {
+                    callback.onFailure("Produto não encontrado")
+                    callback.onComplete()
+                    return@addOnSuccessListener
+                }
+                processSnapshot(snapshot, callback, 0)
+            }
+            .addOnFailureListener { e ->
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
+            }
+            .addOnCompleteListener { callback.onComplete() }
+    }
+
+    private fun processSnapshot(
+        snapshot: com.google.firebase.firestore.QuerySnapshot,
+        callback: EditCallback,
+        defaultId: Int
+    ) {
+        val data = snapshot.documents.first().data ?: run {
+            callback.onFailure("Documento inválido")
+            callback.onComplete()
+            return
+        }
+
+        try {
+            val produto = PostProduct(
+                id         = (data["id"]         as? Long)?.toInt() ?: defaultId,
+                userId     = data["userId"]      as? String ?: "",
+                uuid       = data["uid"]         as? String ?: "",
+                name       = data["name"]        as? String ?: "",
+                note       = data["note"]        as? String ?: "",
+                barcode    = data["barcode"]     as? String ?: "",
+                categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
+                timestamp  = data["timestamp"]   as? Long ?: 0L,
+                imageUri   = data["imageUri"]    as? String ?: "",
+                deleted    = data["deleted"]     as? Boolean ?: false,
+                deletedAt  = data["deletedAt"]   as? Long
+            )
+
+            Log.d(TAG, "Produto carregado: ${produto.name}")
+            callback.onSuccess(produto)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao mapear produto: ${e.message}")
+            callback.onFailure("Erro ao processar dados do produto")
+        }
     }
 }

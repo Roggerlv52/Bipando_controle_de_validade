@@ -88,7 +88,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                     data: List<PostProduct>
                 ) {
                     val produto = data.getOrNull(position) ?: return
-                    val bundle  = Bundle().apply { putInt("id", produto.id) }
+                    val bundle  = Bundle().apply { putString("uuid", produto.uuid) }
                     findNavController().navigate(
                         R.id.action_nav_home_to_nav_edit_fragment,
                         bundle

@@ -11,4 +11,6 @@ interface PostEditDataSource {
     fun updateProduct(produto: PostProduct, callback: EditCallback)
     fun deleteProduct(produto: PostProduct, callback: EditCallback)
     fun fetchProduct(productId: Int, callback: EditCallback)
+    // ✅ Adicionado: Busca por UUID para compatibilidade com Firestore
+    fun fetchProductByUuid(uuid: String, callback: EditCallback)
 }
