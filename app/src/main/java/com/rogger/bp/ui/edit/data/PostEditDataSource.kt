@@ -10,7 +10,14 @@ import com.rogger.bp.data.model.PostProduct
 interface PostEditDataSource {
     fun updateProduct(produto: PostProduct, callback: EditCallback)
     fun deleteProduct(produto: PostProduct, callback: EditCallback)
-    fun fetchProduct(productId: Int, callback: EditCallback)
-    // ✅ Adicionado: Busca por UUID para compatibilidade com Firestore
-    fun fetchProductByUuid(uuid: String, callback: EditCallback)
+    /**
+     * Busca o produto pelo [docId] — o documentId do Firestore.
+     *
+     * Usando o docId em vez do campo "uid" porque:
+     *  - O docId é SEMPRE único e nunca vazio (gerado pelo Firestore).
+     *  - O campo "uid" pode estar vazio em produtos criados antes da
+     *    implementação do uuid (ou se uuid não foi gerado no momento do add).
+     *  - O [HomeDataSource] expõe o docId via [PostProduct.uuid] com fallback.
+     */
+    fun fetchProductByDocId(docId: String, callback: EditCallback)
 }

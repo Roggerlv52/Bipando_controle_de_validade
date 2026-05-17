@@ -42,7 +42,7 @@ public class ImageBarcodeShow extends Fragment {
         txtBarcode = view.findViewById(R.id.txt_barcode_number);
 
         if (getArguments() != null) {
-            String barcode = getArguments().getString("barcode");
+            String barcode = getArguments().getString("edtF_barcode");
 
             if (barcode != null && !barcode.isEmpty()) {
                 txtBarcode.setText(barcode);

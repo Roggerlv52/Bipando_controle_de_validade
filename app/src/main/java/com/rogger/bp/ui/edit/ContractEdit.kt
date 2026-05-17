@@ -11,8 +11,13 @@ import com.rogger.bp.ui.base.BaseView
  * Hora: 19:50
  */
 interface ContractEdit {
+
     interface Presenter : BasePresenter {
-        fun loadProduct(productoUuid: String)
+        /**
+         * Carrega o produto pelo [docId] (documentId do Firestore).
+         * O [docId] é o [PostProduct.uuid] exposto pelo [HomeDataSource].
+         */
+        fun loadProduct(docId: String)
         fun saveProduct(produto: PostProduct)
         fun deleteProduct(produto: PostProduct)
         fun fetchCategories()

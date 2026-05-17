@@ -104,7 +104,7 @@
         android:name="com.rogger.bp.ui.edit.view.ImageBarcodeShow"
         android:label="Codigo de barras">
         <argument
-            android:name="barcode"
+            android:name="edtF_barcode"
             app:argType="string" />
     </fragment>
 

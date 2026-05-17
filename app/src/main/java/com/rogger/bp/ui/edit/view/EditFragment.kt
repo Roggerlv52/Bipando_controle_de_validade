@@ -9,6 +9,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.view.MenuProvider
@@ -48,25 +49,25 @@ import kotlin.collections.map
 class EditFragment : Fragment(), ContractEdit.View {
 
     override lateinit var presenter: ContractEdit.Presenter
+
     private var _binding: FragmentEditBinding? = null
     private val binding get() = _binding!!
+
     private var produto: PostProduct? = null
-
     private var timestamp: Long = 0L
-
     private var listaCategorias: List<PostCategory> = emptyList()
-
     private var spinnerPronto = false
-
     private var novaImagemFile: File? = null
 
     private val imagePickerUtil = ImagePikerUtil()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Lifecycle
+    // ─────────────────────────────────────────────────────────────────────
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEditBinding.inflate(inflater, container, false)
         return binding.root
@@ -75,10 +76,9 @@ class EditFragment : Fragment(), ContractEdit.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ── Injecção MVP ──────────────────────────────────────────────────
         presenter = EditPresenter(
-            view = this,
-            repository = EditRepository(EditDataSource()),
+            view               = this,
+            repository         = EditRepository(EditDataSource()),
             categoryRepository = CategoryRepository(CategoryDataSource())
         )
 
@@ -90,8 +90,10 @@ class EditFragment : Fragment(), ContractEdit.View {
         setupClicks()
         setupMenu()
 
+        // Ordem: categorias primeiro (async) + produto em paralelo (async)
+        // Ambos são independentes; [bindProduct] e [showCategories] tratam a
+        // race condition nos dois sentidos.
         presenter.fetchCategories()
-
         loadProductFromArgs()
     }
 
@@ -111,68 +113,48 @@ class EditFragment : Fragment(), ContractEdit.View {
                 try {
                     novaImagemFile = ImageUtils.processImage(requireContext(), imageUri, imageFile)
                     showImageView(novaImagemFile!!.absolutePath)
-                } catch (e: Exception) {
-                    onError(e.message ?: "Erro ao processar imagem")
-                }
+                } catch (e: Exception) { onError(e.message ?: "Erro ao processar imagem") }
             }
-
             override fun onCancel() {}
-            override fun onError(e: Exception) {
-                onError(e.message ?: "Erro na câmera")
-            }
+            override fun onError(e: Exception) { onError(e.message ?: "Erro na câmera") }
         })
     }
 
     private fun setupGalleryResult() {
-        parentFragmentManager.setFragmentResultListener(
-            "gallery_result",
-            viewLifecycleOwner
-        ) { _, bundle ->
+        parentFragmentManager.setFragmentResultListener("gallery_result", viewLifecycleOwner) { _, bundle ->
             try {
-                val uri = Uri.parse(bundle.getString("imageUri"))
-                val out = ImagePikerUtil.createImageFile(requireContext())
+                val uri       = Uri.parse(bundle.getString("imageUri"))
+                val out       = ImagePikerUtil.createImageFile(requireContext())
                 novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
                 showImageView(novaImagemFile!!.absolutePath)
-            } catch (e: Exception) {
-                onError(e.message ?: "Erro ao processar imagem da galeria")
-            }
+            } catch (e: Exception) { onError(e.message ?: "Erro ao processar imagem da galeria") }
         }
     }
 
     private fun setupSpinnerListener() {
-        binding.spinnerEdit.onItemSelectedListener =
-            object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: android.widget.AdapterView<*>,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    if (!spinnerPronto || produto == null) return
-                    // Posição 0 = placeholder "Selecione…" (id = -1)
-                    val cat = listaCategorias.getOrNull(position - 1)
-                    produto = produto!!.copy(categoryId = cat?.id ?: 0)
-                }
-
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+        binding.spinnerEdit.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                if (!spinnerPronto || produto == null) return
+                // posição 0 = placeholder; categorias começam na posição 1
+                val cat = listaCategorias.getOrNull(position - 1)
+                produto = produto!!.copy(categoryId = cat?.id ?: 0)
             }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
     }
 
     private fun setupClicks() {
-        // Imagem → picker câmera/galeria
         binding.imageEdit.setOnClickListener {
             ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
                 override fun openGallery() {
                     findNavController().navigate(R.id.action_editFragment_to_galerryFragment)
                 }
-
                 override fun openCamera() {
                     imagePickerUtil.openCamera(requireContext(), cameraLauncher)
                 }
             })
         }
 
-        // Data
         binding.datePickerButton.setOnClickListener {
             Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
                 timestamp = ts
@@ -180,10 +162,8 @@ class EditFragment : Fragment(), ContractEdit.View {
             }
         }
 
-        // Salvar
         binding.btnFgmSave.setOnClickListener { salvarProduto() }
 
-        // Barcode → tela de imagem do barcode
         binding.txtEditBacode.setOnClickListener {
             val barcode = binding.txtEditBacode.text.toString()
             if (barcode.isNotBlank()) abrirImagemBarcode(barcode)
@@ -196,66 +176,74 @@ class EditFragment : Fragment(), ContractEdit.View {
                 menu.clear()
                 menuInflater.inflate(R.menu.menu_edit, menu)
             }
-
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                if (menuItem.itemId == R.id.action_delete) {
-                    confirmarDelete()
-                    return true
-                }
+                if (menuItem.itemId == R.id.action_delete) { confirmarDelete(); return true }
                 return false
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Dados
+    // ─────────────────────────────────────────────────────────────────────
+
+
     private fun loadProductFromArgs() {
-        val id = arguments?.getString("uuid")
-        if (id == null) {
-            onError("Produto inválido")
+        val docId = arguments?.getString("uuid")
+
+        if (docId.isNullOrBlank()) {
+            onError("Produto inválido — identificador ausente")
             return
         }
-        presenter.loadProduct(id)
+
+        presenter.loadProduct(docId)
     }
 
     private fun salvarProduto() {
         if (!Utils.validEditText(binding.edtNameFragment)) return
-
         val p = produto ?: run { onError("Produto não carregado"); return }
 
         val atualizado = p.copy(
-            name = binding.edtNameFragment.text.toString().trim(),
-            note = binding.editFragmentNote.text.toString(),
+            name      = binding.edtNameFragment.text.toString().trim(),
+            note      = binding.editFragmentNote.text.toString(),
             timestamp = timestamp,
-            barcode = binding.txtEditBacode.text.toString(),
-            // Se o utilizador escolheu uma nova imagem, usa o caminho local
-            imageUri = novaImagemFile?.absolutePath ?: p.imageUri
+            barcode   = binding.txtEditBacode.text.toString(),
+            imageUri  = novaImagemFile?.absolutePath ?: p.imageUri
         )
-
         presenter.saveProduct(atualizado)
     }
 
     private fun confirmarDelete() {
         val p = produto ?: return
-        DialogUtil.showDeleteDialog(
-            requireContext(),
-            "Deseja realmente excluir \"${p.name}\"?"
-        ) {
+        DialogUtil.showDeleteDialog(requireContext(), "Deseja realmente excluir \"${p.name}\"?") {
             presenter.deleteProduct(p)
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Selecciona o Spinner na posição correspondente ao [categoryId].
+     * A posição 0 é sempre o placeholder — as categorias começam na posição 1.
+     */
     private fun selecionarCategoria(categoryId: Int) {
         listaCategorias.forEachIndexed { index, cat ->
             if (cat.id == categoryId) {
-                binding.spinnerEdit.setSelection(index + 1) // +1 pelo placeholder
+                binding.spinnerEdit.setSelection(index + 1)
                 return
             }
         }
     }
 
     private fun abrirImagemBarcode(barcode: String) {
-        val intent = Intent(requireContext(), ImageBarcodeShow::class.java)
-        intent.putExtra("barcode", barcode)
-        startActivity(intent)
+       // val intent = Intent(requireContext(), ImageBarcodeShow::class.java)
+       // intent.putExtra("barcode", barcode)
+       // startActivity(intent)
+        val bundle = Bundle().apply { putString("edtF_barcode", barcode) }
+        findNavController().navigate(R.id.nav_barcode_show, bundle)
+
     }
 
     private fun showImageView(path: String) {
@@ -273,12 +261,23 @@ class EditFragment : Fragment(), ContractEdit.View {
     private fun timestampParaData(ts: Long): String =
         SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).format(Date(ts))
 
+    // ─────────────────────────────────────────────────────────────────────
+    // ContractEdit.View
+    // ─────────────────────────────────────────────────────────────────────
+
     override fun showProgress(enable: Boolean) {
         binding.btnFgmSave.isEnabled = !enable
     }
 
+    /**
+     * Preenche todos os campos com os dados do [PostProduct] do Firestore.
+     *
+     * Race condition com [showCategories]:
+     *  - Se categorias já chegaram ([spinnerPronto] = true): selecciona de imediato.
+     *  - Se ainda estão a chegar: [showCategories] chama [selecionarCategoria] ao terminar.
+     */
     override fun bindProduct(produto: PostProduct) {
-        this.produto = produto
+        this.produto   = produto
         this.timestamp = produto.timestamp
 
         binding.edtNameFragment.setText(produto.name)
@@ -286,31 +285,30 @@ class EditFragment : Fragment(), ContractEdit.View {
         binding.txtEditBacode.text = produto.barcode
         binding.datePickerButton.text = timestampParaData(produto.timestamp)
 
-        // Carrega imagem do Storage/URL
         if (produto.imageUri.isNotEmpty()) showImageView(produto.imageUri)
 
-        // Se as categorias já chegaram, selecciona de imediato.
-        // Se ainda estão a ser carregadas, [showCategories] chamará
-        // selecionarCategoria depois do adapter estar pronto.
         if (spinnerPronto) selecionarCategoria(produto.categoryId)
     }
 
+    /**
+     * Popula o Spinner com as [PostCategory] do Firestore.
+     *
+     * Após criar o adapter activa [spinnerPronto] e verifica se o produto
+     * já chegou para seleccionar a categoria correcta.
+     */
     override fun showCategories(categories: List<PostCategory>) {
         listaCategorias = categories
 
         val nomes = mutableListOf("Selecione uma categoria")
         nomes.addAll(categories.map { it.name })
 
-        val adapter = ArrayAdapter(
+        binding.spinnerEdit.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
             nomes
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
-        binding.spinnerEdit.adapter = adapter
         spinnerPronto = true
-
-        // Produto já carregado antes das categorias? Selecciona agora.
         produto?.let { selecionarCategoria(it.categoryId) }
     }
 

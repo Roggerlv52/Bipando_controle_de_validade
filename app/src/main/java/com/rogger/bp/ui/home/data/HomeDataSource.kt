@@ -3,6 +3,7 @@ package com.rogger.bp.ui.home.data
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rogger.bp.data.model.PostProduct
 
@@ -15,16 +16,11 @@ class HomeDataSource : PostHomeDataSource {
 
     private val TAG = "HomeDataSource"
 
-    private val db = FirebaseFirestore.getInstance()
+    private val db   = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
-    // ── Helpers ───────────────────────────────────────────────────────────
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    /**
-     * Referência: users/{uid}/products
-     */
     private fun productsRef(): CollectionReference? {
         val uid = getUserId() ?: return null
         return db.collection("users")
@@ -33,23 +29,40 @@ class HomeDataSource : PostHomeDataSource {
     }
 
     /**
-     * Converte um [Map] do Firestore para [PostProduct].
-     * Retorna null se campos obrigatórios estiverem ausentes.
+     * Converte um [DocumentSnapshot] para [PostProduct].
+     *
+     * ── Chave "uuid" (campo uid no Firestore) ────────────────────────────
+     * O [FireRegisterDataSource] grava `"uid" to produto.uuid`.
+     * Se o produto foi criado antes de ter uuid gerado, o campo
+     * pode estar vazio no Firestore.
+     *
+     * Estratégia de fallback garantida:
+     *   1. Usa `data["uid"]` se não for vazio.
+     *   2. Caso contrário, usa `doc.id` — o documentId do Firestore,
+     *      que é sempre único e nunca vazio.
+     *
+     * O [EditDataSource] busca pelo documentId directamente,
+     * eliminando a dependência do campo "uid".
      */
-    private fun documentToPostProduct(data: Map<String, Any?>): PostProduct? {
+    private fun documentToPostProduct(doc: DocumentSnapshot): PostProduct? {
+        val data = doc.data ?: return null
         return try {
+            val uidField = data["uid"] as? String ?: ""
+            // fallback: usa o docId quando uid está vazio
+            val uuid = if (uidField.isNotEmpty()) uidField else doc.id
+
             PostProduct(
-                id = (data["id"] as? Long)?.toInt() ?: 0,
-                userId = data["userId"] as? String ?: "",
-                uuid = data["uid"] as? String ?: "",
-                name = data["name"] as? String ?: return null,
-                note = data["note"] as? String ?: "",
-                barcode = data["barcode"] as? String ?: "",
+                id         = (data["id"]         as? Long)?.toInt() ?: 0,
+                userId     = data["userId"]      as? String ?: "",
+                uuid       = uuid,
+                name       = data["name"]        as? String ?: return null,
+                note       = data["note"]        as? String ?: "",
+                barcode    = data["barcode"]     as? String ?: "",
                 categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
-                timestamp = data["timestamp"] as? Long ?: 0L,
-                imageUri = data["imageUri"] as? String ?: "",
-                deleted = data["deleted"] as? Boolean ?: false,
-                deletedAt = data["deletedAt"] as? Long
+                timestamp  = data["timestamp"]   as? Long ?: 0L,
+                imageUri   = data["imageUri"]    as? String ?: "",
+                deleted    = data["deleted"]     as? Boolean ?: false,
+                deletedAt  = data["deletedAt"]   as? Long
             )
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao mapear produto: ${e.message}")
@@ -60,9 +73,7 @@ class HomeDataSource : PostHomeDataSource {
     // ── Buscar todos os produtos activos ──────────────────────────────────
 
     override fun fetchProducts(callback: FetchProductsCallback) {
-
         val ref = productsRef()
-
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
@@ -73,33 +84,21 @@ class HomeDataSource : PostHomeDataSource {
             .orderBy("timestamp")
             .get()
             .addOnSuccessListener { snapshot ->
-
-                val list = snapshot.documents.mapNotNull { doc ->
-                    doc.data?.let { documentToPostProduct(it) }
-                }
-
+                val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
                 Log.d(TAG, "Produtos carregados: ${list.size}")
                 callback.onSuccess(list)
             }
-            .addOnFailureListener { exception ->
-
-                Log.e(TAG, "Erro ao buscar produtos: ${exception.message}")
-                callback.onFailure(exception.message ?: "Erro ao buscar produtos")
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Erro ao buscar produtos: ${e.message}")
+                callback.onFailure(e.message ?: "Erro ao buscar produtos")
             }
-            .addOnCompleteListener {
-                callback.onComplete()
-            }
+            .addOnCompleteListener { callback.onComplete() }
     }
 
-    // ── Buscar produtos por categoria ─────────────────────────────────────
+    // ── Buscar por categoria ──────────────────────────────────────────────
 
-    override fun fetchProductsByCategory(
-        categoryId: Int,
-        callback: FetchProductsCallback
-    ) {
-
+    override fun fetchProductsByCategory(categoryId: Int, callback: FetchProductsCallback) {
         val ref = productsRef()
-
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
@@ -111,125 +110,90 @@ class HomeDataSource : PostHomeDataSource {
             .orderBy("timestamp")
             .get()
             .addOnSuccessListener { snapshot ->
-
-                val list = snapshot.documents.mapNotNull { doc ->
-                    doc.data?.let { documentToPostProduct(it) }
-                }
-
+                val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
                 Log.d(TAG, "Produtos da categoria $categoryId: ${list.size}")
                 callback.onSuccess(list)
             }
-            .addOnFailureListener { exception ->
-
-                Log.e(TAG, "Erro ao buscar por categoria: ${exception.message}")
-                callback.onFailure(exception.message ?: "Erro ao buscar produtos por categoria")
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Erro ao buscar por categoria: ${e.message}")
+                callback.onFailure(e.message ?: "Erro ao buscar produtos por categoria")
             }
-            .addOnCompleteListener {
-                callback.onComplete()
-            }
+            .addOnCompleteListener { callback.onComplete() }
     }
 
-    // ── Soft-delete de produto ─────────────────────────────────────────────
+    // ── Soft-delete ───────────────────────────────────────────────────────
 
-    override fun deleteProduct(
-        product: PostProduct,
-        callback: HomeCallback
-    ) {
-
+    override fun deleteProduct(product: PostProduct, callback: HomeCallback) {
         val ref = productsRef()
-
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
             return
         }
 
-        ref.whereEqualTo("uid", product.uuid)
-            .get()
-            .addOnSuccessListener { snapshot ->
+        // Busca pelo docId (uuid) — garantido pelo fallback acima
+        ref.document(product.uuid)
+            .update(mapOf("deleted" to true, "deletedAt" to System.currentTimeMillis()))
+            .addOnSuccessListener {
+                Log.d(TAG, "Produto eliminado (soft): ${product.uuid}")
+                callback.onSuccess(product)
+            }
+            .addOnFailureListener { e ->
+                // fallback: tenta via whereEqualTo("uid")
+                deleteByQuery(product, callback)
+            }
+    }
 
+    private fun deleteByQuery(product: PostProduct, callback: HomeCallback) {
+        productsRef()?.whereEqualTo("uid", product.uuid)?.get()
+            ?.addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
                     callback.onFailure("Produto não encontrado")
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
-
-                val docRef = snapshot.documents.first().reference
-
-                docRef.update(
-                    mapOf(
-                        "deleted" to true,
-                        "deletedAt" to System.currentTimeMillis()
-                    )
-                )
-                    .addOnSuccessListener {
-                        Log.d(TAG, "Produto eliminado (soft): ${product.uuid}")
-                        callback.onSuccess(product)
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Erro ao eliminar produto: ${exception.message}")
-                        callback.onFailure(exception.message ?: "Erro ao eliminar produto")
-                    }
-                    .addOnCompleteListener {
-                        callback.onComplete()
-                    }
-            }
-            .addOnFailureListener { exception ->
-
-                callback.onFailure(exception.message ?: "Erro ao buscar produto")
-                callback.onComplete()
+                snapshot.documents.first().reference
+                    .update(mapOf("deleted" to true, "deletedAt" to System.currentTimeMillis()))
+                    .addOnSuccessListener { callback.onSuccess(product) }
+                    .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro ao eliminar") }
+                    .addOnCompleteListener { callback.onComplete() }
             }
     }
 
-    // ── Restaurar produto eliminado ────────────────────────────────────────
+    // ── Restaurar ─────────────────────────────────────────────────────────
 
-    override fun restoreProduct(
-        product: PostProduct,
-        callback: HomeCallback
-    ) {
-
+    override fun restoreProduct(product: PostProduct, callback: HomeCallback) {
         val ref = productsRef()
-
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
             return
         }
 
-        ref.whereEqualTo("uid", product.uuid)
-            .get()
-            .addOnSuccessListener { snapshot ->
+        ref.document(product.uuid)
+            .update(mapOf("deleted" to false, "deletedAt" to null))
+            .addOnSuccessListener {
+                Log.d(TAG, "Produto restaurado: ${product.uuid}")
+                callback.onSuccess(product)
+            }
+            .addOnFailureListener { _ ->
+                restoreByQuery(product, callback)
+            }
+    }
 
+    private fun restoreByQuery(product: PostProduct, callback: HomeCallback) {
+        productsRef()?.whereEqualTo("uid", product.uuid)?.get()
+            ?.addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
                     callback.onFailure("Produto não encontrado")
                     callback.onComplete()
                     return@addOnSuccessListener
                 }
-
-                val docRef = snapshot.documents.first().reference
-
-                docRef.update(
-                    mapOf(
-                        "deleted" to false,
-                        "deletedAt" to null
-                    )
-                )
-                    .addOnSuccessListener {
-                        Log.d(TAG, "Produto restaurado: ${product.uuid}")
-                        callback.onSuccess(product)
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Erro ao restaurar produto: ${exception.message}")
-                        callback.onFailure(exception.message ?: "Erro ao restaurar produto")
-                    }
-                    .addOnCompleteListener {
-                        callback.onComplete()
-                    }
-            }
-            .addOnFailureListener { exception ->
-
-                callback.onFailure(exception.message ?: "Erro ao buscar produto")
-                callback.onComplete()
+                snapshot.documents.first().reference
+                    .update(mapOf("deleted" to false, "deletedAt" to null))
+                    .addOnSuccessListener { callback.onSuccess(product) }
+                    .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro ao restaurar") }
+                    .addOnCompleteListener { callback.onComplete() }
             }
     }
 }

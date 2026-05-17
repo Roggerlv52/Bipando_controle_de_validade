@@ -26,16 +26,15 @@ class EditPresenter(
 
     // ── 1. Carregar produto ───────────────────────────────────────────────
 
-    override fun loadProduct(productUuid: String) {
-        if (productUuid.isBlank()) {
+    override fun loadProduct(docId: String) {
+        if (docId.isBlank()) {
             view?.onError("Identificador de produto inválido")
             return
         }
 
         view?.showProgress(true)
 
-        // ✅ Alteração: Chamando o repositório com o UUID
-        repository.fetchByUuid(productUuid, object : EditCallback {
+        repository.fetchByDocId(docId, object : EditCallback {
             override fun onSuccess(produto: PostProduct) {
                 view?.bindProduct(produto)
             }
@@ -98,7 +97,7 @@ class EditPresenter(
         })
     }
 
-    // ── 4. Buscar categorias para o Spinner ───────────────────────────────
+    // ── 4. Categorias ─────────────────────────────────────────────────────
 
     override fun fetchCategories() {
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
@@ -106,16 +105,11 @@ class EditPresenter(
                 view?.showCategories(categories)
             }
             override fun onFailure(message: String) {
-                // Entrega lista vazia — Spinner mostrará só o placeholder
                 view?.showCategories(emptyList())
             }
-            override fun onComplete() { /* silencioso */ }
+            override fun onComplete() {}
         })
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────
-
-    override fun onDestroy() {
-        view = null
-    }
+    override fun onDestroy() { view = null }
 }

@@ -9,7 +9,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
-import com.rogger.bp.data.model.Categoria
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentHomeBinding
@@ -24,7 +23,6 @@ import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.home.presentation.HomePresenter
-import com.rogger.bp.ui.scanner.BarcodeScanFragment
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -36,16 +34,11 @@ class HomeFragment : Fragment(), ContractHome.View {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    override val presenter: ContractHome.Presenter by lazy {
-        HomePresenter(
-            view               = this,
-            repository         = HomeRepository(HomeDataSource()),
-            categoryRepository = CategoryRepository(CategoryDataSource())
-        )
-    }
+    private var _presenter: HomePresenter? = null
+    override val presenter: ContractHome.Presenter
+        get() = _presenter!!
 
     private lateinit var adapterHome: AdapterHome
-
     private var listaCategorias: List<PostCategory> = emptyList()
 
     override fun onCreateView(
@@ -60,19 +53,32 @@ class HomeFragment : Fragment(), ContractHome.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Cria ou recria o Presenter conectando esta View
+        _presenter = HomePresenter(
+            view = this,
+            repository = HomeRepository(HomeDataSource()),
+            categoryRepository = CategoryRepository(CategoryDataSource())
+        )
+
         setupRecyclerView()
         setupFab()
-        observeBarcodeResult()
+    }
 
-        // Carrega produtos e categorias via Presenter (Firestore)
+    override fun onResume() {
+        super.onResume()
         presenter.fetchProducts()
         presenter.fetchCategories()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        presenter.onDestroy()
         _binding = null
+    }
+
+    override fun onDestroy() {
+        _presenter?.onDestroy()
+        _presenter = null
+        super.onDestroy()
     }
 
     private fun setupRecyclerView() {
@@ -83,12 +89,9 @@ class HomeFragment : Fragment(), ContractHome.View {
             diasAmarelo,
             object : OnItemClickListener {
 
-                override fun onItemClick(
-                    position: Int,
-                    data: List<PostProduct>
-                ) {
+                override fun onItemClick(position: Int, data: List<PostProduct>) {
                     val produto = data.getOrNull(position) ?: return
-                    val bundle  = Bundle().apply { putString("uuid", produto.uuid) }
+                    val bundle = Bundle().apply { putString("uuid", produto.uuid) }
                     findNavController().navigate(
                         R.id.action_nav_home_to_nav_edit_fragment,
                         bundle
@@ -106,23 +109,20 @@ class HomeFragment : Fragment(), ContractHome.View {
         )
 
         binding.rcViewListHome.layoutManager = LinearLayoutManager(requireContext())
-        binding.rcViewListHome.adapter       = adapterHome
+        binding.rcViewListHome.adapter = adapterHome
     }
 
     private fun setupFab() {
         binding.fab.setOnClickListener {
-
             CategoriaDialogUtil.mostrarDialogo(
                 requireContext(),
                 listaCategorias,
                 object : CategoriaDialogUtil.CategoriaCallback {
 
                     override fun onCategoriaSelecionada(categoriaId: Int) {
-                        val postCat = listaCategorias.firstOrNull { it.id == categoriaId }
-                        navegarParaScanner(
-                            categoriaId   = categoriaId,
-                            categoriaNome = postCat?.name ?: ""
-                        )
+                        val nome = listaCategorias
+                            .firstOrNull { it.id == categoriaId }?.name ?: ""
+                        navegarParaScanner(categoriaId, nome)
                     }
 
                     override fun onAdicionarCategoria() {
@@ -130,13 +130,8 @@ class HomeFragment : Fragment(), ContractHome.View {
                             requireContext(),
                             "Nova Categoria"
                         ) { nomeCategoria ->
-
-                            val nova = PostCategory(name = nomeCategoria)
                             presenter.fetchCategories()
-                            navegarParaScanner(
-                                categoriaId   = -1,
-                                categoriaNome = nomeCategoria
-                            )
+                            navegarParaScanner(-1, nomeCategoria)
                         }
                     }
                 }
@@ -144,37 +139,26 @@ class HomeFragment : Fragment(), ContractHome.View {
         }
     }
 
-    private fun observeBarcodeResult() {
-        findNavController()
-            .currentBackStackEntry
-            ?.savedStateHandle
-            ?.getLiveData<String>(BarcodeScanFragment.KEY_SCANNED_BARCODE)
-            ?.observe(viewLifecycleOwner) { barcode ->
-                if (!barcode.isNullOrEmpty()) {
-                    findNavController()
-                        .currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(BarcodeScanFragment.KEY_SCANNED_BARCODE, "")
-                }
-            }
-    }
-
     private fun navegarParaScanner(categoriaId: Int, categoriaNome: String) {
         val bundle = Bundle().apply {
-            putInt("categoria_id",     categoriaId)
+            putInt("categoria_id", categoriaId)
             putString("categoria_nome", categoriaNome)
         }
         findNavController().navigate(
-            R.id.nav_barcode_scan_fragment,
+            R.id.action_nav_home_to_nav_barcode_scan_fragment,
             bundle
         )
     }
+
     override fun showProgress(enable: Boolean) {
+        // Guarda contra chamadas após onDestroyView (binding pode ser null)
+        val b = _binding ?: return
         if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-        else        CustomProgressBar.hideLoadingDialog()
+        else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showProducts(products: List<PostProduct>) {
+        val b = _binding ?: return
         showEmpty(products.isEmpty())
         if (products.isNotEmpty()) {
             adapterHome.setDados(products)
@@ -187,17 +171,20 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showEmpty(isEmpty: Boolean) {
+        val b = _binding ?: return
         val target = if (isEmpty) 1 else 0
-        if (binding.viewFlipper.displayedChild != target) {
-            binding.viewFlipper.displayedChild = target
+        if (b.viewFlipper.displayedChild != target) {
+            b.viewFlipper.displayedChild = target
         }
     }
 
     override fun onSuccess(message: String) {
-        view?.let { Snackbar.make(it, message, Snackbar.LENGTH_SHORT).show() }
+        val b = _binding ?: return
+        Snackbar.make(b.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onError(message: String) {
-        view?.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+        val b = _binding ?: return
+        Snackbar.make(b.root, message, Snackbar.LENGTH_LONG).show()
     }
 }
