@@ -3,6 +3,7 @@ package com.rogger.bp.ui.edit.view
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -238,9 +239,6 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     private fun abrirImagemBarcode(barcode: String) {
-       // val intent = Intent(requireContext(), ImageBarcodeShow::class.java)
-       // intent.putExtra("barcode", barcode)
-       // startActivity(intent)
         val bundle = Bundle().apply { putString("edtF_barcode", barcode) }
         findNavController().navigate(R.id.nav_barcode_show, bundle)
 
@@ -317,6 +315,7 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     override fun onError(message: String) {
+        Log.e("EditFragment",message)
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 

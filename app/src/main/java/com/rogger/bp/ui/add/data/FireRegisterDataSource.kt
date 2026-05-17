@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.add.data
 
+import android.util.Log
 import androidx.core.net.toUri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -54,7 +55,7 @@ class FireRegisterDataSource : ItemDataSource {
         callback: SaveImageCallback
     ) {
         val docRef = FirebaseFirestore.getInstance()
-            .collection("product_images")
+            .collection("imagens_produtos")
             .document(image.barcode)
 
         docRef.get()
@@ -83,9 +84,9 @@ class FireRegisterDataSource : ItemDataSource {
         val storage = FirebaseStorage.getInstance()
         val firestore = FirebaseFirestore.getInstance()
         val imageRef = storage.reference
-            .child("product_images/${image.barcode}.jpg")
+            .child("imagens_produtos/${image.barcode}.jpg")
         val fileUri = image.uri.toString().toUri()
-
+        Log.e("FireRegister", fileUri.toString())
         imageRef.putFile(fileUri)
             .addOnSuccessListener {
 
@@ -98,7 +99,7 @@ class FireRegisterDataSource : ItemDataSource {
                             uri = image.uri
                         )
                         firestore
-                            .collection("product_images")
+                            .collection("imagens_produtos")
                             .document(image.barcode)
                             .set(productImage)
                             .addOnSuccessListener {
