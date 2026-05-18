@@ -31,14 +31,78 @@ class DeleteItemDataSource : PostDeletedItem {
         item: PostProduct,
         callback: DeleteItemCallback
     ) {
+        // ✅ CORREÇÃO: implementado (estava vazio)
+        val ref = productsRef()
+        if (ref == null) {
+            callback.onFailure("Usuário não autenticado")
+            callback.onComplete()
+            return
+        }
 
+        ref.whereEqualTo("barcode", item.barcode)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val doc = snapshot.documents.firstOrNull()
+                if (doc == null) {
+                    callback.onFailure("Produto não encontrado")
+                    callback.onComplete()
+                    return@addOnSuccessListener
+                }
+                doc.reference.update("deleted", false)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Produto restaurado: ${item.name}")
+                        callback.onSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Erro ao restaurar: ${e.message}")
+                        callback.onFailure(e.message ?: "Erro ao restaurar produto")
+                    }
+                    .addOnCompleteListener { callback.onComplete() }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Erro ao buscar produto para restaurar: ${e.message}")
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
+                callback.onComplete()
+            }
     }
 
     override fun deletePermanently(
         product: PostProduct,
         callback: DeleteItemCallback
     ) {
+        // ✅ CORREÇÃO: implementado (estava vazio)
+        val ref = productsRef()
+        if (ref == null) {
+            callback.onFailure("Usuário não autenticado")
+            callback.onComplete()
+            return
+        }
 
+        ref.whereEqualTo("barcode", product.barcode)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val doc = snapshot.documents.firstOrNull()
+                if (doc == null) {
+                    callback.onFailure("Produto não encontrado")
+                    callback.onComplete()
+                    return@addOnSuccessListener
+                }
+                doc.reference.delete()
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Produto excluído definitivamente: ${product.name}")
+                        callback.onSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Erro ao excluir: ${e.message}")
+                        callback.onFailure(e.message ?: "Erro ao excluir produto")
+                    }
+                    .addOnCompleteListener { callback.onComplete() }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Erro ao buscar produto para excluir: ${e.message}")
+                callback.onFailure(e.message ?: "Erro ao buscar produto")
+                callback.onComplete()
+            }
     }
 
     override fun fetchItemDeleted(callback: DeleteItemCallback) {
@@ -52,27 +116,17 @@ class DeleteItemDataSource : PostDeletedItem {
         ref.whereEqualTo("deleted", true)
             .get()
             .addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull {document ->
+                val list = snapshot.documents.mapNotNull { document ->
                     try {
-
                         PostProduct(
-                            barcode = document.getString("barcode")?: return@mapNotNull null,
+                            barcode = document.getString("barcode") ?: return@mapNotNull null,
                             id = (document.getLong("id") ?: 0L).toInt(),
-                            name = document.getString("name")
-                                ?: return@mapNotNull null,
+                            name = document.getString("name") ?: return@mapNotNull null,
                             userId = document.getString("userId") ?: "",
-                            imageUri = document.getString("imageUri")?:""
-
-
+                            imageUri = document.getString("imageUri") ?: ""
                         )
-
                     } catch (exception: Exception) {
-
-                        Log.e(
-                            TAG,
-                            "Erro ao mapear: ${exception.message}"
-                        )
-
+                        Log.e(TAG, "Erro ao mapear: ${exception.message}")
                         null
                     }
                 }

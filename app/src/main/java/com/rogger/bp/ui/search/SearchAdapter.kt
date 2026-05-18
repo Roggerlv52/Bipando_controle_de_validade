@@ -10,7 +10,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.rogger.bp.R
-import com.rogger.bp.data.model.Produto
+import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.base.Utils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -19,13 +20,13 @@ import java.util.Locale
 class SearchAdapter(
     private val context: Context,
     private val dayYellow: Int,
-    private val onItemClick: ((Produto) -> Unit)? = null
+    private val onItemClick: ((PostProduct) -> Unit)? = null
 ) : RecyclerView.Adapter<SearchAdapter.ViewHolder>() {
 
-    private var dados: List<Produto> = emptyList()
+    private var dados: List<PostProduct> = emptyList()
 
     @SuppressLint("NotifyDataSetChanged")
-    fun setDados(novos: List<Produto>) {
+    fun setDados(novos: List<PostProduct>) {
         dados = novos
         notifyDataSetChanged()
     }
@@ -42,13 +43,13 @@ class SearchAdapter(
         val produto = dados[position]
 
         // Nome
-        holder.txtTitle.text = produto.nome ?: ""
+        holder.txtTitle.text = produto.name ?: ""
 
         // Categoria
-        holder.txtSubTitle.text = produto.nomeCategoria ?: ""
+       // holder.txtSubTitle.text = produto.nameCategory ?: ""
 
         // Código de barras
-        holder.txtBarcode.text = produto.codigoBarras ?: ""
+        holder.txtBarcode.text = produto.barcode ?: ""
 
         // Data de validade formatada
         if (produto.timestamp > 0) {
@@ -79,7 +80,7 @@ class SearchAdapter(
         // Imagem via Glide
         Glide.with(context)
             .asBitmap()
-            .load(produto.imagem)
+            .load(produto.imageUri)
             .override(200, 200)
             .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
             .placeholder(R.drawable.no_picture)

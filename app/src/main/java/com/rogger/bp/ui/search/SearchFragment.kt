@@ -17,7 +17,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.rogger.bp.R
-import com.rogger.bp.data.model.Produto
+import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.scanner.BarcodeScanFragment
 import com.rogger.bp.ui.viewmodel.DataViewModel
@@ -30,10 +30,7 @@ class SearchFragment : Fragment() {
     private var recyclerSearch: RecyclerView? = null
     private var layoutEmpty: LinearLayout? = null
     private var txtHint: TextView? = null
-
-    private var activeObserver: Observer<List<Produto>>? = null
-    private var activeLiveData: LiveData<List<Produto>>? = null
-
+    
     // Referência à toolbar global do MainActivity
     private val mainToolbar: Toolbar?
         get() = requireActivity().findViewById(R.id.toolbar)
@@ -64,10 +61,6 @@ class SearchFragment : Fragment() {
 
         val diasAmarelo = NotificationPrefs.getDays(requireContext())
 
-        adapter = SearchAdapter(requireContext(),diasAmarelo) { produto ->
-            val bundle = Bundle().apply { putInt("id", produto.id) }
-            findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
-        }
 
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
         recyclerSearch?.adapter = adapter
@@ -137,7 +130,6 @@ class SearchFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        activeObserver?.let { activeLiveData?.removeObserver(it) }
         recyclerSearch = null
         layoutEmpty = null
         txtHint = null
@@ -186,17 +178,15 @@ class SearchFragment : Fragment() {
         substituirObserver(dataViewModel!!.buscarPorCodigoBarras(barcode))
     }
 
-    private fun substituirObserver(novoLiveData: LiveData<List<Produto>>) {
-        activeObserver?.let { activeLiveData?.removeObserver(it) }
-        val observer = Observer<List<Produto>> { produtos -> mostrarResultados(produtos) }
-        activeLiveData = novoLiveData
-        activeObserver = observer
+    private fun substituirObserver(novoLiveData: LiveData<List<PostProduct>>) {
+
+        val observer = Observer<List<PostProduct>> { produtos -> mostrarResultados(produtos) }
         novoLiveData.observe(viewLifecycleOwner, observer)
     }
 
     // ── UI ────────────────────────────────────────────────────────────
 
-    private fun mostrarResultados(produtos: List<Produto>?) {
+    private fun mostrarResultados(produtos: List<PostProduct>?) {
         if (produtos.isNullOrEmpty()) {
             mostrarEstadoVazio("Nenhum produto encontrado")
         } else {

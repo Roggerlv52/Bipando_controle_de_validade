@@ -67,14 +67,7 @@ class HomeFragment : Fragment(), ContractHome.View {
 
         setupRecyclerView()
         setupFab()
-        observeProductCount()
-    }
 
-    private fun observeProductCount() {
-        dataViewModel.getCountAtivos().observe(viewLifecycleOwner) { count ->
-            val total = count ?: 0
-            (activity as? AppCompatActivity)?.supportActionBar?.title = "Home ($total)"
-        }
     }
 
     override fun onResume() {

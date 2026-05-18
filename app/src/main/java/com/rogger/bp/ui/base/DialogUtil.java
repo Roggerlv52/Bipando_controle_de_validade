@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class DialogUtil {
     }
 
     public interface OnCategoriaSelected {
-        void onSelected(Categoria categoria);
+        void onSelected(PostCategory categoria);
     }
 
     public static void showConfirmDialog(
@@ -91,12 +91,12 @@ public class DialogUtil {
 
     public static void show(
             Context context,
-            List<Categoria> categorias,
+            List<PostCategory> categorias,
             OnCategoriaSelected callback
     ) {
         String[] nomes = new String[categorias.size()];
         for (int i = 0; i < categorias.size(); i++) {
-            nomes[i] = categorias.get(i).getNome();
+            nomes[i] = categorias.get(i).getName();
         }
 
         new AlertDialog.Builder(context)

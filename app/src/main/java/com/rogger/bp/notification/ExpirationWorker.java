@@ -10,9 +10,7 @@ import androidx.work.WorkerParameters;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.rogger.bp.data.dao.ProdutoDao;
-import com.rogger.bp.data.database.BpdDatabase;
-import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.PostProduct;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,12 +47,10 @@ public class ExpirationWorker extends Worker {
 
         Log.d(TAG, "Verificando produtos para userId: " + userId);
 
-        ProdutoDao dao = BpdDatabase
-                .getDatabase(getApplicationContext())
-                .produtoDao();
+
 
         // Usa a query síncrona (sem LiveData) — obrigatório em Workers
-        List<Produto> produtos = dao.listarProdutosAtivosSync(userId);
+        List<PostProduct> produtos = null;
 
         if (produtos == null || produtos.isEmpty()) {
             Log.d(TAG, "Nenhum produto ativo encontrado.");
@@ -72,10 +68,10 @@ public class ExpirationWorker extends Worker {
         int diasAlerta = NotificationPrefs.getDays(getApplicationContext());
         Log.d(TAG, "Dias de alerta configurados: " + diasAlerta);
 
-        List<Produto> vencidos  = new ArrayList<>();
-        List<Produto> vencendo  = new ArrayList<>();
+        List<PostProduct> vencidos  = new ArrayList<>();
+        List<PostProduct> vencendo  = new ArrayList<>();
 
-        for (Produto p : produtos) {
+        for (PostProduct p : produtos) {
             if (p.getTimestamp() == 0L) continue;
 
             // Zera horas do timestamp do produto para comparação justa por dia

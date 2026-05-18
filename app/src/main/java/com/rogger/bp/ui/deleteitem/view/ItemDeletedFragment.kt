@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.rogger.bp.R
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentItemDeletedBinding
-import com.rogger.bp.ui.category.presentation.CategoryPresenter
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.deleteitem.DeletedItem
 import com.rogger.bp.ui.deleteitem.data.DeleteItemRepository
@@ -48,6 +47,7 @@ class ItemDeletedFragment : Fragment(R.layout.fragment_item_deleted), DeletedIte
         presenter = DeletedItemPresenter(this, repository)
 
         setupRecyclerView()
+        presenter.loadDeletedItems() // ✅ CORREÇÃO: busca os dados ao abrir a tela
     }
 
     private fun setupRecyclerView() {

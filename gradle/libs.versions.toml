@@ -22,6 +22,7 @@ firebaseStorage = "22.0.1"
 kotlin = "2.0.21"
 coreKtx = "1.12.0"
 recyclerview = "1.4.0"
+room3CommonJvm = "3.0.0-alpha04"
 
 [libraries]
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -47,6 +48,7 @@ legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", ver
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+room3-common-jvm = { group = "androidx.room3", name = "room3-common-jvm", version.ref = "room3CommonJvm" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

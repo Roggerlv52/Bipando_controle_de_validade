@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.R;
-import com.rogger.bp.data.model.Categoria;
+import com.rogger.bp.data.model.PostCategory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,17 +20,17 @@ import java.util.Set;
 
 public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHolder> {
 
-    private final List<Categoria> categorias = new ArrayList<>();
-    private final Set<Categoria> selecionadas = new HashSet<>();
+    private final List<PostCategory> categorias = new ArrayList<>();
+    private final Set<PostCategory> selecionadas = new HashSet<>();
 
     private boolean modoSelecao = false;
 
     private final OnCategoriaListener listener;
 
     public interface OnCategoriaListener {
-        void onClick(Categoria categoria);
+        void onClick(PostCategory categoria);
 
-        void onMenuEditClick(Categoria categoria); // 🔑 Novo método para o clique nos três pontos
+        void onMenuEditClick(PostCategory categoria); // 🔑 Novo método para o clique nos três pontos
 
         void onSelectionChanged(int totalSelecionados);
     }
@@ -39,7 +39,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         this.listener = listener;
     }
 
-    public void setItems(List<Categoria> list) {
+    public void setItems(List<PostCategory> list) {
         categorias.clear();
         categorias.addAll(list);
         selecionadas.clear();
@@ -54,7 +54,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
     }
 
     // 🔹 Retorna selecionadas
-    public List<Categoria> getSelecionadas() {
+    public List<PostCategory> getSelecionadas() {
         return new ArrayList<>(selecionadas);
     }
 
@@ -71,7 +71,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Categoria categoria = categorias.get(position);
+        PostCategory categoria = categorias.get(position);
         holder.bind(categoria);
     }
 
@@ -93,9 +93,9 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
             imgMenu = itemView.findViewById(R.id.img_menu_edit);
         }
 
-        void bind(Categoria categoria) {
+        void bind(PostCategory categoria) {
             // ✅ Exibe o nome concatenado com a quantidade de produtos
-            String textoExibicao = categoria.getNome();
+            String textoExibicao = categoria.getName();
             if (categoria.getCount() > 0) {
                 textoExibicao += " (" + categoria.getCount() + ")";
             } else {
@@ -134,7 +134,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
             });
         }
 
-        private void toggleSelecionado(Categoria categoria) {
+        private void toggleSelecionado(PostCategory categoria) {
             if (selecionadas.contains(categoria)) {
                 selecionadas.remove(categoria);
             } else {

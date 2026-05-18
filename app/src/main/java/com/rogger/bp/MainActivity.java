@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -21,17 +20,13 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.notification.NotificationUtil;
 import com.rogger.bp.ui.animation.GradientAnimator;
 import com.rogger.bp.ui.base.BaseActivity;
-import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 import com.rogger.bp.ui.login.view.LoginActivity;
-import com.rogger.bp.ui.viewmodel.CategoriaViewModel;
-import com.rogger.bp.ui.viewmodel.DataViewModel;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -112,43 +107,13 @@ public class MainActivity extends BaseActivity {
     }
 
     private void setupNavigationDrawerCounters(NavigationView navigationView) {
-        DataViewModel dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
-        CategoriaViewModel categoriaViewModel = new ViewModelProvider(this).get(CategoriaViewModel.class);
 
         Menu menu = navigationView.getMenu();
-        MenuItem homeItem = menu.findItem(R.id.nav_home);
+        MenuItem homeItem    = menu.findItem(R.id.nav_home);
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
         MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
-        // Observar total de produtos ativos
-        dataViewModel.getCountAtivos().observe(this, count -> {
-            int total = count != null ? count : 0;
-            if (homeItem != null) {
-                homeItem.setTitle("Home (" + total + ")");
-            }
-            // Atualiza o título da Toolbar se estiver na Home
-            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-            if (getSupportActionBar() != null && navController.getCurrentDestination() != null &&
-                    navController.getCurrentDestination().getId() == R.id.nav_home) {
-                getSupportActionBar().setTitle("Home (" + total + ")");
-            }
-        });
 
-        // Observar total de categorias
-        categoriaViewModel.getCountCategorias().observe(this, count -> {
-            if (categoryItem != null) {
-                int total = count != null ? count : 0;
-                categoryItem.setTitle("Categorias (" + total + ")");
-            }
-        });
-
-        // Observar total de itens deletados
-        dataViewModel.getCountDeletados().observe(this, count -> {
-            if (deletedItem != null) {
-                int total = count != null ? count : 0;
-                deletedItem.setTitle("Lixeira (" + total + ")");
-            }
-        });
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -173,13 +138,7 @@ public class MainActivity extends BaseActivity {
             finish();
         }
         if (id == R.id.menu_add_category) {
-            Utils.dialogCategory(this, "Nova categoria", (name) -> {
-                CategoriaViewModel categoria = new ViewModelProvider(this)
-                        .get(CategoriaViewModel.class);
-                Categoria c = new Categoria();
-                c.setNome(name);
-                categoria.insert(c);
-            });
+
         }
         return super.onOptionsItemSelected(item);
     }

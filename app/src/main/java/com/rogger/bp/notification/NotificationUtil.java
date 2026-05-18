@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
@@ -18,7 +17,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.rogger.bp.MainActivity;
 import com.rogger.bp.R;
-import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.PostProduct;
 
 import java.util.List;
 
@@ -74,7 +73,7 @@ public class NotificationUtil {
         return PendingIntent.getActivity(c, 0, intent, flags);
     }
 
-    public static void showVencendo(Context c, List<Produto> produtos) {
+    public static void showVencendo(Context c, List<PostProduct> produtos) {
         if (produtos == null || produtos.isEmpty()) return;
 
         if (!temPermissao(c)) {
@@ -88,7 +87,7 @@ public class NotificationUtil {
                 : produtos.size() + " produtos vencendo";
 
         String body = produtos.size() == 1
-                ? "'" + produtos.get(0).getNome() + "' está próximo do vencimento."
+                ? "'" + produtos.get(0).getName() + "' está próximo do vencimento."
                 : "Você tem " + produtos.size() + " produtos próximos do vencimento.";
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
@@ -108,7 +107,7 @@ public class NotificationUtil {
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    public static void showVencidos(Context c, List<Produto> produtos) {
+    public static void showVencidos(Context c, List<PostProduct> produtos) {
         if (produtos == null || produtos.isEmpty()) return;
 
         if (!temPermissao(c)) {
@@ -122,7 +121,7 @@ public class NotificationUtil {
                 : produtos.size() + " produtos vencidos";
 
         String body = produtos.size() == 1
-                ? "'" + produtos.get(0).getNome() + "' já venceu!"
+                ? "'" + produtos.get(0).getName() + "' já venceu!"
                 : "Você tem " + produtos.size() + " produtos que já venceram!";
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)

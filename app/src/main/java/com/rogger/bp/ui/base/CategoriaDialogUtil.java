@@ -6,7 +6,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;

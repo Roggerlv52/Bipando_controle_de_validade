@@ -18,9 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
-import com.rogger.bp.data.dao.CategoriaDao;
-import com.rogger.bp.data.database.BpdDatabase;
-import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.PostProduct;
 import com.rogger.bp.ui.base.Utils;
 import com.rogger.bp.ui.home.OnItemClickListener;
@@ -40,7 +37,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     private int diasLimiteAmarelo;
 
     private final Map<Integer, String> categoriaMap = new HashMap<>();
-    private final CategoriaDao categoriaDao;
 
     public void clear() {
         if (dados != null) {
@@ -61,7 +57,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         this.mListener = listener;
         this.context = context;
         this.diasLimiteAmarelo = diasLimiteAmarelo > 0 ? diasLimiteAmarelo : 10;
-        this.categoriaDao = BpdDatabase.getDatabase(context).categoriaDao();
         carregarCategorias();
     }
 
@@ -69,15 +64,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
      * Carrega as categorias do banco para o mapa de cache
      */
     private void carregarCategorias() {
-        BpdDatabase.databaseWriteExecutor.execute(() -> {
-            List<Categoria> categorias = categoriaDao.listarCategoriasSync(""); // Passando vazio para pegar o que estiver local
-            if (categorias != null) {
-                for (Categoria c : categorias) {
-                    categoriaMap.put(c.getId(), c.getNome());
-
-                }
-            }
-        });
     }
 
     @SuppressLint("NotifyDataSetChanged")

@@ -5,11 +5,9 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "produtos")
 data class PostProduct(
 
     // ── Room PrimaryKey ───────────────────────────────────────────────────
-    @PrimaryKey(autoGenerate = true)
     var id: Int = 0,
     var userId: String = "",
     val uuid: String = "",
@@ -26,7 +24,6 @@ data class PostProduct(
     var deletedAt: Long? = null,
 
     // ── Campos calculados / transientes (@Ignore) ─────────────────────────
-    @Ignore
     val categoryName: String = "",
 
     /**
@@ -34,7 +31,6 @@ data class PostProduct(
      * Usada durante o fluxo de add/edit antes do upload.
      * Não persiste no banco; ignorado pelo Room.
      */
-    @Ignore
     val localUri: Uri? = null,
 
     /**

@@ -20,12 +20,19 @@ class DeletedItemPresenter(
         repository.fetchItemDeleted(object : DeleteItemCallback {
 
             override fun onSuccess(items: List<PostProduct>?) {
-                view?.showDeletedItems(items)
+                // ✅ CORREÇÃO: lista vazia mostra o estado vazio em vez de RecyclerView em branco
+                if (items.isNullOrEmpty()) {
+                    view?.showEmptyState()
+                } else {
+                    view?.showDeletedItems(items)
+                }
             }
+
             override fun onFailure(message: String) {
                 view?.showErrorMessage(message)
                 view?.showEmptyState()
             }
+
             override fun onComplete() {
                 view?.showLoading(false)
             }
@@ -37,13 +44,16 @@ class DeletedItemPresenter(
         repository.restore(item, object : DeleteItemCallback {
             override fun onSuccess(items: List<PostProduct>?) {
                 view?.showSuccessMessage("Produto restaurado com sucesso")
+                loadDeletedItems() // ✅ CORREÇÃO: recarrega a lista após restaurar
             }
 
             override fun onFailure(message: String) {
                 view?.showErrorMessage("Erro ao restaurar produto: $message")
+                view?.showLoading(false)
             }
 
             override fun onComplete() {
+                // loading encerrado após recarregar a lista
                 view?.showLoading(false)
             }
         })
@@ -54,14 +64,16 @@ class DeletedItemPresenter(
         repository.deletePermanently(item, object : DeleteItemCallback {
             override fun onSuccess(items: List<PostProduct>?) {
                 view?.showSuccessMessage("Produto excluído definitivamente")
+                loadDeletedItems() // ✅ CORREÇÃO: recarrega a lista após excluir
             }
 
             override fun onFailure(message: String) {
                 view?.showErrorMessage("Erro ao excluir produto: $message")
+                view?.showLoading(false)
             }
 
             override fun onComplete() {
-                view?.showLoading(false)
+                // loading encerrado após recarregar a lista
             }
         })
     }

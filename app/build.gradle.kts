@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
     implementation(libs.recyclerview)
+    implementation(libs.room3.common.jvm)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.work:work-runtime:2.9.0")
 

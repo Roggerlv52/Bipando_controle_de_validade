@@ -77,11 +77,11 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     private fun setupAdapter() {
         adapter = AdapterCategory(object : AdapterCategory.OnCategoriaListener {
 
-            override fun onClick(categoria: com.rogger.bp.data.model.Categoria) {
-                navigateToSearch(categoria.id, categoria.nome)
+            override fun onClick(categoria: PostCategory) {
+                navigateToSearch(categoria.id, categoria.name)
             }
 
-            override fun onMenuEditClick(categoria: com.rogger.bp.data.model.Categoria) {
+            override fun onMenuEditClick(categoria: PostCategory) {
                 openEditDialog(toPostCategory(categoria))
             }
 
@@ -167,20 +167,12 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     // ── Conversores entre Categoria (Java/Room) e PostCategory (Kotlin/MVP) ──
 
-    private fun toPostCategory(c: com.rogger.bp.data.model.Categoria) = PostCategory(
+    private fun toPostCategory(c: PostCategory) = PostCategory(
         id     = c.id,
-        name   = c.nome ?: "",
+        name   = c.name ?: "",
         userId = c.userId ?: ""
     )
 
-    private fun toCategoria(p: PostCategory): com.rogger.bp.data.model.Categoria {
-        val c = com.rogger.bp.data.model.Categoria()
-        c.id     = p.id
-        c.nome   = p.name
-        c.userId = p.userId
-        c.count  = p.count
-        return c
-    }
 
     // =========================================================================
     //  ContractCategory.View
@@ -198,7 +190,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
      */
     override fun showCategories(categories: List<PostCategory>) {
         currentCategories = categories
-        adapter.setItems(categories.map { toCategoria(it) })
+        adapter.setItems(categories)
     }
 
     override fun showEmpty(isEmpty: Boolean) {

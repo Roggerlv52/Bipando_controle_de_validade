@@ -1,5 +1,8 @@
 package com.rogger.bp.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 
 data class PostCategory(
     val id: Int = 0,

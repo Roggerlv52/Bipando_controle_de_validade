@@ -7,7 +7,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.rogger.bp.data.model.Categoria;
 import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
