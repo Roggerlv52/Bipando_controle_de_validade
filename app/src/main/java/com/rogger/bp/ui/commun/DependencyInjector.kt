@@ -5,6 +5,8 @@ import com.rogger.bp.ui.add.data.RegisterItemRepository
 import com.rogger.bp.ui.add.data.RegisterRepository
 import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
+import com.rogger.bp.ui.deleteitem.data.DeleteItemDataSource
+import com.rogger.bp.ui.deleteitem.data.DeleteItemRepository
 import com.rogger.bp.ui.edit.data.EditDataSource
 import com.rogger.bp.ui.edit.data.EditRepository
 import com.rogger.bp.ui.login.data.FireDataSource
@@ -22,6 +24,9 @@ object DependencyInjector {
     }
     fun loginRepository() : LoginRepository{
         return LoginRepository(FireDataSource())
+    }
+    fun itemDeletedRepository(): DeleteItemRepository{
+        return DeleteItemRepository(DeleteItemDataSource())
     }
 
 }

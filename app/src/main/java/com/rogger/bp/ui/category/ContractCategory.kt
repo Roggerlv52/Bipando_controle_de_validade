@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.category
 
+import androidx.lifecycle.LiveData
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.ui.base.BasePresenter
 import com.rogger.bp.ui.base.BaseView
@@ -30,6 +31,7 @@ interface ContractCategory {
         fun delete(category: PostCategory)
         fun deleteMultiple(categories: List<PostCategory>)
         fun fetchCategories()
+        fun getCountCategorias()
     }
 
     interface View : BaseView<Presenter> {

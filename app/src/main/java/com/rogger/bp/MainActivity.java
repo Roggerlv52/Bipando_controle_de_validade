@@ -122,9 +122,15 @@ public class MainActivity extends BaseActivity {
 
         // Observar total de produtos ativos
         dataViewModel.getCountAtivos().observe(this, count -> {
+            int total = count != null ? count : 0;
             if (homeItem != null) {
-                int total = count != null ? count : 0;
                 homeItem.setTitle("Home (" + total + ")");
+            }
+            // Atualiza o título da Toolbar se estiver na Home
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            if (getSupportActionBar() != null && navController.getCurrentDestination() != null &&
+                    navController.getCurrentDestination().getId() == R.id.nav_home) {
+                getSupportActionBar().setTitle("Home (" + total + ")");
             }
         });
 
@@ -144,7 +150,6 @@ public class MainActivity extends BaseActivity {
             }
         });
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);

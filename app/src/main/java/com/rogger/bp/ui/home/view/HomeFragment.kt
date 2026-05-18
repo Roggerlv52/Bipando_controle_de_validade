@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -23,6 +25,7 @@ import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.home.presentation.HomePresenter
+import com.rogger.bp.ui.viewmodel.DataViewModel
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -40,6 +43,7 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     private lateinit var adapterHome: AdapterHome
     private var listaCategorias: List<PostCategory> = emptyList()
+    private lateinit var dataViewModel: DataViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,7 +57,8 @@ class HomeFragment : Fragment(), ContractHome.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Cria ou recria o Presenter conectando esta View
+        dataViewModel = ViewModelProvider(requireActivity()).get(DataViewModel::class.java)
+
         _presenter = HomePresenter(
             view = this,
             repository = HomeRepository(HomeDataSource()),
@@ -62,6 +67,14 @@ class HomeFragment : Fragment(), ContractHome.View {
 
         setupRecyclerView()
         setupFab()
+        observeProductCount()
+    }
+
+    private fun observeProductCount() {
+        dataViewModel.getCountAtivos().observe(viewLifecycleOwner) { count ->
+            val total = count ?: 0
+            (activity as? AppCompatActivity)?.supportActionBar?.title = "Home ($total)"
+        }
     }
 
     override fun onResume() {
@@ -151,7 +164,6 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProgress(enable: Boolean) {
-        // Guarda contra chamadas após onDestroyView (binding pode ser null)
         val b = _binding ?: return
         if (enable) CustomProgressBar.showLoadingDialog(requireContext())
         else CustomProgressBar.hideLoadingDialog()

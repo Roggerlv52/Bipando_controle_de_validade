@@ -41,10 +41,7 @@ public class ProdutoRepository {
     private final FirebaseStorageDataSource storageDataSource;
     private final ProdutoImagemDataSource produtoImagemDataSource;
     private final LocalCache localCache;
-    private final String userId;
 
-    private final LiveData<List<Produto>> produtosAtivos;
-    private final LiveData<List<Produto>> produtosDeletados;
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
 
     public ProdutoRepository(Application application) {
@@ -57,17 +54,16 @@ public class ProdutoRepository {
         localCache = LocalCache.getInstance();
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        userId = currentUser != null ? currentUser.getUid() : "";
-
-        // ✅ Converte ProdutoWithCategory (vido do JOIN) para Produto (com nomeCategoria preenchido)
-        produtosAtivos = Transformations.map(produtoDao.listarProdutosAtivos(userId), this::converterLista);
-        produtosDeletados = Transformations.map(produtoDao.listarProdutosDeletados(userId), this::converterLista);
-
         if (currentUser != null) {
             sincronizarDoFirestore();
         } else {
             Log.w(TAG, "Usuário não logado, pulando sincronização inicial.");
         }
+    }
+
+    private String getUserId() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        return user != null ? user.getUid() : "";
     }
 
     /**
@@ -89,30 +85,45 @@ public class ProdutoRepository {
     }
 
     public LiveData<List<Produto>> getProdutosAtivos() {
-        return produtosAtivos;
+        String userId = getUserId();
+        if (userId.isEmpty()) return new MutableLiveData<>(new ArrayList<>());
+        return Transformations.map(produtoDao.listarProdutosAtivos(userId), this::converterLista);
     }
 
     public LiveData<List<Produto>> getProdutosDeletados() {
-        return produtosDeletados;
+        String userId = getUserId();
+        if (userId.isEmpty()) return new MutableLiveData<>(new ArrayList<>());
+        return Transformations.map(produtoDao.listarProdutosDeletados(userId), this::converterLista);
     }
 
     public LiveData<Integer> getCountAtivos() {
+        String userId = getUserId();
+        Log.d(TAG, "getCountAtivos para userId: " + userId);
+        if (userId.isEmpty()) return new MutableLiveData<>(0);
         return produtoDao.getCountAtivos(userId);
     }
 
     public LiveData<Integer> getCountDeletados() {
+        String userId = getUserId();
+        Log.d(TAG, "getCountDeletados para userId: " + userId);
+        if (userId.isEmpty()) return new MutableLiveData<>(0);
         return produtoDao.getCountDeletados(userId);
     }
 
     public LiveData<List<Produto>> buscarPorNome(String query) {
+        String userId = getUserId();
+        if (userId.isEmpty()) return new MutableLiveData<>(new ArrayList<>());
         return Transformations.map(produtoDao.buscarPorNome(userId, query), this::converterLista);
     }
 
     public LiveData<List<Produto>> buscarPorCodigoBarras(String barcode) {
+        String userId = getUserId();
+        if (userId.isEmpty()) return new MutableLiveData<>(new ArrayList<>());
         return Transformations.map(produtoDao.buscarPorCodigoBarras(userId, barcode), this::converterLista);
     }
 
     public void sincronizarDoFirestore() {
+        String userId = getUserId();
         if (userId.isEmpty()) {
             Log.e(TAG, "Não é possível sincronizar: userId vazio.");
             return;
@@ -154,6 +165,7 @@ public class ProdutoRepository {
      * ✅ Busca nomes das categorias locais e preenche nos produtos em memória
      */
     private void preencherNomesCategorias(List<Produto> produtos) {
+        String userId = getUserId();
         List<Categoria> categorias = categoriaDao.listarCategoriasSync(userId);
         java.util.Map<Integer, String> nomeMap = new java.util.HashMap<>();
         if (categorias != null) {
@@ -167,10 +179,9 @@ public class ProdutoRepository {
         }
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 🆕 Busca produtos pelo nome da categoria (parcial, case-insensitive)
-    // ────────────────────────────────────────────────────────────────
     public LiveData<List<Produto>> buscarPorNomeCategoria(String query) {
+        String userId = getUserId();
+        if (userId.isEmpty()) return new MutableLiveData<>(new ArrayList<>());
         return Transformations.map(
                 produtoDao.buscarPorNomeCategoria(userId, query),
                 this::converterLista
@@ -180,6 +191,7 @@ public class ProdutoRepository {
 
     public void inserir(Produto produto,
                         FirebaseStorageDataSource.UploadCallback callback) {
+        String userId = getUserId();
         if (userId.isEmpty()) return;
 
         produto.setUserId(userId);
@@ -281,19 +293,18 @@ public class ProdutoRepository {
         firebaseDataSource.atualizarProduto(produto, null);
     }
 
-    // ... restante dos métodos permanecem iguais, apenas garantindo que não usem userId se estiver vazio
     private void sincronizarProdutoNoFirestore(Produto produto) {
+        String userId = getUserId();
         if (userId.isEmpty()) return;
         firebaseDataSource.salvarProduto(produto, null);
     }
 
-    // (Apenas para evitar erros de compilação no sandbox, o resto do arquivo seria mantido)
     private void inserirComImagemLegada(Produto produto, File arquivoLocal, FirebaseStorageDataSource.UploadCallback callback) {
-        // Implementação simplificada para o contexto
+        // Implementação simplificada
     }
 
     private void inserirComImagemGlobal(Produto produto, String barcode, File arquivoLocal, FirebaseStorageDataSource.UploadCallback callback) {
-        // Implementação simplificada para o contexto
+        // Implementação simplificada
     }
 
     public void moverParaLixeira(int id) {

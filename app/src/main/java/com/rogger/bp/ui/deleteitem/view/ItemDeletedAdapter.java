@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.deleteitem;
+package com.rogger.bp.ui.deleteitem.view;
 
 import android.content.Context;
 import android.util.Log;
@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.rogger.bp.R;
-import com.rogger.bp.data.model.Produto;
+import com.rogger.bp.data.model.PostProduct;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.Locale;
 
 public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.ViewHolder> {
     private Context context;
-    private List<Produto> lista = new ArrayList<>();
+    private List<PostProduct> lista = new ArrayList<>();
     private OnItemDeletedClick listener;
 
     public ItemDeletedAdapter(Context c, OnItemDeletedClick listener) {
@@ -32,10 +32,10 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
     }
 
     public interface OnItemDeletedClick {
-        void onClick(Produto produto);
+        void onClick(PostProduct produto);
     }
 
-    public void submitList(List<Produto> produtos) {
+    public void submitList(List<PostProduct> produtos) {
         lista = produtos;
         notifyDataSetChanged();
     }
@@ -50,18 +50,18 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ItemDeletedAdapter.ViewHolder holder, int position) {
-        Produto produto = lista.get(position);
-        Log.d("ADAPTER", "Produto: " + produto.getNome() + "");
+        PostProduct produto = lista.get(position);
+        Log.d("ADAPTER", "Produto: " + produto.getName() + "");
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
         holder.txt_left.setText(sdf.format(new Date(produto.getTimestamp())));
-        holder.txt_rigth.setText(produto.getNomeCategoria());
-        holder.txt_home.setText(produto.getNome());
-        holder.txt_bcd.setText(produto.getCodigoBarras());
+        holder.txt_rigth.setText(produto.getCategoryName());
+        holder.txt_home.setText(produto.getName());
+        holder.txt_bcd.setText(produto.getBarcode());
 
         Glide.with(context)
                 .asBitmap()
-                .load(produto.getImagem())
+                .load(produto.getImageUri())
                 .override(200, 200)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
@@ -78,11 +78,9 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
         return lista.size();
     }
 
-    // ViewHolder padrão
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView txt_left, txt_rigth, txt_home, txt_bcd;
         ImageView img_home;
-
 
         public ViewHolder(View itemView) {
             super(itemView);
