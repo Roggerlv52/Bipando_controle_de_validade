@@ -4,6 +4,7 @@ package com.rogger.bp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +21,8 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.notification.NotificationUtil;
@@ -39,6 +42,10 @@ public class MainActivity extends BaseActivity {
     private TextView txtProfileName;
     private TextView txtProfileEmail;
     private GradientAnimator animator;
+
+    private ListenerRegistration listenerHome;
+    private ListenerRegistration listenerCategory;
+    private ListenerRegistration listenerDeleted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +120,46 @@ public class MainActivity extends BaseActivity {
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
         MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
+        // Verifica autenticação — sem UID não há dados a buscar
+        String uid = mAuth.getCurrentUser() != null
+                ? mAuth.getCurrentUser().getUid()
+                : null;
 
+        if (uid == null) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // ── 1. Produtos activos na Home ───────────────────────────────────
+        listenerHome = db.collection("users")
+                .document(uid)
+                .collection("products")
+                .whereEqualTo("deleted", false)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null || snapshot == null) return;
+                    int count = snapshot.size();
+                    runOnUiThread(() -> applyBadge(navigationView, homeItem, count));
+                });
+
+        // ── 2. Categorias ─────────────────────────────────────────────────
+        listenerCategory = db.collection("users")
+                .document(uid)
+                .collection("category")
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null || snapshot == null) return;
+                    int count = snapshot.size();
+                    runOnUiThread(() -> applyBadge(navigationView, categoryItem, count));
+                });
+
+        // ── 3. Produtos deletados ─────────────────────────────────────────
+        listenerDeleted = db.collection("users")
+                .document(uid)
+                .collection("products")
+                .whereEqualTo("deleted", true)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null || snapshot == null) return;
+                    int count = snapshot.size();
+                    runOnUiThread(() -> applyBadge(navigationView, deletedItem, count));
+                });
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -142,6 +188,26 @@ public class MainActivity extends BaseActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+    private void applyBadge(NavigationView navigationView, MenuItem item, int count) {
+        if (item == null) return;
+
+        View actionView = item.getActionView();
+        if (actionView == null) {
+            actionView = LayoutInflater.from(this)
+                    .inflate(R.layout.nav_drawer_badge, navigationView, false);
+            item.setActionView(actionView);
+        }
+
+        TextView badge = actionView.findViewById(R.id.nav_badge_text);
+        if (badge == null) return;
+
+        if (count <= 0) {
+            badge.setVisibility(View.GONE);
+        } else {
+            badge.setText(count > 99 ? "99+" : String.valueOf(count));
+            badge.setVisibility(View.VISIBLE);
+        }
+    }
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -156,5 +222,9 @@ public class MainActivity extends BaseActivity {
         if (animator != null) {
             animator.stop();
         }
+        // Remove listeners do Firestore para evitar memory-leaks
+        if (listenerHome     != null) listenerHome.remove();
+        if (listenerCategory != null) listenerCategory.remove();
+        if (listenerDeleted  != null) listenerDeleted.remove();
     }
 }

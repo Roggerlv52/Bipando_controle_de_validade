@@ -251,7 +251,6 @@ class EditFragment : Fragment(), ContractEdit.View {
             .override(512, 512)
             .format(DecodeFormat.PREFER_RGB_565)
             .centerCrop()
-            .placeholder(R.drawable.carregando)
             .error(R.drawable.up_picture)
             .into(binding.imageEdit)
     }

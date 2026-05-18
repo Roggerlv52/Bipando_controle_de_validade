@@ -32,16 +32,17 @@ class AddItemPresenter(
         }
 
         view?.showProgress(true)
+
         val image = PostImage(barcode = barcode)
 
         repository.createImage(image, object : SaveImageCallback {
 
             override fun onSuccess() {
-                // Upload disparado internamente pelo datasource; aguarda onComplete.
+                view?.showProgress(false)
             }
 
             override fun onAlreadyExists(image: PostImage) {
-                // Imagem global já existe — View exibe e bloqueia troca.
+                view?.showProgress(false)
                 view?.imageAlreadyExists(image)
             }
             override fun onFailure(message: String) {

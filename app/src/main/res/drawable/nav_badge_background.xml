@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    res/drawable/nav_badge_background.xml
+    Fundo pill/oval do badge numérico do Navigation Drawer.
+    Adapte a cor "solid" à paleta do seu tema.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <!-- Vermelho Material — troque por @color/colorAccent se preferir -->
+    <solid android:color="#E53935" />
+
+    <corners android:radius="12dp" />
+
+</shape>

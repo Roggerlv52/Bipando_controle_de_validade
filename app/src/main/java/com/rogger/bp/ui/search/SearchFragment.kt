@@ -20,18 +20,15 @@ import com.rogger.bp.R
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.scanner.BarcodeScanFragment
-import com.rogger.bp.ui.viewmodel.DataViewModel
 
 
 class SearchFragment : Fragment() {
 
-    private var dataViewModel: DataViewModel? = null
     private var adapter: SearchAdapter? = null
     private var recyclerSearch: RecyclerView? = null
     private var layoutEmpty: LinearLayout? = null
     private var txtHint: TextView? = null
-    
-    // Referência à toolbar global do MainActivity
+
     private val mainToolbar: Toolbar?
         get() = requireActivity().findViewById(R.id.toolbar)
 
@@ -52,7 +49,6 @@ class SearchFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
 
-        dataViewModel = ViewModelProvider(this).get(DataViewModel::class.java)
 
         recyclerSearch = view.findViewById(R.id.recycler_search)
         layoutEmpty = view.findViewById(R.id.layout_search_empty)
@@ -165,17 +161,17 @@ class SearchFragment : Fragment() {
 
     private fun buscarPorNome(query: String) {
         txtHint?.text = "Buscando produto: $query"
-        substituirObserver(dataViewModel!!.buscarPorNome(query))
+
     }
 
     private fun buscarPorCategoria(query: String) {
         txtHint?.text = "📂 Categoria: $query"
-        substituirObserver(dataViewModel!!.buscarPorNomeCategoria(query))
+
     }
 
     private fun buscarPorCodigoBarras(barcode: String) {
         txtHint?.text = "🔢 Código de barras: $barcode"
-        substituirObserver(dataViewModel!!.buscarPorCodigoBarras(barcode))
+
     }
 
     private fun substituirObserver(novoLiveData: LiveData<List<PostProduct>>) {

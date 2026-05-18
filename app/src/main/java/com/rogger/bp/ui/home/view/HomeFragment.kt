@@ -25,7 +25,6 @@ import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.home.presentation.HomePresenter
-import com.rogger.bp.ui.viewmodel.DataViewModel
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -43,7 +42,6 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     private lateinit var adapterHome: AdapterHome
     private var listaCategorias: List<PostCategory> = emptyList()
-    private lateinit var dataViewModel: DataViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,8 +54,6 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        dataViewModel = ViewModelProvider(requireActivity()).get(DataViewModel::class.java)
 
         _presenter = HomePresenter(
             view = this,

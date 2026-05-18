@@ -138,7 +138,6 @@
                                 android:layout_width="250dp"
                                 android:layout_height="50dp"
                                 android:layout_gravity="center"
-                                android:text="@string/_01_jan_2020"
                                 android:textColor="@color/black"
                                 android:textSize="20sp" />
                         </LinearLayout>
