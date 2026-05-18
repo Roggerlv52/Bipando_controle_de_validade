@@ -4,9 +4,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
+@Entity(tableName = "categories")
 data class PostCategory(
-    val id: Int = 0,
-    val name: String = "",
-    val userId: String = "",
-    val count: Int = 0
+    @PrimaryKey
+    var firestoreId: String = "", // Usado como chave primária no Room, deve ser o documentId do Firestore
+    var id: Int = 0,
+    var name: String = "",
+    var userId: String = ""
 )

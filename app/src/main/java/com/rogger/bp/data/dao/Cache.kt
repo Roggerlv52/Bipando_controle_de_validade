@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.commun
+package com.rogger.bp.data.dao
 
 /*
  * Desenvolvido por Roger de Oliveira
