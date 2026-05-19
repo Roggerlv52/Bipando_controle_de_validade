@@ -12,7 +12,7 @@ data class PostImage(
     @set:PropertyName("nomeProduto")
     var name: String = "",
 
-    @get:PropertyName("imagemUrl")
-    @set:PropertyName("imagemUrl")
+    @get:PropertyName("imageUri")
+    @set:PropertyName("imageUri")
     var uri: String = ""
 )

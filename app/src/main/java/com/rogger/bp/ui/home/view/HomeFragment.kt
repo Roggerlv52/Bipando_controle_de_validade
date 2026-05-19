@@ -4,17 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
-import com.rogger.bp.data.database.BpdDatabase
+import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
@@ -63,7 +61,7 @@ class HomeFragment : Fragment(), ContractHome.View {
         super.onViewCreated(view, savedInstanceState)
 
         // Inicialização do Room e DAOs
-        val database = BpdDatabase.getDatabase(requireContext())
+        val database = BpDatabase.getDatabase(requireContext())
         val productDao = database.productDao()
         val categoryDao = database.categoryDao()
 
@@ -96,11 +94,6 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     override fun onResume() {
         super.onResume()
-        // Não precisamos mais chamar fetchProducts/fetchCategories aqui,
-        // pois os Flows já estão observando e o listener do Firestore já está ativo.
-        // Apenas para garantir que o listener seja reativado se a app for para background e voltar.
-        // presenter.fetchProducts()
-        // presenter.fetchCategories()
     }
 
     override fun onDestroyView() {
@@ -124,7 +117,7 @@ class HomeFragment : Fragment(), ContractHome.View {
 
                 override fun onItemClick(position: Int, data: List<PostProduct>) {
                     val produto = data.getOrNull(position) ?: return
-                    val bundle = Bundle().apply { putString("firestoreDocId", produto.firestoreDocId) }
+                    val bundle = Bundle().apply { putString("uuid", produto.uuid) }
                     findNavController().navigate(
                         R.id.action_nav_home_to_nav_edit_fragment,
                         bundle

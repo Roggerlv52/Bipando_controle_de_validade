@@ -11,7 +11,7 @@ data class PostProduct(
     var firestoreDocId: String = "", // Usado como chave primária no Room, deve ser o documentId do Firestore
     var id: Int = 0,
     var userId: String = "",
-    val uuid: String = "", // Manter para compatibilidade, mas firestoreDocId será a chave principal para o cache
+    var uuid: String = "", // Manter para compatibilidade, mas firestoreDocId será a chave principal para o cache
     var name: String = "",
     var note: String = "",
     var barcode: String = "",
@@ -21,7 +21,7 @@ data class PostProduct(
     var imageUri: String = "",
     var deleted: Boolean = false,
     var deletedAt: Long? = null,
-    val categoryName: String = "",
+    var categoryName: String = "",
     @Ignore val localUri: Uri? = null, // Ignorar para o Room, pois Uri não é um tipo primitivo
     @Ignore val publisher: UserAuth? = null // Ignorar para o Room
 ) {

@@ -96,11 +96,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
                     showLocalImage(photoFile!!)
 
                     // Faz upload imediatamente para o catálogo global
-                    val image = PostImage(
-                        barcode = barcode,
-                        uri = imageFile.absolutePath
-                    )
-                    presenter.uploadImage(image)
                 } catch (e: Exception) {
                     onFailure(e.message ?: "Erro ao processar imagem")
                 }
@@ -125,7 +120,10 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
                 remoteImageUri = null
                 showLocalImage(photoFile!!)
 
-                val image = PostImage(barcode = barcode, uri = file.absolutePath)
+                val image = PostImage(
+                    barcode = barcode,
+                    uri =  Uri.fromFile(photoFile).toString()
+                )
                 presenter.uploadImage(image)
             } catch (e: Exception) {
                 onFailure(e.message ?: "Erro ao processar imagem da galeria")

@@ -1,12 +1,13 @@
 package com.rogger.bp.ui.add.data
 
+import android.net.Uri
 import android.util.Log
-import androidx.core.net.toUri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
+import java.io.File
 
 class FireRegisterDataSource : ItemDataSource {
     override fun createItem(
@@ -67,11 +68,10 @@ class FireRegisterDataSource : ItemDataSource {
                         callback.onFailure("Erro ao converter dados do produto")
                     }
                 } else {
-                    // Se não existe no Firestore, mas o usuário passou uma URI local, faz upload
-                    if (image.uri.isNotEmpty() && image.uri.startsWith("file")) {
+
+                    if (image.uri.isNotEmpty()) {
                         uploadImage(image, callback)
                     } else {
-                        // Apenas informamos que não foi encontrado para liberar a UI
                         callback.onComplete()
                     }
                 }
@@ -86,6 +86,7 @@ class FireRegisterDataSource : ItemDataSource {
             }
     }
 
+    //8718951006188
     override fun uploadImage(
         image: PostImage,
         callback: SaveImageCallback
@@ -97,48 +98,46 @@ class FireRegisterDataSource : ItemDataSource {
         val imageRef = storage.reference
             .child("imagens_produtos/${image.barcode}/imagem.jpg")
 
-        val fileUri = image.uri.toUri()
+        val fileUri: Uri = when {
+            image.uri.startsWith("content://") -> Uri.parse(image.uri)
+            image.uri.startsWith("file://") -> Uri.parse(image.uri)
+            else -> Uri.fromFile(File(image.uri)) // path absoluto → file://
+        }
+
         Log.d("FireRegister", "Iniciando upload de: $fileUri")
 
+        imageRef.putFile(fileUri)
+
+        // ✅ CORRETO — mova onComplete para dentro de cada desfecho
         imageRef.putFile(fileUri)
             .addOnSuccessListener {
                 imageRef.downloadUrl
                     .addOnSuccessListener { downloadUri ->
-                        val downloadUrl = downloadUri.toString()
-                        Log.d("FireRegister", "Upload concluído. URL: $downloadUrl")
-
                         val productImage = PostImage(
                             barcode = image.barcode,
                             name = image.name,
-                            uri = downloadUrl // Agora salvamos a URL de download (https://...)
+                            uri = downloadUri.toString()
                         )
-
-                        firestore
-                            .collection("imagens_produtos")
+                        firestore.collection("imagens_produtos")
                             .document(image.barcode)
                             .set(productImage)
                             .addOnSuccessListener {
                                 callback.onSuccess()
+                                callback.onComplete() // ← aqui
                             }
                             .addOnFailureListener { exception ->
-                                callback.onFailure(
-                                    exception.message ?: "Erro ao salvar metadados no Firestore"
-                                )
+                                callback.onFailure(exception.message ?: "Erro ao salvar metadados")
+                                callback.onComplete() // ← e aqui
                             }
                     }
                     .addOnFailureListener { exception ->
-                        callback.onFailure(
-                            exception.message ?: "Erro ao obter URL de download"
-                        )
+                        callback.onFailure(exception.message ?: "Erro ao obter URL")
+                        callback.onComplete() // ← e aqui
                     }
             }
             .addOnFailureListener { exception ->
-                callback.onFailure(
-                    exception.message ?: "Erro no upload da imagem para o Storage"
-                )
-            }
-            .addOnCompleteListener {
-                callback.onComplete()
+                callback.onFailure(exception.message ?: "Erro no upload")
+                callback.onComplete() // ← e aqui
             }
     }
 }

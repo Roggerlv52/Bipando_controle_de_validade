@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -6,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
 val keystoreProperties = Properties()
@@ -67,19 +67,22 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation ("com.google.firebase:firebase-storage:20.3.0")
+    implementation("com.google.firebase:firebase-storage:20.3.0")
     //Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
+    implementation("androidx.room:room-ktx:2.6.1")
     implementation(libs.recyclerview)
     implementation(libs.room3.common.jvm)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.work:work-runtime:2.9.0")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    //ksp("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation(libs.appcompat)
     implementation(libs.material)

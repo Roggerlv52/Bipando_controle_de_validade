@@ -51,6 +51,7 @@ recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version
 room3-common-jvm = { group = "androidx.room3", name = "room3-common-jvm", version.ref = "room3CommonJvm" }
 
 [plugins]
+ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.28" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

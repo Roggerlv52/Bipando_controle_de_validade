@@ -1,7 +1,7 @@
 package com.rogger.bp.ui.commun
 
 import android.content.Context
-import com.rogger.bp.data.database.BpdDatabase
+import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.ui.add.data.FireRegisterDataSource
 import com.rogger.bp.ui.add.data.RegisterItemRepository
@@ -24,7 +24,7 @@ object DependencyInjector {
     }
 
     fun registerCategoryRepository(context: Context): CategoryRepository {
-        val database = BpdDatabase.getDatabase(context)
+        val database = BpDatabase.getDatabase(context)
         val categoryDao = database.categoryDao()
         val roomCategoryCache = RoomCategoryCache(categoryDao)
         val categoryDataSource = CategoryDataSource()
@@ -32,7 +32,7 @@ object DependencyInjector {
     }
 
     fun registerHomeRepository(context: Context): HomeRepository {
-        val database = BpdDatabase.getDatabase(context)
+        val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
         val homeDataSource = HomeDataSource()

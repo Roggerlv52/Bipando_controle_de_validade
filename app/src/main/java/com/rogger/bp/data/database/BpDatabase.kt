@@ -1,8 +1,9 @@
 package com.rogger.bp.data.database
+
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 19/05/2026
- * Hora: 11:05
+ * Hora: 13:02
  */
 import android.content.Context
 import androidx.room.Database
@@ -14,20 +15,20 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 
 @Database(entities = [PostProduct::class, PostCategory::class], version = 1, exportSchema = false)
-abstract class BpdDatabase : RoomDatabase() {
+abstract class BpDatabase : RoomDatabase() {
 
     abstract fun productDao(): ProductDao
     abstract fun categoryDao(): CategoryDao
 
     companion object {
         @Volatile
-        private var INSTANCE: BpdDatabase? = null
+        private var INSTANCE: BpDatabase? = null
 
-        fun getDatabase(context: Context): BpdDatabase {
+        fun getDatabase(context: Context): BpDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
-                    BpdDatabase::class.java,
+                    BpDatabase::class.java,
                     "bp_database"
                 )
                     .fallbackToDestructiveMigration() // Estratégia de migração simples para desenvolvimento

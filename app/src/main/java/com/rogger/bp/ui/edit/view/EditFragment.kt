@@ -21,7 +21,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DecodeFormat
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
-import com.rogger.bp.data.database.BpdDatabase
+import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentEditBinding
@@ -78,7 +78,7 @@ class EditFragment : Fragment(), ContractEdit.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val database = BpdDatabase.getDatabase(requireContext())
+        val database = BpDatabase.getDatabase(requireContext())
         val categoryDao = database.categoryDao()
         val roomCategoryCache = RoomCategoryCache(categoryDao)
         val categoryDataSource = CategoryDataSource()
