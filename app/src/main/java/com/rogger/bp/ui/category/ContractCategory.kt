@@ -24,7 +24,6 @@ import com.rogger.bp.ui.base.BaseView
  *  [onError]          → feedback de erro.
  */
 interface ContractCategory {
-
     interface Presenter : BasePresenter {
         fun create(category: PostCategory)
         fun update(category: PostCategory)
@@ -36,10 +35,13 @@ interface ContractCategory {
 
     interface View : BaseView<Presenter> {
         fun showProgress(enable: Boolean)
-        fun showCategories(categories: List<PostCategory>)
+        // fun showCategories(categories: List<PostCategory>) // Removido, a View observará o Flow diretamente
         fun showEmpty(isEmpty: Boolean)
         fun onSuccess(message: String)
-        fun onCategoryExists(category: PostCategory)
         fun onError(message: String)
+        fun onCategoryExists(category: PostCategory)
+        fun onCategoryCreated(category: PostCategory)
+        fun onCategoryUpdated(category: PostCategory)
+        fun onCategoryDeleted(category: PostCategory)
     }
 }

@@ -8,6 +8,15 @@ import com.rogger.bp.ui.home.ContractHome
 import com.rogger.bp.ui.home.data.FetchProductsCallback
 import com.rogger.bp.ui.home.data.HomeCallback
 import com.rogger.bp.ui.home.data.HomeRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -20,26 +29,49 @@ class HomePresenter(
     private val categoryRepository: CategoryRepository
 ) : ContractHome.Presenter {
 
+    private val _products = MutableStateFlow<List<PostProduct>>(emptyList())
+    val products: StateFlow<List<PostProduct>> = _products.asStateFlow()
+
+    private val _categories = MutableStateFlow<List<PostCategory>>(emptyList())
+    val categories: StateFlow<List<PostCategory>> = _categories.asStateFlow()
+
+    private val presenterScope = CoroutineScope(Dispatchers.Main + Job())
+    private var productsCollectionJob: Job? = null
+    private var categoriesCollectionJob: Job? = null
+
     // ── 1. Buscar produtos ────────────────────────────────────────────────
 
     override fun fetchProducts() {
         view?.showProgress(true)
 
+        // Inicia o listener do Firestore e atualiza o cache local
         repository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                view?.showProducts(products)
-                view?.showEmpty(products.isEmpty())
+                // Os dados serão propagados via Flow do Room, então não precisamos
+                // chamar view?.showProducts(products) aqui diretamente.
+                // Apenas ocultamos o progresso após a primeira sincronização ou se o cache já tiver dados.
+                view?.showProgress(false)
             }
 
             override fun onFailure(message: String) {
                 view?.onError(message)
-                view?.showEmpty(true)
+                view?.showProgress(false)
             }
 
             override fun onComplete() {
-                view?.showProgress(false)
+                // onComplete não é chamado para listeners contínuos
             }
         })
+
+        // Coleta os produtos do cache local e os expõe para a View
+        productsCollectionJob?.cancel() // Cancela o job anterior se houver
+        productsCollectionJob = presenterScope.launch {
+            repository.getCachedProductsFlow().collectLatest {
+                _products.value = it
+                view?.showEmpty(it.isEmpty())
+                view?.showProgress(false) // Garante que o progresso seja ocultado após o primeiro carregamento do cache
+            }
+        }
     }
 
     // ── 2. Buscar produtos por categoria ──────────────────────────────────
@@ -51,15 +83,20 @@ class HomePresenter(
         }
         view?.showProgress(true)
 
+        // Para a busca por categoria, o ideal seria ter um Flow filtrado no repositório
+        // ou filtrar o Flow principal aqui. Por enquanto, mantemos a chamada direta
+        // ao remoteDataSource para garantir a funcionalidade.
         repository.fetchByCategory(categoryId, object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                view?.showProducts(products)
+                _products.value = products // Atualiza o StateFlow para a UI
                 view?.showEmpty(products.isEmpty())
+                view?.showProgress(false)
             }
 
             override fun onFailure(message: String) {
                 view?.onError(message)
                 view?.showEmpty(true)
+                view?.showProgress(false)
             }
 
             override fun onComplete() {
@@ -84,7 +121,7 @@ class HomePresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                fetchProducts()
+                // Não precisa chamar fetchProducts() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
@@ -105,7 +142,7 @@ class HomePresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                fetchProducts()
+                // Não precisa chamar fetchProducts() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
@@ -113,22 +150,37 @@ class HomePresenter(
     // ── 5. Buscar categorias (para dialog do FAB) ─────────────────────────
 
     override fun fetchCategories() {
+        // Inicia o listener do Firestore para categorias e atualiza o cache local
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {
-                view?.showCategories(categories)
+                // Os dados serão propagados via Flow do Room, não precisamos atualizar a view diretamente aqui.
             }
 
             override fun onFailure(message: String) {
-                // Sem categorias: entrega lista vazia — o dialog trata o fluxo B
-                view?.showCategories(emptyList())
+                view?.onError(message)
             }
 
-            override fun onComplete() { /* sem progress — chamada silenciosa */
+            override fun onComplete() {
+                // onComplete não é chamado para listeners contínuos
             }
         })
+
+        // Coleta as categorias do cache local e as expõe para a View
+        categoriesCollectionJob?.cancel()
+        categoriesCollectionJob = presenterScope.launch {
+            categoryRepository.getCachedCategoriesFlow().collectLatest {
+                _categories.value = it
+                // view?.showCategories(it) // A view observará o StateFlow diretamente
+            }
+        }
     }
 
     override fun onDestroy() {
+        repository.stopListeningForProducts()
+        categoryRepository.stopListeningForCategories()
+        productsCollectionJob?.cancel()
+        categoriesCollectionJob?.cancel()
+        presenterScope.cancel()
         view = null
     }
 }

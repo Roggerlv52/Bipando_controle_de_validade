@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.home.data
 
+import com.google.firebase.firestore.ListenerRegistration
 import com.rogger.bp.data.model.PostProduct
 
 /*
@@ -12,4 +13,6 @@ interface PostHomeDataSource {
     fun fetchProductsByCategory(categoryId: Int, callback: FetchProductsCallback)
     fun deleteProduct(product: PostProduct, callback: HomeCallback)
     fun restoreProduct(product: PostProduct, callback: HomeCallback)
+
+    fun addProductsSnapshotListener(callback: FetchProductsCallback): ListenerRegistration?
 }

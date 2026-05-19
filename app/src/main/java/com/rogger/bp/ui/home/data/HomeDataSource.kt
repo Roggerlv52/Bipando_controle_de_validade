@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.rogger.bp.data.model.PostProduct
 
 /*
@@ -52,6 +53,7 @@ class HomeDataSource : PostHomeDataSource {
             val uuid = if (uidField.isNotEmpty()) uidField else doc.id
 
             PostProduct(
+                firestoreDocId = doc.id, // Adicionado para o Room
                 id         = (data["id"]         as? Long)?.toInt() ?: 0,
                 userId     = data["userId"]      as? String ?: "",
                 uuid       = uuid,
@@ -132,7 +134,7 @@ class HomeDataSource : PostHomeDataSource {
         }
 
         // Busca pelo docId (uuid) — garantido pelo fallback acima
-        ref.document(product.uuid)
+        ref.document(product.firestoreDocId) // Usar firestoreDocId
             .update(mapOf("deleted" to true, "deletedAt" to System.currentTimeMillis()))
             .addOnSuccessListener {
                 Log.d(TAG, "Produto eliminado (soft): ${product.uuid}")
@@ -170,7 +172,7 @@ class HomeDataSource : PostHomeDataSource {
             return
         }
 
-        ref.document(product.uuid)
+        ref.document(product.firestoreDocId) // Usar firestoreDocId
             .update(mapOf("deleted" to false, "deletedAt" to null))
             .addOnSuccessListener {
                 Log.d(TAG, "Produto restaurado: ${product.uuid}")
@@ -194,6 +196,33 @@ class HomeDataSource : PostHomeDataSource {
                     .addOnSuccessListener { callback.onSuccess(product) }
                     .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro ao restaurar") }
                     .addOnCompleteListener { callback.onComplete() }
+            }
+    }
+
+    override fun addProductsSnapshotListener(callback: FetchProductsCallback): ListenerRegistration? {
+        val ref = productsRef()
+        if (ref == null) {
+            callback.onFailure("Usuário não autenticado")
+            callback.onComplete()
+            return null
+        }
+
+        return ref.whereEqualTo("deleted", false)
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Erro no listener de produtos: ${error.message}")
+                    callback.onFailure(error.message ?: "Erro no listener de produtos")
+                    callback.onComplete()
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
+                    Log.d(TAG, "Produtos atualizados via listener: ${list.size}")
+                    callback.onSuccess(list)
+                }
+                // onComplete não é chamado para listeners contínuos
             }
     }
 }

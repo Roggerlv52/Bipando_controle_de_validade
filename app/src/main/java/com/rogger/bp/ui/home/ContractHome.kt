@@ -10,7 +10,7 @@ import com.rogger.bp.ui.base.BaseView
  * Data: 13/05/2026
  * Hora: 22:40
  */
- interface ContractHome {
+interface ContractHome {
  interface Presenter : BasePresenter {
   fun fetchProducts()
   fun fetchProductsByCategory(categoryId: Int)
@@ -22,11 +22,12 @@ import com.rogger.bp.ui.base.BaseView
 
  interface View : BaseView<Presenter> {
   fun showProgress(enable: Boolean)
-  fun showProducts(products: List<PostProduct>)
+  // fun showProducts(products: List<PostProduct>) // Removido, a View observará o Flow diretamente
   fun showEmpty(isEmpty: Boolean)
   fun onSuccess(message: String)
   fun onError(message: String)
-  /** Entrega lista de [PostCategory] para o dialog do FAB. */
-  fun showCategories(categories: List<PostCategory>)
+  // fun showCategories(categories: List<PostCategory>) // Removido, a View observará o Flow diretamente
+  fun onProductDeleted(product: PostProduct)
+  fun onProductRestored(product: PostProduct)
  }
 }

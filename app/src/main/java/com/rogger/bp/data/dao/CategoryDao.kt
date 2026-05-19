@@ -24,7 +24,7 @@ interface CategoryDao {
     suspend fun insertCategory(category: PostCategory)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllCategories(categories: List<PostCategory>)
+    fun insertAllCategories(categories: List<PostCategory>)
 
     @Update
     suspend fun updateCategory(category: PostCategory)
@@ -41,20 +41,22 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY name ASC")
     fun getAllCategories(): Flow<List<PostCategory>>
 
-    // Implementação da interface Cache<List<PostCategory>> para o DAO
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun putAllCategories(categories: List<PostCategory>)
+
+    // Método não-suspend para a interface Cache (opcional)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun putAllCategoriesSync(categories: List<PostCategory>)
+
     @Query("SELECT EXISTS(SELECT 1 FROM categories LIMIT 1)")
     fun isAnyCategoryCached(): Boolean
 
     @Query("SELECT * FROM categories")
     fun getAllCachedCategories(): List<PostCategory>?
 
-    suspend fun putAllCategories(categories: List<PostCategory>) {
-        insertAllCategories(categories)
-    }
-
     @Query("DELETE FROM categories WHERE firestoreId = :key")
-    suspend fun removeCachedCategory(key: String)
+    fun removeCachedCategory(key: String)
 
     @Query("DELETE FROM categories")
-    suspend fun clearAllCategories()
+    fun clearAllCategories()
 }

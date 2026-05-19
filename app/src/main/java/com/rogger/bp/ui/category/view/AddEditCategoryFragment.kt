@@ -11,6 +11,8 @@ import android.view.ViewGroup
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -22,6 +24,7 @@ import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.category.ContractCategory
 import com.rogger.bp.ui.category.presentation.CategoryPresenter
 import com.rogger.bp.ui.commun.DependencyInjector
+import kotlinx.coroutines.launch
 
 class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
@@ -31,9 +34,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     private val binding get() = _binding!!
 
     private lateinit var adapter: AdapterCategory
-
-    private var currentCategories: List<PostCategory> = emptyList()
-
     private var actionMode: ActionMode? = null
 
     override fun onCreateView(
@@ -48,19 +48,19 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repository = DependencyInjector.registerCategoryRepository()
-        presenter = CategoryPresenter(this, repository)
+        val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
+
+        presenter = CategoryPresenter(this, categoryRepository)
 
         binding.recyclerViewCategory.layoutManager = LinearLayoutManager(requireContext())
 
-        // 3. Adapter com callbacks de interação
         setupAdapter()
         binding.recyclerViewCategory.adapter = adapter
 
-        // 4. Menu da toolbar
         setupListeners()
+        observePresenterFlows()
 
-        // 5. Carrega lista do Firebase ao entrar na tela
+        // Inicia o carregamento e o listener do Firestore
         presenter.fetchCategories()
     }
 
@@ -74,6 +74,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         if (::presenter.isInitialized) presenter.onDestroy()
         super.onDestroy()
     }
+
     private fun setupAdapter() {
         adapter = AdapterCategory(object : AdapterCategory.OnCategoriaListener {
 
@@ -82,7 +83,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             }
 
             override fun onMenuEditClick(categoria: PostCategory) {
-                openEditDialog(toPostCategory(categoria))
+                openEditDialog(categoria)
             }
 
             override fun onSelectionChanged(total: Int) {
@@ -145,7 +146,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     }
 
     private fun confirmDeleteSelected(mode: ActionMode) {
-        val selecionadas = adapter.getSelecionadas().map { toPostCategory(it) }
+        val selecionadas = adapter.getSelecionadas()
         val mensagem = if (selecionadas.size == 1)
             "Deseja excluir \"${selecionadas.first().name}\"?"
         else
@@ -165,14 +166,18 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         findNavController().navigate(R.id.action_nav_category_to_nav_search, bundle)
     }
 
-    // ── Conversores entre Categoria (Java/Room) e PostCategory (Kotlin/MVP) ──
-
-    private fun toPostCategory(c: PostCategory) = PostCategory(
-        id     = c.id,
-        name   = c.name ?: "",
-        userId = c.userId ?: ""
-    )
-
+    private fun observePresenterFlows() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { // Observa as categorias
+                    (presenter as CategoryPresenter).categories.collect { categories ->
+                        adapter.setItems(categories)
+                        showEmpty(categories.isEmpty())
+                    }
+                }
+            }
+        }
+    }
 
     // =========================================================================
     //  ContractCategory.View
@@ -181,16 +186,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     override fun showProgress(enable: Boolean) {
         binding.progressCategory.visibility = if (enable) View.VISIBLE else View.GONE
         binding.recyclerViewCategory.isEnabled = !enable
-    }
-
-
-    /**
-     * Atualiza o adapter com a lista recebida do Firebase.
-     * Substitui o papel do LiveData do ViewModel — chamado após cada operação de escrita.
-     */
-    override fun showCategories(categories: List<PostCategory>) {
-        currentCategories = categories
-        adapter.setItems(categories)
     }
 
     override fun showEmpty(isEmpty: Boolean) {
@@ -202,7 +197,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
-
     override fun onCategoryExists(category: PostCategory) {
         Snackbar.make(
             binding.root,
@@ -213,5 +207,17 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     override fun onError(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    override fun onCategoryCreated(category: PostCategory) {
+        onSuccess("Categoria \"${category.name}\" criada")
+    }
+
+    override fun onCategoryUpdated(category: PostCategory) {
+        onSuccess("Categoria atualizada para \"${category.name}\"")
+    }
+
+    override fun onCategoryDeleted(category: PostCategory) {
+        onSuccess("Categoria \"${category.name}\" excluída")
     }
 }

@@ -24,7 +24,7 @@ interface ProductDao {
     suspend fun insertProduct(product: PostProduct)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllProducts(products: List<PostProduct>)
+    fun insertAllProducts(products: List<PostProduct>)
 
     @Update
     suspend fun updateProduct(product: PostProduct)
@@ -60,15 +60,15 @@ interface ProductDao {
     fun getAllCachedProducts(): List<PostProduct>?
 
     // put para inserir/atualizar uma lista de produtos
-    suspend fun putAllProducts(products: List<PostProduct>) {
+    fun putAllProducts(products: List<PostProduct>) {
         insertAllProducts(products)
     }
 
     // remove para remover um produto específico (usando firestoreDocId como key)
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
-    suspend fun removeCachedProduct(key: String)
+    fun removeCachedProduct(key: String)
 
     // clear para limpar todos os produtos
     @Query("DELETE FROM products")
-    suspend fun clearAllProducts()
+    fun clearAllProducts()
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.rogger.bp.data.model.PostCategory
 
 class CategoryDataSource : PostCategoryDataSource {
@@ -321,14 +322,11 @@ class CategoryDataSource : PostCategoryDataSource {
                     try {
 
                         PostCategory(
-
+                            firestoreId = document.id, // Capturar o documentId do Firestore
                             id = (document.getLong("id") ?: 0L).toInt(),
-
                             name = document.getString("name")
                                 ?: return@mapNotNull null,
-
                             userId = document.getString("userId") ?: ""
-
                         )
 
                     } catch (exception: Exception) {
@@ -367,4 +365,40 @@ class CategoryDataSource : PostCategoryDataSource {
 
     }
 
+    override fun addCategoriesSnapshotListener(callback: FetchCategoriesCallback): ListenerRegistration? {
+        val ref = categoriasRef()
+        if (ref == null) {
+            callback.onFailure("Usuário não autenticado")
+            callback.onComplete()
+            return null
+        }
+
+        return ref.orderBy("name")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Erro no listener de categorias: ${error.message}")
+                    callback.onFailure(error.message ?: "Erro no listener de categorias")
+                    callback.onComplete()
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val list = snapshot.documents.mapNotNull { document ->
+                        try {
+                            PostCategory(
+                                firestoreId = document.id, // Capturar o documentId do Firestore
+                                id = (document.getLong("id") ?: 0L).toInt(),
+                                name = document.getString("name") ?: return@mapNotNull null,
+                                userId = document.getString("userId") ?: ""
+                            )
+                        } catch (exception: Exception) {
+                            Log.e(TAG, "Erro ao mapear categoria via listener: ${exception.message}")
+                            null
+                        }
+                    }
+                    Log.d(TAG, "Categorias atualizadas via listener: ${list.size}")
+                    callback.onSuccess(list)
+                }
+            }
+    }
 }

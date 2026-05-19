@@ -1,26 +1,40 @@
-package com.rogger.bp.data.database;
+package com.rogger.bp.data.database
+/*
+ * Desenvolvido por Roger de Oliveira
+ * Data: 19/05/2026
+ * Hora: 11:05
+ */
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.rogger.bp.data.dao.CategoryDao
+import com.rogger.bp.data.dao.ProductDao
+import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.data.model.PostProduct
 
-import android.content.Context;
+@Database(entities = [PostProduct::class, PostCategory::class], version = 1, exportSchema = false)
+abstract class BpdDatabase : RoomDatabase() {
 
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
+    abstract fun productDao(): ProductDao
+    abstract fun categoryDao(): CategoryDao
 
-public abstract class BpdDatabase extends RoomDatabase {
+    companion object {
+        @Volatile
+        private var INSTANCE: BpdDatabase? = null
 
-    private static volatile BpdDatabase INSTANCE;
-
-    public static BpdDatabase getDatabase(Context context) {
-        if (INSTANCE == null) {
-            synchronized (BpdDatabase.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(
-                                    context.getApplicationContext(),
-                                    BpdDatabase.class,
-                                    "bp"
-                            )
-                            .build();
-                }
+        fun getDatabase(context: Context): BpdDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    BpdDatabase::class.java,
+                    "bp_database"
+                )
+                    .fallbackToDestructiveMigration() // Estratégia de migração simples para desenvolvimento
+                    .build()
+                INSTANCE = instance
+                instance
             }
         }
-        return INSTANCE;}
     }
+}

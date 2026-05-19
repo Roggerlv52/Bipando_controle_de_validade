@@ -5,11 +5,26 @@ import com.rogger.bp.ui.category.ContractCategory
 import com.rogger.bp.ui.category.data.CategoryCallback
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class CategoryPresenter(
     private var view: ContractCategory.View?,
     private val repository: CategoryRepository
 ) : ContractCategory.Presenter {
+
+    private val _categories = MutableStateFlow<List<PostCategory>>(emptyList())
+    val categories: StateFlow<List<PostCategory>> = _categories.asStateFlow()
+
+    private val presenterScope = CoroutineScope(Dispatchers.Main + Job())
+    private var categoriesCollectionJob: Job? = null
 
     companion object {
         private const val NAME_MIN = 3
@@ -35,7 +50,7 @@ class CategoryPresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                fetchCategories()
+                // Não precisa chamar fetchCategories() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
@@ -63,7 +78,7 @@ class CategoryPresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                fetchCategories()
+                // Não precisa chamar fetchCategories() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
@@ -84,7 +99,7 @@ class CategoryPresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                fetchCategories()
+                // Não precisa chamar fetchCategories() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
@@ -124,7 +139,7 @@ class CategoryPresenter(
                         } else {
                             view?.onError("$errors de $total categorias falharam ao excluir")
                         }
-                        fetchCategories()
+                        // Não precisa chamar fetchCategories() aqui, o listener do Firestore e o Flow do Room já farão a atualização
                     }
                 }
             })
@@ -133,24 +148,40 @@ class CategoryPresenter(
 
     override fun fetchCategories() {
         view?.showProgress(true)
+
+        // Inicia o listener do Firestore e atualiza o cache local
         repository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {
-                view?.showCategories(categories)
-                view?.showEmpty(categories.isEmpty())
+                // Os dados serão propagados via Flow do Room, então não precisamos
+                // chamar view?.showCategories(categories) aqui diretamente.
+                // Apenas ocultamos o progresso após a primeira sincronização ou se o cache já tiver dados.
+                view?.showProgress(false)
             }
 
             override fun onFailure(message: String) {
                 view?.onError(message)
-                view?.showEmpty(true)
+                view?.showProgress(false)
             }
 
             override fun onComplete() {
-                view?.showProgress(false)
+                // onComplete não é chamado para listeners contínuos
             }
         })
+
+        // Coleta as categorias do cache local e as expõe para a View
+        categoriesCollectionJob?.cancel() // Cancela o job anterior se houver
+        categoriesCollectionJob = presenterScope.launch {
+            repository.getCachedCategoriesFlow().collectLatest {
+                _categories.value = it
+                view?.showEmpty(it.isEmpty()) // Atualiza o estado de vazio
+                view?.showProgress(false) // Garante que o progresso seja ocultado após o primeiro carregamento do cache
+            }
+        }
     }
 
     override fun getCountCategorias() {
+        // Este método pode ser removido ou adaptado para usar o Flow de categorias
+        // Por exemplo, _categories.value.size
     }
 
     private fun validateName(name: String): String? {
@@ -173,6 +204,9 @@ class CategoryPresenter(
     }
 
     override fun onDestroy() {
+        repository.stopListeningForCategories()
+        categoriesCollectionJob?.cancel()
+        presenterScope.cancel()
         view = null
     }
 }

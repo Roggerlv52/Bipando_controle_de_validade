@@ -96,11 +96,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
         void bind(PostCategory categoria) {
             // ✅ Exibe o nome concatenado com a quantidade de produtos
             String textoExibicao = categoria.getName();
-            if (categoria.getCount() > 0) {
-                textoExibicao += " (" + categoria.getCount() + ")";
-            } else {
-                textoExibicao += " (0)";
-            }
+           
             nome.setText(textoExibicao);
 
             checkBox.setVisibility(modoSelecao ? View.VISIBLE : View.GONE);
