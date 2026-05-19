@@ -106,23 +106,21 @@ class FireRegisterDataSource : ItemDataSource {
 
         Log.d("FireRegister", "Iniciando upload de: $fileUri")
 
-        imageRef.putFile(fileUri)
-
-        // ✅ CORRETO — mova onComplete para dentro de cada desfecho
+        // Uma única chamada putFile (antes havia chamada duplicada que fazia upload duplo)
         imageRef.putFile(fileUri)
             .addOnSuccessListener {
                 imageRef.downloadUrl
                     .addOnSuccessListener { downloadUri ->
                         val productImage = PostImage(
                             barcode = image.barcode,
-                            name = image.name,
-                            uri = downloadUri.toString()
+                            name    = image.name,   // nome digitado pelo utilizador
+                            uri     = downloadUri.toString()
                         )
                         firestore.collection("imagens_produtos")
                             .document(image.barcode)
                             .set(productImage)
                             .addOnSuccessListener {
-                                callback.onSuccess()
+                                callback.onSuccess(productImage)
                                 callback.onComplete() // ← aqui
                             }
                             .addOnFailureListener { exception ->
