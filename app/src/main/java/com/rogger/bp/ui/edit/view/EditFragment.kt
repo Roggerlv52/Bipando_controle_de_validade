@@ -42,6 +42,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.net.toUri
+import com.rogger.bp.ui.animation.ToastCustom
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -97,9 +99,6 @@ class EditFragment : Fragment(), ContractEdit.View {
         setupClicks()
         setupMenu()
 
-        // Ordem: categorias primeiro (async) + produto em paralelo (async)
-        // Ambos são independentes; [bindProduct] e [showCategories] tratam a
-        // race condition nos dois sentidos.
         presenter.fetchCategories()
         loadProductFromArgs()
     }
@@ -137,13 +136,18 @@ class EditFragment : Fragment(), ContractEdit.View {
             "gallery_result",
             viewLifecycleOwner
         ) { _, bundle ->
-            try {
-                val uri = Uri.parse(bundle.getString("imageUri"))
-                val out = ImagePikerUtil.createImageFile(requireContext())
-                novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
-                showImageView(novaImagemFile!!.absolutePath)
-            } catch (e: Exception) {
-                onError(e.message ?: "Erro ao processar imagem da galeria")
+            // Usa post() para garantir que o Fragment já está totalmente visível
+            // antes de processar o resultado, evitando que um callback tardio do
+            // Firestore (bindProduct) sobrescreva a imagem escolhida pelo utilizador.
+            binding.root.post {
+                try {
+                    val uri = Uri.parse(bundle.getString("imageUri"))
+                    val out = ImagePikerUtil.createImageFile(requireContext())
+                    novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
+                    showImageView(novaImagemFile!!.absolutePath)
+                } catch (e: Exception) {
+                    onError(e.message ?: "Erro ao processar imagem da galeria")
+                }
             }
         }
     }
@@ -210,20 +214,23 @@ class EditFragment : Fragment(), ContractEdit.View {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Dados
-    // ─────────────────────────────────────────────────────────────────────
-
-
     private fun loadProductFromArgs() {
         val docId = arguments?.getString("uuid")
+        val productBundle = arguments?.getSerializable("product_bundle") as? PostProduct
 
         if (docId.isNullOrBlank()) {
             onError("Produto inválido — identificador ausente")
             return
         }
 
-        presenter.loadProduct(docId)
+        // Se o produto veio via Bundle, exibe imediatamente
+        productBundle?.let {
+
+            bindProduct(it)
+        }
+        //presenter.loadProduct(docId)
+        // Carrega do Firestore em background para atualizar silenciosamente
+
     }
 
     private fun salvarProduto() {
@@ -247,14 +254,6 @@ class EditFragment : Fragment(), ContractEdit.View {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────────
-
-    /**
-     * Selecciona o Spinner na posição correspondente ao [categoryId].
-     * A posição 0 é sempre o placeholder — as categorias começam na posição 1.
-     */
     private fun selecionarCategoria(categoryId: Int) {
         listaCategorias.forEachIndexed { index, cat ->
             if (cat.id == categoryId) {
@@ -284,21 +283,10 @@ class EditFragment : Fragment(), ContractEdit.View {
     private fun timestampParaData(ts: Long): String =
         SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).format(Date(ts))
 
-    // ─────────────────────────────────────────────────────────────────────
-    // ContractEdit.View
-    // ─────────────────────────────────────────────────────────────────────
-
     override fun showProgress(enable: Boolean) {
         binding.btnFgmSave.isEnabled = !enable
     }
 
-    /**
-     * Preenche todos os campos com os dados do [PostProduct] do Firestore.
-     *
-     * Race condition com [showCategories]:
-     *  - Se categorias já chegaram ([spinnerPronto] = true): selecciona de imediato.
-     *  - Se ainda estão a chegar: [showCategories] chama [selecionarCategoria] ao terminar.
-     */
     override fun bindProduct(produto: PostProduct) {
         this.produto = produto
         this.timestamp = produto.timestamp
@@ -313,12 +301,6 @@ class EditFragment : Fragment(), ContractEdit.View {
         if (spinnerPronto) selecionarCategoria(produto.categoryId)
     }
 
-    /**
-     * Popula o Spinner com as [PostCategory] do Firestore.
-     *
-     * Após criar o adapter activa [spinnerPronto] e verifica se o produto
-     * já chegou para seleccionar a categoria correcta.
-     */
     override fun showCategories(categories: List<PostCategory>) {
         listaCategorias = categories
 
@@ -336,7 +318,8 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     override fun onSuccess(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        ToastCustom.showCustomToast(requireContext(),"")
+        //Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onError(message: String) {

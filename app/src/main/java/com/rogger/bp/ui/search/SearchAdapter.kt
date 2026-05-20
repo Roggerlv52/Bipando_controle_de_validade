@@ -46,7 +46,7 @@ class SearchAdapter(
         holder.txtTitle.text = produto.name ?: ""
 
         // Categoria
-       // holder.txtSubTitle.text = produto.nameCategory ?: ""
+        // holder.txtSubTitle.text = produto.nameCategory ?: ""
 
         // Código de barras
         holder.txtBarcode.text = produto.barcode ?: ""
@@ -75,7 +75,7 @@ class SearchAdapter(
         } else {
             holder.txtContDay.text = "$dias dias"
         }
-         holder.imgCircle.setColorFilter(corCirculo)
+        holder.imgCircle.setColorFilter(corCirculo)
 
         // Imagem via Glide
         Glide.with(context)
