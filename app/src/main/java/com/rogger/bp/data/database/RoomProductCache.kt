@@ -46,7 +46,7 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
     override fun clear() {
         productDao.clearAllProducts()
     }
-    suspend fun putAllProducts(categories: List<PostProduct>) {
+    fun putAllProducts(categories: List<PostProduct>) {
         productDao.putAllProducts(categories)
     }
 

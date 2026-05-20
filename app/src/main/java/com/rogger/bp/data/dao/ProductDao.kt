@@ -38,10 +38,12 @@ interface ProductDao {
     @Query("DELETE FROM products")
     suspend fun clearProducts()
 
-    @Query("SELECT * FROM products ORDER BY timestamp DESC")
+    // MODIFICADO: Apenas produtos não deletados
+    @Query("SELECT * FROM products WHERE deleted = 0 ORDER BY timestamp DESC")
     fun getAllProducts(): Flow<List<PostProduct>>
 
-    @Query("SELECT * FROM products WHERE categoryId = :categoryId ORDER BY timestamp DESC")
+    // MODIFICADO: Apenas produtos não deletados por categoria
+    @Query("SELECT * FROM products WHERE categoryId = :categoryId AND deleted = 0 ORDER BY timestamp DESC")
     fun getProductsByCategory(categoryId: Int): Flow<List<PostProduct>>
 
     // Implementação da interface Cache<List<PostProduct>> para o DAO
@@ -56,6 +58,7 @@ interface ProductDao {
     fun isAnyProductCached(): Boolean
 
     // get para retornar todos os produtos (representando o cache completo)
+    // Este método pode retornar itens deletados se for usado para sincronização interna
     @Query("SELECT * FROM products")
     fun getAllCachedProducts(): List<PostProduct>?
 
@@ -68,7 +71,6 @@ interface ProductDao {
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     fun removeCachedProduct(key: String)
 
-    // clear para limpar todos os produtos
     @Query("DELETE FROM products")
     fun clearAllProducts()
 }

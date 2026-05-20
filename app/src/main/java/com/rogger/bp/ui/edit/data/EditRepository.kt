@@ -17,10 +17,6 @@ class EditRepository(private val dataSource: PostEditDataSource) {
         dataSource.deleteProduct(produto, callback)
     }
 
-    /**
-     * Busca o produto pelo [docId] — o documentId do Firestore.
-     * É o mesmo valor exposto em [PostProduct.uuid] pelo [HomeDataSource].
-     */
     fun fetchByDocId(docId: String, callback: EditCallback) {
         dataSource.fetchProductByDocId(docId, callback)
     }

@@ -18,6 +18,7 @@ import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.databinding.FragmentAddBinding
 import com.rogger.bp.ui.add.RegisterAdd
 import com.rogger.bp.ui.add.presentation.AddItemPresenter
+import com.rogger.bp.ui.animation.ToastCustom
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.ShowSelectDialog
@@ -251,7 +252,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         findNavController().navigate(R.id.action_addFragment_to_nav_gallery_fragment)
     }
     override fun goToHome() {
-        Toast.makeText(requireContext(), "Produto salvo com sucesso", Toast.LENGTH_SHORT).show()
+        ToastCustom.showCustomToast(requireContext(),"")
+        //Toast.makeText(requireContext(), "Produto salvo com sucesso", Toast.LENGTH_SHORT).show()
+
         findNavController().popBackStack()
     }
 }

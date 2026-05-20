@@ -12,22 +12,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
-import com.rogger.bp.data.database.BpDatabase
-import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentHomeBinding
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.base.CategoriaDialogUtil
 import com.rogger.bp.ui.base.Utils
-import com.rogger.bp.ui.category.data.CategoryDataSource
-import com.rogger.bp.ui.category.data.CategoryRepository
-import com.rogger.bp.ui.category.data.RoomCategoryCache
+import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.home.ContractHome
 import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.OnItemClickListener
-import com.rogger.bp.ui.home.data.HomeDataSource
-import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.home.presentation.HomePresenter
 import kotlinx.coroutines.launch
 
@@ -41,9 +35,9 @@ class HomeFragment : Fragment(), ContractHome.View {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private var _presenter: HomePresenter? = null
-    override val presenter: ContractHome.Presenter
-        get() = _presenter!!
+
+    override lateinit var presenter: ContractHome.Presenter
+
 
     private lateinit var adapterHome: AdapterHome
     private var currentCategories: List<PostCategory> = emptyList() // Para o dialog do FAB
@@ -61,27 +55,9 @@ class HomeFragment : Fragment(), ContractHome.View {
         super.onViewCreated(view, savedInstanceState)
 
         // Inicialização do Room e DAOs
-        val database = BpDatabase.getDatabase(requireContext())
-        val productDao = database.productDao()
-        val categoryDao = database.categoryDao()
-
-        // Inicialização dos Caches
-        val roomProductCache = RoomProductCache(productDao)
-        val roomCategoryCache = RoomCategoryCache(categoryDao)
-
-        // Inicialização dos DataSources
-        val homeDataSource = HomeDataSource()
-        val categoryDataSource = CategoryDataSource()
-
-        // Inicialização dos Repositórios
-        val homeRepository = HomeRepository(homeDataSource, roomProductCache)
-        val categoryRepository = CategoryRepository(categoryDataSource, roomCategoryCache)
-
-        _presenter = HomePresenter(
-            view = this,
-            repository = homeRepository,
-            categoryRepository = categoryRepository
-        )
+        val category = DependencyInjector.registerCategoryRepository(requireContext())
+        val homeRepository = DependencyInjector.registerHomeRepository(requireContext())
+        presenter = HomePresenter(this, homeRepository, category)
 
         setupRecyclerView()
         setupFab()
@@ -102,8 +78,7 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun onDestroy() {
-        _presenter?.onDestroy()
-        _presenter = null
+        if (::presenter.isInitialized) presenter.onDestroy()
         super.onDestroy()
     }
 

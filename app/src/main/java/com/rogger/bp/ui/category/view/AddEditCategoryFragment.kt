@@ -49,7 +49,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         super.onViewCreated(view, savedInstanceState)
 
         val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
-
         presenter = CategoryPresenter(this, categoryRepository)
 
         binding.recyclerViewCategory.layoutManager = LinearLayoutManager(requireContext())
