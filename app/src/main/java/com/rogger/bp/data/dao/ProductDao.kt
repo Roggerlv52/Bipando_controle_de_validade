@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.rogger.bp.data.model.PostProduct
 import kotlinx.coroutines.flow.Flow
@@ -38,39 +39,42 @@ interface ProductDao {
     @Query("DELETE FROM products")
     suspend fun clearProducts()
 
-    // MODIFICADO: Apenas produtos não deletados
+    // Apenas produtos não deletados — garante que o Flow nunca exponha
+    // itens com deleted=true para a HomeFragment.
     @Query("SELECT * FROM products WHERE deleted = 0 ORDER BY timestamp DESC")
     fun getAllProducts(): Flow<List<PostProduct>>
 
-    // MODIFICADO: Apenas produtos não deletados por categoria
     @Query("SELECT * FROM products WHERE categoryId = :categoryId AND deleted = 0 ORDER BY timestamp DESC")
     fun getProductsByCategory(categoryId: Int): Flow<List<PostProduct>>
 
-    // Implementação da interface Cache<List<PostProduct>> para o DAO
-    // Note: A interface Cache<T> foi adaptada para o contexto de um DAO que lida com uma lista de produtos.
-    // Para 'get', 'isCached', 'remove', 'put' e 'clear', a 'key' pode ser usada para identificar um conjunto de dados (ex: 'all_products').
-    // No entanto, para um DAO, é mais comum ter métodos específicos para operações de lista e item.
-    // Para simplificar e manter a interface, vamos considerar que 'key' pode ser um identificador para a lista completa.
-    // Para operações de item, os métodos específicos do DAO serão usados.
+    // ── Métodos do Cache ──────────────────────────────────────────────────
 
-    // isCached para verificar se há algum produto no cache
     @Query("SELECT EXISTS(SELECT 1 FROM products LIMIT 1)")
     fun isAnyProductCached(): Boolean
 
-    // get para retornar todos os produtos (representando o cache completo)
-    // Este método pode retornar itens deletados se for usado para sincronização interna
     @Query("SELECT * FROM products")
     fun getAllCachedProducts(): List<PostProduct>?
 
-    // put para inserir/atualizar uma lista de produtos
     fun putAllProducts(products: List<PostProduct>) {
         insertAllProducts(products)
     }
 
-    // remove para remover um produto específico (usando firestoreDocId como key)
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     fun removeCachedProduct(key: String)
 
     @Query("DELETE FROM products")
     fun clearAllProducts()
+
+    /**
+     * BUGFIX: Apaga e reinsere em uma única transação Room.
+     *
+     * A anotação @Transaction garante que o Flow de getAllProducts()
+     * não emita uma lista vazia entre o clear e o insert — Room
+     * só notifica os observers depois que a transação completa.
+     */
+    @Transaction
+    fun replaceAllProducts(products: List<PostProduct>) {
+        clearAllProducts()
+        insertAllProducts(products)
+    }
 }

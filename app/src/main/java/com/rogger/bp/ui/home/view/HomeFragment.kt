@@ -177,8 +177,8 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     override fun showProgress(enable: Boolean) {
         val b = _binding ?: return
-        if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-        else CustomProgressBar.hideLoadingDialog()
+        //if (enable) CustomProgressBar.showLoadingDialog(requireContext())
+       // else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showEmpty(isEmpty: Boolean) {
@@ -200,12 +200,10 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun onProductDeleted(product: PostProduct) {
-        // A lista já será atualizada via Flow, apenas mostra a mensagem
         onSuccess("\"${product.name}\" eliminado")
     }
 
     override fun onProductRestored(product: PostProduct) {
-        // A lista já será atualizada via Flow, apenas mostra a mensagem
         onSuccess("\"${product.name}\" restaurado")
     }
 }

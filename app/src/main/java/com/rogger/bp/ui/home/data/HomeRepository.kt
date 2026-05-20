@@ -21,26 +21,25 @@ class HomeRepository(
 
     private var productsListenerRegistration: ListenerRegistration? = null
 
-    /**
-     * Busca todos os produtos activos do utilizador, priorizando o cache local
-     * e mantendo-o sincronizado com o Firestore via listener.
-     */
     fun fetchAll(callback: FetchProductsCallback) {
         CoroutineScope(Dispatchers.IO).launch {
-            // 1. Tentar carregar do cache local imediatamente
+            // 1. Mostrar dados do cache imediatamente (se houver)
             localCache.getAllProductsFlow().firstOrNull()?.let { cachedProducts ->
                 if (cachedProducts.isNotEmpty()) {
                     callback.onSuccess(cachedProducts)
                 }
             }
 
-            // 2. Configurar listener do Firestore para atualizações em tempo real
+            // 2. Listener do Firestore — snapshot contém SOMENTE deleted=false
             productsListenerRegistration = remoteDataSource.addProductsSnapshotListener(object : FetchProductsCallback {
                 override fun onSuccess(products: List<PostProduct>) {
-                    // Atualizar o cache local com os dados mais recentes do Firestore
                     CoroutineScope(Dispatchers.IO).launch {
-                        localCache.putAllProducts(products)
-                        // A UI já estará observando o Flow do Room, então não precisa chamar callback.onSuccess aqui novamente
+                        // BUGFIX: replaceAll — apaga tudo e reinsere apenas os ativos.
+                        // Isso garante que qualquer produto que saiu do snapshot
+                        // (ex: foi soft-deleted) seja removido do Room.
+                        localCache.replaceAllProducts(products)
+                        // O Flow do ProductDao (WHERE deleted = 0) emitirá
+                        // a lista atualizada automaticamente para o Presenter.
                     }
                 }
 
@@ -48,43 +47,31 @@ class HomeRepository(
                     callback.onFailure(message)
                 }
 
-                override fun onComplete() {
-                    // onComplete não é chamado para listeners contínuos
-                }
+                override fun onComplete() {}
             })
         }
     }
 
-    /**
-     * Busca produtos filtrados por [categoryId], priorizando o cache local
-     * e mantendo-o sincronizado com o Firestore via listener.
-     * NOTA: Para esta função, o listener do Firestore precisaria ser adaptado
-     * para filtrar por categoria, ou o filtro seria feito no lado do cliente após
-     * o carregamento completo. Por simplicidade, vamos focar no fetchAll para o listener.
-     * A implementação abaixo ainda usa o método original do remoteDataSource.
-     */
     fun fetchByCategory(categoryId: Int, callback: FetchProductsCallback) {
         CoroutineScope(Dispatchers.IO).launch {
-            // Tentar carregar do cache local imediatamente
             localCache.getProductsByCategoryFlow(categoryId).firstOrNull()?.let { cachedProducts ->
                 if (cachedProducts.isNotEmpty()) {
                     callback.onSuccess(cachedProducts)
                 }
             }
-            // Fallback para o remoteDataSource se o cache estiver vazio ou para garantir a atualização inicial
             remoteDataSource.fetchProductsByCategory(categoryId, callback)
         }
     }
 
-    /**
-     * Soft-delete: marca [product] como eliminado no Firestore e atualiza o cache.
-     */
     fun delete(product: PostProduct, callback: HomeCallback) {
         remoteDataSource.deleteProduct(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    // Atualiza o cache local após a operação remota
-                    localCache.updateProduct(p) // O listener do Firestore também faria isso, mas é bom ter consistência imediata
+                    // BUGFIX: marca deleted=true no Room imediatamente.
+                    // O Flow WHERE deleted=0 remove o item da lista
+                    // ANTES do próximo snapshot do Firestore chegar.
+                    val deletedProduct = p.copy(deleted = true, deletedAt = System.currentTimeMillis())
+                    localCache.updateProduct(deletedProduct)
                 }
                 callback.onSuccess(p)
             }
@@ -99,15 +86,13 @@ class HomeRepository(
         })
     }
 
-    /**
-     * Restaura um produto previamente eliminado no Firestore e atualiza o cache.
-     */
     fun restore(product: PostProduct, callback: HomeCallback) {
         remoteDataSource.restoreProduct(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    // Atualiza o cache local após a operação remota
-                    localCache.updateProduct(p)
+                    // Marca deleted=false no Room para restaurar na lista imediatamente
+                    val restoredProduct = p.copy(deleted = false, deletedAt = null)
+                    localCache.updateProduct(restoredProduct)
                 }
                 callback.onSuccess(p)
             }
@@ -127,7 +112,6 @@ class HomeRepository(
         productsListenerRegistration = null
     }
 
-    // Métodos para operações de cache direto, se necessário
     suspend fun insertProductIntoCache(product: PostProduct) {
         localCache.insertProduct(product)
     }
