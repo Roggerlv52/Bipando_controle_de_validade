@@ -42,6 +42,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.net.toUri
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -138,7 +139,7 @@ class EditFragment : Fragment(), ContractEdit.View {
             viewLifecycleOwner
         ) { _, bundle ->
             try {
-                val uri = Uri.parse(bundle.getString("imageUri"))
+                val uri = bundle.getString("imageUri")?.toUri()
                 val out = ImagePikerUtil.createImageFile(requireContext())
                 novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
                 showImageView(novaImagemFile!!.absolutePath)
@@ -210,19 +211,21 @@ class EditFragment : Fragment(), ContractEdit.View {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Dados
-    // ─────────────────────────────────────────────────────────────────────
-
-
     private fun loadProductFromArgs() {
         val docId = arguments?.getString("uuid")
+        val productBundle = arguments?.getSerializable("product_bundle") as? PostProduct
 
         if (docId.isNullOrBlank()) {
             onError("Produto inválido — identificador ausente")
             return
         }
 
+        // Se o produto veio via Bundle, exibe imediatamente
+        productBundle?.let {
+            bindProduct(it)
+        }
+
+        // Carrega do Firestore em background para atualizar silenciosamente
         presenter.loadProduct(docId)
     }
 
@@ -246,10 +249,6 @@ class EditFragment : Fragment(), ContractEdit.View {
             presenter.deleteProduct(p)
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────────
 
     /**
      * Selecciona o Spinner na posição correspondente ao [categoryId].

@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(tableName = "products")
 data class PostProduct(
@@ -24,7 +25,7 @@ data class PostProduct(
     var categoryName: String = "",
     @Ignore val localUri: Uri? = null, // Ignorar para o Room, pois Uri não é um tipo primitivo
     @Ignore val publisher: UserAuth? = null // Ignorar para o Room
-) {
+) : Serializable {
     /**
      * Construtor secundário sem os campos @Ignore — necessário para o Room
      * reconstruir entidades a partir do banco sem os campos ignorados.

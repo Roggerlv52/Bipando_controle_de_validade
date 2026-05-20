@@ -92,7 +92,10 @@ class HomeFragment : Fragment(), ContractHome.View {
 
                 override fun onItemClick(position: Int, data: List<PostProduct>) {
                     val produto = data.getOrNull(position) ?: return
-                    val bundle = Bundle().apply { putString("uuid", produto.uuid) }
+                    val bundle = Bundle().apply {
+                        putString("uuid", produto.uuid)
+                        putSerializable("product_bundle", produto)
+                    }
                     findNavController().navigate(
                         R.id.action_nav_home_to_nav_edit_fragment,
                         bundle

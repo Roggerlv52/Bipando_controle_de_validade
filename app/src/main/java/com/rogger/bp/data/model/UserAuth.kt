@@ -1,6 +1,7 @@
 package com.rogger.bp.data.model
 
 import android.net.Uri
+import java.io.Serializable
 
 data class UserAuth (
     val uuid: String,
@@ -8,4 +9,4 @@ data class UserAuth (
     val email: String,
     val password: String,
     val photoUri: Uri?,
-)
+): Serializable

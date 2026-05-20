@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.edit.presentation
 
+import android.util.Log
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.category.data.CategoryRepository
@@ -32,14 +33,16 @@ class EditPresenter(
             return
         }
 
-        view?.showProgress(true)
+        // Removido showProgress(true) para carregamento silencioso em background
 
         repository.fetchByDocId(docId, object : EditCallback {
             override fun onSuccess(produto: PostProduct) {
                 view?.bindProduct(produto)
             }
             override fun onFailure(message: String) {
-                view?.onError(message)
+                // Falha silenciosa se já tivermos dados do Bundle,
+                // ou erro se for o primeiro carregamento (opcional)
+                Log.e("EditPresenter", "Erro ao atualizar produto em background: $message")
             }
             override fun onComplete() {
                 view?.showProgress(false)
