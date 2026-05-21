@@ -1,10 +1,13 @@
 package com.rogger.bp.ui.edit.data
 
+import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.rogger.bp.data.model.PostProduct
+import java.io.File
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -14,16 +17,15 @@ import com.rogger.bp.data.model.PostProduct
 class EditDataSource : PostEditDataSource {
 
     private val TAG = "EditDataSource"
-    private val db   = FirebaseFirestore.getInstance()
+    private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
     private fun productsRef(): CollectionReference? {
         val uid = getUserId() ?: return null
-        return db.collection("users")
-            .document(uid)
-            .collection("products")
+        return db.collection("users").document(uid).collection("products")
     }
 
     // ── 1. Buscar pelo documentId ─────────────────────────────────────────
@@ -36,8 +38,6 @@ class EditDataSource : PostEditDataSource {
             return
         }
 
-        // Acesso directo pelo docId — sem query, sem whereEqualTo,
-        // sem depender do campo "uid" que pode estar vazio
         ref.document(docId)
             .get()
             .addOnSuccessListener { doc ->
@@ -55,7 +55,7 @@ class EditDataSource : PostEditDataSource {
 
                 try {
                     val uidField = data["uid"] as? String ?: ""
-                    val uuid     = if (uidField.isNotEmpty()) uidField else doc.id
+                    val uuid = if (uidField.isNotEmpty()) uidField else doc.id
 
                     val produto = PostProduct(
                         id         = (data["id"]         as? Long)?.toInt() ?: 0,
@@ -86,7 +86,7 @@ class EditDataSource : PostEditDataSource {
             .addOnCompleteListener { callback.onComplete() }
     }
 
-    // ── 2. Actualizar pelo documentId ─────────────────────────────────────
+    // ── 2. Actualizar produto — com upload de imagem se necessário ─────────
 
     override fun updateProduct(produto: PostProduct, callback: EditCallback) {
         val ref = productsRef()
@@ -96,25 +96,117 @@ class EditDataSource : PostEditDataSource {
             return
         }
 
-        // uuid = docId (garantido pelo HomeDataSource com fallback)
-        val docRef = ref.document(produto.uuid)
+        val imageUri = produto.imageUri
 
+        // BUGFIX: detecta se imageUri é um caminho local que precisa de upload.
+        // Caminhos locais começam com "/" (absoluto) ou "file://".
+        // URLs remotas já válidas começam com "http" ou "https".
+        val isLocalPath = imageUri.isNotEmpty() &&
+                (imageUri.startsWith("/") || imageUri.startsWith("file://"))
+
+        if (isLocalPath) {
+            Log.d(TAG, "imageUri é local — fazendo upload antes de salvar: $imageUri")
+            uploadImageAndUpdate(ref, produto, imageUri, callback)
+        } else {
+            Log.d(TAG, "imageUri já é remota — atualizando Firestore diretamente")
+            updateFirestoreDoc(ref, produto, imageUri, callback)
+        }
+    }
+
+    /**
+     * Faz upload do arquivo local para o Firebase Storage e,
+     * ao obter a URL de download pública, chama [updateFirestoreDoc].
+     *
+     * Caminho no Storage: user_images/{uid}/{uuid}/product.jpg
+     * Isso garante que cada produto tem sua própria imagem isolada
+     * e a URL é permanente, independente de reinstalação.
+     */
+    private fun uploadImageAndUpdate(
+        ref: CollectionReference,
+        produto: PostProduct,
+        localPath: String,
+        callback: EditCallback
+    ) {
+        // Normaliza o caminho para Uri — suporta path absoluto e file://
+        val fileUri: Uri = if (localPath.startsWith("file://")) {
+            Uri.parse(localPath)
+        } else {
+            Uri.fromFile(File(localPath))
+        }
+
+        // Verifica que o arquivo existe localmente antes de tentar o upload
+        val file = File(localPath.removePrefix("file://"))
+        if (!file.exists()) {
+            Log.e(TAG, "Arquivo local não encontrado: $localPath")
+            callback.onFailure("Arquivo de imagem não encontrado no dispositivo")
+            callback.onComplete()
+            return
+        }
+
+        // BUGFIX: caminho deve seguir o mesmo padrão do AddFragment/FireRegisterDataSource:
+        //   imagens_produtos/{barcode}/imagem.jpg
+        // As regras do Firebase Storage foram configuradas para esse path.
+        // Qualquer outro caminho (ex: user_images/) recebe "permission denied".
+        //
+        // Se o produto não tiver barcode (campo vazio), usa o uuid como fallback
+        // para garantir que o upload sempre tenha um caminho válido e único.
+        val bucketKey = if (produto.barcode.isNotEmpty()) produto.barcode else produto.uuid
+        val storagePath = "imagens_produtos/$bucketKey/imagem.jpg"
+        val imageRef = storage.reference.child(storagePath)
+
+        Log.d(TAG, "Iniciando upload para: $storagePath")
+
+        imageRef.putFile(fileUri)
+            .addOnSuccessListener {
+                // Upload concluído — busca a URL pública de download
+                imageRef.downloadUrl
+                    .addOnSuccessListener { downloadUri ->
+                        val remoteUrl = downloadUri.toString()
+                        Log.d(TAG, "Upload concluído. URL: $remoteUrl")
+                        // Agora salva a URL remota no Firestore
+                        updateFirestoreDoc(ref, produto, remoteUrl, callback)
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Erro ao obter URL de download: ${e.message}")
+                        callback.onFailure("Erro ao obter URL da imagem: ${e.message}")
+                        callback.onComplete()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Erro no upload da imagem: ${e.message}")
+                callback.onFailure("Erro ao enviar imagem: ${e.message}")
+                callback.onComplete()
+            }
+    }
+
+    /**
+     * Salva os campos do produto no Firestore usando [imageUri] como a
+     * URL da imagem (pode ser a URL remota recém-obtida ou a original).
+     */
+    private fun updateFirestoreDoc(
+        ref: CollectionReference,
+        produto: PostProduct,
+        imageUri: String,
+        callback: EditCallback
+    ) {
         val updates = mapOf(
             "name"       to produto.name,
             "note"       to produto.note,
             "timestamp"  to produto.timestamp,
             "categoryId" to produto.categoryId,
-            "imageUri"   to produto.imageUri,
+            "imageUri"   to imageUri,   // ← sempre uma URL remota ou vazia
             "barcode"    to produto.barcode
         )
 
-        docRef.update(updates)
+        ref.document(produto.uuid)
+            .update(updates)
             .addOnSuccessListener {
-                Log.d(TAG, "Produto actualizado: ${produto.uuid}")
-                callback.onSuccess(produto)
+                Log.d(TAG, "Produto actualizado no Firestore: ${produto.uuid}")
+                // Retorna o produto com a URI já corrigida para o presenter
+                callback.onSuccess(produto.copy(imageUri = imageUri))
             }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Erro ao actualizar: ${e.message}")
+                Log.e(TAG, "Erro ao actualizar Firestore: ${e.message}")
                 callback.onFailure(e.message ?: "Erro ao actualizar produto")
             }
             .addOnCompleteListener { callback.onComplete() }
@@ -131,10 +223,12 @@ class EditDataSource : PostEditDataSource {
         }
 
         ref.document(produto.uuid)
-            .update(mapOf(
-                "deleted"   to true,
-                "deletedAt" to System.currentTimeMillis()
-            ))
+            .update(
+                mapOf(
+                    "deleted"   to true,
+                    "deletedAt" to System.currentTimeMillis()
+                )
+            )
             .addOnSuccessListener {
                 Log.d(TAG, "Produto movido para lixeira: ${produto.uuid}")
                 callback.onSuccess(produto)

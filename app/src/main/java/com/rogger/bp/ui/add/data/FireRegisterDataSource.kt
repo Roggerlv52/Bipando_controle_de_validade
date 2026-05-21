@@ -106,7 +106,6 @@ class FireRegisterDataSource : ItemDataSource {
 
         Log.d("FireRegister", "Iniciando upload de: $fileUri")
 
-        // Uma única chamada putFile (antes havia chamada duplicada que fazia upload duplo)
         imageRef.putFile(fileUri)
             .addOnSuccessListener {
                 imageRef.downloadUrl

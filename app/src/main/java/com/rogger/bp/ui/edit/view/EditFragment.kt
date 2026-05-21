@@ -139,7 +139,7 @@ class EditFragment : Fragment(), ContractEdit.View {
             // Usa post() para garantir que o Fragment já está totalmente visível
             // antes de processar o resultado, evitando que um callback tardio do
             // Firestore (bindProduct) sobrescreva a imagem escolhida pelo utilizador.
-            binding.root.post {
+
                 try {
                     val uri = Uri.parse(bundle.getString("imageUri"))
                     val out = ImagePikerUtil.createImageFile(requireContext())
@@ -148,7 +148,7 @@ class EditFragment : Fragment(), ContractEdit.View {
                 } catch (e: Exception) {
                     onError(e.message ?: "Erro ao processar imagem da galeria")
                 }
-            }
+
         }
     }
 

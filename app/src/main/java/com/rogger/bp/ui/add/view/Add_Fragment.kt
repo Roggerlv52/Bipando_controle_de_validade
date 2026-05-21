@@ -253,7 +253,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
     }
     override fun goToHome() {
         ToastCustom.showCustomToast(requireContext(),"")
-        //Toast.makeText(requireContext(), "Produto salvo com sucesso", Toast.LENGTH_SHORT).show()
 
         findNavController().popBackStack()
     }
