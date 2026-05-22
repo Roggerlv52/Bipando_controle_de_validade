@@ -34,16 +34,6 @@ class RoomCategoryCache(private val categoryDao: CategoryDao) : Cache<List<PostC
         categoryDao.putAllCategories(categories)
     }
 
-    /**
-     * Limpa toda a tabela e insere a lista recebida em uma única transação @Transaction.
-     *
-     * Por que isso resolve a duplicação:
-     * - putAllCategories usa INSERT OR REPLACE individualmente, podendo causar
-     *   múltiplas emissões do Flow do Room (uma por REPLACE).
-     * - replaceAllCategories faz clear + insertAll de forma atômica: o Room emite
-     *   o Flow UMA única vez com o estado final correto, eliminando o flash /
-     *   duplicação visível no AdapterCategory e no spinner de seleção.
-     */
     suspend fun replaceAllCategories(categories: List<PostCategory>) {
         categoryDao.replaceAllCategories(categories)
     }
@@ -60,9 +50,7 @@ class RoomCategoryCache(private val categoryDao: CategoryDao) : Cache<List<PostC
         categoryDao.deleteCategory(category)
     }
 
-    // --- FIM DOS MÉTODOS ADICIONAIS ---
-
-    override fun remove(key: String) {
+    override suspend fun remove(key: String) {
         if (key.isNotEmpty()) {
             categoryDao.removeCachedCategory(key)
         } else {
@@ -70,7 +58,7 @@ class RoomCategoryCache(private val categoryDao: CategoryDao) : Cache<List<PostC
         }
     }
 
-    override fun clear() {
+    override suspend fun clear() {
         categoryDao.clearAllCategories()
     }
 }

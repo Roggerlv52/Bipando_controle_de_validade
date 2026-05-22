@@ -47,8 +47,6 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE categoryId = :categoryId AND deleted = 0 ORDER BY timestamp DESC")
     fun getProductsByCategory(categoryId: Int): Flow<List<PostProduct>>
 
-    // ── Métodos do Cache ──────────────────────────────────────────────────
-
     @Query("SELECT EXISTS(SELECT 1 FROM products LIMIT 1)")
     fun isAnyProductCached(): Boolean
 
@@ -63,17 +61,10 @@ interface ProductDao {
     fun removeCachedProduct(key: String)
 
     @Query("DELETE FROM products")
-    fun clearAllProducts()
+   suspend fun clearAllProducts()
 
-    /**
-     * BUGFIX: Apaga e reinsere em uma única transação Room.
-     *
-     * A anotação @Transaction garante que o Flow de getAllProducts()
-     * não emita uma lista vazia entre o clear e o insert — Room
-     * só notifica os observers depois que a transação completa.
-     */
     @Transaction
-    fun replaceAllProducts(products: List<PostProduct>) {
+   suspend fun replaceAllProducts(products: List<PostProduct>) {
         clearAllProducts()
         insertAllProducts(products)
     }

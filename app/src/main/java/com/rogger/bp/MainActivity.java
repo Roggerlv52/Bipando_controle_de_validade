@@ -116,7 +116,7 @@ public class MainActivity extends BaseActivity {
     private void setupNavigationDrawerCounters(NavigationView navigationView) {
 
         Menu menu = navigationView.getMenu();
-        MenuItem homeItem    = menu.findItem(R.id.nav_home);
+        MenuItem homeItem = menu.findItem(R.id.nav_home);
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
         MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
@@ -161,6 +161,7 @@ public class MainActivity extends BaseActivity {
                     runOnUiThread(() -> applyBadge(navigationView, deletedItem, count));
                 });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -188,6 +189,7 @@ public class MainActivity extends BaseActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
     private void applyBadge(NavigationView navigationView, MenuItem item, int count) {
         if (item == null) return;
 
@@ -217,14 +219,19 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (animator != null) {
-            animator.stop();
+    protected void onStop() {
+        super.onStop();
+        if (listenerHome != null) {
+            listenerHome.remove();
+            listenerHome = null;
         }
-        // Remove listeners do Firestore para evitar memory-leaks
-        if (listenerHome     != null) listenerHome.remove();
-        if (listenerCategory != null) listenerCategory.remove();
-        if (listenerDeleted  != null) listenerDeleted.remove();
+        if (listenerCategory != null) {
+            listenerCategory.remove();
+            listenerCategory = null;
+        }
+        if (listenerDeleted != null) {
+            listenerDeleted.remove();
+            listenerDeleted = null;
+        }
     }
 }

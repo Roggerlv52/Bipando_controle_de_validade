@@ -29,7 +29,7 @@ abstract class BpDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     BpDatabase::class.java,
-                    "bp_database"
+                    "bp_data"
                 )
                     .fallbackToDestructiveMigration() // Estratégia de migração simples para desenvolvimento
                     .build()

@@ -44,7 +44,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
     private var spinnerPronto = false
 
     private var barcode: String = ""
-    private var categoriaId: Int = -1
     private var timestamp: Long = 0L
     private var photoFile: File? = null
     private var remoteImageUri: String? = null   // URI da imagem já existente no Storage
@@ -158,7 +157,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         val args = arguments ?: return
 
         barcode = args.getString(KEY_BARCODE).orEmpty()
-        categoriaId = args.getInt(KEY_CATEGORIA, -1)
 
         if (barcode.isNotEmpty()) {
             binding.txtAddBarcode.text = barcode
@@ -214,7 +212,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
             name       = nome,
             note       = binding.editFragmentNoteAdd.text.toString(),
             barcode    = barcode,
-            categoryId = categoriaId,
             deleted    = false,
             timestamp  = timestamp,
             publisher  = UserAuth("", "", "", "", null)  // preenchido no DataSource com Auth atual
@@ -275,11 +272,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
         spinnerPronto = true
-        selecionarCategoria(categoriaId)
-    }
-    private fun selecionarCategoria(categoryId: Int) {
+
         listaCategorias.forEachIndexed { index, cat ->
-            if (cat.id == categoryId) {
+            if (cat.firestoreId.isBlank()) {
                 binding.spinnerAdd.setSelection(index + 1)
                 return
             }

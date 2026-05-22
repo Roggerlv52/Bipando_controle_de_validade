@@ -8,7 +8,6 @@ import androidx.room.PrimaryKey
 data class PostCategory(
     @PrimaryKey
     var firestoreId: String = "", // Usado como chave primária no Room, deve ser o documentId do Firestore
-    var id: Int = 0,
     var name: String = "",
     var userId: String = ""
 )

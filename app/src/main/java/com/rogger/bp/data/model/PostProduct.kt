@@ -1,11 +1,15 @@
 package com.rogger.bp.data.model
 
+import android.annotation.SuppressLint
 import android.net.Uri
+
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import java.io.Serializable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "products")
 data class PostProduct(
     @PrimaryKey
@@ -16,7 +20,6 @@ data class PostProduct(
     var name: String = "",
     var note: String = "",
     var barcode: String = "",
-    var count: Int = 0,
     var categoryId: Int = 0,
     var timestamp: Long = 0L,
     var imageUri: String = "",
@@ -25,12 +28,8 @@ data class PostProduct(
     var categoryName: String = "",
     @Ignore val localUri: Uri? = null, // Ignorar para o Room, pois Uri não é um tipo primitivo
     @Ignore val publisher: UserAuth? = null // Ignorar para o Room
-) : Serializable {
-    /**
-     * Construtor secundário sem os campos @Ignore — necessário para o Room
-     * reconstruir entidades a partir do banco sem os campos ignorados.
-     * Este construtor deve ser atualizado para incluir firestoreDocId.
-     */
+) : Parcelable {
+
     constructor(
         firestoreDocId: String,
         id: Int,
@@ -62,4 +61,5 @@ data class PostProduct(
         localUri = null,
         publisher = null
     )
+
 }

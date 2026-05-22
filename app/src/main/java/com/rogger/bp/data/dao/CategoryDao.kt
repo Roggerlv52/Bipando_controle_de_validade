@@ -59,7 +59,7 @@ interface CategoryDao {
     fun removeCachedCategory(key: String)
 
     @Query("DELETE FROM categories")
-    fun clearAllCategories()
+   suspend fun clearAllCategories()
 
     /**
      * Substitui TODA a tabela de forma atômica (clear + insert em uma transação).

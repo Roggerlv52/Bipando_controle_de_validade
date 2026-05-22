@@ -13,7 +13,7 @@ import java.util.List;
 public class CategoriaDialogUtil {
 
     public interface CategoriaCallback {
-        void onCategoriaSelecionada(int categoriaId);
+        void onCategoriaSelecionada(String categoriaId);
         void onAdicionarCategoria();
     }
 
@@ -44,7 +44,7 @@ public class CategoriaDialogUtil {
             dialog.dismiss();
 
             if (callback != null) {
-                callback.onCategoriaSelecionada(categoria.getId());
+                callback.onCategoriaSelecionada(categoria.getFirestoreId());
             }
         });
 

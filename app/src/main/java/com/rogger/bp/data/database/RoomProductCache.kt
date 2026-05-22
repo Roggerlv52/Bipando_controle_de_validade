@@ -28,7 +28,7 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.putAllProducts(data)
     }
 
-    override fun remove(key: String) {
+    override suspend fun remove(key: String) {
         if (key.isNotEmpty()) {
             productDao.removeCachedProduct(key) // Tenta remover um produto específico
         } else {
@@ -36,12 +36,12 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         }
     }
 
-    fun replaceAllProducts(products: List<PostProduct>) {
+    suspend fun replaceAllProducts(products: List<PostProduct>) {
         productDao.clearAllProducts()
         productDao.putAllProducts(products)
     }
 
-    override fun clear() {
+    override suspend fun clear() {
         productDao.clearAllProducts()
     }
 

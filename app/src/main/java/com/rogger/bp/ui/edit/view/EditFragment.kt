@@ -163,7 +163,7 @@ class EditFragment : Fragment(), ContractEdit.View {
                 if (!spinnerPronto || produto == null) return
                 // posição 0 = placeholder; categorias começam na posição 1
                 val cat = listaCategorias.getOrNull(position - 1)
-                produto = produto!!.copy(categoryId = cat?.id ?: 0)
+                produto = produto!!.copy(categoryId = 0)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
@@ -216,7 +216,7 @@ class EditFragment : Fragment(), ContractEdit.View {
 
     private fun loadProductFromArgs() {
         val docId = arguments?.getString("uuid")
-        val productBundle = arguments?.getSerializable("product_bundle") as? PostProduct
+        val productBundle = arguments?.getParcelable("product_bundle") as? PostProduct
 
         if (docId.isNullOrBlank()) {
             onError("Produto inválido — identificador ausente")
@@ -256,7 +256,7 @@ class EditFragment : Fragment(), ContractEdit.View {
 
     private fun selecionarCategoria(categoryId: Int) {
         listaCategorias.forEachIndexed { index, cat ->
-            if (cat.id == categoryId) {
+            if (cat.firestoreId == categoryId.toString()) {
                 binding.spinnerEdit.setSelection(index + 1)
                 return
             }
@@ -318,8 +318,7 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     override fun onSuccess(message: String) {
-        ToastCustom.showCustomToast(requireContext(),"")
-        //Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onError(message: String) {

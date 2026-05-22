@@ -24,14 +24,16 @@ class FireRegisterDataSource : ItemDataSource {
                 .document()
                 .set(
                     hashMapOf(
-                        "uid" to produto.uuid,
-                        "imageUri" to produto.imageUri,
-                        "name" to produto.name,
-                        "note" to produto.note,
-                        "barcode" to produto.barcode,
+                        "uid"        to produto.uuid,
+                        "userId"     to uid,          // ← adicionar
+                        "id"         to produto.id,   // ← adicionar
+                        "imageUri"   to produto.imageUri,
+                        "name"       to produto.name,
+                        "note"       to produto.note,
+                        "barcode"    to produto.barcode,
                         "categoryId" to produto.categoryId,
-                        "deleted" to produto.deleted,
-                        "timestamp" to produto.timestamp,
+                        "deleted"    to produto.deleted,
+                        "timestamp"  to produto.timestamp,
                     )
                 )
                 .addOnSuccessListener {

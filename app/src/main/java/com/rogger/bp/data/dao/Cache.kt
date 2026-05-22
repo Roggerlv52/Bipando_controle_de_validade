@@ -9,6 +9,6 @@ interface Cache<T> {
     fun isCached(key: String): Boolean
     fun get(key: String): T?
     fun put(key: String, data: T)
-    fun remove(key: String)
-    fun clear()
+    suspend fun remove(key: String)
+    suspend fun clear()
 }

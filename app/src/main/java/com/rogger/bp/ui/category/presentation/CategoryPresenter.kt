@@ -8,6 +8,7 @@ import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,7 @@ class CategoryPresenter(
     private val _categories = MutableStateFlow<List<PostCategory>>(emptyList())
     val categories: StateFlow<List<PostCategory>> = _categories.asStateFlow()
 
-    private val presenterScope = CoroutineScope(Dispatchers.Main + Job())
+    private val presenterScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var categoriesCollectionJob: Job? = null
 
     companion object {
@@ -201,7 +202,7 @@ class CategoryPresenter(
     }
 
     override fun onDestroy() {
-        repository.stopListeningForCategories()
+        repository.destroy()
         categoriesCollectionJob?.cancel()
         presenterScope.cancel()
         view = null

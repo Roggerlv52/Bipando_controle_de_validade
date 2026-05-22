@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -74,38 +75,30 @@ class HomePresenter(
         }
     }
 
-    // ── 2. Buscar produtos por categoria ──────────────────────────────────
-
     override fun fetchProductsByCategory(categoryId: Int) {
-        if (categoryId <= 0) {
+        if (categoryId != 0) {
             view?.onError("Categoria inválida")
             return
         }
         view?.showProgress(true)
 
-        // Para a busca por categoria, o ideal seria ter um Flow filtrado no repositório
-        // ou filtrar o Flow principal aqui. Por enquanto, mantemos a chamada direta
-        // ao remoteDataSource para garantir a funcionalidade.
-        repository.fetchByCategory(categoryId, object : FetchProductsCallback {
-            override fun onSuccess(products: List<PostProduct>) {
-                _products.value = products // Atualiza o StateFlow para a UI
-                view?.showEmpty(products.isEmpty())
-                view?.showProgress(false)
-            }
-
-            override fun onFailure(message: String) {
-                view?.onError(message)
-                view?.showEmpty(true)
-                view?.showProgress(false)
-            }
-
-            override fun onComplete() {
-                view?.showProgress(false)
-            }
-        })
+        filterByCategory(categoryId)
     }
 
-    // ── 3. Soft-delete ────────────────────────────────────────────────────
+    fun filterByCategory(categoryId: Int) {
+        productsCollectionJob?.cancel()
+        productsCollectionJob = presenterScope.launch {
+            if (categoryId != -1) {
+                repository.getCachedProductsFlow()
+            } else {
+                repository.getCachedProductsByCategoryFlow(categoryId)
+            }.collectLatest { products ->
+                _products.value = products
+                view?.showEmpty(products.isEmpty())
+            }
+        }
+    }
+
 
     override fun deleteProduct(product: PostProduct) {
         view?.showProgress(true)
@@ -121,12 +114,10 @@ class HomePresenter(
 
             override fun onComplete() {
                 view?.showProgress(false)
-                // Não precisa chamar fetchProducts() aqui, o listener do Firestore e o Flow do Room já farão a atualização
             }
         })
     }
 
-    // ── 4. Restaurar produto ──────────────────────────────────────────────
 
     override fun restoreProduct(product: PostProduct) {
         view?.showProgress(true)

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    id("kotlin-parcelize")
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
 val keystoreProperties = Properties()
@@ -32,7 +33,7 @@ android {
         minSdk = 28
         targetSdk = 34
         versionCode = 2
-        versionName = "1.0"
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {

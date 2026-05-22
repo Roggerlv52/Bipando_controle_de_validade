@@ -21,7 +21,6 @@ import com.rogger.bp.ui.base.CategoriaDialogUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.home.ContractHome
-import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.presentation.HomePresenter
 import kotlinx.coroutines.launch
@@ -95,7 +94,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                     val produto = data.getOrNull(position) ?: return
                     val bundle = Bundle().apply {
                         putString("uuid", produto.uuid)
-                        putSerializable("product_bundle", produto)
+                        putParcelable("product_bundle", produto)
                     }
                     findNavController().navigate(
                         R.id.action_nav_home_to_nav_edit_fragment,
@@ -124,9 +123,9 @@ class HomeFragment : Fragment(), ContractHome.View {
                 currentCategories, // Usa a lista de categorias observada
                 object : CategoriaDialogUtil.CategoriaCallback {
 
-                    override fun onCategoriaSelecionada(categoriaId: Int) {
+                    override fun onCategoriaSelecionada(categoriaId: String) {
                         val nome = currentCategories
-                            .firstOrNull { it.id == categoriaId }?.name ?: ""
+                            .firstOrNull { it.firestoreId == categoriaId }?.name ?: ""
                         Log.e("Home_fragment"," categoria id ${categoriaId} name:${nome}" )
                         navegarParaScanner(categoriaId, nome)
 
@@ -140,7 +139,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                             // A criação de categoria deve ser feita via Presenter/Repository
                             // e o listener do Firestore se encarregará de atualizar o cache e, consequentemente, o Flow.
                             // Por enquanto, apenas navegamos para o scanner com a nova categoria.
-                            navegarParaScanner(-1, nomeCategoria)
+                            navegarParaScanner(categoriaId = "", nomeCategoria)
                         }
                     }
                 }
@@ -170,9 +169,9 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
 
-    private fun navegarParaScanner(categoriaId: Int, categoriaNome: String) {
+    private fun navegarParaScanner(categoriaId: String, categoriaNome: String) {
         val bundle = Bundle().apply {
-            putInt("categoria_id", categoriaId)
+            putString("categoria_id", categoriaId)
             putString("categoria_nome", categoriaNome)
         }
         findNavController().navigate(

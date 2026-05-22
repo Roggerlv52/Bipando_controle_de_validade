@@ -31,35 +31,25 @@ class HomeRepository(
             }
 
             // 2. Listener do Firestore — snapshot contém SOMENTE deleted=false
-            productsListenerRegistration = remoteDataSource.addProductsSnapshotListener(object : FetchProductsCallback {
-                override fun onSuccess(products: List<PostProduct>) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        // BUGFIX: replaceAll — apaga tudo e reinsere apenas os ativos.
-                        // Isso garante que qualquer produto que saiu do snapshot
-                        // (ex: foi soft-deleted) seja removido do Room.
-                        localCache.replaceAllProducts(products)
-                        // O Flow do ProductDao (WHERE deleted = 0) emitirá
-                        // a lista atualizada automaticamente para o Presenter.
+            productsListenerRegistration =
+                remoteDataSource.addProductsSnapshotListener(object : FetchProductsCallback {
+                    override fun onSuccess(products: List<PostProduct>) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // BUGFIX: replaceAll — apaga tudo e reinsere apenas os ativos.
+                            // Isso garante que qualquer produto que saiu do snapshot
+                            // (ex: foi soft-deleted) seja removido do Room.
+                            localCache.replaceAllProducts(products)
+                            // O Flow do ProductDao (WHERE deleted = 0) emitirá
+                            // a lista atualizada automaticamente para o Presenter.
+                        }
                     }
-                }
 
-                override fun onFailure(message: String) {
-                    callback.onFailure(message)
-                }
+                    override fun onFailure(message: String) {
+                        callback.onFailure(message)
+                    }
 
-                override fun onComplete() {}
-            })
-        }
-    }
-
-    fun fetchByCategory(categoryId: Int, callback: FetchProductsCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            localCache.getProductsByCategoryFlow(categoryId).firstOrNull()?.let { cachedProducts ->
-                if (cachedProducts.isNotEmpty()) {
-                    callback.onSuccess(cachedProducts)
-                }
-            }
-            remoteDataSource.fetchProductsByCategory(categoryId, callback)
+                    override fun onComplete() {}
+                })
         }
     }
 
@@ -70,7 +60,8 @@ class HomeRepository(
                     // BUGFIX: marca deleted=true no Room imediatamente.
                     // O Flow WHERE deleted=0 remove o item da lista
                     // ANTES do próximo snapshot do Firestore chegar.
-                    val deletedProduct = p.copy(deleted = true, deletedAt = System.currentTimeMillis())
+                    val deletedProduct =
+                        p.copy(deleted = true, deletedAt = System.currentTimeMillis())
                     localCache.updateProduct(deletedProduct)
                 }
                 callback.onSuccess(p)
@@ -126,5 +117,9 @@ class HomeRepository(
 
     fun getCachedProductsFlow(): Flow<List<PostProduct>> {
         return localCache.getAllProductsFlow()
+    }
+
+    fun getCachedProductsByCategoryFlow(i: Int): Flow<List<PostProduct>> {
+        return localCache.getProductsByCategoryFlow(i)
     }
 }

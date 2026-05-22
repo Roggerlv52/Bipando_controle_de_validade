@@ -62,22 +62,11 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         presenter.fetchCategories()
     }
 
-    override fun onDestroyView() {
-        actionMode?.finish()
-        super.onDestroyView()
-        _binding = null
-    }
-
-    override fun onDestroy() {
-        if (::presenter.isInitialized) presenter.onDestroy()
-        super.onDestroy()
-    }
-
     private fun setupAdapter() {
         adapter = AdapterCategory(object : AdapterCategory.OnCategoriaListener {
 
             override fun onClick(categoria: PostCategory) {
-                navigateToSearch(categoria.id, categoria.name)
+                navigateToSearch(categoria.firestoreId, categoria.name)
             }
 
             override fun onMenuEditClick(categoria: PostCategory) {
@@ -160,10 +149,10 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         }
     }
 
-    private fun navigateToSearch(categoriaId: Int, categoriaNome: String) {
+    private fun navigateToSearch(categoriaId: String, categoriaNome: String) {
         val bundle = Bundle().apply {
             putString("categoria_nome", categoriaNome)
-            putInt("categoria_id", categoriaId)
+            putString("categoria_id", categoriaId)
         }
         findNavController().navigate(R.id.action_nav_category_to_nav_search, bundle)
     }
@@ -217,5 +206,12 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     override fun onCategoryDeleted(category: PostCategory) {
         onSuccess("Categoria \"${category.name}\" excluída")
+    }
+
+    override fun onDestroyView() {
+        actionMode?.finish()
+        if (::presenter.isInitialized) presenter.onDestroy() // ← mover para cá
+        super.onDestroyView()
+        _binding = null
     }
 }
