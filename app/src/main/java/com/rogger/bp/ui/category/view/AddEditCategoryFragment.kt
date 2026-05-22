@@ -59,7 +59,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         setupListeners()
         observePresenterFlows()
 
-        // Inicia o carregamento e o listener do Firestore
         presenter.fetchCategories()
     }
 
@@ -89,6 +88,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
                 when {
                     total > 0 && actionMode == null ->
                         actionMode = requireActivity().startActionMode(actionModeCallback)
+
                     total == 0 -> actionMode?.finish()
                 }
                 actionMode?.title = "$total selecionada(s)"
@@ -102,6 +102,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
                 menu.clear()
                 menuInflater.inflate(R.menu.category, menu)
             }
+
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 if (menuItem.itemId == R.id.add_category) {
                     openCreateDialog()
@@ -118,6 +119,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             adapter.setModoSelecao(true)
             return true
         }
+
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             if (item.itemId == R.id.action_delete) {
@@ -126,6 +128,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             }
             return false
         }
+
         override fun onDestroyActionMode(mode: ActionMode) {
             adapter.setModoSelecao(false)
             actionMode = null
@@ -178,10 +181,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         }
     }
 
-    // =========================================================================
-    //  ContractCategory.View
-    // =========================================================================
-
     override fun showProgress(enable: Boolean) {
         binding.progressCategory.visibility = if (enable) View.VISIBLE else View.GONE
         binding.recyclerViewCategory.isEnabled = !enable
@@ -189,7 +188,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     override fun showEmpty(isEmpty: Boolean) {
         binding.recyclerViewCategory.visibility = if (isEmpty) View.GONE else View.VISIBLE
-        binding.layoutEmptyCategory.visibility  = if (isEmpty) View.VISIBLE else View.GONE
+        binding.layoutEmptyCategory.visibility = if (isEmpty) View.VISIBLE else View.GONE
     }
 
     override fun onSuccess(message: String) {

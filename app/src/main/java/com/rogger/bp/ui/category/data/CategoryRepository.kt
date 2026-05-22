@@ -16,21 +16,29 @@ class CategoryRepository(
     private var categoryListenerRegistration: ListenerRegistration? = null
 
     fun fetchAll(callback: FetchCategoriesCallback) {
+        // Cancela qualquer listener anterior antes de criar um novo.
+        // Sem isso, cada vez que fetchAll() é chamado (ex: ao voltar para o Fragment)
+        // acumula-se um listener extra, e cada mudança no Firestore dispara N vezes
+        // para o Room, causando N emissões do Flow e duplicação visual.
+        stopListeningForCategories()
+
         CoroutineScope(Dispatchers.IO).launch {
-            // 1. Tentar carregar do cache local imediatamente
+            // 1. Carregar do cache local imediatamente (offline-first)
             localCache.getAllCategoriesFlow().firstOrNull()?.let { cachedCategories ->
                 if (cachedCategories.isNotEmpty()) {
                     callback.onSuccess(cachedCategories)
                 }
             }
 
-            // 2. Configurar listener do Firestore para atualizações em tempo real
+            // 2. Configurar UM ÚNICO listener do Firestore para atualizações em tempo real
             categoryListenerRegistration = remoteDataSource.addCategoriesSnapshotListener(object : FetchCategoriesCallback {
                 override fun onSuccess(categories: List<PostCategory>) {
-                    // Atualizar o cache local com os dados mais recentes do Firestore
                     CoroutineScope(Dispatchers.IO).launch {
-                        localCache.putAllCategories(categories)
-                        // A UI já estará observando o Flow do Room, então não precisa chamar callback.onSuccess aqui novamente
+                        // Usa replaceAllCategories (clear + insertAll) em vez de putAllCategories
+                        // (INSERT OR REPLACE puro). Isso garante que categorias removidas no
+                        // Firestore também sejam removidas do Room, e que o Flow emita apenas
+                        // UMA vez com o estado final correto.
+                        localCache.replaceAllCategories(categories)
                     }
                 }
 
@@ -39,7 +47,7 @@ class CategoryRepository(
                 }
 
                 override fun onComplete() {
-                    // onComplete não é chamado para listeners contínuos
+                    // Não chamado para listeners contínuos
                 }
             })
         }
@@ -48,69 +56,39 @@ class CategoryRepository(
     fun create(category: PostCategory, callback: CategoryCallback) {
         remoteDataSource.createCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    localCache.insertCategory(p)
-                }
+                // Não inserir manualmente no cache aqui.
+                // O snapshot listener já atualiza o Room via replaceAllCategories.
                 callback.onSuccess(p)
             }
-
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
-
-            override fun onComplete() {
-                callback.onComplete()
-            }
-
-            override fun onAlreadyExists(existingCategory: PostCategory) {
-                callback.onAlreadyExists(existingCategory)
-            }
+            override fun onFailure(message: String) = callback.onFailure(message)
+            override fun onComplete() = callback.onComplete()
+            override fun onAlreadyExists(existingCategory: PostCategory) = callback.onAlreadyExists(existingCategory)
         })
     }
 
     fun update(category: PostCategory, callback: CategoryCallback) {
         remoteDataSource.updateCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    localCache.updateCategory(p)
-                }
+                // Não atualizar manualmente no cache aqui.
+                // O snapshot listener já atualiza o Room via replaceAllCategories.
                 callback.onSuccess(p)
             }
-
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
-
-            override fun onComplete() {
-                callback.onComplete()
-            }
-
-            override fun onAlreadyExists(existingCategory: PostCategory) {
-                callback.onAlreadyExists(existingCategory)
-            }
+            override fun onFailure(message: String) = callback.onFailure(message)
+            override fun onComplete() = callback.onComplete()
+            override fun onAlreadyExists(existingCategory: PostCategory) = callback.onAlreadyExists(existingCategory)
         })
     }
 
     fun delete(category: PostCategory, callback: CategoryCallback) {
         remoteDataSource.deleteCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    localCache.deleteCategory(p)
-                }
+                // Não deletar manualmente do cache aqui.
+                // O snapshot listener já atualiza o Room via replaceAllCategories.
                 callback.onSuccess(p)
             }
-
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
-
-            override fun onComplete() {
-                callback.onComplete()
-            }
-
-            override fun onAlreadyExists(existingCategory: PostCategory) {
-                callback.onAlreadyExists(existingCategory)
-            }
+            override fun onFailure(message: String) = callback.onFailure(message)
+            override fun onComplete() = callback.onComplete()
+            override fun onAlreadyExists(existingCategory: PostCategory) = callback.onAlreadyExists(existingCategory)
         })
     }
 

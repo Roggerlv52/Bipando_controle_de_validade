@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.rogger.bp.data.model.PostCategory
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +45,7 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putAllCategories(categories: List<PostCategory>)
 
-    // Método não-suspend para a interface Cache (opcional)
+    // Método não-suspend para a interface Cache
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun putAllCategoriesSync(categories: List<PostCategory>)
 
@@ -59,4 +60,19 @@ interface CategoryDao {
 
     @Query("DELETE FROM categories")
     fun clearAllCategories()
+
+    /**
+     * Substitui TODA a tabela de forma atômica (clear + insert em uma transação).
+     *
+     * Isso é fundamental para evitar duplicação no AdapterCategory:
+     * - INSERT OR REPLACE (putAllCategories) pode emitir o Flow múltiplas vezes,
+     *   uma por linha substituída, causando flashes e itens duplicados na UI.
+     * - @Transaction garante que o Room só notifica o Flow UMA vez, ao final,
+     *   com o estado final completo e correto.
+     */
+    @Transaction
+    suspend fun replaceAllCategories(categories: List<PostCategory>) {
+        clearAllCategories()
+        putAllCategories(categories)
+    }
 }

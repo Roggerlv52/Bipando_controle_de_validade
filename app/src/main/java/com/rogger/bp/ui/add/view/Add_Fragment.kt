@@ -6,12 +6,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.rogger.bp.R
+import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.data.model.UserAuth
@@ -38,6 +40,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
 
     private var _binding: FragmentAddBinding? = null
     private val binding get() = _binding!!
+    private var listaCategorias: List<PostCategory> = emptyList()
+    private var spinnerPronto = false
 
     private var barcode: String = ""
     private var categoriaId: Int = -1
@@ -62,7 +66,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         super.onViewCreated(view, savedInstanceState)
 
         val repository = DependencyInjector.registerProductRepository()
-        presenter = AddItemPresenter(this, repository)
+        val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
+        presenter = AddItemPresenter(this, repository, categoryRepository)
 
         val dataAtual = Utils.getCurrentDateFormatted()
         binding.datePickerBtnAdd.text = dataAtual
@@ -255,5 +260,29 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         ToastCustom.showCustomToast(requireContext(),"")
 
         findNavController().popBackStack()
+    }
+
+    override fun showCategories(categories: List<PostCategory>) {
+        listaCategorias = categories
+
+        val nomes = mutableListOf("Selecione uma categoria")
+        nomes.addAll(categories.map { it.name })
+
+        binding.spinnerAdd.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            nomes
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        spinnerPronto = true
+        selecionarCategoria(categoriaId)
+    }
+    private fun selecionarCategoria(categoryId: Int) {
+        listaCategorias.forEachIndexed { index, cat ->
+            if (cat.id == categoryId) {
+                binding.spinnerAdd.setSelection(index + 1)
+                return
+            }
+        }
     }
 }

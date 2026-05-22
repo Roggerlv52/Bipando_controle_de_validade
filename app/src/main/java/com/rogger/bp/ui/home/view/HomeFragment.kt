@@ -1,6 +1,7 @@
 package com.rogger.bp.ui.home.view
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -126,7 +127,9 @@ class HomeFragment : Fragment(), ContractHome.View {
                     override fun onCategoriaSelecionada(categoriaId: Int) {
                         val nome = currentCategories
                             .firstOrNull { it.id == categoriaId }?.name ?: ""
+                        Log.e("Home_fragment"," categoria id ${categoriaId} name:${nome}" )
                         navegarParaScanner(categoriaId, nome)
+
                     }
 
                     override fun onAdicionarCategoria() {

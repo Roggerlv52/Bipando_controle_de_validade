@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.add
 
+import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.base.BasePresenter
@@ -11,6 +12,7 @@ interface RegisterAdd {
         fun checkOrCreateImage(barcode: String)
         fun uploadImage(image: PostImage)
         fun saveProduct(product: PostProduct)
+        fun fetchCategories()
     }
 
     interface View : BaseView<Presenter> {
@@ -21,5 +23,6 @@ interface RegisterAdd {
         fun openCamera()
         fun openGallery()
         fun goToHome()
+        fun showCategories(categories: List<PostCategory>)
     }
 }

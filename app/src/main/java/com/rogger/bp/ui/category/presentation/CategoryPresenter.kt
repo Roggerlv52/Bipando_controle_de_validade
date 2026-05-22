@@ -56,7 +56,7 @@ class CategoryPresenter(
     }
 
     override fun update(category: PostCategory) {
-        if (category.id == 0) {
+        if (category.userId.isBlank()) {
             view?.onError("Categoria inválida para edição")
             return
         }
@@ -152,9 +152,6 @@ class CategoryPresenter(
         // Inicia o listener do Firestore e atualiza o cache local
         repository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {
-                // Os dados serão propagados via Flow do Room, então não precisamos
-                // chamar view?.showCategories(categories) aqui diretamente.
-                // Apenas ocultamos o progresso após a primeira sincronização ou se o cache já tiver dados.
                 view?.showProgress(false)
             }
 

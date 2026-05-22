@@ -1,11 +1,14 @@
 package com.rogger.bp.ui.add.presentation
 
+import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.add.RegisterAdd
 import com.rogger.bp.ui.add.data.RegisterItemCallback
 import com.rogger.bp.ui.add.data.RegisterItemRepository
 import com.rogger.bp.ui.add.data.SaveImageCallback
+import com.rogger.bp.ui.category.data.CategoryRepository
+import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 
 
 /**
@@ -20,7 +23,8 @@ import com.rogger.bp.ui.add.data.SaveImageCallback
  */
 class AddItemPresenter(
     private var view: RegisterAdd.View?,
-    private val repository: RegisterItemRepository
+    private val repository: RegisterItemRepository,
+    private val categoryRepository: CategoryRepository
 ) : RegisterAdd.Presenter {
 
     // ── 1. Verificar/criar imagem pelo barcode ─────────────────────────────
@@ -37,14 +41,17 @@ class AddItemPresenter(
             override fun onSuccess(image: PostImage) {
                 view?.showProgress(false)
             }
+
             override fun onAlreadyExists(image: PostImage) {
                 view?.showProgress(false)
                 view?.imageAlreadyExists(image)
             }
+
             override fun onFailure(message: String) {
                 view?.onFailure(message)
                 view?.showProgress(false)
             }
+
             override fun onComplete() {}
         })
     }
@@ -62,12 +69,15 @@ class AddItemPresenter(
             override fun onSuccess(image: PostImage) {
                 view?.goToHome()
             }
+
             override fun onAlreadyExists(image: PostImage) {
                 view?.imageAlreadyExists(image)
             }
+
             override fun onFailure(message: String) {
                 view?.onFailure(message)
             }
+
             override fun onComplete() {
                 view?.showProgress(false)
             }
@@ -93,22 +103,26 @@ class AddItemPresenter(
             isLocalImage && product.barcode.isNotEmpty() -> {
                 val postImage = PostImage(
                     barcode = product.barcode,
-                    name    = product.name,
-                    uri     = product.imageUri
+                    name = product.name,
+                    uri = product.imageUri
                 )
                 repository.uploadImage(postImage, object : SaveImageCallback {
                     override fun onSuccess(uploaded: PostImage) {
                         repository.create(product.copy(imageUri = uploaded.uri), createCallback())
                     }
+
                     override fun onAlreadyExists(existing: PostImage) {
                         // Imagem global já existe → usa a URL remota sem fazer novo upload
                         repository.create(product.copy(imageUri = existing.uri), createCallback())
                     }
+
                     override fun onFailure(message: String) {
                         view?.onFailure(message)
                         view?.showProgress(false)
                     }
-                    override fun onComplete() { /* callbacks acima controlam o fluxo */ }
+
+                    override fun onComplete() { /* callbacks acima controlam o fluxo */
+                    }
                 })
             }
 
@@ -124,16 +138,22 @@ class AddItemPresenter(
                             // (uri vazia) — salva o produto sem imagem mesmo.
                             repository.create(product, createCallback())
                         }
+
                         override fun onAlreadyExists(existing: PostImage) {
                             // Imagem global encontrada → usa a URL existente no produto.
                             // É exatamente o caso de "re-adição após deleção".
-                            repository.create(product.copy(imageUri = existing.uri), createCallback())
+                            repository.create(
+                                product.copy(imageUri = existing.uri),
+                                createCallback()
+                            )
                         }
+
                         override fun onFailure(message: String) {
                             // Falha na consulta → salva o produto sem imagem.
                             // Não bloqueia o cadastro por causa da imagem.
                             repository.create(product, createCallback())
                         }
+
                         override fun onComplete() {}
                     }
                 )
@@ -147,10 +167,32 @@ class AddItemPresenter(
         }
     }
 
+    override fun fetchCategories() {
+        categoryRepository.fetchAll(object : FetchCategoriesCallback {
+            override fun onSuccess(categories: List<PostCategory>) {
+                view?.showCategories(categories)
+            }
+
+            override fun onFailure(message: String) {
+                view?.onFailure(message)
+            }
+
+            override fun onComplete() {}
+        })
+    }
+
     private fun createCallback() = object : RegisterItemCallback {
-        override fun onSuccess(image: PostImage?) { view?.goToHome() }
-        override fun onFailure(message: String)   { view?.onFailure(message) }
-        override fun onComplete()                 { view?.showProgress(false) }
+        override fun onSuccess(image: PostImage?) {
+            view?.goToHome()
+        }
+
+        override fun onFailure(message: String) {
+            view?.onFailure(message)
+        }
+
+        override fun onComplete() {
+            view?.showProgress(false)
+        }
     }
 
     override fun onDestroy() {

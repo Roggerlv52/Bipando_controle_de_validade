@@ -21,27 +21,31 @@ class RoomCategoryCache(private val categoryDao: CategoryDao) : Cache<List<PostC
     }
 
     override fun put(key: String, data: List<PostCategory>) {
-        // Como o método da interface não é suspend, usamos runBlocking ou
-        // idealmente chamamos o método suspend diretamente no repositório.
-        // Para fins de compatibilidade com a interface:
         categoryDao.putAllCategoriesSync(data)
     }
 
     // --- MÉTODOS ADICIONAIS PARA O REPOSITÓRIO ---
 
-    /**
-     * Retorna um Flow para observação reativa dos dados no banco local.
-     * É este método que resolve o erro "em vermelho" no seu CategoryRepository.
-     */
     fun getAllCategoriesFlow(): Flow<List<PostCategory>> {
         return categoryDao.getAllCategories()
     }
 
-    /**
-     * Versão suspend para ser usada dentro de Coroutines no Repositório.
-     */
     suspend fun putAllCategories(categories: List<PostCategory>) {
         categoryDao.putAllCategories(categories)
+    }
+
+    /**
+     * Limpa toda a tabela e insere a lista recebida em uma única transação @Transaction.
+     *
+     * Por que isso resolve a duplicação:
+     * - putAllCategories usa INSERT OR REPLACE individualmente, podendo causar
+     *   múltiplas emissões do Flow do Room (uma por REPLACE).
+     * - replaceAllCategories faz clear + insertAll de forma atômica: o Room emite
+     *   o Flow UMA única vez com o estado final correto, eliminando o flash /
+     *   duplicação visível no AdapterCategory e no spinner de seleção.
+     */
+    suspend fun replaceAllCategories(categories: List<PostCategory>) {
+        categoryDao.replaceAllCategories(categories)
     }
 
     suspend fun insertCategory(category: PostCategory) {
