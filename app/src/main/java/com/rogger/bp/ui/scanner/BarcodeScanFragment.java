@@ -45,10 +45,8 @@ public class BarcodeScanFragment extends Fragment {
     private BarcodeView barcodeView;
     private MediaPlayer mediaPlayer;
     private boolean beep;
-    private int categoryId;
-    /** Quem chamou este fragment: "add" (padrão) ou "search" */
+    private String categoryId;
     private String caller;
-    /** Impede que múltiplas leituras disparem navegação repetida */
     private boolean resultHandled = false;
 
     public BarcodeScanFragment() {
@@ -80,7 +78,7 @@ public class BarcodeScanFragment extends Fragment {
 
     private void setupArguments() {
         if (getArguments() != null) {
-            categoryId = getArguments().getInt("categoria_id", 0);
+            categoryId = getArguments().getString("categoria_id", "");
             caller     = getArguments().getString("caller", "add");
         } else {
             caller = "add";
@@ -164,7 +162,7 @@ public class BarcodeScanFragment extends Fragment {
     private void gotoAddItem(String barcode) {
         Bundle bundle = new Bundle();
         bundle.putString("key_barcode", barcode);
-        bundle.putInt("categoria_id", categoryId);
+        bundle.putString("categoria_id", categoryId);
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.nav_add_fragment, bundle);
     }

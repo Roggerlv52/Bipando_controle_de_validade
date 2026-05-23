@@ -45,7 +45,7 @@ interface ProductDao {
     fun getAllProducts(): Flow<List<PostProduct>>
 
     @Query("SELECT * FROM products WHERE categoryId = :categoryId AND deleted = 0 ORDER BY timestamp DESC")
-    fun getProductsByCategory(categoryId: Int): Flow<List<PostProduct>>
+    fun getProductsByCategory(categoryId: String): Flow<List<PostProduct>>
 
     @Query("SELECT EXISTS(SELECT 1 FROM products LIMIT 1)")
     fun isAnyProductCached(): Boolean

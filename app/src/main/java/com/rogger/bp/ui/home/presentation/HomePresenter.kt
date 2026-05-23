@@ -75,8 +75,8 @@ class HomePresenter(
         }
     }
 
-    override fun fetchProductsByCategory(categoryId: Int) {
-        if (categoryId != 0) {
+    override fun fetchProductsByCategory(categoryId: String) {
+        if (categoryId.isEmpty()) {
             view?.onError("Categoria inválida")
             return
         }
@@ -85,10 +85,10 @@ class HomePresenter(
         filterByCategory(categoryId)
     }
 
-    fun filterByCategory(categoryId: Int) {
+    fun filterByCategory(categoryId: String) {
         productsCollectionJob?.cancel()
         productsCollectionJob = presenterScope.launch {
-            if (categoryId != -1) {
+            if (categoryId.isEmpty()) {
                 repository.getCachedProductsFlow()
             } else {
                 repository.getCachedProductsByCategoryFlow(categoryId)

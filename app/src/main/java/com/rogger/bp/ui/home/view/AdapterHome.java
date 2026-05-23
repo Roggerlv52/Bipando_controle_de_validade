@@ -116,7 +116,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         
         // 🔑 NOME DA CATEGORIA: Tenta pegar do modelo, se vazio tenta do cache local
         String nomeCat = modelo.getCategoryName();
-        if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId() != 0) {
+        if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId().isEmpty()) {
             nomeCat = categoriaMap.get(modelo.getCategoryId());
             Log.d("AdpterHome","categoria "+ modelo.getCategoryName());
         }

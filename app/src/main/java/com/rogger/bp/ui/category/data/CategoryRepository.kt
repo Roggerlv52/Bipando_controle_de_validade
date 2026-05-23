@@ -48,8 +48,6 @@ class CategoryRepository(
     fun create(category: PostCategory, callback: CategoryCallback) {
         remoteDataSource.createCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
-                // Não inserir manualmente no cache aqui.
-                // O snapshot listener já atualiza o Room via replaceAllCategories.
                 callback.onSuccess(p)
             }
 
@@ -63,8 +61,6 @@ class CategoryRepository(
     fun update(category: PostCategory, callback: CategoryCallback) {
         remoteDataSource.updateCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
-                // Não atualizar manualmente no cache aqui.
-                // O snapshot listener já atualiza o Room via replaceAllCategories.
                 callback.onSuccess(p)
             }
 

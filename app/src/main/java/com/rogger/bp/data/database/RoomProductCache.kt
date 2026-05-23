@@ -53,7 +53,7 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         return productDao.getAllProducts()
     }
 
-    fun getProductsByCategoryFlow(categoryId: Int): Flow<List<PostProduct>> {
+    fun getProductsByCategoryFlow(categoryId: String): Flow<List<PostProduct>> {
         return productDao.getProductsByCategory(categoryId)
     }
 

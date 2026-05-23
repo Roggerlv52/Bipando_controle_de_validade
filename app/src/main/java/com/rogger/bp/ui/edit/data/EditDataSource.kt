@@ -64,7 +64,7 @@ class EditDataSource : PostEditDataSource {
                         name       = data["name"]        as? String ?: "",
                         note       = data["note"]        as? String ?: "",
                         barcode    = data["barcode"]     as? String ?: "",
-                        categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
+                        categoryId = data["categoryId"] as? String ?: "",
                         timestamp  = data["timestamp"]   as? Long ?: 0L,
                         imageUri   = data["imageUri"]    as? String ?: "",
                         deleted    = data["deleted"]     as? Boolean ?: false,

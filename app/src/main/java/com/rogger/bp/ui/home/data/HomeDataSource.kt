@@ -60,7 +60,7 @@ class HomeDataSource : PostHomeDataSource {
                 name       = data["name"]        as? String ?: return null,
                 note       = data["note"]        as? String ?: "",
                 barcode    = data["barcode"]     as? String ?: "",
-                categoryId = (data["categoryId"] as? Long)?.toInt() ?: 0,
+                categoryId = data["categoryId"] as? String ?: "",
                 timestamp  = data["timestamp"]   as? Long ?: 0L,
                 imageUri   = data["imageUri"]    as? String ?: "",
                 deleted    = data["deleted"]     as? Boolean ?: false,
@@ -99,7 +99,7 @@ class HomeDataSource : PostHomeDataSource {
 
     // ── Buscar por categoria ──────────────────────────────────────────────
 
-    override fun fetchProductsByCategory(categoryId: Int, callback: FetchProductsCallback) {
+    override fun fetchProductsByCategory(categoryId: String, callback: FetchProductsCallback) {
         val ref = productsRef()
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
@@ -222,7 +222,6 @@ class HomeDataSource : PostHomeDataSource {
                     Log.d(TAG, "Produtos atualizados via listener: ${list.size}")
                     callback.onSuccess(list)
                 }
-                // onComplete não é chamado para listeners contínuos
             }
     }
 }

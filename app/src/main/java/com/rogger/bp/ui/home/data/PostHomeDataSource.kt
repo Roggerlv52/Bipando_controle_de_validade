@@ -10,7 +10,7 @@ import com.rogger.bp.data.model.PostProduct
  */
 interface PostHomeDataSource {
     fun fetchProducts(callback: FetchProductsCallback)
-    fun fetchProductsByCategory(categoryId: Int, callback: FetchProductsCallback)
+    fun fetchProductsByCategory(categoryId: String, callback: FetchProductsCallback)
     fun deleteProduct(product: PostProduct, callback: HomeCallback)
     fun restoreProduct(product: PostProduct, callback: HomeCallback)
 

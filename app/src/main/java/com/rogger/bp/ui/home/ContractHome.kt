@@ -13,7 +13,7 @@ import com.rogger.bp.ui.base.BaseView
 interface ContractHome {
  interface Presenter : BasePresenter {
   fun fetchProducts()
-  fun fetchProductsByCategory(categoryId: Int)
+  fun fetchProductsByCategory(categoryId: String)
   fun deleteProduct(product: PostProduct)
   fun restoreProduct(product: PostProduct)
   /** Busca categorias do Firestore para o dialog do FAB. */

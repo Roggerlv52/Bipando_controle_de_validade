@@ -3,9 +3,11 @@ package com.rogger.bp.ui.add.view
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -41,8 +43,10 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
     private var _binding: FragmentAddBinding? = null
     private val binding get() = _binding!!
     private var listaCategorias: List<PostCategory> = emptyList()
+    private var produto: PostProduct? = null
     private var spinnerPronto = false
-
+    private var selectedCategoryId: String = ""
+    private var selectedCategoryName: String = ""
     private var barcode: String = ""
     private var timestamp: Long = 0L
     private var photoFile: File? = null
@@ -99,7 +103,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
                     photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile)
                     remoteImageUri = null    // foto local substitui qualquer URI remota
                     showLocalImage(photoFile!!)
-                    // Upload é feito apenas ao clicar em "Salvar" (saveProduct).
                 } catch (e: Exception) {
                     onFailure(e.message ?: "Erro ao processar imagem")
                 }
@@ -123,8 +126,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
                 photoFile = ImageUtils.processImage(requireContext(), img, file)
                 remoteImageUri = null
                 showLocalImage(photoFile!!)
-                // Upload é feito apenas ao clicar em "Salvar" (saveProduct),
-                // nunca antes de o produto existir no banco.
             } catch (e: Exception) {
                 onFailure(e.message ?: "Erro ao processar imagem da galeria")
             }
@@ -151,16 +152,39 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
             if (remoteImageUri != null) return@setOnClickListener   // bloqueado
             openMediaPicker()
         }
+        binding.spinnerAdd.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (!spinnerPronto || produto == null) return
+                // posição 0 = placeholder; categorias começam na posição 1
+                val cat = listaCategorias.getOrNull(position - 1)
+                if (cat != null) {
+                    produto = produto!!.copy(
+                        categoryId = cat.firestoreId,
+                        categoryName = cat.name
+                    )
+                } else {
+                    produto = produto!!.copy(
+                        categoryId = "",
+                        categoryName = ""
+                    )
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     private fun readArguments() {
         val args = arguments ?: return
 
         barcode = args.getString(KEY_BARCODE).orEmpty()
+        val argCategoryId = args.getString(KEY_CATEGORIA).orEmpty()
+        if (argCategoryId.isNotEmpty()) {
+            selectedCategoryId = argCategoryId
+            Log.e("AddItemFragment"," id -> "+argCategoryId)
+        }
 
         if (barcode.isNotEmpty()) {
             binding.txtAddBarcode.text = barcode
-            // Verifica se já existe imagem para este barcode no catálogo global
             presenter.checkOrCreateImage(barcode)
         }
     }
@@ -264,20 +288,33 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
 
         val nomes = mutableListOf("Selecione uma categoria")
         nomes.addAll(categories.map { it.name })
-
         binding.spinnerAdd.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            nomes
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        spinnerPronto = true
+        produto.let {
+            listaCategorias.forEachIndexed { index, cat ->
+                if (cat.firestoreId == it?.categoryId.toString()) {
+                    binding.spinnerAdd.setSelection(index + 1)
+                    return
+                }
+            }
+        }
+
+        /*
+        val nomes = mutableListOf("Selecione uma categoria")
+        nomes.addAll(categories.map { it.name })
+
+        binding.spinnerEdit.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
             nomes
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
         spinnerPronto = true
-
-        listaCategorias.forEachIndexed { index, cat ->
-            if (cat.firestoreId.isBlank()) {
-                binding.spinnerAdd.setSelection(index + 1)
-                return
-            }
-        }
+        produto?.let { selecionarCategoria(it.categoryId) }
+         */
     }
 }

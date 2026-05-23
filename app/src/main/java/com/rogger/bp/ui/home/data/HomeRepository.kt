@@ -35,12 +35,7 @@ class HomeRepository(
                 remoteDataSource.addProductsSnapshotListener(object : FetchProductsCallback {
                     override fun onSuccess(products: List<PostProduct>) {
                         CoroutineScope(Dispatchers.IO).launch {
-                            // BUGFIX: replaceAll — apaga tudo e reinsere apenas os ativos.
-                            // Isso garante que qualquer produto que saiu do snapshot
-                            // (ex: foi soft-deleted) seja removido do Room.
                             localCache.replaceAllProducts(products)
-                            // O Flow do ProductDao (WHERE deleted = 0) emitirá
-                            // a lista atualizada automaticamente para o Presenter.
                         }
                     }
 
@@ -57,9 +52,6 @@ class HomeRepository(
         remoteDataSource.deleteProduct(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    // BUGFIX: marca deleted=true no Room imediatamente.
-                    // O Flow WHERE deleted=0 remove o item da lista
-                    // ANTES do próximo snapshot do Firestore chegar.
                     val deletedProduct =
                         p.copy(deleted = true, deletedAt = System.currentTimeMillis())
                     localCache.updateProduct(deletedProduct)
@@ -119,7 +111,7 @@ class HomeRepository(
         return localCache.getAllProductsFlow()
     }
 
-    fun getCachedProductsByCategoryFlow(i: Int): Flow<List<PostProduct>> {
+    fun getCachedProductsByCategoryFlow(i: String): Flow<List<PostProduct>> {
         return localCache.getProductsByCategoryFlow(i)
     }
 }

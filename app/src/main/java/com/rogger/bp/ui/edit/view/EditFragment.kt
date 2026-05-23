@@ -163,7 +163,17 @@ class EditFragment : Fragment(), ContractEdit.View {
                 if (!spinnerPronto || produto == null) return
                 // posição 0 = placeholder; categorias começam na posição 1
                 val cat = listaCategorias.getOrNull(position - 1)
-                produto = produto!!.copy(categoryId = 0)
+                if (cat != null) {
+                    produto = produto!!.copy(
+                        categoryId = cat.firestoreId,
+                        categoryName = cat.name
+                    )
+                } else {
+                    produto = produto!!.copy(
+                        categoryId = "",
+                        categoryName = ""
+                    )
+                }
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
@@ -254,7 +264,7 @@ class EditFragment : Fragment(), ContractEdit.View {
         }
     }
 
-    private fun selecionarCategoria(categoryId: Int) {
+    private fun selecionarCategoria(categoryId: String) {
         listaCategorias.forEachIndexed { index, cat ->
             if (cat.firestoreId == categoryId.toString()) {
                 binding.spinnerEdit.setSelection(index + 1)
