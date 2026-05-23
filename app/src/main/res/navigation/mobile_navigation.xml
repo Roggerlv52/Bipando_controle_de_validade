@@ -60,7 +60,7 @@
             app:argType="string" />
 
         <argument
-            android:name="categoria_nome"
+            android:name="nameCategory"
             app:argType="string" />
 
         <argument

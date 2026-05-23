@@ -31,12 +31,11 @@ import java.util.Locale;
 import java.util.Map;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
+
     private OnItemClickListener mListener;
     private List<PostProduct> dados;
     private final Context context;
     private int diasLimiteAmarelo;
-
-    private final Map<Integer, String> categoriaMap = new HashMap<>();
 
     public void clear() {
         if (dados != null) {
@@ -54,16 +53,9 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
     }
 
     public AdapterHome(Context context, int diasLimiteAmarelo, OnItemClickListener listener) {
-        this.mListener = listener;
-        this.context = context;
+        this.mListener        = listener;
+        this.context          = context;
         this.diasLimiteAmarelo = diasLimiteAmarelo > 0 ? diasLimiteAmarelo : 10;
-        carregarCategorias();
-    }
-
-    /**
-     * Carrega as categorias do banco para o mapa de cache
-     */
-    private void carregarCategorias() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -78,8 +70,9 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_list, parent, false);
         return new ViewHolder(view);
     }
 
@@ -89,7 +82,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
         PostProduct modelo = dados.get(position);
 
-        // 1. Cálculo de dias usando a nova lógica de Utils
+        // 1. Cálculo de dias
         long diasRestantes = Utils.calcDifferencInDays(modelo.getTimestamp());
 
         // 2. Formatação da data de vencimento
@@ -100,6 +93,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         }
         holder.txtRight.setText(dataFormatada);
 
+        // 3. Indicador de cor/dias
         if (diasRestantes < 1) {
             holder.imageCircle.setImageResource(R.drawable.red_circle);
             holder.txtLight.setText(diasRestantes < 0 ? "VENCIDO" : "VENCE HOJE");
@@ -111,36 +105,30 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.txtLight.setText(diasRestantes + " dias");
         }
 
-        // 4. Preenchimento de textos
+        // 4. Nome do produto
         holder.txtTitle.setText(modelo.getName() != null ? modelo.getName() : "");
-        
-        // 🔑 NOME DA CATEGORIA: Tenta pegar do modelo, se vazio tenta do cache local
+
+        // FIX: categoryName já vem preenchido no PostProduct desde o momento
+        // do cadastro (AddItemFragment salva produto.copy(categoryName=...)).
+        // Basta exibir diretamente — não há mais necessidade de um Map local.
         String nomeCat = modelo.getCategoryName();
-        if ((nomeCat == null || nomeCat.isEmpty()) && modelo.getCategoryId().isEmpty()) {
-            nomeCat = categoriaMap.get(modelo.getCategoryId());
-            Log.d("AdpterHome","categoria "+ modelo.getCategoryName());
-        }
-        holder.txtSubTitle.setText(nomeCat != null ? nomeCat : "");
-        
+        if (nomeCat == null) nomeCat = "";
+        holder.txtSubTitle.setText(nomeCat);
+        Log.d("AdapterHome", "pos=" + position + " name=" + modelo.getName() + " cat=" + nomeCat);
+
+        // 5. Código de barras
         holder.txtBarcode.setText(modelo.getBarcode() != null ? modelo.getBarcode() : "");
 
-        // 5. Carregamento da imagem
+        // 6. Imagem
         Glide.with(context)
                 .asBitmap()
                 .load(modelo.getImageUri())
                 .override(200, 200)
-                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
+                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                 .centerCrop()
                 .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(holder.imageView);
-        
-        // 6. Clique na imagem
-        holder.imageView.setOnClickListener(v -> {
-            if (mListener != null && modelo.getImageUri() != null) {
-                mListener.onImageClick(modelo.getImageUri());
-            }
-        });
     }
 
     @Override
@@ -148,27 +136,40 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         return dados != null ? dados.size() : 0;
     }
 
+    // ── ViewHolder ────────────────────────────────────────────────────────
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final ImageView imageCircle, imageView;
-        private final TextView txtRight, txtLight, txtTitle, txtSubTitle, txtBarcode;
+        private final TextView  txtRight, txtLight, txtTitle, txtSubTitle, txtBarcode;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.imageview_home);
-            // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
+            imageView   = itemView.findViewById(R.id.imageview_home);
             imageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             imageCircle = itemView.findViewById(R.id.image_home_circle);
-            txtLight = itemView.findViewById(R.id.txt_home_left);
-            txtRight = itemView.findViewById(R.id.txt_home_right);
-            txtTitle = itemView.findViewById(R.id.home_title);
+            txtLight    = itemView.findViewById(R.id.txt_home_left);
+            txtRight    = itemView.findViewById(R.id.txt_home_right);
+            txtTitle    = itemView.findViewById(R.id.home_title);
             txtSubTitle = itemView.findViewById(R.id.home_subTitle);
-            txtBarcode = itemView.findViewById(R.id.home_barcode);
+            txtBarcode  = itemView.findViewById(R.id.home_barcode);
 
             itemView.setOnClickListener(v -> {
                 if (mListener != null) {
                     int pos = getAdapterPosition();
                     if (pos != RecyclerView.NO_POSITION) {
                         mListener.onItemClick(pos, dados);
+                    }
+                }
+            });
+
+            imageView.setOnClickListener(v -> {
+                if (mListener != null && dados != null) {
+                    int pos = getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        PostProduct item = dados.get(pos);
+                        if (item.getImageUri() != null && !item.getImageUri().isEmpty()) {
+                            mListener.onImageClick(item.getImageUri());
+                        }
                     }
                 }
             });

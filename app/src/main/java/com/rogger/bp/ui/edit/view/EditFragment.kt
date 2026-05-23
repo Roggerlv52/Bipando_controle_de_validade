@@ -42,8 +42,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.core.net.toUri
-import com.rogger.bp.ui.animation.ToastCustom
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -65,10 +63,6 @@ class EditFragment : Fragment(), ContractEdit.View {
 
     private val imagePickerUtil = ImagePikerUtil()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────────────────────────────
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -136,10 +130,6 @@ class EditFragment : Fragment(), ContractEdit.View {
             "gallery_result",
             viewLifecycleOwner
         ) { _, bundle ->
-            // Usa post() para garantir que o Fragment já está totalmente visível
-            // antes de processar o resultado, evitando que um callback tardio do
-            // Firestore (bindProduct) sobrescreva a imagem escolhida pelo utilizador.
-
                 try {
                     val uri = Uri.parse(bundle.getString("imageUri"))
                     val out = ImagePikerUtil.createImageFile(requireContext())
@@ -161,7 +151,6 @@ class EditFragment : Fragment(), ContractEdit.View {
                 id: Long
             ) {
                 if (!spinnerPronto || produto == null) return
-                // posição 0 = placeholder; categorias começam na posição 1
                 val cat = listaCategorias.getOrNull(position - 1)
                 if (cat != null) {
                     produto = produto!!.copy(
@@ -233,14 +222,10 @@ class EditFragment : Fragment(), ContractEdit.View {
             return
         }
 
-        // Se o produto veio via Bundle, exibe imediatamente
         productBundle?.let {
 
             bindProduct(it)
         }
-        //presenter.loadProduct(docId)
-        // Carrega do Firestore em background para atualizar silenciosamente
-
     }
 
     private fun salvarProduto() {

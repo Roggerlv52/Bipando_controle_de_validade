@@ -41,7 +41,7 @@ public class BarcodeScanFragment extends Fragment {
     public static final String CALLER_SEARCH = "search";
     /** Chave usada no SavedStateHandle para devolver o barcode ao SearchFragment */
     public static final String KEY_SCANNED_BARCODE = "scanned_barcode";
-
+    private String nameCategory;
     private BarcodeView barcodeView;
     private MediaPlayer mediaPlayer;
     private boolean beep;
@@ -79,6 +79,7 @@ public class BarcodeScanFragment extends Fragment {
     private void setupArguments() {
         if (getArguments() != null) {
             categoryId = getArguments().getString("categoria_id", "");
+            nameCategory  = getArguments().getString("categoria_nome", "");
             caller     = getArguments().getString("caller", "add");
         } else {
             caller = "add";
@@ -163,6 +164,8 @@ public class BarcodeScanFragment extends Fragment {
         Bundle bundle = new Bundle();
         bundle.putString("key_barcode", barcode);
         bundle.putString("categoria_id", categoryId);
+        bundle.putString("nameCategory",nameCategory);
+
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.nav_add_fragment, bundle);
     }

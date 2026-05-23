@@ -32,26 +32,27 @@ import com.rogger.bp.ui.gallery.ImageUtils
 import com.rogger.bp.ui.scanner.ImageBarcode
 import java.io.File
 
-class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
+class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
+
     companion object {
-        const val KEY_BARCODE     = "key_barcode"
-        const val KEY_CATEGORIA   = "categoria_id"
+        const val KEY_BARCODE   = "key_barcode"
+        const val KEY_CATEGORIA = "categoria_id"
     }
-    // ── MVP ───────────────────────────────────────────────────────────────
     override lateinit var presenter: RegisterAdd.Presenter
 
     private var _binding: FragmentAddBinding? = null
     private val binding get() = _binding!!
+
     private var listaCategorias: List<PostCategory> = emptyList()
-    private var produto: PostProduct? = null
+
+    private var produto: PostProduct = PostProduct()
+
     private var spinnerPronto = false
-    private var selectedCategoryId: String = ""
-    private var selectedCategoryName: String = ""
     private var barcode: String = ""
     private var timestamp: Long = 0L
     private var photoFile: File? = null
-    private var remoteImageUri: String? = null   // URI da imagem já existente no Storage
-    private var confirmed: Boolean = false        // evita apagar foto se o usuário salvou
+    private var remoteImageUri: String? = null
+    private var confirmed: Boolean = false
 
     private val cameraUtil = ImagePikerUtil()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
@@ -68,24 +69,27 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repository = DependencyInjector.registerProductRepository()
+        val repository         = DependencyInjector.registerProductRepository()
         val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
         presenter = AddItemPresenter(this, repository, categoryRepository)
 
         val dataAtual = Utils.getCurrentDateFormatted()
         binding.datePickerBtnAdd.text = dataAtual
-        binding.txtAddData.text = dataAtual
+        binding.txtAddData.text       = dataAtual
         timestamp = Utils.getCurrentTimestamp()
 
         setupCamera()
         setupGalleryResult()
+        setupSpinner()
         setupListeners()
+
         readArguments()
+
+        presenter.fetchCategories()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Limpa arquivo temporário se o usuário cancelou sem salvar
         if (!confirmed && photoFile != null && remoteImageUri == null) {
             ImagePikerUtil.cleanUpTempFiles(photoFile)
         }
@@ -96,34 +100,29 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         if (::presenter.isInitialized) presenter.onDestroy()
         super.onDestroy()
     }
+
     private fun setupCamera() {
         cameraLauncher = cameraUtil.register(this, object : CameraCallback {
             override fun onImageCaptured(imageUri: Uri, imageFile: File) {
                 try {
-                    photoFile = ImageUtils.processImage(requireContext(), imageUri, imageFile)
-                    remoteImageUri = null    // foto local substitui qualquer URI remota
+                    photoFile      = ImageUtils.processImage(requireContext(), imageUri, imageFile)
+                    remoteImageUri = null
                     showLocalImage(photoFile!!)
                 } catch (e: Exception) {
                     onFailure(e.message ?: "Erro ao processar imagem")
                 }
             }
-
-            override fun onCancel() { /* nenhuma ação necessária */ }
-            override fun onError(e: Exception) {
-                onFailure(e.message ?: "Erro na câmera")
-            }
+            override fun onCancel() {}
+            override fun onError(e: Exception) { onFailure(e.message ?: "Erro na câmera") }
         })
     }
 
     private fun setupGalleryResult() {
-        parentFragmentManager.setFragmentResultListener(
-            "gallery_result",
-            viewLifecycleOwner
-        ) { _, bundle ->
+        parentFragmentManager.setFragmentResultListener("gallery_result", viewLifecycleOwner) { _, bundle ->
             try {
-                val img = Uri.parse(bundle.getString("imageUri"))
+                val img  = Uri.parse(bundle.getString("imageUri"))
                 val file = ImagePikerUtil.createImageFile(requireContext())
-                photoFile = ImageUtils.processImage(requireContext(), img, file)
+                photoFile      = ImageUtils.processImage(requireContext(), img, file)
                 remoteImageUri = null
                 showLocalImage(photoFile!!)
             } catch (e: Exception) {
@@ -132,14 +131,34 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         }
     }
 
-    private fun setupListeners() {
-        binding.btnFgmSaveAdd.setOnClickListener {
-            saveProduct()
+    private fun setupSpinner() {
+        binding.spinnerAdd.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?, view: View?, position: Int, id: Long
+            ) {
+                if (!spinnerPronto) return
+                // posição 0 = placeholder "Selecione uma categoria"
+                val cat = listaCategorias.getOrNull(position - 1)
+                produto = if (cat != null) {
+                    produto.copy(categoryId = cat.firestoreId, categoryName = cat.name)
+                } else {
+                    produto.copy(categoryId = "", categoryName = "")
+                }
+                Log.d("AddItemFragment", "Spinner selecionou: id=${produto.categoryId} name=${produto.categoryName}")
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+    }
+
+    // ── Listeners gerais ──────────────────────────────────────────────────
+
+    private fun setupListeners() {
+        binding.btnFgmSaveAdd.setOnClickListener { saveProduct() }
+
         binding.datePickerBtnAdd.setOnClickListener {
             Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
                 binding.datePickerBtnAdd.text = dataFormatada
-                binding.txtAddData.text = dataFormatada
+                binding.txtAddData.text       = dataFormatada
                 timestamp = ts
             }
         }
@@ -149,38 +168,23 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         }
 
         binding.fragmentImgAdd.setOnClickListener {
-            if (remoteImageUri != null) return@setOnClickListener   // bloqueado
+            if (remoteImageUri != null) return@setOnClickListener
             openMediaPicker()
         }
-        binding.spinnerAdd.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (!spinnerPronto || produto == null) return
-                // posição 0 = placeholder; categorias começam na posição 1
-                val cat = listaCategorias.getOrNull(position - 1)
-                if (cat != null) {
-                    produto = produto!!.copy(
-                        categoryId = cat.firestoreId,
-                        categoryName = cat.name
-                    )
-                } else {
-                    produto = produto!!.copy(
-                        categoryId = "",
-                        categoryName = ""
-                    )
-                }
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
     }
+
+    // ── Argumentos de navegação ───────────────────────────────────────────
 
     private fun readArguments() {
         val args = arguments ?: return
 
         barcode = args.getString(KEY_BARCODE).orEmpty()
-        val argCategoryId = args.getString(KEY_CATEGORIA).orEmpty()
+
+        val argCategoryId   = args.getString(KEY_CATEGORIA).orEmpty()
+        val argCategoryName = args.getString("nameCategory").orEmpty()
         if (argCategoryId.isNotEmpty()) {
-            selectedCategoryId = argCategoryId
-            Log.e("AddItemFragment"," id -> "+argCategoryId)
+            produto = produto.copy(categoryId = argCategoryId, categoryName = argCategoryName)
+            Log.d("AddItemFragment", "Categoria recebida por arg: id=$argCategoryId name=$argCategoryName")
         }
 
         if (barcode.isNotEmpty()) {
@@ -189,7 +193,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         }
     }
 
-    /** Exibe arquivo local no ImageView. */
     private fun showLocalImage(file: File) {
         Glide.with(requireContext())
             .load(file)
@@ -198,7 +201,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
             .into(binding.fragmentImgAdd)
     }
 
-    /** Exibe URL remota no ImageView. */
     private fun showRemoteImage(url: String) {
         Glide.with(requireContext())
             .load(url)
@@ -212,12 +214,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
 
     private fun openMediaPicker() {
         ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
-            override fun openGallery() {
-                this@AddItemFragment.openGallery()
-            }
-            override fun openCamera() {
-                this@AddItemFragment.openCamera()
-            }
+            override fun openGallery() { this@AddItemFragment.openGallery() }
+            override fun openCamera()  { this@AddItemFragment.openCamera() }
         })
     }
 
@@ -231,18 +229,18 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
             else                   -> Uri.EMPTY
         }
 
-        val product = PostProduct(
-            imageUri   = imageUri.toString(),
-            name       = nome,
-            note       = binding.editFragmentNoteAdd.text.toString(),
-            barcode    = barcode,
-            deleted    = false,
-            timestamp  = timestamp,
-            publisher  = UserAuth("", "", "", "", null)  // preenchido no DataSource com Auth atual
+        val productToSave = produto.copy(
+            imageUri  = imageUri.toString(),
+            name      = nome,
+            note      = binding.editFragmentNoteAdd.text.toString(),
+            barcode   = barcode,
+            deleted   = false,
+            timestamp = timestamp,
+            publisher = UserAuth("", "", "", "", null)
         )
 
         confirmed = true
-        presenter.saveProduct(product)
+        presenter.saveProduct(productToSave)
     }
 
     private fun openBarcodeImageScreen(barcodeValue: String) {
@@ -250,36 +248,40 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
         intent.putExtra("keyBarcode", barcodeValue)
         startActivity(intent)
     }
+
     override fun showProgress(enable: Boolean) {
         binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.GONE
-        binding.btnFgmSaveAdd.isEnabled = !enable
+        binding.btnFgmSaveAdd.isEnabled      = !enable
     }
+
     override fun onFailure(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
+
     override fun imageAlreadyExists(postImage: PostImage) {
         remoteImageUri = postImage.uri
         showRemoteImage(postImage.uri)
         if (postImage.name.isNotEmpty()) {
             binding.edtNameFragmentAdd.setText(postImage.name)
-            binding.edtNameFragmentAdd.setSelection(
-                binding.edtNameFragmentAdd.text.length
-            )
+            binding.edtNameFragmentAdd.setSelection(binding.edtNameFragmentAdd.text.length)
         }
     }
+
     override fun onImageNotFound() {
         binding.fragmentImgAdd.isClickable = true
     }
+
     override fun openCamera() {
         photoFile?.delete()
         cameraUtil.openCamera(requireContext(), cameraLauncher)
     }
+
     override fun openGallery() {
         findNavController().navigate(R.id.action_addFragment_to_nav_gallery_fragment)
     }
-    override fun goToHome() {
-        ToastCustom.showCustomToast(requireContext(),"")
 
+    override fun goToHome() {
+        ToastCustom.showCustomToast(requireContext(), "")
         findNavController().popBackStack()
     }
 
@@ -288,33 +290,21 @@ class AddItemFragment : Fragment(R.layout.fragment_add),RegisterAdd.View {
 
         val nomes = mutableListOf("Selecione uma categoria")
         nomes.addAll(categories.map { it.name })
-        binding.spinnerAdd.adapter = ArrayAdapter(
+
+        val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
             nomes
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-        spinnerPronto = true
-        produto.let {
-            listaCategorias.forEachIndexed { index, cat ->
-                if (cat.firestoreId == it?.categoryId.toString()) {
-                    binding.spinnerAdd.setSelection(index + 1)
-                    return
-                }
-            }
+
+        spinnerPronto = false
+        binding.spinnerAdd.adapter = adapter
+
+        val indexNaLista = categories.indexOfFirst { it.firestoreId == produto.categoryId }
+        if (indexNaLista >= 0) {
+            binding.spinnerAdd.setSelection(indexNaLista + 1, false)
         }
 
-        /*
-        val nomes = mutableListOf("Selecione uma categoria")
-        nomes.addAll(categories.map { it.name })
-
-        binding.spinnerEdit.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            nomes
-        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-
         spinnerPronto = true
-        produto?.let { selecionarCategoria(it.categoryId) }
-         */
     }
 }
