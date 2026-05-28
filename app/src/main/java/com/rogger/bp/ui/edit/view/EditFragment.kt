@@ -25,6 +25,7 @@ import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentEditBinding
+import com.rogger.bp.ui.animation.ToastCustom
 import com.rogger.bp.ui.base.DialogUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.category.data.CategoryDataSource
@@ -313,7 +314,7 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     override fun onSuccess(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+        ToastCustom.showCustomToast(requireContext(), "Savo com sucesso!")
     }
 
     override fun onError(message: String) {

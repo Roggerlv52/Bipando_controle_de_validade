@@ -52,7 +52,9 @@ class AddItemPresenter(
                 view?.showProgress(false)
             }
 
-            override fun onComplete() {}
+            override fun onComplete() {
+                view?.showProgress(false)
+            }
         })
     }
 
@@ -79,7 +81,6 @@ class AddItemPresenter(
             }
 
             override fun onComplete() {
-                view?.showProgress(false)
             }
         })
     }
@@ -154,7 +155,9 @@ class AddItemPresenter(
                             repository.create(product, createCallback())
                         }
 
-                        override fun onComplete() {}
+                        override fun onComplete() {
+                            view?.showProgress(false)
+                        }
                     }
                 )
             }

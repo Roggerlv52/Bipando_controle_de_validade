@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -19,6 +20,10 @@ public class ToastCustom {
 
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.custom_toast, null);
+
+        // TextView do layout
+        TextView txtMensagem = view.findViewById(R.id.txtMensagem);
+        txtMensagem.setText(mensagem);
         Toast toast = new Toast(context);
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(view);

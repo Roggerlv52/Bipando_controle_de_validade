@@ -250,8 +250,13 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun showProgress(enable: Boolean) {
-        binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.GONE
-        binding.btnFgmSaveAdd.isEnabled      = !enable
+        binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.INVISIBLE
+        binding.btnFgmSaveAdd.isEnabled
+        if (enable){
+            binding.btnFgmSaveAdd.isEnabled = false
+        }else{
+            binding.btnFgmSaveAdd.isEnabled = true
+        }
     }
 
     override fun onFailure(message: String) {
@@ -268,7 +273,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun onImageNotFound() {
-        binding.fragmentImgAdd.isClickable = true
+        binding.progressUploadAdd.visibility =  View.INVISIBLE
     }
 
     override fun openCamera() {
