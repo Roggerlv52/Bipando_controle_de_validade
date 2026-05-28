@@ -1,13 +1,17 @@
 package com.rogger.bp.ui.edit.data
 
-import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import com.rogger.bp.data.image.UploadResult
+import com.rogger.bp.data.image.datasource.GlobalImageDataSource
+import com.rogger.bp.data.image.datasource.UserImageDataSource
+import com.rogger.bp.data.image.repository.ImageResolutionRepository
 import com.rogger.bp.data.model.PostProduct
-import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -19,7 +23,11 @@ class EditDataSource : PostEditDataSource {
     private val TAG = "EditDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+
+    private val imageRepository = ImageResolutionRepository(
+        userImageDataSource   = UserImageDataSource(),
+        globalImageDataSource = GlobalImageDataSource()
+    )
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
@@ -33,7 +41,7 @@ class EditDataSource : PostEditDataSource {
     override fun fetchProductByDocId(docId: String, callback: EditCallback) {
         val ref = productsRef()
         if (ref == null) {
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }
@@ -58,17 +66,18 @@ class EditDataSource : PostEditDataSource {
                     val uuid = if (uidField.isNotEmpty()) uidField else doc.id
 
                     val produto = PostProduct(
-                        id         = (data["id"]         as? Long)?.toInt() ?: 0,
-                        userId     = data["userId"]      as? String ?: "",
-                        uuid       = uuid,
-                        name       = data["name"]        as? String ?: "",
-                        note       = data["note"]        as? String ?: "",
-                        barcode    = data["barcode"]     as? String ?: "",
-                        categoryId = data["categoryId"] as? String ?: "",
-                        timestamp  = data["timestamp"]   as? Long ?: 0L,
-                        imageUri   = data["imageUri"]    as? String ?: "",
-                        deleted    = data["deleted"]     as? Boolean ?: false,
-                        deletedAt  = data["deletedAt"]   as? Long
+                        firestoreDocId = doc.id,
+                        id             = (data["id"] as? Long)?.toInt() ?: 0,
+                        userId         = data["userId"] as? String ?: "",
+                        uuid           = uuid,
+                        name           = data["name"] as? String ?: "",
+                        note           = data["note"] as? String ?: "",
+                        barcode        = data["barcode"] as? String ?: "",
+                        categoryId     = data["categoryId"] as? String ?: "",
+                        timestamp      = data["timestamp"] as? Long ?: 0L,
+                        imageUri       = data["imageUri"] as? String ?: "",
+                        deleted        = data["deleted"] as? Boolean ?: false,
+                        deletedAt      = data["deletedAt"] as? Long
                     )
 
                     Log.d(TAG, "Produto carregado: ${produto.name} (docId=$docId)")
@@ -86,27 +95,23 @@ class EditDataSource : PostEditDataSource {
             .addOnCompleteListener { callback.onComplete() }
     }
 
-    // ── 2. Actualizar produto — com upload de imagem se necessário ─────────
+    // ── 2. Atualizar produto ──────────────────────────────────────────────
 
     override fun updateProduct(produto: PostProduct, callback: EditCallback) {
         val ref = productsRef()
         if (ref == null) {
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }
 
         val imageUri = produto.imageUri
-
-        // BUGFIX: detecta se imageUri é um caminho local que precisa de upload.
-        // Caminhos locais começam com "/" (absoluto) ou "file://".
-        // URLs remotas já válidas começam com "http" ou "https".
         val isLocalPath = imageUri.isNotEmpty() &&
                 (imageUri.startsWith("/") || imageUri.startsWith("file://"))
 
         if (isLocalPath) {
-            Log.d(TAG, "imageUri é local — fazendo upload antes de salvar: $imageUri")
-            uploadImageAndUpdate(ref, produto, imageUri, callback)
+            Log.d(TAG, "imageUri é local — resolvendo upload para barcode=${produto.barcode}")
+            handleImageUploadForEdit(ref, produto, imageUri, callback)
         } else {
             Log.d(TAG, "imageUri já é remota — atualizando Firestore diretamente")
             updateFirestoreDoc(ref, produto, imageUri, callback)
@@ -114,75 +119,80 @@ class EditDataSource : PostEditDataSource {
     }
 
     /**
-     * Faz upload do arquivo local para o Firebase Storage e,
-     * ao obter a URL de download pública, chama [updateFirestoreDoc].
+     * Resolve o upload de imagem no contexto de edição.
      *
-     * Caminho no Storage: user_images/{uid}/{uuid}/product.jpg
-     * Isso garante que cada produto tem sua própria imagem isolada
-     * e a URL é permanente, independente de reinstalação.
+     * Lógica:
+     *  1. Verifica se já existe imagem GLOBAL para o barcode.
+     *  2. Se NÃO existe → cria imagem global (este utilizador está a definir a imagem canónica).
+     *  3. Se JÁ existe → salva imagem PERSONALIZADA do utilizador (não altera a global).
+     *
+     * Em ambos os casos, o produto do utilizador é atualizado com a URL resultante.
      */
-    private fun uploadImageAndUpdate(
+    private fun handleImageUploadForEdit(
         ref: CollectionReference,
         produto: PostProduct,
         localPath: String,
         callback: EditCallback
     ) {
-        // Normaliza o caminho para Uri — suporta path absoluto e file://
-        val fileUri: Uri = if (localPath.startsWith("file://")) {
-            Uri.parse(localPath)
-        } else {
-            Uri.fromFile(File(localPath))
-        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val globalExists = imageRepository.globalImageExists(produto.barcode)
 
-        // Verifica que o arquivo existe localmente antes de tentar o upload
-        val file = File(localPath.removePrefix("file://"))
-        if (!file.exists()) {
-            Log.e(TAG, "Arquivo local não encontrado: $localPath")
-            callback.onFailure("Arquivo de imagem não encontrado no dispositivo")
-            callback.onComplete()
-            return
-        }
+            if (!globalExists) {
+                // ── Sem imagem global: cria a imagem global ────────────────
+                Log.d(TAG, "Sem imagem global — criando para barcode=${produto.barcode}")
+                val result = imageRepository.uploadGlobalImage(
+                    barcode     = produto.barcode,
+                    productName = produto.name,
+                    imageUri    = localPath
+                )
+                handleUploadResult(ref, produto, result, callback)
 
-        // BUGFIX: caminho deve seguir o mesmo padrão do AddFragment/FireRegisterDataSource:
-        //   imagens_produtos/{barcode}/imagem.jpg
-        // As regras do Firebase Storage foram configuradas para esse path.
-        // Qualquer outro caminho (ex: user_images/) recebe "permission denied".
-        //
-        // Se o produto não tiver barcode (campo vazio), usa o uuid como fallback
-        // para garantir que o upload sempre tenha um caminho válido e único.
-        val bucketKey = if (produto.barcode.isNotEmpty()) produto.barcode else produto.uuid
-        val storagePath = "imagens_produtos/$bucketKey/imagem.jpg"
-        val imageRef = storage.reference.child(storagePath)
-
-        Log.d(TAG, "Iniciando upload para: $storagePath")
-
-        imageRef.putFile(fileUri)
-            .addOnSuccessListener {
-                // Upload concluído — busca a URL pública de download
-                imageRef.downloadUrl
-                    .addOnSuccessListener { downloadUri ->
-                        val remoteUrl = downloadUri.toString()
-                        Log.d(TAG, "Upload concluído. URL: $remoteUrl")
-                        // Agora salva a URL remota no Firestore
-                        updateFirestoreDoc(ref, produto, remoteUrl, callback)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e(TAG, "Erro ao obter URL de download: ${e.message}")
-                        callback.onFailure("Erro ao obter URL da imagem: ${e.message}")
-                        callback.onComplete()
-                    }
+            } else {
+                // ── Imagem global existe: salva personalizada (privada) ────
+                Log.d(TAG, "Imagem global existe — salvando personalizada para barcode=${produto.barcode}")
+                val result = imageRepository.saveUserImage(
+                    barcode  = produto.barcode,
+                    imageUri = localPath
+                )
+                handleUploadResult(ref, produto, result, callback)
             }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Erro no upload da imagem: ${e.message}")
-                callback.onFailure("Erro ao enviar imagem: ${e.message}")
-                callback.onComplete()
-            }
+        }
     }
 
-    /**
-     * Salva os campos do produto no Firestore usando [imageUri] como a
-     * URL da imagem (pode ser a URL remota recém-obtida ou a original).
-     */
+    private fun handleUploadResult(
+        ref: CollectionReference,
+        produto: PostProduct,
+        result: UploadResult,
+        callback: EditCallback
+    ) {
+        when {
+            result is UploadResult.Success -> {
+                Log.d(TAG, "Upload concluído. URL: ${result.url}")
+                CoroutineScope(Dispatchers.Main).launch {
+                    updateFirestoreDoc(ref, produto, result.url, callback)
+                }
+            }
+
+            result is UploadResult.Error &&
+                    result.message.startsWith("ALREADY_EXISTS:") -> {
+                // Race condition — usa URL da imagem global existente
+                val existingUrl = result.message.removePrefix("ALREADY_EXISTS:")
+                Log.w(TAG, "Race condition no upload — usando URL existente: $existingUrl")
+                CoroutineScope(Dispatchers.Main).launch {
+                    updateFirestoreDoc(ref, produto, existingUrl, callback)
+                }
+            }
+
+            result is UploadResult.Error -> {
+                Log.e(TAG, "Erro no upload: ${result.message}")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback.onFailure(result.message)
+                    callback.onComplete()
+                }
+            }
+        }
+    }
+
     private fun updateFirestoreDoc(
         ref: CollectionReference,
         produto: PostProduct,
@@ -194,30 +204,29 @@ class EditDataSource : PostEditDataSource {
             "note"       to produto.note,
             "timestamp"  to produto.timestamp,
             "categoryId" to produto.categoryId,
-            "imageUri"   to imageUri,   // ← sempre uma URL remota ou vazia
+            "imageUri"   to imageUri,
             "barcode"    to produto.barcode
         )
 
         ref.document(produto.uuid)
             .update(updates)
             .addOnSuccessListener {
-                Log.d(TAG, "Produto actualizado no Firestore: ${produto.uuid}")
-                // Retorna o produto com a URI já corrigida para o presenter
+                Log.d(TAG, "Produto atualizado: ${produto.uuid}")
                 callback.onSuccess(produto.copy(imageUri = imageUri))
             }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Erro ao actualizar Firestore: ${e.message}")
-                callback.onFailure(e.message ?: "Erro ao actualizar produto")
+                Log.e(TAG, "Erro ao atualizar Firestore: ${e.message}")
+                callback.onFailure(e.message ?: "Erro ao atualizar produto")
             }
             .addOnCompleteListener { callback.onComplete() }
     }
 
-    // ── 3. Soft-delete pelo documentId ────────────────────────────────────
+    // ── 3. Soft-delete ────────────────────────────────────────────────────
 
     override fun deleteProduct(produto: PostProduct, callback: EditCallback) {
         val ref = productsRef()
         if (ref == null) {
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }

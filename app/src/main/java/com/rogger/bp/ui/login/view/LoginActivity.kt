@@ -51,7 +51,7 @@ class LoginActivity : BaseActivity(), Login.View {
 
     private var currentIndex = 0
     private val imageArray = intArrayOf(
-        R.drawable.bipando,
+       // R.drawable.bp_logo,
         R.drawable.picture_2,
         R.drawable.picture_3,
         R.drawable.picture_4,

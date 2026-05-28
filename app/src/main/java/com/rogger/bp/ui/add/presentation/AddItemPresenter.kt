@@ -27,8 +27,16 @@ class AddItemPresenter(
     private val categoryRepository: CategoryRepository
 ) : RegisterAdd.Presenter {
 
-    // ── 1. Verificar/criar imagem pelo barcode ─────────────────────────────
+    // ── 1. Verificar/buscar imagem pelo barcode ───────────────────────────
 
+    /**
+     * Chamado assim que o barcode é lido pelo scanner.
+     *
+     * Fluxo interno (gerenciado por [FireRegisterDataSource]):
+     *  a. Busca imagem personalizada do utilizador
+     *  b. Se não existir, busca imagem global
+     *  c. Se não existir nenhuma, aguarda o utilizador fazer upload
+     */
     override fun checkOrCreateImage(barcode: String) {
         if (barcode.isEmpty()) {
             view?.onFailure("Código de barras inválido")
@@ -39,17 +47,19 @@ class AddItemPresenter(
 
         repository.createImage(PostImage(barcode = barcode), object : SaveImageCallback {
             override fun onSuccess(image: PostImage) {
+                // Upload criado com sucesso (imagem global ou personalizada)
                 view?.showProgress(false)
             }
 
             override fun onAlreadyExists(image: PostImage) {
+                // Imagem encontrada (global ou personalizada) — mostra na UI
                 view?.showProgress(false)
                 view?.imageAlreadyExists(image)
             }
 
             override fun onFailure(message: String) {
-                view?.onFailure(message)
                 view?.showProgress(false)
+                view?.onFailure(message)
             }
 
             override fun onComplete() {
@@ -58,8 +68,17 @@ class AddItemPresenter(
         })
     }
 
-    // ── 2. Upload de imagem capturada (câmera / galeria) ──────────────────
+    // ── 2. Upload de imagem após utilizador selecionar da câmera/galeria ──
 
+    /**
+     * Chamado quando o utilizador escolhe uma nova imagem.
+     *
+     * O [FireRegisterDataSource] decide automaticamente:
+     *  - Se imagem global NÃO existe → cria imagem global
+     *  - Se imagem global JÁ existe  → salva como imagem personalizada
+     *
+     * A View é notificada via [RegisterAdd.View.goToHome] em caso de sucesso.
+     */
     override fun uploadImage(image: PostImage) {
         if (image.uri.isEmpty()) {
             view?.onFailure("Nenhuma imagem selecionada")
@@ -67,26 +86,41 @@ class AddItemPresenter(
         }
 
         view?.showProgress(true)
+
         repository.uploadImage(image, object : SaveImageCallback {
             override fun onSuccess(image: PostImage) {
+                view?.showProgress(false)
                 view?.goToHome()
             }
 
             override fun onAlreadyExists(image: PostImage) {
+                // Race condition: imagem global criada por outro utilizador
+                // durante o upload → usa URL existente
+                view?.showProgress(false)
                 view?.imageAlreadyExists(image)
             }
 
             override fun onFailure(message: String) {
+                view?.showProgress(false)
                 view?.onFailure(message)
             }
 
             override fun onComplete() {
+                view?.showProgress(false)
             }
         })
     }
 
-    // ── 3. Salvar produto ──────────────────────────────────────────────────
+    // ── 3. Salvar produto ─────────────────────────────────────────────────
 
+    /**
+     * Salva o produto no Firestore.
+     *
+     * Lógica de imageUri:
+     *  - Se imageUri é local → [FireRegisterDataSource.uploadImage] resolve (global vs personalizada)
+     *  - Se imageUri está vazia mas há barcode → tenta reusar imagem existente
+     *  - Se imageUri é remota (https) → usa diretamente sem upload
+     */
     override fun saveProduct(product: PostProduct) {
         if (product.name.isBlank()) {
             view?.onFailure("Informe o nome do produto")
@@ -99,13 +133,12 @@ class AddItemPresenter(
                 (product.imageUri.startsWith("/") && !product.imageUri.startsWith("//"))
 
         when {
-            // ── Caso 1: usuário selecionou imagem local + tem barcode ──────
-            // Faz upload para o Storage global; se já existir, usa a URL existente.
+            // ── Caso 1: imagem local + barcode → upload via lógica nova ───
             isLocalImage && product.barcode.isNotEmpty() -> {
                 val postImage = PostImage(
                     barcode = product.barcode,
-                    name = product.name,
-                    uri = product.imageUri
+                    name    = product.name,
+                    uri     = product.imageUri
                 )
                 repository.uploadImage(postImage, object : SaveImageCallback {
                     override fun onSuccess(uploaded: PostImage) {
@@ -113,36 +146,30 @@ class AddItemPresenter(
                     }
 
                     override fun onAlreadyExists(existing: PostImage) {
-                        // Imagem global já existe → usa a URL remota sem fazer novo upload
+                        // Imagem já existe (global ou personalizada) — usa URL existente
                         repository.create(product.copy(imageUri = existing.uri), createCallback())
                     }
 
                     override fun onFailure(message: String) {
-                        view?.onFailure(message)
                         view?.showProgress(false)
+                        view?.onFailure(message)
                     }
 
-                    override fun onComplete() { /* callbacks acima controlam o fluxo */
-                    }
+                    override fun onComplete() { /* fluxo controlado pelos callbacks acima */ }
                 })
             }
 
-            // ── Caso 2: sem imagem local, imageUri vazia, mas tem barcode ──
-            // BUGFIX: consulta se já existe imagem global para este barcode.
-            // Cobre o cenário de "deletar e re-adicionar o mesmo produto".
+            // ── Caso 2: sem imagem, mas tem barcode → busca imagem existente
             !isLocalImage && product.imageUri.isEmpty() && product.barcode.isNotEmpty() -> {
                 repository.createImage(
                     PostImage(barcode = product.barcode),
                     object : SaveImageCallback {
                         override fun onSuccess(image: PostImage) {
-                            // Documento recém-criado no Firestore, ainda sem URL de imagem
-                            // (uri vazia) — salva o produto sem imagem mesmo.
                             repository.create(product, createCallback())
                         }
 
                         override fun onAlreadyExists(existing: PostImage) {
-                            // Imagem global encontrada → usa a URL existente no produto.
-                            // É exatamente o caso de "re-adição após deleção".
+                            // Reutiliza URL existente (re-adição após deleção)
                             repository.create(
                                 product.copy(imageUri = existing.uri),
                                 createCallback()
@@ -150,8 +177,7 @@ class AddItemPresenter(
                         }
 
                         override fun onFailure(message: String) {
-                            // Falha na consulta → salva o produto sem imagem.
-                            // Não bloqueia o cadastro por causa da imagem.
+                            // Falha na busca → salva sem imagem (não bloqueia o cadastro)
                             repository.create(product, createCallback())
                         }
 
@@ -162,8 +188,7 @@ class AddItemPresenter(
                 )
             }
 
-            // ── Caso 3: imageUri já é uma URL remota (http/https) ──────────
-            // ou produto sem barcode — salva diretamente sem nenhuma consulta.
+            // ── Caso 3: URL remota ou sem barcode → salva diretamente ─────
             else -> {
                 repository.create(product, createCallback())
             }
