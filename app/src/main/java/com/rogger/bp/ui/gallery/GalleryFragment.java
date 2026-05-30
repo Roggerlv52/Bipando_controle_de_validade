@@ -61,17 +61,32 @@ public class GalleryFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         rc = view.findViewById(R.id.rc_galerry);
         rc.setLayoutManager(new GridLayoutManager(getContext(), 3));
-
         initCache();
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_MEDIA_IMAGES
-        ) != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES);
+
+        checkPermissionAndLoadImages();
+
+    }
+    private void checkPermissionAndLoadImages() {
+
+        String permission;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permission = Manifest.permission.READ_MEDIA_IMAGES;
         } else {
-            loadImagesAsync();
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
         }
 
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                permission
+        ) != PackageManager.PERMISSION_GRANTED) {
+
+            permissionLauncher.launch(permission);
+
+        } else {
+
+            loadImagesAsync();
+        }
     }
 
     private void initCache() {

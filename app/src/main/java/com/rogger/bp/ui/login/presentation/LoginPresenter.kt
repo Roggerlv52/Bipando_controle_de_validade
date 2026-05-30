@@ -31,6 +31,7 @@ class LoginPresenter(
         repository.loginWithGoogle(idToken, email,object : LoginCallback {
             override fun onSuccess(userAuth: UserAuth) {
                 view?.onUserAuthenticated(userAuth)
+                Log.e("login_google"," ${userAuth.name} \n ${userAuth.email}")
             }
 
             override fun onFailure(message: String) {

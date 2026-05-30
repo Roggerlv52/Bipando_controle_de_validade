@@ -58,7 +58,7 @@ class FireDataSource : LoginDataSource {
                     "email" to finalEmail,
                     "photoUrl" to photoUrl
                 )
-
+                Log.d("AUTH", auth.currentUser?.uid ?: "NULL")
                 firestore.collection("users")
                     .document(uid)
                     .set(firestoreData, SetOptions.merge())
@@ -72,6 +72,7 @@ class FireDataSource : LoginDataSource {
                             photoUri = user.photoUrl   // android.net.Uri directo do FirebaseUser
                         )
                         callback.onSuccess(userAuth)
+                        Log.e("login_datasource"," ${userAuth.name} \n ${userAuth.email}")
                     }
                     .addOnFailureListener { exception ->
                         Log.e(TAG, "Erro ao salvar no Firestore: ${exception.message}")

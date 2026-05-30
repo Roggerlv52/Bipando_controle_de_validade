@@ -57,7 +57,7 @@ class ProfileRepository {
 
                 }
                 .addOnFailureListener { e ->
-
+                    Log.e("Profile", e.toString())
                     callback.onFailure(
                         e.message ?: "Erro ao remover dados do usuário"
                     )
