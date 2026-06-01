@@ -45,16 +45,24 @@ object DependencyInjector {
         return HomeRepository(homeDataSource, roomProductCache)
     }
 
-    fun registerEditRepository(): EditRepository {
-        return EditRepository(EditDataSource())
+    fun registerEditRepository(context: Context): EditRepository {
+        val database = BpDatabase.getDatabase(context)
+        val productDao = database.productDao()
+        val roomProductCache = RoomProductCache(productDao)
+        return EditRepository(EditDataSource(), roomProductCache)
     }
 
     fun loginRepository(): LoginRepository {
         return LoginRepository(FireDataSource())
     }
 
-    fun itemDeletedRepository(): DeleteItemRepository {
-        return DeleteItemRepository(DeleteItemDataSource())
+    fun itemDeletedRepository(context: Context): DeleteItemRepository {
+
+        val database = BpDatabase.getDatabase(context)
+        val productDao = database.productDao()
+        val roomProductCache = RoomProductCache(productDao)
+        return DeleteItemRepository(DeleteItemDataSource(), roomProductCache)
+
     }
 
     // ── Novos repositórios de imagem ──────────────────────────────────────

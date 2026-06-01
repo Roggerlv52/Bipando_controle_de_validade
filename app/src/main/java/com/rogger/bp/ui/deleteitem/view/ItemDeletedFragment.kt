@@ -29,7 +29,7 @@ class ItemDeletedFragment : Fragment(R.layout.fragment_item_deleted), DeletedIte
     private var _binding: FragmentItemDeletedBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: ItemDeletedAdapter
-    private lateinit var repository: DeleteItemRepository
+    //private lateinit var repository: DeleteItemRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,8 +43,9 @@ class ItemDeletedFragment : Fragment(R.layout.fragment_item_deleted), DeletedIte
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repository = DependencyInjector.itemDeletedRepository()
+        val repository = DependencyInjector.itemDeletedRepository(requireContext())
         presenter = DeletedItemPresenter(this, repository)
+
 
         setupRecyclerView()
         presenter.loadDeletedItems() // ✅ CORREÇÃO: busca os dados ao abrir a tela

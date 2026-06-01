@@ -31,6 +31,7 @@ import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.RoomCategoryCache
+import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.edit.ContractEdit
 import com.rogger.bp.ui.edit.data.EditDataSource
@@ -82,7 +83,7 @@ class EditFragment : Fragment(), ContractEdit.View {
 
         presenter = EditPresenter(
             view = this,
-            repository = EditRepository(EditDataSource()),
+            repository = DependencyInjector.registerEditRepository(requireContext()),
             categoryRepository = CategoryRepository(categoryDataSource, roomCategoryCache)
         )
 

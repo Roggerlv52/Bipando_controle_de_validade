@@ -72,7 +72,6 @@ class FireDataSource : LoginDataSource {
                             photoUri = user.photoUrl   // android.net.Uri directo do FirebaseUser
                         )
                         callback.onSuccess(userAuth)
-                        Log.e("login_datasource"," ${userAuth.name} \n ${userAuth.email}")
                     }
                     .addOnFailureListener { exception ->
                         Log.e(TAG, "Erro ao salvar no Firestore: ${exception.message}")
@@ -84,7 +83,6 @@ class FireDataSource : LoginDataSource {
                             photoUri = user.photoUrl
                         )
                         callback.onSuccess(userAuth)
-                        Log.w(TAG, "Login OK mas Firestore falhou: ${exception.message}")
                     }
                     .addOnCompleteListener {
                         callback.onComplete()
