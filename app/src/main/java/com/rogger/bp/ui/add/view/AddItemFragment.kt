@@ -69,7 +69,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repository         = DependencyInjector.registerProductRepository()
+        val repository         = DependencyInjector.registerProductRepository(requireContext())
         val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
         presenter = AddItemPresenter(this, repository, categoryRepository)
 

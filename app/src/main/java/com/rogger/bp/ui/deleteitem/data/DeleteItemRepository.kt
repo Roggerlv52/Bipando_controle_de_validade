@@ -30,7 +30,6 @@ class DeleteItemRepository(
 
                 CoroutineScope(Dispatchers.IO).launch {
                     // Remove permanentemente o registro do Room local
-
                     localCache.remove(item.firestoreDocId)
                     UserImageDataSource().removeUserImage(item.barcode)
                 }

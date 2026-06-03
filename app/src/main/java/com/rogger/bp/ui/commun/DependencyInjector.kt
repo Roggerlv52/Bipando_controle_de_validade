@@ -25,8 +25,11 @@ object DependencyInjector {
 
     // ── Repositórios existentes (sem alteração de interface) ──────────────
 
-    fun registerProductRepository(): RegisterItemRepository {
-        return RegisterRepository(FireRegisterDataSource())
+    fun registerProductRepository(context: Context): RegisterItemRepository {
+        val database = BpDatabase.getDatabase(context)
+        val productDao = database.productDao()
+        val roomProductCache = RoomProductCache(productDao)
+        return RegisterItemRepository(FireRegisterDataSource(), roomProductCache)
     }
 
     fun registerCategoryRepository(context: Context): CategoryRepository {

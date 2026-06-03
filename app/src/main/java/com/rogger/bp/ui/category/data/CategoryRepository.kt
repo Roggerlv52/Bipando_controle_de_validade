@@ -46,29 +46,31 @@ class CategoryRepository(
     }
 
     fun create(category: PostCategory, callback: CategoryCallback) {
-        remoteDataSource.createCategory(category, object : CategoryCallback {
-            override fun onSuccess(p: PostCategory) {
-                callback.onSuccess(p)
-            }
+        // 1. Salva no cache local do Room imediatamente
+        CoroutineScope(Dispatchers.IO).launch {
+            localCache.insertCategory(category)
+        }
 
-            override fun onFailure(message: String) = callback.onFailure(message)
-            override fun onComplete() = callback.onComplete()
-            override fun onAlreadyExists(existingCategory: PostCategory) =
-                callback.onAlreadyExists(existingCategory)
-        })
+        // 2. Envia para o Firestore em segundo plano
+        remoteDataSource.createCategory(category, callback)
+
+        // 3. Retorna sucesso imediatamente para fechar o diálogo
+        callback.onSuccess(category)
+        callback.onComplete()
     }
 
     fun update(category: PostCategory, callback: CategoryCallback) {
-        remoteDataSource.updateCategory(category, object : CategoryCallback {
-            override fun onSuccess(p: PostCategory) {
-                callback.onSuccess(p)
-            }
+        // 1. Atualiza no cache local do Room imediatamente
+        CoroutineScope(Dispatchers.IO).launch {
+            localCache.updateCategory(category)
+        }
 
-            override fun onFailure(message: String) = callback.onFailure(message)
-            override fun onComplete() = callback.onComplete()
-            override fun onAlreadyExists(existingCategory: PostCategory) =
-                callback.onAlreadyExists(existingCategory)
-        })
+        // 2. Envia para o Firestore em segundo plano
+        remoteDataSource.updateCategory(category, callback)
+
+        // 3. Retorna sucesso imediatamente
+        callback.onSuccess(category)
+        callback.onComplete()
     }
 
     fun delete(category: PostCategory, callback: CategoryCallback) {
@@ -94,6 +96,7 @@ class CategoryRepository(
     fun getCachedCategoriesFlow(): Flow<List<PostCategory>> {
         return localCache.getAllCategoriesFlow()
     }
+
     fun destroy() {
         stopListeningForCategories()
         repositoryScope.cancel()

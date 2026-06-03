@@ -13,34 +13,44 @@ import kotlinx.coroutines.launch
  */
 class EditRepository(
     private val dataSource: PostEditDataSource,
-    private val localCache: RoomProductCache) {
+    private val localCache: RoomProductCache
+) {
 
     fun update(produto: PostProduct, callback: EditCallback) {
-    dataSource.updateProduct(produto, callback)
-}
+        CoroutineScope(Dispatchers.IO).launch {
+            localCache.updateProduct(produto)
+        }
 
-fun delete(produto: PostProduct, callback: EditCallback) {
-    //dataSource.deleteProduct(produto, callback)
-    dataSource.deleteProduct(produto, object : EditCallback {
-        override fun onSuccess(p: PostProduct) {
-            CoroutineScope(Dispatchers.IO).launch {
-                // Remove do Room imediatamente após o sucesso no Firestore
-                localCache.remove(p.firestoreDocId)
+        // 2. Executa a gravação no Firestore em segundo plano
+        dataSource.updateProduct(produto, callback)
+
+        // 3. Dispara o callback de sucesso imediatamente para liberar a UI
+        callback.onSuccess(produto)
+        callback.onComplete()
+    }
+
+    fun delete(produto: PostProduct, callback: EditCallback) {
+        //dataSource.deleteProduct(produto, callback)
+        dataSource.deleteProduct(produto, object : EditCallback {
+            override fun onSuccess(p: PostProduct) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    // Remove do Room imediatamente após o sucesso no Firestore
+                    localCache.remove(p.firestoreDocId)
+                }
+                callback.onSuccess(p)
             }
-            callback.onSuccess(p)
-        }
 
-        override fun onFailure(message: String) {
-            callback.onFailure(message)
-        }
+            override fun onFailure(message: String) {
+                callback.onFailure(message)
+            }
 
-        override fun onComplete() {
-            callback.onComplete()
-        }
-    })
-}
+            override fun onComplete() {
+                callback.onComplete()
+            }
+        })
+    }
 
-fun fetchByDocId(docId: String, callback: EditCallback) {
-    dataSource.fetchProductByDocId(docId, callback)
-}
+    fun fetchByDocId(docId: String, callback: EditCallback) {
+        dataSource.fetchProductByDocId(docId, callback)
+    }
 }
