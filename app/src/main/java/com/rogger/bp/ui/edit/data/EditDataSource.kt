@@ -111,16 +111,11 @@ class EditDataSource : PostEditDataSource {
                 (imageUri.startsWith("/") || imageUri.startsWith("file://"))
 
         if (isLocalPath) {
-            // 👉 Se estiver offline, grava a alteração do Firestore localmente com a URI local
-            if (NetworkUtils.isNetworkAvailable()) {
-                Log.d(
-                    TAG,
-                    "Cliente offline no edit — atualizando Firestore localmente com URI local"
-                )
+            Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
+            if (!NetworkUtils.isNetworkAvailable()) {
                 updateFirestoreDoc(ref, produto, imageUri, callback)
                 return
             }
-            Log.d(TAG, "imageUri é local — resolvendo upload para barcode=${produto.barcode}")
             handleImageUploadForEdit(ref, produto, imageUri, callback)
         } else {
             Log.d(TAG, "imageUri já é remota — atualizando Firestore diretamente")

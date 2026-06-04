@@ -80,6 +80,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
         setupCamera()
         setupGalleryResult()
+        showDataPiker()
         setupSpinner()
         setupListeners()
 
@@ -156,11 +157,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         binding.btnFgmSaveAdd.setOnClickListener { saveProduct() }
 
         binding.datePickerBtnAdd.setOnClickListener {
-            Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
-                binding.datePickerBtnAdd.text = dataFormatada
-                binding.txtAddData.text       = dataFormatada
-                timestamp = ts
-            }
+            showDataPiker()
         }
 
         binding.txtAddBarcode.setOnClickListener {
@@ -174,7 +171,13 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     // ── Argumentos de navegação ───────────────────────────────────────────
-
+    private fun showDataPiker(){
+        Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
+            binding.datePickerBtnAdd.text = dataFormatada
+            binding.txtAddData.text       = dataFormatada
+            timestamp = ts
+        }
+    }
     private fun readArguments() {
         val args = arguments ?: return
 
@@ -286,7 +289,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun goToHome() {
-        ToastCustom.showCustomToast(requireContext(), "")
+        ToastCustom.showCustomToast(requireContext(), "Salvo com sucesso!")
         findNavController().popBackStack()
     }
 

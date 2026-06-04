@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.rogger.bp.data.database.BpDatabase;
 import com.rogger.bp.data.model.PostProduct;
 
 import java.util.ArrayList;
@@ -19,9 +20,6 @@ import java.util.List;
 public class ExpirationWorker extends Worker {
     private static final String TAG = "ExpirationWorker";
 
-    // SharedPreferences usada como fallback para recuperar userId
-    // quando FirebaseAuth não tem sessão ativa no contexto do Worker.
-    // O userId é salvo nessa chave pelo SharedPreferencesManager ao fazer login.
     private static final String PREF_USER = "shared_key_date";
     private static final String KEY_UID   = "userUid";
 
@@ -34,10 +32,6 @@ public class ExpirationWorker extends Worker {
     public Result doWork() {
         Log.d(TAG, "Worker iniciado — verificando validade dos produtos.");
 
-        // Bug 4 corrigido: Workers rodam fora do ciclo de vida do app.
-        // FirebaseAuth.getCurrentUser() pode ser null nesse contexto.
-        // Estratégia: tenta Firebase primeiro; se nulo, usa uid salvo
-        // no SharedPreferences no momento do login.
         String userId = obterUserId();
 
         if (userId == null || userId.isEmpty()) {
@@ -47,13 +41,23 @@ public class ExpirationWorker extends Worker {
 
         Log.d(TAG, "Verificando produtos para userId: " + userId);
 
+        // ── ✅ CORREÇÃO CRÍTICA: Carrega e filtra os produtos do Room offline ──
+        BpDatabase database = BpDatabase.Companion.getDatabase(getApplicationContext());
+        List<PostProduct> todosProdutosCached = database.productDao().getAllCachedProducts();
 
+        List<PostProduct> produtos = new ArrayList<>();
 
-        // Usa a query síncrona (sem LiveData) — obrigatório em Workers
-        List<PostProduct> produtos = null;
+        if (todosProdutosCached != null) {
+            for (PostProduct p : todosProdutosCached) {
+                // Filtra apenas produtos do usuário ativo e que não estão na lixeira
+                if (p.getUserId() != null && p.getUserId().equals(userId) && !p.getDeleted()) {
+                    produtos.add(p);
+                }
+            }
+        }
 
-        if (produtos == null || produtos.isEmpty()) {
-            Log.d(TAG, "Nenhum produto ativo encontrado.");
+        if (produtos.isEmpty()) {
+            Log.d(TAG, "Nenhum produto ativo encontrado no Room para este usuário.");
             return Result.success();
         }
 
@@ -107,14 +111,6 @@ public class ExpirationWorker extends Worker {
         return Result.success();
     }
 
-    /**
-     * Obtém o userId com fallback:
-     * 1. Tenta FirebaseAuth (funciona se a sessão ainda está ativa)
-     * 2. Lê do SharedPreferences (salvo no login pelo SharedPreferencesManager)
-     *
-     * Para que o fallback funcione, o SharedPreferencesManager deve salvar
-     * o uid ao fazer login (veja o comentário em ProfileFragment/LoginActivity).
-     */
     private String obterUserId() {
         // Tentativa 1: Firebase Auth
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -123,7 +119,7 @@ public class ExpirationWorker extends Worker {
             return user.getUid();
         }
 
-        // Tentativa 2: SharedPreferences (salvo no login)
+        // Tentativa 2: SharedPreferences (fallback offline)
         SharedPreferences prefs = getApplicationContext()
                 .getSharedPreferences(PREF_USER, Context.MODE_PRIVATE);
         String uid = prefs.getString(KEY_UID, null);

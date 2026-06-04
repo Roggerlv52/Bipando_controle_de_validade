@@ -91,10 +91,10 @@ class UserImageDataSource {
         }
 
         // 👉 Bloqueia início se estiver offline
-        if (NetworkUtils.isNetworkAvailable()) {
+        if (!NetworkUtils.isNetworkAvailable()) { // ← NOT invertido
             return UploadResult.Error("OFFLINE")
         }
-
+        Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
         return try {
             val fileUri: Uri = when {
                 imageUri.startsWith("content://") -> Uri.parse(imageUri)

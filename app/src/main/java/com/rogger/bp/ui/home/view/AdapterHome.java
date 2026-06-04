@@ -6,6 +6,7 @@ package com.rogger.bp.ui.home.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -94,12 +95,17 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
         // 3. Indicador de cor/dias
         if (diasRestantes < 1) {
             holder.imageCircle.setImageResource(R.drawable.red_circle);
+            holder.txtLight.setTextColor(Color.RED);
+            holder.txtRight.setTextColor(Color.RED);
             holder.txtLight.setText(diasRestantes < 0 ? "VENCIDO" : "VENCE HOJE");
         } else if (diasRestantes <= diasLimiteAmarelo) {
             holder.imageCircle.setImageResource(R.drawable.yellow_circle);
+            //holder.txtLight.setTextColor(Color.parseColor("#FFD700"));
+            holder.txtRight.setTextColor(Color.parseColor("#FFD700"));
             holder.txtLight.setText(diasRestantes + (diasRestantes == 1 ? " Dia" : " Dias"));
         } else {
             holder.imageCircle.setImageResource(R.drawable.circle);
+            holder.txtRight.setTextColor(Color.parseColor("#008000"));
             holder.txtLight.setText(diasRestantes + " dias");
         }
 

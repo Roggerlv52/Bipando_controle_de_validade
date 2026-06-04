@@ -7,6 +7,7 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RegisterItemRepository(
     private val dataSource: ItemDataSource,
@@ -38,14 +39,13 @@ class RegisterItemRepository(
             })
         } else {
             // ── CENÁRIO OFFLINE ─────────────────────────────────────────────
-            // Se estamos offline, salvamos imediatamente com a URI local
-            // para não travar o usuário, deixando o WorkManager sincronizar depois.
             CoroutineScope(Dispatchers.IO).launch {
                 localCache.insertProduct(product)
+                withContext(Dispatchers.Main) {
+                    callback.onSuccess(null)
+                   // callback.onComplete()
+                }
             }
-            dataSource.createItem(product, callback)
-            callback.onSuccess(null)
-            callback.onComplete()
         }
     }
 

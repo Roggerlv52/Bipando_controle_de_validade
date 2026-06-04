@@ -10,7 +10,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.rogger.bp.data.database.BpDatabase
-import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -85,17 +84,15 @@ class ImageSyncWorker(context: Context, params: WorkerParameters) : Worker(conte
                 val updatedProduct = product.copy(imageUri = downloadUrl)
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    productDao.insertProduct(updatedProduct)
-                    // 4. Atualiza o documento no Firestore com a URL pública
-                    val productRef = db.collection("users")
-                        .document(uid)
-                        .collection("products")
-                        .document(product.firestoreDocId)
-
-                    Tasks.await(productRef.update("imageUri", downloadUrl))
-                    Log.d(TAG, "Firestore sincronizado com sucesso para ${product.name}")
-
+                    productDao.updateProduct(updatedProduct)
                 }
+                // 4. Atualiza o documento no Firestore com a URL pública
+                val productRef = db.collection("users")
+                    .document(uid)
+                    .collection("products")
+                    .document(product.firestoreDocId)
+                Tasks.await(productRef.update("imageUri", downloadUrl))
+                Log.d(TAG, "Firestore sincronizado com sucesso para ${product.name}")
 
 
             } catch (e: Exception) {
