@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.edit
 
+import android.content.Context
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.base.BasePresenter
@@ -18,7 +19,7 @@ interface ContractEdit {
          * O [docId] é o [PostProduct.uuid] exposto pelo [HomeDataSource].
          */
         fun loadProduct(docId: String)
-        fun saveProduct(produto: PostProduct)
+        fun saveProduct(produto: PostProduct,context: Context)
         fun deleteProduct(produto: PostProduct)
         fun fetchCategories()
     }

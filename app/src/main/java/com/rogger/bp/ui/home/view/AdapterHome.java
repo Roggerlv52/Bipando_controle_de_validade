@@ -25,10 +25,8 @@ import com.rogger.bp.ui.home.OnItemClickListener;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
 
@@ -126,7 +124,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                 .override(200, 200)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                 .centerCrop()
-                .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(holder.imageView);
     }

@@ -6,6 +6,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.model.PostImage
+import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.tasks.await
 import java.io.File
 /*
@@ -32,6 +33,12 @@ class GlobalImageDataSource {
     suspend fun fetchGlobalImage(barcode: String): ImageResult {
         if (barcode.isBlank()) {
             return ImageResult.Error("Código de barras inválido")
+        }
+
+        // 👉 Se estiver offline, retorna NoImage direto para evitar a exceção do Firebase
+        if (!NetworkUtils.isNetworkAvailable()) {
+            Log.d(TAG, "Dispositivo offline — ignorando busca de imagem global para barcode=$barcode")
+            return ImageResult.NoImage
         }
 
         return try {
@@ -82,6 +89,11 @@ class GlobalImageDataSource {
             return UploadResult.Error("Barcode ou URI de imagem inválidos")
         }
 
+        // 👉 Se detectar offline no início, retorna OFFLINE imediatamente
+        if (!NetworkUtils.isNetworkAvailable()) {
+            return UploadResult.Error("OFFLINE")
+        }
+
         return try {
             // ── Verificação de existência (guarda de segurança) ──────────
             val existing = db.collection("imageProdutos")
@@ -93,8 +105,6 @@ class GlobalImageDataSource {
                 val image = existing.toObject(PostImage::class.java)
                 if (image != null && image.uri.isNotEmpty()) {
                     Log.w(TAG, "Imagem global já existe para barcode=$barcode — não sobrescrevendo")
-                    // Retorna a URL existente encapsulada como erro com prefixo especial
-                    // O caller deve detectar "ALREADY_EXISTS:" e extrair a URL.
                     return UploadResult.Error("ALREADY_EXISTS:${image.uri}")
                 }
             }
@@ -122,9 +132,6 @@ class GlobalImageDataSource {
                 uri     = downloadUrl
             )
 
-            // set() com merge=false garante criação. Se por algum race condition
-            // já existir, o Firestore sobrescreve — mas as Security Rules do servidor
-            // impedem isso (allow create, deny update).
             db.collection("imageProdutos")
                 .document(barcode)
                 .set(postImage)
@@ -135,6 +142,11 @@ class GlobalImageDataSource {
 
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao criar imagem global: ${e.message}")
+            // 👉 Se falhar devido à falta de rede durante a execução, retorna OFFLINE de forma amigável
+            if (e.message?.contains("offline", ignoreCase = true) == true ||
+                e.message?.contains("unavailable", ignoreCase = true) == true) {
+                return UploadResult.Error("OFFLINE")
+            }
             UploadResult.Error(e.message ?: "Erro ao criar imagem global")
         }
     }

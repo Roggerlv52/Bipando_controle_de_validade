@@ -1,5 +1,7 @@
 package com.rogger.bp.ui.edit.presentation
 
+import android.content.Context
+import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.category.data.CategoryRepository
@@ -49,7 +51,7 @@ class EditPresenter(
 
     // ── 2. Guardar produto ────────────────────────────────────────────────
 
-    override fun saveProduct(produto: PostProduct) {
+    override fun saveProduct(produto: PostProduct,context : Context) {
         val nome = produto.name.trim()
         when {
             nome.isEmpty()         -> { view?.onError("Informe o nome do produto"); return }
@@ -61,9 +63,8 @@ class EditPresenter(
             view?.onError("Selecione uma data de validade")
             return
         }
-
         view?.showProgress(true)
-
+        ImageSyncScheduler.start(context)
         repository.update(produto, object : EditCallback {
             override fun onSuccess(p: PostProduct) {
                 view?.onSuccess("\"${p.name}\" actualizado com sucesso")
@@ -74,6 +75,7 @@ class EditPresenter(
             }
             override fun onComplete() {
                 view?.showProgress(false)
+
             }
         })
     }

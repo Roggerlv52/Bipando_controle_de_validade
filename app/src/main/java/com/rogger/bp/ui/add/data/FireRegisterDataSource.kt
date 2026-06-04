@@ -10,6 +10,7 @@ import com.rogger.bp.data.image.datasource.UserImageDataSource
 import com.rogger.bp.data.image.repository.ImageResolutionRepository
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -134,6 +135,14 @@ class FireRegisterDataSource : ItemDataSource {
     override fun uploadImage(image: PostImage, callback: SaveImageCallback) {
         if (image.uri.isEmpty()) {
             callback.onFailure("Nenhuma imagem selecionada")
+            return
+        }
+
+        // 👉 Se estiver offline, pula o upload e conclui usando a URI local da imagem
+        if (!NetworkUtils.isNetworkAvailable()) {
+            Log.d(TAG, "Dispositivo offline — pulando upload e salvando com URI local")
+            callback.onSuccess(image)
+            callback.onComplete()
             return
         }
 

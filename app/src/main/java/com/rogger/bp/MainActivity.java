@@ -4,7 +4,6 @@ package com.rogger.bp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +23,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.rogger.bp.data.image.notification.ImageSyncScheduler;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.notification.NotificationUtil;
@@ -51,6 +51,9 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
+        ImageSyncScheduler.INSTANCE.start(this);
+
         NotificationUtil.createChannel(this);
         mAuth = FirebaseAuth.getInstance();
         binding = ActivityMainBinding.inflate(getLayoutInflater());

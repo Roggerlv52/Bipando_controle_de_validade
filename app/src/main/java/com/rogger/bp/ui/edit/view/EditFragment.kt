@@ -241,7 +241,7 @@ class EditFragment : Fragment(), ContractEdit.View {
             barcode = binding.txtEditBacode.text.toString(),
             imageUri = novaImagemFile?.absolutePath ?: p.imageUri
         )
-        presenter.saveProduct(atualizado)
+        presenter.saveProduct(atualizado,requireContext())
     }
 
     private fun confirmarDelete() {

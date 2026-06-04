@@ -1,5 +1,7 @@
 package com.rogger.bp.ui.add.presentation
 
+import android.content.Context
+import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
@@ -121,12 +123,13 @@ class AddItemPresenter(
      *  - Se imageUri está vazia mas há barcode → tenta reusar imagem existente
      *  - Se imageUri é remota (https) → usa diretamente sem upload
      */
-    override fun saveProduct(product: PostProduct) {
+    override fun saveProduct(product: PostProduct,context : Context) {
         if (product.name.isBlank()) {
             view?.onFailure("Informe o nome do produto")
             return
         }
-
+        // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
+        ImageSyncScheduler.start(context)
         view?.showProgress(true)
 
         val isLocalImage = product.imageUri.startsWith("file://") ||
@@ -137,8 +140,8 @@ class AddItemPresenter(
             isLocalImage && product.barcode.isNotEmpty() -> {
                 val postImage = PostImage(
                     barcode = product.barcode,
-                    name    = product.name,
-                    uri     = product.imageUri
+                    name = product.name,
+                    uri = product.imageUri
                 )
                 repository.uploadImage(postImage, object : SaveImageCallback {
                     override fun onSuccess(uploaded: PostImage) {
@@ -155,7 +158,11 @@ class AddItemPresenter(
                         view?.onFailure(message)
                     }
 
-                    override fun onComplete() { /* fluxo controlado pelos callbacks acima */ }
+                    override fun onComplete() {
+                        /* fluxo controlado pelos callbacks acima */
+                        // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
+
+                    }
                 })
             }
 

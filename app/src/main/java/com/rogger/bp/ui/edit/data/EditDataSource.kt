@@ -9,6 +9,7 @@ import com.rogger.bp.data.image.datasource.GlobalImageDataSource
 import com.rogger.bp.data.image.datasource.UserImageDataSource
 import com.rogger.bp.data.image.repository.ImageResolutionRepository
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +26,7 @@ class EditDataSource : PostEditDataSource {
     private val auth = FirebaseAuth.getInstance()
 
     private val imageRepository = ImageResolutionRepository(
-        userImageDataSource   = UserImageDataSource(),
+        userImageDataSource = UserImageDataSource(),
         globalImageDataSource = GlobalImageDataSource()
     )
 
@@ -67,17 +68,17 @@ class EditDataSource : PostEditDataSource {
 
                     val produto = PostProduct(
                         firestoreDocId = doc.id,
-                        id             = (data["id"] as? Long)?.toInt() ?: 0,
-                        userId         = data["userId"] as? String ?: "",
-                        uuid           = uuid,
-                        name           = data["name"] as? String ?: "",
-                        note           = data["note"] as? String ?: "",
-                        barcode        = data["barcode"] as? String ?: "",
-                        categoryId     = data["categoryId"] as? String ?: "",
-                        timestamp      = data["timestamp"] as? Long ?: 0L,
-                        imageUri       = data["imageUri"] as? String ?: "",
-                        deleted        = data["deleted"] as? Boolean ?: false,
-                        deletedAt      = data["deletedAt"] as? Long
+                        id = (data["id"] as? Long)?.toInt() ?: 0,
+                        userId = data["userId"] as? String ?: "",
+                        uuid = uuid,
+                        name = data["name"] as? String ?: "",
+                        note = data["note"] as? String ?: "",
+                        barcode = data["barcode"] as? String ?: "",
+                        categoryId = data["categoryId"] as? String ?: "",
+                        timestamp = data["timestamp"] as? Long ?: 0L,
+                        imageUri = data["imageUri"] as? String ?: "",
+                        deleted = data["deleted"] as? Boolean ?: false,
+                        deletedAt = data["deletedAt"] as? Long
                     )
 
                     Log.d(TAG, "Produto carregado: ${produto.name} (docId=$docId)")
@@ -110,6 +111,15 @@ class EditDataSource : PostEditDataSource {
                 (imageUri.startsWith("/") || imageUri.startsWith("file://"))
 
         if (isLocalPath) {
+            // 👉 Se estiver offline, grava a alteração do Firestore localmente com a URI local
+            if (NetworkUtils.isNetworkAvailable()) {
+                Log.d(
+                    TAG,
+                    "Cliente offline no edit — atualizando Firestore localmente com URI local"
+                )
+                updateFirestoreDoc(ref, produto, imageUri, callback)
+                return
+            }
             Log.d(TAG, "imageUri é local — resolvendo upload para barcode=${produto.barcode}")
             handleImageUploadForEdit(ref, produto, imageUri, callback)
         } else {
@@ -141,17 +151,20 @@ class EditDataSource : PostEditDataSource {
                 // ── Sem imagem global: cria a imagem global ────────────────
                 Log.d(TAG, "Sem imagem global — criando para barcode=${produto.barcode}")
                 val result = imageRepository.uploadGlobalImage(
-                    barcode     = produto.barcode,
+                    barcode = produto.barcode,
                     productName = produto.name,
-                    imageUri    = localPath
+                    imageUri = localPath
                 )
                 handleUploadResult(ref, produto, result, callback)
 
             } else {
                 // ── Imagem global existe: salva personalizada (privada) ────
-                Log.d(TAG, "Imagem global existe — salvando personalizada para barcode=${produto.barcode}")
+                Log.d(
+                    TAG,
+                    "Imagem global existe — salvando personalizada para barcode=${produto.barcode}"
+                )
                 val result = imageRepository.saveUserImage(
-                    barcode  = produto.barcode,
+                    barcode = produto.barcode,
                     imageUri = localPath
                 )
                 handleUploadResult(ref, produto, result, callback)
@@ -175,11 +188,21 @@ class EditDataSource : PostEditDataSource {
 
             result is UploadResult.Error &&
                     result.message.startsWith("ALREADY_EXISTS:") -> {
-                // Race condition — usa URL da imagem global existente
                 val existingUrl = result.message.removePrefix("ALREADY_EXISTS:")
                 Log.w(TAG, "Race condition no upload — usando URL existente: $existingUrl")
                 CoroutineScope(Dispatchers.Main).launch {
                     updateFirestoreDoc(ref, produto, existingUrl, callback)
+                }
+            }
+
+            // 👉 NOVO: Trata o resultado "OFFLINE" e atualiza o Firestore localmente usando a URI local
+            result is UploadResult.Error && result.message == "OFFLINE" -> {
+                Log.d(
+                    TAG,
+                    "Falha no upload (Dispositivo Offline) — salvando localmente com URI local"
+                )
+                CoroutineScope(Dispatchers.Main).launch {
+                    updateFirestoreDoc(ref, produto, produto.imageUri, callback)
                 }
             }
 
@@ -200,12 +223,12 @@ class EditDataSource : PostEditDataSource {
         callback: EditCallback
     ) {
         val updates = mapOf(
-            "name"       to produto.name,
-            "note"       to produto.note,
-            "timestamp"  to produto.timestamp,
+            "name" to produto.name,
+            "note" to produto.note,
+            "timestamp" to produto.timestamp,
             "categoryId" to produto.categoryId,
-            "imageUri"   to imageUri,
-            "barcode"    to produto.barcode
+            "imageUri" to imageUri,
+            "barcode" to produto.barcode
         )
 
         ref.document(produto.uuid)
@@ -234,7 +257,7 @@ class EditDataSource : PostEditDataSource {
         ref.document(produto.uuid)
             .update(
                 mapOf(
-                    "deleted"   to true,
+                    "deleted" to true,
                     "deletedAt" to System.currentTimeMillis()
                 )
             )

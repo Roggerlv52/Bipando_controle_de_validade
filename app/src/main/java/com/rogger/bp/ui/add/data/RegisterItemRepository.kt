@@ -3,6 +3,7 @@ package com.rogger.bp.ui.add.data
 import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,13 +14,39 @@ class RegisterItemRepository(
 ) {
 
     fun create(product: PostProduct, callback: RegisterItemCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            localCache.insertProduct(product)
-        }
+        val isOnline = NetworkUtils.isNetworkAvailable()
 
-        dataSource.createItem(product, callback)
-        callback.onSuccess(null)
-        callback.onComplete()
+        if (isOnline) {
+            // ── CENÁRIO ONLINE ──────────────────────────────────────────────
+            // Se estamos online, não fazemos gravação dupla. Esperamos o fluxo normal
+            // do Firestore salvar e depois persistimos no Room local com a URL pública.
+            dataSource.createItem(product, object : RegisterItemCallback {
+                override fun onSuccess(image: PostImage?) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        localCache.insertProduct(product)
+                    }
+                    callback.onSuccess(image)
+                }
+
+                override fun onFailure(message: String) {
+                    callback.onFailure(message)
+                }
+
+                override fun onComplete() {
+                    callback.onComplete()
+                }
+            })
+        } else {
+            // ── CENÁRIO OFFLINE ─────────────────────────────────────────────
+            // Se estamos offline, salvamos imediatamente com a URI local
+            // para não travar o usuário, deixando o WorkManager sincronizar depois.
+            CoroutineScope(Dispatchers.IO).launch {
+                localCache.insertProduct(product)
+            }
+            dataSource.createItem(product, callback)
+            callback.onSuccess(null)
+            callback.onComplete()
+        }
     }
 
     fun createImage(image: PostImage, callback: SaveImageCallback) {

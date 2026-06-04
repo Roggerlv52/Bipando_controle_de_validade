@@ -240,7 +240,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         )
 
         confirmed = true
-        presenter.saveProduct(productToSave)
+        presenter.saveProduct(productToSave,requireContext())
     }
 
     private fun openBarcodeImageScreen(barcodeValue: String) {
