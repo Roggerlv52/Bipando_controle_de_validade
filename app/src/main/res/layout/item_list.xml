@@ -55,6 +55,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="2dp"
                 android:scaleType="centerCrop"
+                android:transitionName="img_transition_name"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/image_home_circle"
                 tools:ignore="MissingConstraints" />

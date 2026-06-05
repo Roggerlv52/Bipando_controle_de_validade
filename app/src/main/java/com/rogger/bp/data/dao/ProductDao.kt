@@ -62,6 +62,14 @@ interface ProductDao {
 
     @Query("DELETE FROM products")
    suspend fun clearAllProducts()
+    @Query("SELECT * FROM products WHERE deleted = 0 AND name LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    fun searchProductsByName(query: String): Flow<List<PostProduct>>
+
+    @Query("SELECT * FROM products WHERE deleted = 0 AND barcode LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    fun searchProductsByBarcode(query: String): Flow<List<PostProduct>>
+
+    @Query("SELECT * FROM products WHERE deleted = 0 AND categoryName LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    fun searchProductsByCategoryName(query: String): Flow<List<PostProduct>>
 
     @Transaction
    suspend fun replaceAllProducts(products: List<PostProduct>) {

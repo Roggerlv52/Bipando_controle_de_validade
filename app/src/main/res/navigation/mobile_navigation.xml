@@ -15,13 +15,25 @@
             app:argType="string" />
         <action
             android:id="@+id/action_nav_home_to_nav_edit_fragment"
-            app:destination="@id/nav_edit_fragment" />
+            app:destination="@id/nav_edit_fragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_nav_home_to_nav_show_fragment"
-            app:destination="@id/nav_show_fragment" />
+            app:destination="@id/nav_show_fragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
         <action
             android:id="@+id/action_nav_home_to_nav_barcode_scan_fragment"
-            app:destination="@id/nav_barcode_scan_fragment" />
+            app:destination="@id/nav_barcode_scan_fragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
         <action
             android:id="@+id/action_nav_home_to_nav_add_fragment"
             app:destination="@id/nav_add_fragment" />
@@ -33,10 +45,17 @@
         tools:layout="@layout/fragment_search">
         <action
             android:id="@+id/action_search_to_barcode_scanner"
-            app:destination="@id/nav_barcode_scan_fragment" />
+            app:destination="@id/nav_barcode_scan_fragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
         <action
             android:id="@+id/action_nav_search_to_nav_edit_fragment"
-            app:destination="@id/nav_edit_fragment" />
+            app:destination="@id/nav_edit_fragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            />
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"
@@ -48,7 +67,18 @@
             app:argType="string" />
         <action
             android:id="@+id/action_editFragment_to_galerryFragment"
-            app:destination="@id/nav_gallery_fragment" />
+            app:destination="@id/nav_gallery_fragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
+        <action
+            android:id="@+id/action_editFragment_to_nav_barcode_show"
+            app:destination="@id/nav_barcode_show"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
     </fragment>
     <fragment
         android:id="@+id/nav_add_fragment"
@@ -69,7 +99,11 @@
             app:argType="string" />
         <action
             android:id="@+id/action_addFragment_to_nav_gallery_fragment"
-            app:destination="@id/nav_gallery_fragment" />
+            app:destination="@id/nav_gallery_fragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out"/>
     </fragment>
 
     <fragment
@@ -102,7 +136,8 @@
     <fragment
         android:id="@+id/nav_barcode_show"
         android:name="com.rogger.bp.ui.edit.view.ImageBarcodeShow"
-        android:label="Codigo de barras">
+        android:label="Codigo de barras"
+        tools:layout="@layout/image_barcode_show" >
         <argument
             android:name="edtF_barcode"
             app:argType="string" />
@@ -121,7 +156,8 @@
         tools:layout="@layout/fragment_add_edit_category">
         <action
             android:id="@+id/action_nav_category_to_nav_search"
-            app:destination="@id/nav_search" />
+            app:destination="@id/nav_search"
+            />
     </fragment>
 
     <fragment

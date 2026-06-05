@@ -21,8 +21,8 @@ class CategoryPresenter(
     private val repository: CategoryRepository
 ) : ContractCategory.Presenter {
 
-    private val _categories = MutableStateFlow<List<PostCategory>>(emptyList())
-    val categories: StateFlow<List<PostCategory>> = _categories.asStateFlow()
+    private val _categories = MutableStateFlow<List<PostCategory>?>(null)
+    val categories: StateFlow<List<PostCategory>?> = _categories.asStateFlow()
 
     private val presenterScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var categoriesCollectionJob: Job? = null

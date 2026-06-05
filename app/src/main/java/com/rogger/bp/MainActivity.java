@@ -97,7 +97,10 @@ public class MainActivity extends BaseActivity {
                     .into(imgProfile);
         }
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_item_deleted_fragment, R.id.nav_category)
+                R.id.nav_home,
+                R.id.nav_item_deleted_fragment,
+                R.id.nav_category,
+                R.id.nav_profile)
                 .setOpenableLayout(drawer)
                 .build();
         AtomicReference<NavController> navController = new AtomicReference<>(Navigation.findNavController(this, R.id.nav_host_fragment_content_main));

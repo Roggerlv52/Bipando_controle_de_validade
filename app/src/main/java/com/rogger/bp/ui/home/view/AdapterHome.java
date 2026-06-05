@@ -100,7 +100,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.txtLight.setText(diasRestantes < 0 ? "VENCIDO" : "VENCE HOJE");
         } else if (diasRestantes <= diasLimiteAmarelo) {
             holder.imageCircle.setImageResource(R.drawable.yellow_circle);
-            //holder.txtLight.setTextColor(Color.parseColor("#FFD700"));
             holder.txtRight.setTextColor(Color.parseColor("#FFD700"));
             holder.txtLight.setText(diasRestantes + (diasRestantes == 1 ? " Dia" : " Dias"));
         } else {

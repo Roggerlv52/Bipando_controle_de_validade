@@ -17,20 +17,15 @@ public class NotificationScheduler {
 
     /**
      * Agenda (ou reagenda) o worker diário no horário definido pelo usuário.
-     *
      * Deve ser chamado:
      *  - ao ativar o switch de notificações
      *  - ao alterar o horário no TimePicker
-     *  - ao alterar os dias de alerta no slider     ← BUG 1 corrigido
      *  - no MainActivity.onCreate() se notificações estiverem ativas
-     *
      * Usa CANCEL_AND_REENQUEUE para garantir que o novo initialDelay
      * seja respeitado imediatamente, sem esperar o ciclo anterior acabar.
-     * Isso corrige o drift de horário (Bug 2).
      */
     public static void start(Context c) {
-        // Garante que o canal de notificação existe ANTES de agendar
-        // (Bug 5 corrigido: canal criado aqui e na Application)
+
         NotificationUtil.createChannel(c);
 
         int hour   = NotificationPrefs.getHour(c);
@@ -56,7 +51,6 @@ public class NotificationScheduler {
                 + ". Próximo disparo em " + minutesUntilRun + " minuto(s).");
 
         // CANCEL_AND_REENQUEUE garante que o initialDelay calculado acima
-        // seja aplicado imediatamente, corrigindo o drift de horário (Bug 2/3).
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
                 WORK_NAME,
                 ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,

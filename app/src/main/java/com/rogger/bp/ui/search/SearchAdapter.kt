@@ -45,8 +45,7 @@ class SearchAdapter(
         // Nome
         holder.txtTitle.text = produto.name ?: ""
 
-        // Categoria
-        // holder.txtSubTitle.text = produto.nameCategory ?: ""
+        holder.txtSubTitle.text = produto.categoryName ?: ""
 
         // Código de barras
         holder.txtBarcode.text = produto.barcode ?: ""

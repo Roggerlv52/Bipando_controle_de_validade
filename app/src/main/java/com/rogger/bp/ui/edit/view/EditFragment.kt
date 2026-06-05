@@ -261,8 +261,10 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     private fun abrirImagemBarcode(barcode: String) {
-        val bundle = Bundle().apply { putString("edtF_barcode", barcode) }
-        findNavController().navigate(R.id.nav_barcode_show, bundle)
+        val bundle = Bundle().apply {
+            putString("edtF_barcode", barcode)
+        }
+        findNavController().navigate(R.id.action_editFragment_to_nav_barcode_show, bundle)
 
     }
 

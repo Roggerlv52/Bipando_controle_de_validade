@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +22,7 @@ import com.rogger.bp.ui.base.CategoriaDialogUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.home.ContractHome
+import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.presentation.HomePresenter
 import kotlinx.coroutines.launch
@@ -126,7 +128,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                     override fun onCategoriaSelecionada(categoriaId: String) {
                         val nome = currentCategories
                             .firstOrNull { it.firestoreId == categoriaId }?.name ?: ""
-                        Log.e("Home_fragment"," categoria id ${categoriaId} name:${nome}" )
+                        Log.e("Home_fragment", " categoria id ${categoriaId} name:${nome}")
                         navegarParaScanner(categoriaId, nome)
 
                     }
@@ -136,9 +138,6 @@ class HomeFragment : Fragment(), ContractHome.View {
                             requireContext(),
                             "Nova Categoria"
                         ) { nomeCategoria ->
-                            // A criação de categoria deve ser feita via Presenter/Repository
-                            // e o listener do Firestore se encarregará de atualizar o cache e, consequentemente, o Flow.
-                            // Por enquanto, apenas navegamos para o scanner com a nova categoria.
                             navegarParaScanner(categoriaId = "", nomeCategoria)
                         }
                     }
@@ -153,9 +152,11 @@ class HomeFragment : Fragment(), ContractHome.View {
                 launch { // Observa os produtos
                     // Adicione o "as HomePresenter" aqui
                     (presenter as HomePresenter).products.collect { products ->
-                        adapterHome.setDados(products)
-                        adapterHome.ordenarPorDiferencaDeDias()
-                        showEmpty(products.isEmpty())
+                        if (products != null) {
+                            adapterHome.setDados(products)
+                            adapterHome.ordenarPorDiferencaDeDias()
+                            showEmpty(products.isEmpty())
+                        }
                     }
                 }
                 launch { // Observa as categorias
@@ -181,16 +182,18 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProgress(enable: Boolean) {
-        val b = _binding ?: return
-        //if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-       // else CustomProgressBar.hideLoadingDialog()
+        if (enable) CustomProgressBar.showLoadingDialog(requireContext())
+        else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showEmpty(isEmpty: Boolean) {
-        val b = _binding ?: return
         val target = if (isEmpty) 1 else 0
-        if (b.viewFlipper.displayedChild != target) {
-            b.viewFlipper.displayedChild = target
+        if (binding.viewFlipper.displayedChild != target) {
+            binding.viewFlipper.displayedChild = target
+            binding.txtHomeFlipper.visibility = View.VISIBLE
+            binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
+        } else {
+            binding.txtHomeFlipper.visibility = View.GONE
         }
     }
 

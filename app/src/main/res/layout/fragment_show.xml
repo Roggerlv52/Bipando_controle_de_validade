@@ -9,6 +9,7 @@
         android:id="@+id/imgPreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:transitionName="img_transition_name"
         android:contentDescription="Imagem"
         android:adjustViewBounds="true" />
 

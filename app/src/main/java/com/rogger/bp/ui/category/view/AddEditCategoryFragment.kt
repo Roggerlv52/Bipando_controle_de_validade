@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
@@ -154,7 +153,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             putString("categoria_nome", categoriaNome)
             putString("categoria_id", categoriaId)
         }
-        findNavController().navigate(R.id.action_nav_category_to_nav_search, bundle)
+       // findNavController().navigate(R.id.action_nav_category_to_nav_search, bundle)
     }
 
     private fun observePresenterFlows() {
@@ -162,8 +161,10 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { // Observa as categorias
                     (presenter as CategoryPresenter).categories.collect { categories ->
-                        adapter.setItems(categories)
-                        showEmpty(categories.isEmpty())
+                        if (categories != null) {
+                            adapter.setItems(categories)
+                            showEmpty(categories.isEmpty())
+                        }
                     }
                 }
             }
@@ -172,7 +173,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     override fun showProgress(enable: Boolean) {
         binding.progressCategory.visibility = if (enable) View.VISIBLE else View.GONE
-        binding.recyclerViewCategory.isEnabled = !enable
+       // binding.recyclerViewCategory.isEnabled = !enable
     }
 
     override fun showEmpty(isEmpty: Boolean) {

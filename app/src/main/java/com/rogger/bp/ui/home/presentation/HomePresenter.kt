@@ -30,8 +30,8 @@ class HomePresenter(
     private val categoryRepository: CategoryRepository
 ) : ContractHome.Presenter {
 
-    private val _products = MutableStateFlow<List<PostProduct>>(emptyList())
-    val products: StateFlow<List<PostProduct>> = _products.asStateFlow()
+    private val _products = MutableStateFlow<List<PostProduct>?>(null)
+    val products: StateFlow<List<PostProduct>?> = _products.asStateFlow()
 
     private val _categories = MutableStateFlow<List<PostCategory>>(emptyList())
     val categories: StateFlow<List<PostCategory>> = _categories.asStateFlow()
@@ -43,15 +43,10 @@ class HomePresenter(
     // ── 1. Buscar produtos ────────────────────────────────────────────────
 
     override fun fetchProducts() {
-        view?.showProgress(true)
-
         // Inicia o listener do Firestore e atualiza o cache local
         repository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                // Os dados serão propagados via Flow do Room, então não precisamos
-                // chamar view?.showProducts(products) aqui diretamente.
-                // Apenas ocultamos o progresso após a primeira sincronização ou se o cache já tiver dados.
-                view?.showProgress(false)
+
             }
 
             override fun onFailure(message: String) {
@@ -60,6 +55,7 @@ class HomePresenter(
             }
 
             override fun onComplete() {
+                view?.showProgress(false)
                 // onComplete não é chamado para listeners contínuos
             }
         })
@@ -69,8 +65,7 @@ class HomePresenter(
         productsCollectionJob = presenterScope.launch {
             repository.getCachedProductsFlow().collectLatest {
                 _products.value = it
-                view?.showEmpty(it.isEmpty())
-                view?.showProgress(false) // Garante que o progresso seja ocultado após o primeiro carregamento do cache
+                view?.showProgress(false)
             }
         }
     }
@@ -94,7 +89,6 @@ class HomePresenter(
                 repository.getCachedProductsByCategoryFlow(categoryId)
             }.collectLatest { products ->
                 _products.value = products
-                view?.showEmpty(products.isEmpty())
             }
         }
     }

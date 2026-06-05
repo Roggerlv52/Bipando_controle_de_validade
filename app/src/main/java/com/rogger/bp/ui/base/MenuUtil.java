@@ -19,7 +19,6 @@ public final class MenuUtil {
         fragment.requireActivity().addMenuProvider(new MenuProvider() {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
-                // Não infla nenhum menu extra
             }
 
             @Override
