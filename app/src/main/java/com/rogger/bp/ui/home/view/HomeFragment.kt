@@ -147,6 +147,7 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     private fun observePresenterFlows() {
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { // Observa os produtos

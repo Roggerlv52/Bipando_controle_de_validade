@@ -105,14 +105,6 @@ class SearchFragment : Fragment() {
             }
         })
 
-        // Filtro inicial via argumento de navegação (Categoria vinda do clique do adapter)
-        val categoriaNome = arguments?.getString("categoria_nome")
-        if (!categoriaNome.isNullOrEmpty()) {
-            //val queryInicial = "@$categoriaNome"
-           // searchView?.setQuery(queryInicial, false)
-            //buscarPorCategoria(categoriaNome)
-        }
-
         // Botão câmera → abre scanner no modo "search"
         view.findViewById<ImageButton>(R.id.btn_scan_barcode)?.setOnClickListener {
             val bundle = Bundle().apply {
@@ -150,12 +142,6 @@ class SearchFragment : Fragment() {
 
     private fun despacharBusca(query: String) {
         when {
-            query.startsWith("@") -> {
-                val nomeCategoria = query.removePrefix("@").trim()
-                if (nomeCategoria.isNotEmpty()) buscarPorCategoria(nomeCategoria)
-                else mostrarEstadoVazio("Digite o nome da categoria após @")
-            }
-
             query.all { it.isDigit() } -> {
                 buscarPorCodigoBarras(query)
             }
@@ -177,7 +163,6 @@ class SearchFragment : Fragment() {
 
     private fun buscarPorCategoria(query: String) {
         Log.d("SearchFragment",query)
-        txtHint?.text = "📂 Categoria: $query"
         val database = BpDatabase.getDatabase(requireContext())
         val flow = database.productDao().searchProductsByCategoryName(query)
         coletarResultados(flow)

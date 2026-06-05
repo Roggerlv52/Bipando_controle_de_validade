@@ -26,14 +26,14 @@
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_nav_home_to_nav_barcode_scan_fragment"
             app:destination="@id/nav_barcode_scan_fragment"
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_nav_home_to_nav_add_fragment"
             app:destination="@id/nav_add_fragment" />
@@ -49,13 +49,12 @@
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_nav_search_to_nav_edit_fragment"
             app:destination="@id/nav_edit_fragment"
             app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            />
+            app:exitAnim="@anim/slide_out_left" />
     </fragment>
     <fragment
         android:id="@+id/nav_edit_fragment"
@@ -71,14 +70,14 @@
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_editFragment_to_nav_barcode_show"
             app:destination="@id/nav_barcode_show"
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
     <fragment
         android:id="@+id/nav_add_fragment"
@@ -103,7 +102,7 @@
             app:enterAnim="@anim/fade_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out"/>
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
 
     <fragment
@@ -137,7 +136,7 @@
         android:id="@+id/nav_barcode_show"
         android:name="com.rogger.bp.ui.edit.view.ImageBarcodeShow"
         android:label="Codigo de barras"
-        tools:layout="@layout/image_barcode_show" >
+        tools:layout="@layout/image_barcode_show">
         <argument
             android:name="edtF_barcode"
             app:argType="string" />
@@ -149,15 +148,25 @@
         android:name="com.rogger.bp.ui.gallery.GalleryFragment"
         android:label="@string/menu_gallery"
         tools:layout="@layout/fragment_gallery" />
+
     <fragment
         android:id="@+id/nav_category"
         android:name="com.rogger.bp.ui.category.view.AddEditCategoryFragment"
         android:label="@string/category"
         tools:layout="@layout/fragment_add_edit_category">
+        <argument
+            android:name="categoria_nome"
+            app:argType="string" />
+        <argument
+            android:name="categoria_id"
+            app:argType="string" />
         <action
-            android:id="@+id/action_nav_category_to_nav_search"
-            app:destination="@id/nav_search"
-            />
+            android:id="@+id/action_nav_category_to_nav_home"
+            app:destination="@id/nav_home"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
 
     <fragment

@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
@@ -65,6 +66,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         adapter = AdapterCategory(object : AdapterCategory.OnCategoriaListener {
 
             override fun onClick(categoria: PostCategory) {
+                categoria.name
                 navigateToSearch(categoria.firestoreId, categoria.name)
             }
 
@@ -153,7 +155,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
             putString("categoria_nome", categoriaNome)
             putString("categoria_id", categoriaId)
         }
-       // findNavController().navigate(R.id.action_nav_category_to_nav_search, bundle)
+        findNavController().navigate(R.id.action_nav_category_to_nav_home, bundle)
     }
 
     private fun observePresenterFlows() {
