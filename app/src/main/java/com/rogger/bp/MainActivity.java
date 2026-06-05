@@ -14,6 +14,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -105,7 +107,22 @@ public class MainActivity extends BaseActivity {
                 .build();
         AtomicReference<NavController> navController = new AtomicReference<>(Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
         NavigationUI.setupActionBarWithNavController(this, navController.get(), mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController.get());
+
+        // Configuração personalizada para limpar filtros ao clicar em "Início" no Drawer
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                // 👉 Força a navegação limpando os argumentos (filtros) e reiniciando a Home de forma limpa
+                navController.get().navigate(R.id.nav_home, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_home, true) // Remove instâncias antigas e reconstrói
+                        .build());
+            } else {
+                // Comportamento normal para os outros destinos do Drawer
+                NavigationUI.onNavDestinationSelected(item, navController.get());
+            }
+            drawer.closeDrawers();
+            return true;
+        });
 
         // ✅ Inicia o agendamento de notificações de validade
         NotificationScheduler.start(MainActivity.this);
@@ -127,7 +144,6 @@ public class MainActivity extends BaseActivity {
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
         MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
-        // Verifica autenticação — sem UID não há dados a buscar
         String uid = mAuth.getCurrentUser() != null
                 ? mAuth.getCurrentUser().getUid()
                 : null;
@@ -188,7 +204,6 @@ public class MainActivity extends BaseActivity {
             SharedPreferencesManager.setLoginState(this, "state", false);
             SharedPreferencesManager.clearUserInfo(this);
             startActivity(new Intent(this, LoginActivity.class));
-
             finish();
         }
         if (id == R.id.menu_add_category) {

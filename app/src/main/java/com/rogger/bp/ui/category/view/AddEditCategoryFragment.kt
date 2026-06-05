@@ -66,8 +66,8 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         adapter = AdapterCategory(object : AdapterCategory.OnCategoriaListener {
 
             override fun onClick(categoria: PostCategory) {
-                categoria.name
-                navigateToSearch(categoria.firestoreId, categoria.name)
+                // 👉 Modificado: Navega direto para a Home aplicando o filtro
+                navigateToHomeFiltered(categoria.firestoreId, categoria.name)
             }
 
             override fun onMenuEditClick(categoria: PostCategory) {
@@ -150,12 +150,12 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
         }
     }
 
-    private fun navigateToSearch(categoriaId: String, categoriaNome: String) {
+    private fun navigateToHomeFiltered(categoriaId: String, categoriaNome: String) {
         val bundle = Bundle().apply {
-            putString("categoria_nome", categoriaNome)
             putString("categoria_id", categoriaId)
+            putString("categoria_nome", categoriaNome)
         }
-        findNavController().navigate(R.id.action_nav_category_to_nav_home, bundle)
+        findNavController().navigate(R.id.nav_home, bundle)
     }
 
     private fun observePresenterFlows() {

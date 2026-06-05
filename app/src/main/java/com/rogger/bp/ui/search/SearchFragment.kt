@@ -83,7 +83,7 @@ class SearchFragment : Fragment() {
         }
 
         val searchView = view.findViewById<SearchView>(R.id.search_view)
-        searchView?.queryHint = "Nome, Código ou @categoria…"
+        searchView?.queryHint = "Nome ou codigo de barras"
         searchView?.setOnQueryTextFocusChangeListener { _, hasFocus ->
             marquee.visibility = if (hasFocus) View.GONE else View.VISIBLE
         }
@@ -158,13 +158,6 @@ class SearchFragment : Fragment() {
         txtHint?.text = "Buscando produto: $query"
         val database = BpDatabase.getDatabase(requireContext())
         val flow = database.productDao().searchProductsByName(query)
-        coletarResultados(flow)
-    }
-
-    private fun buscarPorCategoria(query: String) {
-        Log.d("SearchFragment",query)
-        val database = BpDatabase.getDatabase(requireContext())
-        val flow = database.productDao().searchProductsByCategoryName(query)
         coletarResultados(flow)
     }
 

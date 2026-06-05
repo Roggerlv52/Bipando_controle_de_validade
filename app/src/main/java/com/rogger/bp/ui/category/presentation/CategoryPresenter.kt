@@ -167,19 +167,17 @@ class CategoryPresenter(
         })
 
         // Coleta as categorias do cache local e as expõe para a View
-        categoriesCollectionJob?.cancel() // Cancela o job anterior se houver
+        categoriesCollectionJob?.cancel()
         categoriesCollectionJob = presenterScope.launch {
-            repository.getCachedCategoriesFlow().collectLatest {
+            // 👉 Modificado para escutar o fluxo com contagem combinada
+            repository.getCachedCategoriesWithCountsFlow().collectLatest {
                 _categories.value = it
-                view?.showEmpty(it.isEmpty()) // Atualiza o estado de vazio
-                view?.showProgress(false) // Garante que o progresso seja ocultado após o primeiro carregamento do cache
+                view?.showProgress(false)
             }
         }
     }
 
     override fun getCountCategorias() {
-        // Este método pode ser removido ou adaptado para usar o Flow de categorias
-        // Por exemplo, _categories.value.size
     }
 
     private fun validateName(name: String): String? {

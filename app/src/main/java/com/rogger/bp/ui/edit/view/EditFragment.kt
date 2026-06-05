@@ -76,15 +76,10 @@ class EditFragment : Fragment(), ContractEdit.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val database = BpDatabase.getDatabase(requireContext())
-        val categoryDao = database.categoryDao()
-        val roomCategoryCache = RoomCategoryCache(categoryDao)
-        val categoryDataSource = CategoryDataSource()
-
         presenter = EditPresenter(
             view = this,
             repository = DependencyInjector.registerEditRepository(requireContext()),
-            categoryRepository = CategoryRepository(categoryDataSource, roomCategoryCache)
+            categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
         )
 
         binding.imageEdit.setLayerType(View.LAYER_TYPE_SOFTWARE, null)

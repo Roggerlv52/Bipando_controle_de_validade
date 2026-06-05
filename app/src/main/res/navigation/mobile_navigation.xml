@@ -12,6 +12,15 @@
         tools:layout="@layout/fragment_home">
         <argument
             android:name="uuid"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="categoria_id"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="categoria_nome"
+            android:defaultValue=""
             app:argType="string" />
         <action
             android:id="@+id/action_nav_home_to_nav_edit_fragment"

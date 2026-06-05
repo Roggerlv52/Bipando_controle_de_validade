@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -37,9 +37,7 @@ class HomeFragment : Fragment(), ContractHome.View {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-
     override lateinit var presenter: ContractHome.Presenter
-
 
     private lateinit var adapterHome: AdapterHome
     private var currentCategories: List<PostCategory> = emptyList() // Para o dialog do FAB
@@ -55,7 +53,6 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         // Inicialização do Room e DAOs
         val category = DependencyInjector.registerCategoryRepository(requireContext())
         val homeRepository = DependencyInjector.registerHomeRepository(requireContext())
@@ -64,10 +61,21 @@ class HomeFragment : Fragment(), ContractHome.View {
         setupRecyclerView()
         setupFab()
         observePresenterFlows()
+        // ── ✅ CORREÇÃO: Lê os argumentos para aplicar filtro de categoria se houver ──
+        val categoryId = arguments?.getString("categoria_id").orEmpty()
+        val categoryNome = arguments?.getString("categoria_nome").orEmpty()
 
-        // Inicia o carregamento e o listener do Firestore
-        presenter.fetchProducts()
+        if (categoryId.isNotEmpty()) {
+            // Atualiza o título da Toolbar para mostrar que a categoria está ativa
+            (activity as? AppCompatActivity)?.supportActionBar?.title = "Categoria: $categoryNome"
+            presenter.fetchProductsByCategory(categoryId)
+        } else {
+            // Comportamento normal caso venha do menu lateral direto
+            presenter.fetchProducts()
+        }
+
         presenter.fetchCategories()
+        // Se não há categoria, fetchProducts() já carregou tudo normalmente
     }
 
     override fun onResume() {
@@ -122,7 +130,7 @@ class HomeFragment : Fragment(), ContractHome.View {
         binding.fab.setOnClickListener {
             CategoriaDialogUtil.mostrarDialogo(
                 requireContext(),
-                currentCategories, // Usa a lista de categorias observada
+                currentCategories,
                 object : CategoriaDialogUtil.CategoriaCallback {
 
                     override fun onCategoriaSelecionada(categoriaId: String) {
@@ -130,7 +138,6 @@ class HomeFragment : Fragment(), ContractHome.View {
                             .firstOrNull { it.firestoreId == categoriaId }?.name ?: ""
                         Log.e("Home_fragment", " categoria id ${categoriaId} name:${nome}")
                         navegarParaScanner(categoriaId, nome)
-
                     }
 
                     override fun onAdicionarCategoria() {
@@ -147,11 +154,9 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     private fun observePresenterFlows() {
-
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch { // Observa os produtos
-                    // Adicione o "as HomePresenter" aqui
+                launch {
                     (presenter as HomePresenter).products.collect { products ->
                         if (products != null) {
                             adapterHome.setDados(products)
@@ -160,8 +165,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                         }
                     }
                 }
-                launch { // Observa as categorias
-                    // Adicione o "as HomePresenter" aqui também
+                launch {
                     (presenter as HomePresenter).categories.collect { categories ->
                         currentCategories = categories
                     }
@@ -169,7 +173,6 @@ class HomeFragment : Fragment(), ContractHome.View {
             }
         }
     }
-
 
     private fun navegarParaScanner(categoriaId: String, categoriaNome: String) {
         val bundle = Bundle().apply {
@@ -183,8 +186,8 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProgress(enable: Boolean) {
-        if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-        else CustomProgressBar.hideLoadingDialog()
+        //if (enable) CustomProgressBar.showLoadingDialog(requireContext())
+       // else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showEmpty(isEmpty: Boolean) {

@@ -95,7 +95,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
 
         void bind(PostCategory categoria) {
             // ✅ Exibe o nome concatenado com a quantidade de produtos
-            String textoExibicao = categoria.getName();
+            String textoExibicao = categoria.getName() + " (" + categoria.getItemCount() + ")";
 
             nome.setText(textoExibicao);
 

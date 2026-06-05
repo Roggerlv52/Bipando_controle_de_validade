@@ -35,9 +35,10 @@ object DependencyInjector {
     fun registerCategoryRepository(context: Context): CategoryRepository {
         val database = BpDatabase.getDatabase(context)
         val categoryDao = database.categoryDao()
+        val productDao = database.productDao() // 👉 Adicionado para buscar contagem
         val roomCategoryCache = RoomCategoryCache(categoryDao)
         val categoryDataSource = CategoryDataSource()
-        return CategoryRepository(categoryDataSource, roomCategoryCache)
+        return CategoryRepository(categoryDataSource, roomCategoryCache,productDao)
     }
 
     fun registerHomeRepository(context: Context): HomeRepository {
