@@ -208,8 +208,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         Glide.with(requireContext())
             .load(url)
             .override(500, 500)
-            .placeholder(R.drawable.carregando)
-            .error(R.drawable.imagem_error)
             .centerCrop()
             .into(binding.fragmentImgAdd)
         binding.fragmentImgAdd.isClickable = false
