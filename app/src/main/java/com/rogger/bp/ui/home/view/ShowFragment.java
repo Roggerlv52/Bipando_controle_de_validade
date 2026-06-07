@@ -57,7 +57,6 @@ public class ShowFragment extends Fragment {
                 .override(1024, 1024)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .fitCenter()
-                .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(imageView);
         scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {

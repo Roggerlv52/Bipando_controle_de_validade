@@ -65,7 +65,6 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
                 .override(200, 200)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                 .centerCrop()
-                .placeholder(R.drawable.carregando)
                 .error(R.drawable.imagem_error)
                 .into(holder.img_home);
 
