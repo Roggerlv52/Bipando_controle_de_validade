@@ -25,6 +25,9 @@
     <color name="gray">#808080</color>
     <color name="skyBlue">#87CEEB</color>
 
+    <color name="google_btn_bg">#FFFFFF</color>
+    <color name="google_btn_text">#1F1F1F</color>
+
     <color name="zxing_custom_possible_result_points">#c0ffff00</color>
     <color name="zxing_custom_result_view">#b0000000</color>
     <color name="zxing_custom_viewfinder_laser">#ffcc0000</color>

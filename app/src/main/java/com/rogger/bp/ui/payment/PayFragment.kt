@@ -57,7 +57,6 @@ class PayFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //enableEdgeToEdge()
 
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(

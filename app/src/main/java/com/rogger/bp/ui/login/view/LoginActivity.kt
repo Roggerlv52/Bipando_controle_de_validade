@@ -9,11 +9,16 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -37,7 +42,7 @@ class LoginActivity : BaseActivity(), Login.View {
 
     companion object {
         private const val TAG = "LoginActivity"
-        private const val SLIDESHOW_DELAY = 2000L
+        private const val SLIDESHOW_DELAY = 3500L
     }
 
     override lateinit var presenter: Login.Presenter
@@ -51,17 +56,19 @@ class LoginActivity : BaseActivity(), Login.View {
 
     private var currentIndex = 0
     private val imageArray = intArrayOf(
-       // R.drawable.bp_logo,
-        R.drawable.picture_2,
+        R.drawable.magic_1,
         R.drawable.picture_3,
-        R.drawable.picture_4,
-        R.drawable.picture_1
+        R.drawable.magnific_5,
+        R.drawable.magnific_3,
+        R.drawable.magnific_2,
+        R.drawable.magnific_6
     )
     private val handler = Handler(Looper.getMainLooper())
     private val slideshowRunnable = object : Runnable {
         override fun run() {
-            showNextImage()
+
             handler.postDelayed(this, SLIDESHOW_DELAY)
+            showNextImage()
         }
     }
 
@@ -100,8 +107,22 @@ class LoginActivity : BaseActivity(), Login.View {
         binding.loginWithGmail.setOnClickListener {
             startGoogleSignIn()
         }
-
         startSlideshow()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 👉 Ativa o modo de imersão de ponta a ponta ao entrar
+        enableEdgeToEdge()
+
+       // mainToolbar?.visibility = View.GONE
+       // (activity as? AppCompatActivity)?.supportActionBar?.hide()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        restoreSystemBars()
     }
 
     override fun onDestroy() {
@@ -142,12 +163,12 @@ class LoginActivity : BaseActivity(), Login.View {
 
     private fun showNextImage() {
         binding.imgActivityLogin.animate()
-            .alpha(0f).setDuration(500)
+            .alpha(0f).setDuration(1000)
             .setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     if (currentIndex >= imageArray.size) currentIndex = 0
                     binding.imgActivityLogin.setImageResource(imageArray[currentIndex++])
-                    binding.imgActivityLogin.animate().alpha(1f).setDuration(500).setListener(null)
+                    binding.imgActivityLogin.animate().alpha(1f).setDuration(1000).setListener(null)
                 }
             })
     }
