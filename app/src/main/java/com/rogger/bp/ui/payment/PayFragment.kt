@@ -3,15 +3,17 @@ package com.rogger.bp.ui.payment
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
+import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import com.rogger.bp.R
 import com.rogger.bp.databinding.FragmentPayBinding
@@ -56,9 +58,23 @@ class PayFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         //enableEdgeToEdge()
-        // Configuração do clique no botão Fechar (Voltar)
+
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(
+            R.attr.ic_color_theme,
+            typedValue,
+            true
+        )
         binding.btnClosePay.setOnClickListener {
             parentFragmentManager.popBackStack()
+        }
+        // Aplica padding dinâmico no botão fechar para respeitar a statusbar real
+        ViewCompat.setOnApplyWindowInsetsListener(binding.btnClosePay) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = systemBars.top + 40  // 8dp de folga visual
+            }
+            insets
         }
     }
 
@@ -69,15 +85,12 @@ class PayFragment : Fragment() {
     private fun enableEdgeToEdge() {
         val window = requireActivity().window
 
+        // Diz ao sistema que o app vai gerenciar os insets manualmente
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        // Torna as barras transparentes (não esconde — apenas deixa ver por baixo)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
-
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.hide(WindowInsetsCompat.Type.systemBars())
-        controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     /**
@@ -86,13 +99,20 @@ class PayFragment : Fragment() {
     private fun restoreSystemBars() {
         val window = requireActivity().window
 
+        // Volta a encaixar a UI dentro das barras
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
+        // Restaura as cores originais do app
+        window.statusBarColor = getThemeColor(R.attr._color_theme_status)
+        window.navigationBarColor = getThemeColor(R.attr._color_theme_navigation)
+        // Garante que as barras estejam visíveis (caso hide() tenha sido chamado antes)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.show(WindowInsetsCompat.Type.systemBars())
-
-        window.statusBarColor = Color.parseColor("#1a272f")
-        window.navigationBarColor = Color.parseColor("#1a272f")
+    }
+    private fun getThemeColor(@AttrRes attrColor: Int): Int {
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(attrColor, typedValue, true)
+        return typedValue.data
     }
 
     private fun iniciarAnimacaoVibracaoInfinita() {

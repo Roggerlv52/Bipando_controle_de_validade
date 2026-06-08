@@ -13,6 +13,8 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="ic_color_theme">@color/white</item>
+        <item name="_color_theme_status">?attr/colorPrimary</item>
+        <item name="_color_theme_navigation">@color/black</item>
     </style>
 
     <style name="ThemeOverlay.Bipando.FullscreenContainer" parent="">

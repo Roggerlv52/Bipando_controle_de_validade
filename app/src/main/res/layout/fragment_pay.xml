@@ -32,7 +32,7 @@
         android:id="@+id/btn_close_pay"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="0dp"
         android:padding="20dp"
         android:layout_marginEnd="20dp"
         android:background="@android:color/transparent"
@@ -247,7 +247,7 @@
                 android:layout_marginTop="16dp"
                 android:gravity="center"
                 android:text="A assinatura será renovada automaticamente mensalmente ou bimestralmente até ser cancelada nas configurações da Play Store."
-                android:textColor="#4d6470"
+                android:textColor="#8ca5b2"
                 android:textSize="10sp"
                 app:layout_constraintTop_toBottomOf="@id/txt_trial_duration" />
 

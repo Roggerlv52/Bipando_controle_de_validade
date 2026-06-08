@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <attr name="ic_color_theme" format="color"/>
+    <attr name="_color_theme_status" format="color"/>
+    <attr name="_color_theme_navigation" format="color"/>
 </resources>
