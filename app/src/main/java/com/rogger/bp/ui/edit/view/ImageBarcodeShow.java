@@ -12,12 +12,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 
 public class ImageBarcodeShow extends Fragment {
 
@@ -37,6 +39,7 @@ public class ImageBarcodeShow extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        MenuUtil.clearMenu(this);
 
         imgBarcode = view.findViewById(R.id.img_barcode);
         txtBarcode = view.findViewById(R.id.txt_barcode_number);
@@ -107,5 +110,4 @@ public class ImageBarcodeShow extends Fragment {
             ).show();
         }
     }
-
 }

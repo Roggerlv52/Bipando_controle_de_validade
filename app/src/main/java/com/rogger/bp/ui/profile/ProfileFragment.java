@@ -29,6 +29,7 @@ import com.rogger.bp.databinding.FragmentProfileBinding;
 import com.rogger.bp.notification.NotificationPrefs;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.ui.base.DialogUtil;
+import com.rogger.bp.ui.base.MenuUtil;
 import com.rogger.bp.ui.commun.SharedPreferencesManager;
 import com.rogger.bp.ui.login.view.LoginActivity;
 import com.rogger.bp.ui.profile.data.DeleteAccountCallback;
@@ -73,6 +74,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        MenuUtil.clearMenu(this);
         int themeNumber = SharedPreferencesManager.getThemeNumber(requireContext(), "chave");
         boolean stateBeep = SharedPreferencesManager.getBeepState(requireContext(), "beep");
 

@@ -52,10 +52,10 @@ class HomeRepository(
         remoteDataSource.deleteProduct(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
                 CoroutineScope(Dispatchers.IO).launch {
-                   // val deletedProduct =
-                       // p.copy(deleted = true, deletedAt = System.currentTimeMillis())
-                    //localCache.updateProduct(deletedProduct)
-                    localCache.remove(p.firestoreDocId)
+
+                    val deletedProduct =
+                        p.copy(deleted = true, deletedAt = System.currentTimeMillis())
+                    localCache.updateProduct(deletedProduct)
                 }
                 callback.onSuccess(p)
             }

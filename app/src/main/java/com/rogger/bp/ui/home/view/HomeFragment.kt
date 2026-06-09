@@ -22,7 +22,6 @@ import com.rogger.bp.ui.base.CategoriaDialogUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.home.ContractHome
-import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.presentation.HomePresenter
 import kotlinx.coroutines.launch

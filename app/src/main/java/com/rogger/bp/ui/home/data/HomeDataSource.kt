@@ -29,22 +29,6 @@ class HomeDataSource : PostHomeDataSource {
             .collection("products")
     }
 
-    /**
-     * Converte um [DocumentSnapshot] para [PostProduct].
-     *
-     * ── Chave "uuid" (campo uid no Firestore) ────────────────────────────
-     * O [FireRegisterDataSource] grava `"uid" to produto.uuid`.
-     * Se o produto foi criado antes de ter uuid gerado, o campo
-     * pode estar vazio no Firestore.
-     *
-     * Estratégia de fallback garantida:
-     *   1. Usa `data["uid"]` se não for vazio.
-     *   2. Caso contrário, usa `doc.id` — o documentId do Firestore,
-     *      que é sempre único e nunca vazio.
-     *
-     * O [EditDataSource] busca pelo documentId directamente,
-     * eliminando a dependência do campo "uid".
-     */
     private fun documentToPostProduct(doc: DocumentSnapshot): PostProduct? {
         val data = doc.data ?: return null
         return try {
@@ -82,8 +66,7 @@ class HomeDataSource : PostHomeDataSource {
             return
         }
 
-        ref.whereEqualTo("deleted", false)
-            .orderBy("timestamp")
+        ref  //.whereEqualTo("deleted", false).orderBy("timestamp")
             .get()
             .addOnSuccessListener { snapshot ->
                 val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
@@ -207,8 +190,7 @@ class HomeDataSource : PostHomeDataSource {
             return null
         }
 
-        return ref.whereEqualTo("deleted", false)
-            .orderBy("timestamp")
+        return ref //.whereEqualTo("deleted", false) .orderBy("timestamp")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Erro no listener de produtos: ${error.message}")

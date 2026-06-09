@@ -62,6 +62,8 @@ public class BarcodeScanFragment extends Fragment {
     ) {
         View view = inflater.inflate(R.layout.barcode_scan, container, false);
 
+        MenuUtil.clearMenu(this);
+
         barcodeView = view.findViewById(R.id.barcode_scanner);
 
         setupArguments();

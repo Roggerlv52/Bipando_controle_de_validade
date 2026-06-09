@@ -3,6 +3,8 @@ package com.rogger.bp.ui.add.view
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,12 +25,14 @@ import com.rogger.bp.databinding.FragmentAddBinding
 import com.rogger.bp.ui.add.RegisterAdd
 import com.rogger.bp.ui.add.presentation.AddItemPresenter
 import com.rogger.bp.ui.animation.ToastCustom
+import com.rogger.bp.ui.base.MenuUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.gallery.CameraCallback
 import com.rogger.bp.ui.gallery.ImagePikerUtil
 import com.rogger.bp.ui.gallery.ImageUtils
+import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.scanner.ImageBarcode
 import java.io.File
 
@@ -68,6 +72,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        MenuUtil.clearMenu(this);
 
         val repository         = DependencyInjector.registerProductRepository(requireContext())
         val categoryRepository = DependencyInjector.registerCategoryRepository(requireContext())
@@ -160,10 +165,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
             showDataPiker()
         }
 
-        binding.txtAddBarcode.setOnClickListener {
-            openBarcodeImageScreen(binding.txtAddBarcode.text.toString())
-        }
-
         binding.fragmentImgAdd.setOnClickListener {
             if (remoteImageUri != null) return@setOnClickListener
             openMediaPicker()
@@ -244,12 +245,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         presenter.saveProduct(productToSave,requireContext())
     }
 
-    private fun openBarcodeImageScreen(barcodeValue: String) {
-        val intent = Intent(requireContext(), ImageBarcode::class.java)
-        intent.putExtra("keyBarcode", barcodeValue)
-        startActivity(intent)
-    }
-
     override fun showProgress(enable: Boolean) {
         binding.progressUploadAdd.visibility = if (enable) View.VISIBLE else View.INVISIBLE
         binding.btnFgmSaveAdd.isEnabled
@@ -287,8 +282,13 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun goToHome() {
-        ToastCustom.showCustomToast(requireContext(), "Salvo com sucesso!")
-        findNavController().popBackStack()
+       // ToastCustom.showCustomToast(requireContext(), "Salvo com sucesso!")
+        CustomProgressBar.showLoadingDialog(requireContext())
+        Handler(Looper.getMainLooper()).postDelayed({
+            CustomProgressBar.hideLoadingDialog()
+            findNavController().popBackStack()
+        }, 1000)
+
     }
 
     override fun showCategories(categories: List<PostCategory>) {

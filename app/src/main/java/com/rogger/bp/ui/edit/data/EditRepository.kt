@@ -53,26 +53,39 @@ class EditRepository(
     }
 
     fun delete(produto: PostProduct, callback: EditCallback) {
-        //dataSource.deleteProduct(produto, callback)
-        dataSource.deleteProduct(produto, object : EditCallback {
-            override fun onSuccess(p: PostProduct) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    // Remove do Room imediatamente após o sucesso no Firestore
-                    localCache.remove(p.firestoreDocId)
+        val isOnline = NetworkUtils.isNetworkAvailable()
+
+        if (isOnline) {
+            // ── CENÁRIO ONLINE ──────────────────────────────────────────────
+            dataSource.deleteProduct(produto, object : EditCallback {
+                override fun onSuccess(p: PostProduct) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val deletedProduct = p.copy(deleted = true, deletedAt = System.currentTimeMillis())
+                        localCache.updateProduct(deletedProduct)
+                    }
+                    callback.onSuccess(p)
                 }
-                callback.onSuccess(p)
-            }
 
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
+                override fun onFailure(message: String) {
+                    callback.onFailure(message)
+                }
 
-            override fun onComplete() {
-                callback.onComplete()
+                override fun onComplete() {
+                    callback.onComplete()
+                }
+            })
+        } else {
+            // ── CENÁRIO OFFLINE ─────────────────────────────────────────────
+            CoroutineScope(Dispatchers.IO).launch {
+                // 👉 CORREÇÃO: Trocado 'p.copy' por 'produto.copy' para compilar com sucesso
+                val deletedProduct = produto.copy(deleted = true, deletedAt = System.currentTimeMillis())
+                localCache.updateProduct(deletedProduct)
             }
-        })
+            dataSource.deleteProduct(produto, callback)
+            callback.onSuccess(produto)
+            callback.onComplete()
+        }
     }
-
     fun fetchByDocId(docId: String, callback: EditCallback) {
         dataSource.fetchProductByDocId(docId, callback)
     }

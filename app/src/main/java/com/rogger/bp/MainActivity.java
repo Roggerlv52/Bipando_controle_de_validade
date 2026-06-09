@@ -4,17 +4,18 @@ package com.rogger.bp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -23,8 +24,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
+import com.rogger.bp.data.database.BpDatabase;
 import com.rogger.bp.data.image.notification.ImageSyncScheduler;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
@@ -45,10 +45,6 @@ public class MainActivity extends BaseActivity {
     private TextView txtProfileName;
     private TextView txtProfileEmail;
     private GradientAnimator animator;
-
-    private ListenerRegistration listenerHome;
-    private ListenerRegistration listenerCategory;
-    private ListenerRegistration listenerDeleted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,12 +108,13 @@ public class MainActivity extends BaseActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
-                // 👉 Força a navegação limpando os argumentos (filtros) e reiniciando a Home de forma limpa
+
                 navController.get().navigate(R.id.nav_home, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_home, true) // Remove instâncias antigas e reconstrói
+                        .setPopUpTo(R.id.nav_home, true)
                         .build());
+            } else if (id == R.id.share_app) { // 👉 Adicionada a ação de compartilhar
+                compartilharAplicativo();
             } else {
-                // Comportamento normal para os outros destinos do Drawer
                 NavigationUI.onNavDestinationSelected(item, navController.get());
             }
             drawer.closeDrawers();
@@ -144,45 +141,24 @@ public class MainActivity extends BaseActivity {
         MenuItem categoryItem = menu.findItem(R.id.nav_category);
         MenuItem deletedItem = menu.findItem(R.id.nav_item_deleted_fragment);
 
-        String uid = mAuth.getCurrentUser() != null
-                ? mAuth.getCurrentUser().getUid()
-                : null;
+        // 👉 Obtém o banco de dados Room local
+        BpDatabase db = BpDatabase.Companion.getDatabase(this);
 
-        if (uid == null) return;
+        // ── 1. Contagem reativa de Produtos Ativos (Home) ──
+        db.productDao().getActiveProductsCountLiveData().observe(this, count -> {
+            applyBadge(navigationView, homeItem, count != null ? count : 0);
+        });
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // ── 2. Contagem reativa de Categorias ──
+        db.categoryDao().getCategoriesCountLiveData().observe(this, count -> {
+            applyBadge(navigationView, categoryItem, count != null ? count : 0);
+        });
 
-        // ── 1. Produtos activos na Home ───────────────────────────────────
-        listenerHome = db.collection("users")
-                .document(uid)
-                .collection("products")
-                .whereEqualTo("deleted", false)
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null || snapshot == null) return;
-                    int count = snapshot.size();
-                    runOnUiThread(() -> applyBadge(navigationView, homeItem, count));
-                });
-
-        // ── 2. Categorias ─────────────────────────────────────────────────
-        listenerCategory = db.collection("users")
-                .document(uid)
-                .collection("category")
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null || snapshot == null) return;
-                    int count = snapshot.size();
-                    runOnUiThread(() -> applyBadge(navigationView, categoryItem, count));
-                });
-
-        // ── 3. Produtos deletados ─────────────────────────────────────────
-        listenerDeleted = db.collection("users")
-                .document(uid)
-                .collection("products")
-                .whereEqualTo("deleted", true)
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null || snapshot == null) return;
-                    int count = snapshot.size();
-                    runOnUiThread(() -> applyBadge(navigationView, deletedItem, count));
-                });
+        // ── 3. Contagem reativa de Produtos Deletados (Lixeira) ──
+        db.productDao().getDeletedProductsCountLiveData(true).observe(this, count -> {
+            Log.e("teste"," contagem "+count );
+            applyBadge(navigationView, deletedItem, count != null ? count : 0);
+        });
     }
 
     @Override
@@ -233,6 +209,26 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    private void compartilharAplicativo() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+
+        // Mensagem de texto amigável com o link fictício gerado dinamicamente com seu package name
+        String mensagem = "Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\n" +
+                "Baixe agora na Play Store: https://play.google.com/store/apps/details?id=" + getPackageName();
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, mensagem);
+
+        // Cria o seletor amigável de aplicativos
+        Intent chooser = Intent.createChooser(shareIntent, "Compartilhar Bipando via:");
+
+        try {
+            startActivity(chooser);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(this, "Nenhum aplicativo encontrado para compartilhar.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -243,17 +239,5 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (listenerHome != null) {
-            listenerHome.remove();
-            listenerHome = null;
-        }
-        if (listenerCategory != null) {
-            listenerCategory.remove();
-            listenerCategory = null;
-        }
-        if (listenerDeleted != null) {
-            listenerDeleted.remove();
-            listenerDeleted = null;
-        }
     }
 }

@@ -31,14 +31,6 @@ class AddItemPresenter(
 
     // ── 1. Verificar/buscar imagem pelo barcode ───────────────────────────
 
-    /**
-     * Chamado assim que o barcode é lido pelo scanner.
-     *
-     * Fluxo interno (gerenciado por [FireRegisterDataSource]):
-     *  a. Busca imagem personalizada do utilizador
-     *  b. Se não existir, busca imagem global
-     *  c. Se não existir nenhuma, aguarda o utilizador fazer upload
-     */
     override fun checkOrCreateImage(barcode: String) {
         if (barcode.isEmpty()) {
             view?.onFailure("Código de barras inválido")
@@ -72,15 +64,6 @@ class AddItemPresenter(
 
     // ── 2. Upload de imagem após utilizador selecionar da câmera/galeria ──
 
-    /**
-     * Chamado quando o utilizador escolhe uma nova imagem.
-     *
-     * O [FireRegisterDataSource] decide automaticamente:
-     *  - Se imagem global NÃO existe → cria imagem global
-     *  - Se imagem global JÁ existe  → salva como imagem personalizada
-     *
-     * A View é notificada via [RegisterAdd.View.goToHome] em caso de sucesso.
-     */
     override fun uploadImage(image: PostImage) {
         if (image.uri.isEmpty()) {
             view?.onFailure("Nenhuma imagem selecionada")
@@ -115,14 +98,6 @@ class AddItemPresenter(
 
     // ── 3. Salvar produto ─────────────────────────────────────────────────
 
-    /**
-     * Salva o produto no Firestore.
-     *
-     * Lógica de imageUri:
-     *  - Se imageUri é local → [FireRegisterDataSource.uploadImage] resolve (global vs personalizada)
-     *  - Se imageUri está vazia mas há barcode → tenta reusar imagem existente
-     *  - Se imageUri é remota (https) → usa diretamente sem upload
-     */
     override fun saveProduct(product: PostProduct,context : Context) {
         if (product.name.isBlank()) {
             view?.onFailure("Informe o nome do produto")

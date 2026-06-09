@@ -3,6 +3,8 @@ package com.rogger.bp.ui.edit.view
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
@@ -32,6 +34,7 @@ import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.RoomCategoryCache
 import com.rogger.bp.ui.commun.DependencyInjector
+import com.rogger.bp.ui.commun.NetworkUtils
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.edit.ContractEdit
 import com.rogger.bp.ui.edit.data.EditDataSource
@@ -40,6 +43,7 @@ import com.rogger.bp.ui.edit.presentation.EditPresenter
 import com.rogger.bp.ui.gallery.CameraCallback
 import com.rogger.bp.ui.gallery.ImagePikerUtil
 import com.rogger.bp.ui.gallery.ImageUtils
+import com.rogger.bp.ui.home.CustomProgressBar
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -312,7 +316,27 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     override fun onSuccess(message: String) {
-        ToastCustom.showCustomToast(requireContext(), "Savo com sucesso!")
+        // Verifica se a mensagem contém "lixeira" (indica que é operação de remoção)
+        if (message.contains("lixeira", ignoreCase = true)) {
+            if (!NetworkUtils.isNetworkAvailable()) {
+                // 👉 Offline: mostra o loading dialog por um curto período e exibe o toast correto
+               handlerProgressBa()
+            } else {
+                // Online
+                //ToastCustom.showCustomToast(requireContext(), "Removido com sucesso!")
+                handlerProgressBa()
+            }
+        } else {
+            // Se for alteração de qualquer outro campo (nome, data, etc.)
+            //ToastCustom.showCustomToast(requireContext(), "Alterado com sucesso!")
+            handlerProgressBa()
+        }
+    }
+    private fun handlerProgressBa(){
+        CustomProgressBar.showLoadingDialog(requireContext())
+        Handler(Looper.getMainLooper()).postDelayed({
+            CustomProgressBar.hideLoadingDialog()
+        }, 1000)
     }
 
     override fun onError(message: String) {

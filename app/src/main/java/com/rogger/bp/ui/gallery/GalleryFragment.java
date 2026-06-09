@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,7 @@ public class GalleryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        MenuUtil.clearMenu(this);
         rc = view.findViewById(R.id.rc_galerry);
         rc.setLayoutManager(new GridLayoutManager(getContext(), 3));
         initCache();

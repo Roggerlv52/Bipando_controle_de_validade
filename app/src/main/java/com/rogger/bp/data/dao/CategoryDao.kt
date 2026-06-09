@@ -41,7 +41,9 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories ORDER BY name ASC")
     fun getAllCategories(): Flow<List<PostCategory>>
-
+    // 👉 Consulta reativa do total de categorias
+    @Query("SELECT COUNT(*) FROM categories")
+    fun getCategoriesCountLiveData(): androidx.lifecycle.LiveData<Int>
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putAllCategories(categories: List<PostCategory>)
 

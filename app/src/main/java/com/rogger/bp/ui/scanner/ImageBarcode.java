@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.rogger.bp.R;
+import com.rogger.bp.ui.base.MenuUtil;
 
 public class ImageBarcode extends AppCompatActivity {
 	private ImageView imageView, imageBack;

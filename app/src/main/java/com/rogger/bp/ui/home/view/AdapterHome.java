@@ -104,7 +104,6 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
             holder.txtLight.setText(diasRestantes + (diasRestantes == 1 ? " Dia" : " Dias"));
         } else {
             holder.imageCircle.setImageResource(R.drawable.circle);
-            holder.txtRight.setTextColor(Color.parseColor("#008000"));
             holder.txtLight.setText(diasRestantes + " dias");
         }
 

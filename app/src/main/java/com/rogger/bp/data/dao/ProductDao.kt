@@ -38,6 +38,13 @@ interface ProductDao {
 
     @Query("DELETE FROM products")
     suspend fun clearProducts()
+    // 👉 Consulta reativa de produtos ativos (Home)
+    @Query("SELECT COUNT(*) FROM products WHERE deleted = 0")
+    fun getActiveProductsCountLiveData(): androidx.lifecycle.LiveData<Int>
+
+    // 👉 Consulta reativa de produtos na lixeira
+    @Query("SELECT COUNT(*) FROM products WHERE deleted =  :isDeleted")
+    fun getDeletedProductsCountLiveData(isDeleted: Boolean): androidx.lifecycle.LiveData<Int>
 
     // Apenas produtos não deletados — garante que o Flow nunca exponha
     // itens com deleted=true para a HomeFragment.

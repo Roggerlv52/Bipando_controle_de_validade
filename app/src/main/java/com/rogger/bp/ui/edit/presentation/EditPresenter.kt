@@ -1,6 +1,8 @@
 package com.rogger.bp.ui.edit.presentation
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
@@ -40,9 +42,11 @@ class EditPresenter(
             override fun onSuccess(produto: PostProduct) {
                 view?.bindProduct(produto)
             }
+
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
+
             override fun onComplete() {
                 view?.showProgress(false)
             }
@@ -51,12 +55,20 @@ class EditPresenter(
 
     // ── 2. Guardar produto ────────────────────────────────────────────────
 
-    override fun saveProduct(produto: PostProduct,context : Context) {
+    override fun saveProduct(produto: PostProduct, context: Context) {
         val nome = produto.name.trim()
         when {
-            nome.isEmpty()         -> { view?.onError("Informe o nome do produto"); return }
-            nome.length < NOME_MIN -> { view?.onError("Nome deve ter pelo menos $NOME_MIN caracteres"); return }
-            nome.length > NOME_MAX -> { view?.onError("Nome deve ter no máximo $NOME_MAX caracteres"); return }
+            nome.isEmpty() -> {
+                view?.onError("Informe o nome do produto"); return
+            }
+
+            nome.length < NOME_MIN -> {
+                view?.onError("Nome deve ter pelo menos $NOME_MIN caracteres"); return
+            }
+
+            nome.length > NOME_MAX -> {
+                view?.onError("Nome deve ter no máximo $NOME_MAX caracteres"); return
+            }
         }
 
         if (produto.timestamp <= 0L) {
@@ -68,14 +80,18 @@ class EditPresenter(
         repository.update(produto, object : EditCallback {
             override fun onSuccess(p: PostProduct) {
                 view?.onSuccess("\"${p.name}\" actualizado com sucesso")
-                view?.navigateBack()
+
             }
+
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
+
             override fun onComplete() {
                 view?.showProgress(false)
-
+                Handler(Looper.getMainLooper()).postDelayed({
+                    view?.navigateBack()
+                }, 1000)
             }
         })
     }
@@ -88,13 +104,17 @@ class EditPresenter(
         repository.delete(produto, object : EditCallback {
             override fun onSuccess(p: PostProduct) {
                 view?.onSuccess("\"${p.name}\" movido para a lixeira")
-                view?.navigateBack()
             }
+
             override fun onFailure(message: String) {
                 view?.onError(message)
             }
+
             override fun onComplete() {
                 view?.showProgress(false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    view?.navigateBack()
+                }, 1000)
             }
         })
     }
@@ -106,12 +126,16 @@ class EditPresenter(
             override fun onSuccess(categories: List<PostCategory>) {
                 view?.showCategories(categories)
             }
+
             override fun onFailure(message: String) {
                 view?.showCategories(emptyList())
             }
+
             override fun onComplete() {}
         })
     }
 
-    override fun onDestroy() { view = null }
+    override fun onDestroy() {
+        view = null
+    }
 }
