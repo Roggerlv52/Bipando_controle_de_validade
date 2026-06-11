@@ -18,27 +18,6 @@ import androidx.fragment.app.Fragment
 import com.rogger.bp.R
 import com.rogger.bp.databinding.FragmentPayBinding
 
-/*
-
- private fun iniciarAnimacaoVibracaoInfinita() {
-        shakeAnimator?.cancel()
-
-        shakeAnimator = ValueAnimator.ofInt(0,20,-18,18,-15,15,-6,6,0).apply {
-            duration = 1200
-
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.RESTART
-            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
-            addUpdateListener { valueAnimator ->
-                val deslocamento = valueAnimator.animatedValue as Int
-                binding.btnStartFreeTrial.translationX = deslocamento.toFloat()
-            }
-            start()
-
-        }
-    }
- */
-
 class PayFragment : Fragment() {
 
     private var billingManager: BillingManager? = null

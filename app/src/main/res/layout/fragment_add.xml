@@ -44,6 +44,7 @@
                         <ImageView
                             android:id="@+id/fragment_img_add"
                             style="@style/Theme.Bpd.ImageView"
+                            android:padding="20dp"
                             android:scaleType="centerCrop"/>
                     </androidx.cardview.widget.CardView>
 

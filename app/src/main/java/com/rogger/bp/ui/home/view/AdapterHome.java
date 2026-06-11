@@ -128,7 +128,7 @@ public class AdapterHome extends RecyclerView.Adapter<AdapterHome.ViewHolder> {
                 .override(200, 200)
                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                 .centerCrop()
-                .error(R.drawable.imagem_error)
+                .error(android.R.drawable.ic_menu_gallery)
                 .into(holder.imageView);
     }
 

@@ -82,8 +82,7 @@ class SearchAdapter(
             .load(produto.imageUri)
             .override(200, 200)
             .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
-            .placeholder(R.drawable.no_picture)
-            .error(R.drawable.no_picture)
+            .error(android.R.drawable.ic_menu_report_image)
             .centerCrop()
             .into(holder.imgProduto)
 

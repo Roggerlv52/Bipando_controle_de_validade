@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="0dp"
     android:fitsSystemWindows="false"
-    android:padding="0dp"
-    android:layout_margin="0dp">
+    android:padding="0dp">
 
     <!-- ── Imagem de fundo preenchendo toda a tela
      android:src="@drawable/bg_pay_bipando"── -->
@@ -33,13 +32,13 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="0dp"
-        android:padding="20dp"
         android:layout_marginEnd="20dp"
         android:background="@android:color/transparent"
+        android:padding="20dp"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
-        app:tint="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@android:color/white" />
 
     <!-- ── ScrollView para evitar cortes em telas menores ── -->
     <ScrollView
@@ -54,8 +53,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="56dp"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:paddingBottom="56dp">
 
             <!-- Coroa Premium -->
             <ImageView
@@ -64,9 +63,9 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="16dp"
                 android:src="@android:drawable/btn_star_big_on"
-                app:tint="#FFC107"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FFC107" />
 
             <!-- Título Premium -->
             <TextView
@@ -157,18 +156,21 @@
 
                 <!-- Plano Mensal -->
                 <LinearLayout
+                    android:id="@+id/btn_mensal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:background="@android:drawable/dialog_holo_dark_frame"
-                    android:backgroundTint="#24333d"
+                    android:backgroundTint="@color/bipando_color"
                     android:orientation="vertical"
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/txt_m_select"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:drawableEnd="@android:drawable/checkbox_off_background"
                         android:text="Mensal"
                         android:textColor="#8ca5b2"
                         android:textSize="13sp" />
@@ -186,18 +188,21 @@
 
                 <!-- Plano Bimestral -->
                 <LinearLayout
+                    android:id="@+id/btn_semestral"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:background="@android:drawable/dialog_holo_dark_frame"
                     android:backgroundTint="#2e9e5b"
                     android:orientation="vertical"
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/txt_s_select"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:drawableEnd="@android:drawable/checkbox_off_background"
                         android:text="Semestral"
                         android:textColor="#e0f2f1"
                         android:textSize="13sp" />
@@ -214,19 +219,19 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Botão Iniciar Teste -->
             <Button
                 android:id="@+id/btn_start_free_trial"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:layout_marginStart="10dp"
                 android:layout_marginTop="24dp"
                 android:layout_marginEnd="10dp"
-                android:layout_marginStart="10dp"
                 android:backgroundTint="#FF7A00"
                 android:text="Iniciar Teste GRATUITO"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/layout_plans" />
 
             <!-- Subtítulo informativo do teste -->

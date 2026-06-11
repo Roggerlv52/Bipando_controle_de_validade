@@ -28,11 +28,12 @@
 
                     <ImageView
                         android:id="@+id/profileImage"
+                        android:padding="25dp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center_horizontal"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/no_picture" />
+                        android:src="@android:drawable/ic_menu_report_image" />
                 </androidx.cardview.widget.CardView>
 
                 <TextView

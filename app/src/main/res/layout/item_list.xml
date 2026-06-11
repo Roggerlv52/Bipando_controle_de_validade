@@ -54,6 +54,8 @@
                 android:layout_height="100dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="2dp"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_menu_report_image"
                 android:scaleType="centerCrop"
                 android:transitionName="img_transition_name"
                 app:layout_constraintStart_toStartOf="parent"
