@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -57,6 +59,24 @@ class HomeFragment : Fragment(), ContractHome.View {
         val homeRepository = DependencyInjector.registerHomeRepository(requireContext())
         presenter = HomePresenter(this, homeRepository, category)
 
+        binding?.let { b ->
+            ViewCompat.setOnApplyWindowInsetsListener(b.fab) { v, insets ->
+                val bars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                val params = v.layoutParams as? ViewGroup.MarginLayoutParams
+                params?.let {
+                    // Define a margem inferior baseada na altura da barra de navegação + 16dp de respiro
+                    it.bottomMargin = bars.bottom + 64
+                    v.layoutParams = it
+                }
+                insets
+            }
+        }
+        _binding?.let { b ->
+            b.layoutEmptyStateAdd.setOnClickListener {
+                // Simula o clique do botão FAB principal para abrir o diálogo de categorias
+                b.fab.performClick()
+            }
+        }
         setupRecyclerView()
         setupFab()
         observePresenterFlows()
@@ -193,10 +213,9 @@ class HomeFragment : Fragment(), ContractHome.View {
         val target = if (isEmpty) 1 else 0
         if (binding.viewFlipper.displayedChild != target) {
             binding.viewFlipper.displayedChild = target
-            binding.txtHomeFlipper.visibility = View.VISIBLE
-            binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
+           // binding.txtHomeFlipper.visibility = View.VISIBLE
+           // binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
         } else {
-            binding.txtHomeFlipper.visibility = View.GONE
         }
     }
 

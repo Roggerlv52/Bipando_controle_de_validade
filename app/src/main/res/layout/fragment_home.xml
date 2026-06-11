@@ -23,27 +23,83 @@
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_empty_state_add"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="@android:color/white"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:paddingVertical="16dp"
+            android:paddingHorizontal="24dp">
 
-            <ImageView
-                android:id="@+id/img_home_fragment"
-                android:layout_width="250dp"
-                android:layout_height="250dp"
-                android:contentDescription="@string/todo"
-               />
+            <!-- Linha divisória superior -->
+            <View
+                android:id="@+id/divider_top"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EBEBEB"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/txt_home_flipper"
-                android:layout_width="wrap_content"
+            <!-- Círculo Cinza com o símbolo + -->
+            <FrameLayout
+                android:id="@+id/frame_plus_icon"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginVertical="12dp"
+                android:background="@drawable/bg_circle_plus"
+                app:layout_constraintBottom_toTopOf="@id/divider_bottom"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider_top">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_input_add"
+                    app:tint="@android:color/white" />
+            </FrameLayout>
+
+            <!-- Textos (Título e Subtítulo) -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:visibility="gone"
-                android:textColor="@color/gray" />
-        </LinearLayout>
+                android:layout_marginStart="16dp"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="@id/frame_plus_icon"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/frame_plus_icon"
+                app:layout_constraintTop_toTopOf="@id/frame_plus_icon">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adicionar Produto"
+                    android:textColor="#24333D"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Escaneie códigos de barras para adicionar produtos e receber alertas de validade."
+                    android:textColor="#8ca5b2"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Linha divisória inferior -->
+            <View
+                android:id="@+id/divider_bottom"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EBEBEB"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </ViewFlipper>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

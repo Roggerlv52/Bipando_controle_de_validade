@@ -14,6 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
@@ -49,21 +52,42 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        if (binding == null) return; // Trava de segurança
+
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.appBarMain.toolbar);
+        // ✅ CORREÇÃO EDGE-TO-EDGE SEGURA (Android 15+):
+        // Usamos o ViewCompat no Root View para evitar que a Toolbar suma
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.displayCutout());
+
+            // Ajusta apenas o preenchimento superior da AppBar para empurrar a Toolbar para baixo
+            if (binding.appBarMain.appBarLayout != null) {
+                binding.appBarMain.appBarLayout.setPadding(0, systemBars.top, 0, 0);
+            }
+            return insets;
+        });
+
         ImageSyncScheduler.INSTANCE.start(this);
 
         NotificationUtil.createChannel(this);
         mAuth = FirebaseAuth.getInstance();
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.appBarMain.toolbar);
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
 
         View viewProfile = navigationView.getHeaderView(0);
+
+        int originalTopPadding = viewProfile.getHeight();
+        ViewCompat.setOnApplyWindowInsetsListener(viewProfile, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.statusBars());
+            v.setPadding(v.getPaddingLeft(), originalTopPadding + systemBars.top, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
         imgProfile = viewProfile.findViewById(R.id.img_profile_navigation);
         // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
         imgProfile.setLayerType(View.LAYER_TYPE_SOFTWARE, null);

@@ -19,6 +19,7 @@ import com.rogger.bp.R
 import com.rogger.bp.databinding.FragmentPayBinding
 
 /*
+
  private fun iniciarAnimacaoVibracaoInfinita() {
         shakeAnimator?.cancel()
 
@@ -33,11 +34,14 @@ import com.rogger.bp.databinding.FragmentPayBinding
                 binding.btnStartFreeTrial.translationX = deslocamento.toFloat()
             }
             start()
+
         }
     }
  */
 
 class PayFragment : Fragment() {
+
+    private var billingManager: BillingManager? = null
 
     private var _binding: FragmentPayBinding? = null
     private val binding get() = _binding!!
@@ -75,6 +79,23 @@ class PayFragment : Fragment() {
             }
             insets
         }
+        // 👉 Inicializa o BillingManager para atualizar os preços dinamicamente da Play Store
+        billingManager = BillingManager(requireContext(), requireActivity()) { mensalPrice, semestralPrice ->
+            // Altera os valores dos planos dinamicamente com base na região do usuário
+            binding.txtPriceMensal.text = mensalPrice
+            binding.txtPriceSemestral.text = semestralPrice
+
+            // Atualiza também o informativo do botão
+            binding.txtTrialDuration.text = "30 dias grátis, depois $mensalPrice/mes"
+        }
+
+        // Configura o botão para iniciar o fluxo de assinatura da Play Store
+        binding.btnStartFreeTrial.setOnClickListener {
+           // executarAnimacaoVibracao()
+
+            // Dispara o fluxo oficial de pagamento do Google Play
+            billingManager?.purchaseSubscription("bipando_premium_mensal")
+        }
     }
 
     /**
@@ -108,6 +129,7 @@ class PayFragment : Fragment() {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.show(WindowInsetsCompat.Type.systemBars())
     }
+
     private fun getThemeColor(@AttrRes attrColor: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attrColor, typedValue, true)
