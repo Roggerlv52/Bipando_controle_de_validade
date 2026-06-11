@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="0dp"
+    android:layout_marginBottom="0dp"
     android:fitsSystemWindows="false"
     android:padding="0dp">
 
-    <!-- ── Imagem de fundo preenchendo toda a tela
-     android:src="@drawable/bg_pay_bipando"── -->
+    <!-- ── Imagem de fundo ── -->
     <ImageView
         android:id="@+id/img_bg_pay"
         android:layout_width="0dp"
@@ -20,13 +20,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ── Overlay escuro para garantir legibilidade dos textos ── -->
+    <!-- ── Overlay escuro para legibilidade ── -->
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#99111C24" />
 
-    <!-- ── Botão Fechar (X) no topo direito (com margem de segurança para Status Bar) ── -->
+    <!-- ── Botão Fechar (X) ── -->
     <ImageButton
         android:id="@+id/btn_close_pay"
         android:layout_width="40dp"
@@ -40,7 +40,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@android:color/white" />
 
-    <!-- ── ScrollView para evitar cortes em telas menores ── -->
+    <!-- ── ScrollView ── -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -54,7 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="24dp"
-            android:paddingBottom="56dp">
+            android:layout_marginBottom="0dp">
 
             <!-- Coroa Premium -->
             <ImageView
@@ -145,7 +145,7 @@
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <!-- Contêiner dos planos (Mensal / Bimestral) -->
+            <!-- ── Contêiner dos planos ── -->
             <LinearLayout
                 android:id="@+id/layout_plans"
                 android:layout_width="match_parent"
@@ -161,8 +161,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
+                    android:alpha="0.6"
                     android:background="@android:drawable/dialog_holo_dark_frame"
                     android:backgroundTint="@color/bipando_color"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:orientation="vertical"
                     android:padding="16dp">
 
@@ -186,15 +189,18 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Plano Bimestral -->
+                <!-- Plano Semestral -->
                 <LinearLayout
                     android:id="@+id/btn_semestral"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
+                    android:alpha="0.6"
                     android:background="@android:drawable/dialog_holo_dark_frame"
                     android:backgroundTint="#2e9e5b"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:orientation="vertical"
                     android:padding="16dp">
 
@@ -219,20 +225,43 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ── Banner de informação de troca de plano (visível só quando usuário ativo quer trocar) ── -->
+            <LinearLayout
+                android:id="@+id/layout_plan_change_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="#33FFC107"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/layout_plans">
+
+                <TextView
+                    android:id="@+id/txt_plan_change_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text=""
+                    android:textColor="#FFC107"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- ── Botão principal de assinatura / troca de plano ── -->
             <Button
-                android:id="@+id/btn_start_free_trial"
+                android:id="@+id/btn_subscribe"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginEnd="10dp"
                 android:backgroundTint="#FF7A00"
-                android:text="Iniciar Teste GRATUITO"
+                android:enabled="false"
+                android:text="Selecione um plano"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@id/layout_plans" />
+                app:layout_constraintTop_toBottomOf="@id/layout_plan_change_info" />
 
             <!-- Subtítulo informativo do teste -->
             <TextView
@@ -240,23 +269,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="30 dias grátis, depois R$ 14,99/mes"
+                android:text="30 dias grátis, depois R$ 14,99/mês"
                 android:textColor="#8ca5b2"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/btn_start_free_trial" />
+                app:layout_constraintTop_toBottomOf="@id/btn_subscribe" />
 
-            <!-- Nota de rodapé da assinatura -->
+            <!-- Nota de rodapé legal -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="40dp"
                 android:gravity="center"
-                android:text="A assinatura será renovada automaticamente mensalmente ou bimestralmente até ser cancelada nas configurações da Play Store."
+                android:text="A assinatura será renovada automaticamente mensalmente ou semestralmente até ser cancelada nas configurações da Play Store."
                 android:textColor="#8ca5b2"
                 android:textSize="10sp"
-                app:layout_constraintTop_toBottomOf="@id/txt_trial_duration" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/txt_trial_duration"
+                tools:layout_editor_absoluteX="24dp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

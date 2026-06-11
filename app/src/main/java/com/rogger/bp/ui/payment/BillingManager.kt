@@ -8,14 +8,15 @@ import com.android.billingclient.api.*
 class BillingManager(
     private val context: Context,
     private val activity: Activity,
-    private val onPricesLoaded: (mensalPrice: String, semestralPrice: String) -> Unit // 👉 Callback para atualizar a UI
+    private val onPricesLoaded: (mensalPrice: String, semestralPrice: String) -> Unit,
+    private val onSubscriptionStatusLoaded: (activeProductId: String?) -> Unit = {}
 ) : PurchasesUpdatedListener {
 
     private lateinit var billingClient: BillingClient
 
-    // 👉 Nossos dois IDs criados na Play Console
-    private val productMensalId = "bipando_premium_mensal"
-    private val productSemestralId = "bipando_premium_semestral"
+    // IDs dos produtos na Play Console
+    val productMensalId = "bipando_premium_mensal"
+    val productSemestralId = "bipando_premium_semestral"
 
     init {
         setupBillingClient()
@@ -36,6 +37,7 @@ class BillingManager(
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                     Log.d("Billing", "Conectado com sucesso ao Google Play Billing")
                     querySubscriptionProducts()
+                    queryActiveSubscriptions()
                 }
             }
 
@@ -46,14 +48,14 @@ class BillingManager(
         })
     }
 
-    // 👉 Método corrigido para buscar ASSINATURAS (SUBS) de forma dinâmica
+    // Busca os preços dos produtos de forma dinâmica
     private fun querySubscriptionProducts() {
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
                 listOf(
                     QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(productMensalId)
-                        .setProductType(BillingClient.ProductType.SUBS) // Tipo SUBS para Assinaturas
+                        .setProductType(BillingClient.ProductType.SUBS)
                         .build(),
                     QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(productSemestralId)
@@ -69,7 +71,6 @@ class BillingManager(
                 var semestralPrice = "R$ 77,70"
 
                 for (productDetails in productList) {
-                    // Extrai o preço formatado localizado do Google Play (ex: R$ 14,99 ou € 14,99)
                     val price = productDetails.subscriptionOfferDetails?.getOrNull(0)
                         ?.pricingPhases?.pricingPhaseList?.getOrNull(0)?.formattedPrice ?: ""
 
@@ -80,7 +81,6 @@ class BillingManager(
                     }
                 }
 
-                // Devolve os preços localizados para o fragmento via UI thread
                 activity.runOnUiThread {
                     onPricesLoaded(mensalPrice, semestralPrice)
                 }
@@ -90,7 +90,42 @@ class BillingManager(
         }
     }
 
-    // Iniciar fluxo de compra de uma assinatura
+    /**
+     * Consulta as assinaturas ativas do usuário na Play Store.
+     * Retorna o productId do plano ativo, ou null se não houver assinatura.
+     */
+    fun queryActiveSubscriptions() {
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+
+        billingClient.queryPurchasesAsync(params) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                val activePurchase = purchases.firstOrNull { purchase ->
+                    purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+                }
+
+                // Identifica qual plano está ativo (mensal ou semestral)
+                val activeProductId = activePurchase?.products?.firstOrNull { productId ->
+                    productId == productMensalId || productId == productSemestralId
+                }
+
+                activity.runOnUiThread {
+                    onSubscriptionStatusLoaded(activeProductId)
+                }
+            } else {
+                Log.e("Billing", "Falha ao consultar assinaturas: ${result.debugMessage}")
+                activity.runOnUiThread {
+                    onSubscriptionStatusLoaded(null)
+                }
+            }
+        }
+    }
+
+    /**
+     * Inicia o fluxo de compra/assinatura de um plano.
+     * O Google Play cuida automaticamente de upgrades/downgrades entre planos.
+     */
     fun purchaseSubscription(productId: String) {
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
@@ -117,7 +152,9 @@ class BillingManager(
                     .setProductDetailsParamsList(listOf(productDetailsParams))
                     .build()
 
-                billingClient.launchBillingFlow(activity, billingFlowParams)
+                activity.runOnUiThread {
+                    billingClient.launchBillingFlow(activity, billingFlowParams)
+                }
             }
         }
     }
@@ -127,6 +164,10 @@ class BillingManager(
             for (purchase in purchases) {
                 handlePurchase(purchase)
             }
+            // Atualiza o status após uma compra/mudança de plano
+            queryActiveSubscriptions()
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            Log.d("Billing", "Usuário cancelou o fluxo de compra")
         }
     }
 

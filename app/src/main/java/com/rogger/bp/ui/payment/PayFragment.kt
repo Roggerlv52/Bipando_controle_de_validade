@@ -1,6 +1,5 @@
 package com.rogger.bp.ui.payment
 
-import android.animation.ValueAnimator
 import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
@@ -8,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
@@ -25,7 +25,11 @@ class PayFragment : Fragment() {
     private var _binding: FragmentPayBinding? = null
     private val binding get() = _binding!!
 
-    private var shakeAnimator: ValueAnimator? = null
+    // Rastreia o plano selecionado pelo usuário na UI
+    private var selectedPlanId: String? = null
+
+    // Rastreia o plano atual da assinatura ativa (se houver)
+    private var activePlanId: String? = null
 
     private val mainToolbar: Toolbar?
         get() = activity?.findViewById(R.id.toolbar)
@@ -41,70 +45,209 @@ class PayFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val typedValue = TypedValue()
-        requireContext().theme.resolveAttribute(
-            R.attr.ic_color_theme,
-            typedValue,
-            true
-        )
+        setupCloseButton()
+        setupPlanSelectionClicks()
+        setupSubscribeButton()
+        initBillingManager()
+    }
+
+    // ── Botão Fechar ──────────────────────────────────────────────────────────
+
+    private fun setupCloseButton() {
         binding.btnClosePay.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        // Aplica padding dinâmico no botão fechar para respeitar a statusbar real
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.btnClosePay) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = systemBars.top + 40  // 8dp de folga visual
+                topMargin = systemBars.top + 40
             }
             insets
         }
-        // 👉 Inicializa o BillingManager para atualizar os preços dinamicamente da Play Store
-        billingManager = BillingManager(requireContext(), requireActivity()) { mensalPrice, semestralPrice ->
-            // Altera os valores dos planos dinamicamente com base na região do usuário
-            binding.txtPriceMensal.text = mensalPrice
-            binding.txtPriceSemestral.text = semestralPrice
+    }
 
-            // Atualiza também o informativo do botão
-            binding.txtTrialDuration.text = "30 dias grátis, depois $mensalPrice/mes"
+    // ── Seleção de Planos (Mensal / Semestral) ────────────────────────────────
+
+    private fun setupPlanSelectionClicks() {
+        binding.btnMensal.setOnClickListener {
+            selectPlan(billingManager?.productMensalId ?: "bipando_premium_mensal")
         }
 
-        // Configura o botão para iniciar o fluxo de assinatura da Play Store
-        binding.btnStartFreeTrial.setOnClickListener {
-           // executarAnimacaoVibracao()
-
-            // Dispara o fluxo oficial de pagamento do Google Play
-            billingManager?.purchaseSubscription("bipando_premium_mensal")
+        binding.btnSemestral.setOnClickListener {
+            selectPlan(billingManager?.productSemestralId ?: "bipando_premium_semestral")
         }
     }
 
     /**
-     * Força o sistema a desenhar de ponta a ponta (Edge-to-Edge),
-     * tornando a Barra de Status (topo) e Barra de Navegação (rodapé) 100% transparentes.
+     * Aplica a seleção visual de um plano:
+     * - Marca o checkbox do plano escolhido como ON
+     * - Desmarca o outro como OFF
+     * - Atualiza o texto e estado do botão de assinatura
      */
+    private fun selectPlan(productId: String) {
+        selectedPlanId = productId
+
+        val isMensal = productId == (billingManager?.productMensalId ?: "bipando_premium_mensal")
+
+        // Atualiza os drawables de checkbox
+        binding.txtMSelect.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            0, 0,
+            if (isMensal) android.R.drawable.checkbox_on_background
+            else android.R.drawable.checkbox_off_background,
+            0
+        )
+        binding.txtSSelect.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            0, 0,
+            if (!isMensal) android.R.drawable.checkbox_on_background
+            else android.R.drawable.checkbox_off_background,
+            0
+        )
+
+        // Atualiza aparência visual dos cards de plano
+        binding.btnMensal.alpha = if (isMensal) 1.0f else 0.6f
+        binding.btnSemestral.alpha = if (!isMensal) 1.0f else 0.6f
+
+        // Atualiza o botão de ação conforme estado da assinatura
+        updateSubscribeButton()
+    }
+
+    // ── Botão de Assinatura ───────────────────────────────────────────────────
+
+    private fun setupSubscribeButton() {
+        binding.btnSubscribe.setOnClickListener {
+            val planId = selectedPlanId ?: return@setOnClickListener
+
+            // Se já tem assinatura ativa e quer trocar de plano → exibe diálogo informativo
+            if (activePlanId != null && activePlanId != planId) {
+                showPlanChangeDialog(planId)
+            } else {
+                // Nova assinatura: inicia o fluxo direto
+                billingManager?.purchaseSubscription(planId)
+            }
+        }
+    }
+
+    /**
+     * Atualiza o texto e estado do botão de ação de acordo com:
+     * - Nenhum plano selecionado
+     * - Usuário já tem o plano selecionado ativo
+     * - Usuário quer trocar de plano
+     * - Nova assinatura
+     */
+    private fun updateSubscribeButton() {
+        val planId = selectedPlanId
+
+        when {
+            planId == null -> {
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "Selecione um plano"
+                binding.layoutPlanChangeInfo.visibility = View.GONE
+            }
+
+            planId == activePlanId -> {
+                // Plano já ativo: botão desabilitado
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "✓ Plano atual"
+                binding.layoutPlanChangeInfo.visibility = View.GONE
+            }
+
+            activePlanId != null -> {
+                // Tem assinatura ativa, mas quer outro plano
+                val newPlanName = if (planId == billingManager?.productMensalId) "Mensal" else "Semestral"
+                binding.btnSubscribe.isEnabled = true
+                binding.btnSubscribe.text = "Mudar para o plano $newPlanName"
+                showPlanChangeInfo(newPlanName)
+            }
+
+            else -> {
+                // Novo assinante
+                binding.btnSubscribe.isEnabled = true
+                binding.btnSubscribe.text = "Assinar agora"
+                binding.layoutPlanChangeInfo.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * Exibe o banner informativo de troca de plano conforme as diretrizes do Google Play:
+     * - Informar claramente que a mudança ocorre no próximo ciclo de cobrança
+     * - Não cobrar o usuário imediatamente
+     * - Deixar claro o novo plano e as condições
+     */
+    private fun showPlanChangeInfo(newPlanName: String) {
+        binding.layoutPlanChangeInfo.visibility = View.VISIBLE
+        binding.txtPlanChangeInfo.text =
+            "⚠️ Ao confirmar, seu plano será alterado para $newPlanName. " +
+                    "A mudança entrará em vigor no próximo ciclo de cobrança. " +
+                    "Você não será cobrado agora. Gerencie sua assinatura a qualquer momento " +
+                    "na Google Play Store."
+    }
+
+    /**
+     * Diálogo de confirmação de troca de plano — exigido pelas diretrizes do Google Play
+     * para garantir consentimento explícito do usuário antes de alterar uma assinatura ativa.
+     */
+    private fun showPlanChangeDialog(newPlanId: String) {
+        val currentPlanName = if (activePlanId == billingManager?.productMensalId) "Mensal" else "Semestral"
+        val newPlanName = if (newPlanId == billingManager?.productMensalId) "Mensal" else "Semestral"
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Alterar plano de assinatura")
+            .setMessage(
+                "Você está trocando do plano $currentPlanName para o plano $newPlanName.\n\n" +
+                        "• A mudança será aplicada no próximo ciclo de cobrança.\n" +
+                        "• Você não será cobrado agora pelo novo plano.\n" +
+                        "• Seu acesso premium continua ativo até o fim do período atual.\n\n" +
+                        "Deseja continuar?"
+            )
+            .setPositiveButton("Confirmar troca") { _, _ ->
+                billingManager?.purchaseSubscription(newPlanId)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    // ── BillingManager ────────────────────────────────────────────────────────
+
+    private fun initBillingManager() {
+        billingManager = BillingManager(
+            context = requireContext(),
+            activity = requireActivity(),
+            onPricesLoaded = { mensalPrice, semestralPrice ->
+                binding.txtPriceMensal.text = mensalPrice
+                binding.txtPriceSemestral.text = semestralPrice
+                binding.txtTrialDuration.text = "30 dias grátis, depois $mensalPrice/mês"
+            },
+            onSubscriptionStatusLoaded = { activeProductId ->
+                activePlanId = activeProductId
+
+                if (activeProductId != null) {
+                    // Usuário já tem assinatura: pré-seleciona o plano ativo
+                    selectPlan(activeProductId as String)
+                } else {
+                    // Sem assinatura: nenhum plano selecionado por padrão
+                    selectedPlanId = null
+                    updateSubscribeButton()
+                }
+            }
+        )
+    }
+
+    // ── Sistema (Edge-to-Edge, barras, toolbar) ───────────────────────────────
+
     private fun enableEdgeToEdge() {
         val window = requireActivity().window
-
-        // Diz ao sistema que o app vai gerenciar os insets manualmente
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Torna as barras transparentes (não esconde — apenas deixa ver por baixo)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
     }
 
-    /**
-     * Restaura as barras do sistema ao estado original do aplicativo para não afetar as outras telas.
-     */
     private fun restoreSystemBars() {
         val window = requireActivity().window
-
-        // Volta a encaixar a UI dentro das barras
         WindowCompat.setDecorFitsSystemWindows(window, true)
-
-        // Restaura as cores originais do app
         window.statusBarColor = getThemeColor(R.attr._color_theme_status)
         window.navigationBarColor = getThemeColor(R.attr._color_theme_navigation)
-        // Garante que as barras estejam visíveis (caso hide() tenha sido chamado antes)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.show(WindowInsetsCompat.Type.systemBars())
     }
@@ -115,47 +258,23 @@ class PayFragment : Fragment() {
         return typedValue.data
     }
 
-    private fun iniciarAnimacaoVibracaoInfinita() {
-        shakeAnimator?.cancel()
-
-        shakeAnimator = ValueAnimator.ofInt(0, 20, -20, 20, -20, 20, -20, 0).apply {
-            duration = 1200
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.RESTART
-            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
-
-            addUpdateListener { valueAnimator ->
-                val deslocamento = valueAnimator.animatedValue as Int
-                binding.btnStartFreeTrial.translationX = deslocamento.toFloat()
-            }
-            start()
-        }
-    }
-
     override fun onResume() {
         super.onResume()
-        // 👉 Ativa o modo de imersão de ponta a ponta ao entrar
         enableEdgeToEdge()
-        iniciarAnimacaoVibracaoInfinita()
-
         mainToolbar?.visibility = View.GONE
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
     }
 
     override fun onPause() {
         super.onPause()
-        shakeAnimator?.cancel()
-        shakeAnimator = null
-
-        // 👉 Restaura a formatação padrão das barras para as outras telas do app
         restoreSystemBars()
-
         mainToolbar?.visibility = View.VISIBLE
         (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        billingManager?.destroy()
         _binding = null
     }
 }
