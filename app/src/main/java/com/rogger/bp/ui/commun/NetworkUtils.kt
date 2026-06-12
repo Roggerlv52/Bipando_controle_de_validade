@@ -22,7 +22,7 @@ object NetworkUtils {
             capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                     capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         } catch (e: Exception) {
-            true // Fallback seguro
+            false // Fallback seguro: assume offline em caso de erro de inicialização
         }
     }
 }

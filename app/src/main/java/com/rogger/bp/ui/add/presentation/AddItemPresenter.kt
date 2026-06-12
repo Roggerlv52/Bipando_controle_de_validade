@@ -42,11 +42,14 @@ class AddItemPresenter(
 
             override fun onFailure(message: String) {
                 view?.showProgress(false)
-                view?.onFailure(message)
+                // Nenhuma imagem encontrada para este barcode — libera a UI para o utilizador adicionar
+                view?.onImageNotFound()
             }
 
             override fun onComplete() {
                 view?.showProgress(false)
+                // Nenhuma imagem encontrada para este barcode — libera a UI para o utilizador adicionar
+                view?.onImageNotFound()
             }
         })
     }
@@ -91,7 +94,7 @@ class AddItemPresenter(
             return
         }
         // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
-        ImageSyncScheduler.start(context)
+       // ImageSyncScheduler.start(context)
         view?.showProgress(true)
 
         val isLocalImage = product.imageUri.startsWith("file://") ||

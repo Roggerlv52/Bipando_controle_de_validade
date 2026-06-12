@@ -40,10 +40,10 @@ class RegisterItemRepository(
         } else {
             // ── CENÁRIO OFFLINE ─────────────────────────────────────────────
             CoroutineScope(Dispatchers.IO).launch {
+                localCache.insertProduct(product)
                 withContext(Dispatchers.Main) {
                     callback.onSuccess(null)
-                   // callback.onComplete()
-                    localCache.insertProduct(product)
+                    callback.onComplete()
                 }
             }
         }

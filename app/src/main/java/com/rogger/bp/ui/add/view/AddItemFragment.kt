@@ -33,7 +33,6 @@ import com.rogger.bp.ui.gallery.CameraCallback
 import com.rogger.bp.ui.gallery.ImagePikerUtil
 import com.rogger.bp.ui.gallery.ImageUtils
 import com.rogger.bp.ui.home.CustomProgressBar
-import com.rogger.bp.ui.scanner.ImageBarcode
 import java.io.File
 
 class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
@@ -155,7 +154,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
                 } else {
                     produto.copy(categoryId = "", categoryName = "")
                 }
-                Log.d("AddItemFragment", "Spinner selecionou: id=${produto.categoryId} name=${produto.categoryName}")
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
@@ -189,7 +187,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         val argCategoryName = args.getString("nameCategory").orEmpty()
         if (argCategoryId.isNotEmpty()) {
             produto = produto.copy(categoryId = argCategoryId, categoryName = argCategoryName)
-            Log.d("AddItemFragment", "Categoria recebida por arg: id=$argCategoryId name=$argCategoryName")
         }
 
         if (barcode.isNotEmpty()) {
@@ -212,7 +209,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
             .override(500, 500)
             .centerCrop()
             .into(binding.fragmentImgAdd)
-        binding.fragmentImgAdd.isClickable = false
+        //binding.fragmentImgAdd.isClickable = false
     }
 
     private fun openMediaPicker() {
@@ -271,7 +268,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun onImageNotFound() {
-        binding.progressUploadAdd.visibility =  View.INVISIBLE
+        binding.progressUploadAdd.visibility = View.INVISIBLE
+        // Garante que o utilizador pode clicar para adicionar uma imagem manualmente
+        binding.fragmentImgAdd.isClickable = true
     }
 
     override fun openCamera() {

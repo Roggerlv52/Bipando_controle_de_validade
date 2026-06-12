@@ -94,6 +94,25 @@ class ImageSyncWorker(context: Context, params: WorkerParameters) : Worker(conte
                 Tasks.await(productRef.update("imageUri", downloadUrl))
                 Log.d(TAG, "Firestore sincronizado com sucesso para ${product.name}")
 
+                // 5. Cria imagem global (imageProdutos/{barcode}) se ainda não existir
+                //    Outros utilizadores com o mesmo barcode passam a beneficiar desta imagem
+                if (product.barcode.isNotEmpty()) {
+                    val globalRef = db.collection("imageProdutos").document(product.barcode)
+                    val globalSnap = Tasks.await(globalRef.get())
+                    if (!globalSnap.exists()) {
+                        globalRef.set(
+                            hashMapOf(
+                                "barcode" to product.barcode,
+                                "name"    to product.name,
+                                "uri"     to downloadUrl
+                            )
+                        )
+                        Log.d(TAG, "Imagem global criada para barcode=${product.barcode}")
+                    } else {
+                        Log.d(TAG, "Imagem global já existe para barcode=${product.barcode} — não sobrescrevendo")
+                    }
+                }
+
 
             } catch (e: Exception) {
                 Log.e(TAG, "Falha ao sincronizar imagem do produto ${product.name}: ${e.message}")
