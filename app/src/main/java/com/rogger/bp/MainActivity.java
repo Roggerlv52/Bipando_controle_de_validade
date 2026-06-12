@@ -73,12 +73,25 @@ public class MainActivity extends BaseActivity {
         ImageSyncScheduler.INSTANCE.start(this);
 
         NotificationUtil.createChannel(this);
+
         mAuth = FirebaseAuth.getInstance();
+
+        // ── ✅ CORREÇÃO DE SEGURANÇA SÊNIOR (Validação de Sessão Real) ──
+        // Se o Firebase diz que o usuário não está autenticado, limpa qualquer lixo local
+        // e força o redirecionamento imediato para a LoginActivity
+        if (mAuth.getCurrentUser() == null) {
+            SharedPreferencesManager.setLoginState(this, "state", false);
+            SharedPreferencesManager.clearUserInfo(this);
+
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return; // Interrompe o resto do onCreate para evitar loops ou NullPointerExceptions
+        }
 
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
 
         View viewProfile = navigationView.getHeaderView(0);
 

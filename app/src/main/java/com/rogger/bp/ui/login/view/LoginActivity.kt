@@ -117,8 +117,6 @@ class LoginActivity : BaseActivity(), Login.View {
         // 👉 Ativa o modo de imersão de ponta a ponta ao entrar
         enableEdgeToEdge()
 
-       // mainToolbar?.visibility = View.GONE
-       // (activity as? AppCompatActivity)?.supportActionBar?.hide()
     }
 
     override fun onPause() {
@@ -133,7 +131,13 @@ class LoginActivity : BaseActivity(), Login.View {
 
     override fun startGoogleSignIn() {
         showProgress(true)
-        signInLauncher.launch(googleSignInClient.signInIntent)
+
+        // 👉 Força a limpeza da sessão em cache do cliente Google no aparelho.
+        // Assim, o Android sempre será obrigado a exibir o pop-up de seleção de contas!
+        googleSignInClient.signOut().addOnCompleteListener {
+            // Só dispara a tela de seleção após garantir que a sessão anterior foi apagada
+            signInLauncher.launch(googleSignInClient.signInIntent)
+        }
     }
 
     private fun handleGoogleResult(result: ActivityResult) {
@@ -192,7 +196,6 @@ class LoginActivity : BaseActivity(), Login.View {
 
     override fun onUserUnauthenticated(message: String) {
         showProgress(false)
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         SharedPreferencesManager.clearUserInfo(this)
     }
 

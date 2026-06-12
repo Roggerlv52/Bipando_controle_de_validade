@@ -20,9 +20,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.rogger.bp.R;
 import com.rogger.bp.databinding.FragmentProfileBinding;
@@ -164,6 +170,19 @@ public class ProfileFragment extends Fragment {
         binding.boxProfile4.setOnCheckedChangeListener(listener);
         binding.boxOffBeep.setOnCheckedChangeListener(listenerBeep);
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.cardDelete, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            ViewGroup.MarginLayoutParams params =
+                    (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+
+            params.bottomMargin = systemBars.bottom + 65;
+
+            v.setLayoutParams(params);
+
+            return insets;
+        });
+
         binding.btnDeleteAccount.setOnClickListener(v -> {
             DialogUtil.showCustomDialog(requireContext(), getString(R.string.delete_account_confirme), () -> {
                 showProgress(true);
@@ -171,20 +190,30 @@ public class ProfileFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull String message) {
                         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
-                        Log.e("ProfileFragment","Erro -> "+message);
+                        Log.e("ProfileFragment", "Erro -> " + message);
                     }
 
                     @Override
                     public void onSuccess() {
-                        Intent intent = new Intent(requireContext(), LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        requireActivity().finish();
+                        // 👉 CORREÇÃO: Inicializa o cliente do Google e limpa a sessão ao excluir a conta
+                        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestEmail()
+                                .build();
+
+                        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
+
+                        // Executa o sign out do cliente Google antes de redirecionar para a LoginActivity
+                        googleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+                            Intent intent = new Intent(requireContext(), LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            requireActivity().finish();
+                        });
                     }
 
                     @Override
                     public void onComplete() {
-                        SharedPreferencesManager.setLoginState(requireContext(),"state",false);
+                        SharedPreferencesManager.setLoginState(requireContext(), "state", false);
                         showProgress(false);
                     }
                 });

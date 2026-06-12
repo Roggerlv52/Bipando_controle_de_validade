@@ -13,16 +13,6 @@ import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 
 
-/**
- * Presenter do fluxo de cadastro de item.
- *
- * Responsabilidades:
- *  1. Verificar se imagem do barcode já existe (checkOrCreateImage).
- *  2. Fazer upload de imagem capturada pela câmera/galeria (uploadImage).
- *  3. Salvar o produto no banco (saveProduct).
- *
- * A View é notificada em onDestroy() para evitar memory leak.
- */
 class AddItemPresenter(
     private var view: RegisterAdd.View?,
     private val repository: RegisterItemRepository,
@@ -30,7 +20,6 @@ class AddItemPresenter(
 ) : RegisterAdd.Presenter {
 
     // ── 1. Verificar/buscar imagem pelo barcode ───────────────────────────
-
     override fun checkOrCreateImage(barcode: String) {
         if (barcode.isEmpty()) {
             view?.onFailure("Código de barras inválido")
@@ -79,8 +68,6 @@ class AddItemPresenter(
             }
 
             override fun onAlreadyExists(image: PostImage) {
-                // Race condition: imagem global criada por outro utilizador
-                // durante o upload → usa URL existente
                 view?.showProgress(false)
                 view?.imageAlreadyExists(image)
             }

@@ -38,13 +38,17 @@ class FireRegisterDataSource : ItemDataSource {
             return
         }
 
+        // 👉 Usa o ID gerado client-side se existir, garantindo consistência absoluta entre Room e Firestore
+        val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else db.collection("users").document(uid).collection("products").document().id
+        val finalUuid = if (produto.uuid.isNotEmpty()) produto.uuid else docId
+
         db.collection("users")
             .document(uid)
             .collection("products")
-            .document()
+            .document(docId) // 👉 Cria o documento com o exato mesmo ID do Room
             .set(
                 hashMapOf(
-                    "uid"        to produto.uuid,
+                    "uid"        to finalUuid,
                     "userId"     to uid,
                     "id"         to produto.id,
                     "imageUri"   to produto.imageUri,
@@ -62,14 +66,6 @@ class FireRegisterDataSource : ItemDataSource {
     }
 
     // ── 2. Verificar/criar imagem (chamado ao escanear barcode) ────────────
-
-    /**
-     * Verifica se já existe imagem (personalizada ou global) para o barcode.
-     *
-     * Se existir → [SaveImageCallback.onAlreadyExists]
-     * Se não existir E não há URI → [SaveImageCallback.onComplete] (UI pede upload)
-     * Se não existir E há URI → [SaveImageCallback.onSuccess] após upload global
-     */
     override fun saveProductImage(image: PostImage, callback: SaveImageCallback) {
         CoroutineScope(Dispatchers.IO).launch {
             val result = imageRepository.resolveImage(image.barcode)

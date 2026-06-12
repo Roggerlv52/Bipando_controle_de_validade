@@ -52,6 +52,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     private var produto: PostProduct = PostProduct()
 
     private var spinnerPronto = false
+    private var datePickerOpened = false
     private var barcode: String = ""
     private var timestamp: Long = 0L
     private var photoFile: File? = null
@@ -85,13 +86,17 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
         setupCamera()
         setupGalleryResult()
-        showDataPiker()
         setupSpinner()
         setupListeners()
 
         readArguments()
 
         presenter.fetchCategories()
+
+        if (!datePickerOpened) {
+            datePickerOpened = true
+            binding.datePickerBtnAdd.performClick()
+        }
     }
 
     override fun onDestroyView() {
@@ -162,7 +167,11 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         binding.btnFgmSaveAdd.setOnClickListener { saveProduct() }
 
         binding.datePickerBtnAdd.setOnClickListener {
-            showDataPiker()
+            Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
+                binding.datePickerBtnAdd.text = dataFormatada
+                binding.txtAddData.text       = dataFormatada
+                timestamp = ts
+            }
         }
 
         binding.fragmentImgAdd.setOnClickListener {
@@ -171,14 +180,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         }
     }
 
-    // ── Argumentos de navegação ───────────────────────────────────────────
-    private fun showDataPiker(){
-        Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
-            binding.datePickerBtnAdd.text = dataFormatada
-            binding.txtAddData.text       = dataFormatada
-            timestamp = ts
-        }
-    }
     private fun readArguments() {
         val args = arguments ?: return
 
@@ -225,6 +226,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         val nome = binding.edtNameFragmentAdd.text.toString().trim()
         if (!Utils.validEditText(binding.edtNameFragmentAdd)) return
 
+        // 👉 Permite salvar sem foto: se photoFile e remoteImageUri forem nulos, a URI será vazia ("")
         val imageUri: Uri = when {
             remoteImageUri != null -> Uri.parse(remoteImageUri)
             photoFile != null      -> Uri.fromFile(photoFile)
@@ -232,7 +234,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         }
 
         val productToSave = produto.copy(
-            imageUri  = imageUri.toString(),
+            imageUri  = imageUri.toString(), // Ficará salvo como "" (vazio) caso o usuário não use imagem
             name      = nome,
             note      = binding.editFragmentNoteAdd.text.toString(),
             barcode   = barcode,
@@ -282,7 +284,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun goToHome() {
-       // ToastCustom.showCustomToast(requireContext(), "Salvo com sucesso!")
         CustomProgressBar.showLoadingDialog(requireContext())
         Handler(Looper.getMainLooper()).postDelayed({
             CustomProgressBar.hideLoadingDialog()
