@@ -96,11 +96,6 @@ class HomeFragment : Fragment(), ContractHome.View {
         presenter.fetchCategories()
         // Se não há categoria, fetchProducts() já carregou tudo normalmente
     }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
