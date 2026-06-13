@@ -102,6 +102,7 @@ class FireRegisterDataSource : ItemDataSource {
                     } else {
                         Log.d(TAG, "Sem imagem e sem URI — aguardando upload do utilizador")
                         CoroutineScope(Dispatchers.Main).launch {
+                            callback.onFailure("Nenhuma imagem associada")
                             callback.onComplete()
                         }
                     }

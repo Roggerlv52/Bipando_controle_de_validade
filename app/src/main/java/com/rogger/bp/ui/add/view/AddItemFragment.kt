@@ -28,6 +28,7 @@ import com.rogger.bp.ui.animation.ToastCustom
 import com.rogger.bp.ui.base.MenuUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
+import com.rogger.bp.ui.commun.NetworkUtils
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.gallery.CameraCallback
 import com.rogger.bp.ui.gallery.ImagePikerUtil
@@ -209,7 +210,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
             .override(500, 500)
             .centerCrop()
             .into(binding.fragmentImgAdd)
-        //binding.fragmentImgAdd.isClickable = false
+        binding.fragmentImgAdd.isClickable = false
     }
 
     private fun openMediaPicker() {
@@ -222,6 +223,15 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     private fun saveProduct() {
         val nome = binding.edtNameFragmentAdd.text.toString().trim()
         if (!Utils.validEditText(binding.edtNameFragmentAdd)) return
+
+        // ── VERIFICAÇÃO DE LIGAÇÃO À INTERNET ──
+        if (!NetworkUtils.isNetworkAvailable()) {
+            Toast.makeText(
+                requireContext(),
+                "Sem ligação à Internet. Verifique a sua rede. O produto será guardado localmente.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
 
         // 👉 Permite salvar sem foto: se photoFile e remoteImageUri forem nulos, a URI será vazia ("")
         val imageUri: Uri = when {
@@ -241,7 +251,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         )
 
         confirmed = true
-        presenter.saveProduct(productToSave,requireContext())
+        presenter.saveProduct(productToSave, requireContext())
     }
 
     override fun showProgress(enable: Boolean) {
@@ -283,12 +293,25 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun goToHome() {
+        if (!NetworkUtils.isNetworkAvailable()) {
+            Toast.makeText(
+                requireContext(),
+                "Produto guardado offline com sucesso!",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Produto guardado com sucesso!",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
         CustomProgressBar.showLoadingDialog(requireContext())
         Handler(Looper.getMainLooper()).postDelayed({
             CustomProgressBar.hideLoadingDialog()
             findNavController().popBackStack()
         }, 1000)
-
     }
 
     override fun showCategories(categories: List<PostCategory>) {

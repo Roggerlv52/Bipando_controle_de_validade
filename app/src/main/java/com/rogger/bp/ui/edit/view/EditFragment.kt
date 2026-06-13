@@ -274,7 +274,7 @@ class EditFragment : Fragment(), ContractEdit.View {
             .override(512, 512)
             .format(DecodeFormat.PREFER_RGB_565)
             .centerCrop()
-            .error(R.drawable.up_picture)
+            .error(android.R.drawable.ic_menu_gallery)
             .into(binding.imageEdit)
     }
 
@@ -294,7 +294,7 @@ class EditFragment : Fragment(), ContractEdit.View {
         binding.txtEditBacode.text = produto.barcode
         binding.datePickerButton.text = timestampParaData(produto.timestamp)
 
-        if (produto.imageUri.isNotEmpty()) showImageView(produto.imageUri)
+        showImageView(produto.imageUri)
 
         if (spinnerPronto) selecionarCategoria(produto.categoryId)
     }
