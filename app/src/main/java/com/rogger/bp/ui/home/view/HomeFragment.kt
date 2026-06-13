@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -96,11 +97,6 @@ class HomeFragment : Fragment(), ContractHome.View {
         presenter.fetchCategories()
         // Se não há categoria, fetchProducts() já carregou tudo normalmente
     }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -160,12 +156,19 @@ class HomeFragment : Fragment(), ContractHome.View {
                     }
 
                     override fun onAdicionarCategoria() {
-                        Utils.dialogCategory(
-                            requireContext(),
-                            "Nova Categoria"
-                        ) { nomeCategoria ->
-                            navegarParaScanner(categoriaId = "", nomeCategoria)
-                        }
+                        // ✅ MODIFICADO: Apenas notifica o utilizador e redireciona para o ecrã de categorias
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Nenhuma Categoria Encontrada")
+                            .setMessage("Para começar a gerir os seus produtos, é necessário criar pelo menos uma categoria. Deseja criar uma agora?")
+                            .setPositiveButton("Criar Categoria") { dialog, _ ->
+                                dialog.dismiss()
+                                // Navega para o AddEditCategoryFragment utilizando a rota mapeada no grafo de navegação
+                                findNavController().navigate(R.id.nav_category)
+                            }
+                            .setNegativeButton("Agora não") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .show()
                     }
                 }
             )

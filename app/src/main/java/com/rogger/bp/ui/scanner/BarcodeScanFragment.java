@@ -20,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavBackStackEntry;
 import androidx.navigation.NavController;
@@ -109,6 +112,17 @@ public class BarcodeScanFragment extends Fragment {
         } else {
             // Modo adição: comportamento original
             btnAddWithoutBarcode.setOnClickListener(this::dialogScanner);
+            ViewCompat.setOnApplyWindowInsetsListener(btnAddWithoutBarcode, (v, insets) -> {
+                Insets navBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+
+                // Aplica a margem correspondente à altura da barra de navegação somada a um respiro visual extra (ex: 48 pixels)
+                params.bottomMargin = navBars.bottom + 48;
+                v.setLayoutParams(params);
+
+                return insets;
+            });
         }
     }
 
