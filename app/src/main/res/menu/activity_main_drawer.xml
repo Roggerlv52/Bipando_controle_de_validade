@@ -25,10 +25,10 @@
             <menu >
                 <item android:id="@+id/share_app"
                     android:icon="@android:drawable/ic_menu_share"
-                    android:title="Compartilhar"/>
+                    android:title="@string/shared_app"/>
                 <item android:id="@+id/nav_payment"
                     android:icon="@drawable/ic_credit_card_24"
-                    android:title="Assinatura"/>
+                    android:title="@string/assinatura"/>
             </menu>
         </item>
     </group>
