@@ -144,8 +144,6 @@ class HomeFragment : Fragment(), ContractHome.View {
                         bundle
                     )
                 }
-
-                // ✅ NOVO: Exclusão múltipla de produtos pertencentes ao mesmo lote/grupo
                 override fun onHeaderDeleteClick(productsToDelete: List<PostProduct>, groupTitle: String) {
                     val total = productsToDelete.size
                     val mensagem = if (total == 1) {
@@ -224,7 +222,6 @@ class HomeFragment : Fragment(), ContractHome.View {
                     (presenter as HomePresenter).products.collect { products ->
                         if (products != null) {
                             adapterHome.setDados(products)
-                           // adapterHome.ordenarPorDiferencaDeDias()
                             showEmpty(products.isEmpty())
                         }
                     }
@@ -250,17 +247,12 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun showProgress(enable: Boolean) {
-        //if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-        // else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showEmpty(isEmpty: Boolean) {
         val target = if (isEmpty) 1 else 0
         if (binding.viewFlipper.displayedChild != target) {
             binding.viewFlipper.displayedChild = target
-            // binding.txtHomeFlipper.visibility = View.VISIBLE
-            // binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
-        } else {
         }
     }
 

@@ -105,18 +105,21 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int color;
 
             if (diffDays < 0) {
-                title = "Vencido";
+                title = "Expired";
                 color = Color.parseColor("#FDF2F2"); // Vermelho suave
-            } else if (diffDays <= 1) {
+            } else if (diffDays == 0) {
                 title = "Vence Hoje";
-                color = Color.parseColor("#FDF2F2"); // Laranja/Amarelo suave
+                color = Color.parseColor("#FFFBEB"); // Laranja suave
+            } else if (diffDays == 1) {
+                // ✅ NOVO: Grupo específico para vencer amanhã
+                title = "Vence Amanhã";
+                color = Color.parseColor("#FFFBEB"); // Laranja suave (Atenção)
             } else {
-                title = diffDays + (diffDays > 1 ? " dia restante" : " faltam poucos dias");
-                // ✅ Define o fundo do card dinamicamente com base no limite de aviso
+                // ✅ CORREÇÃO: Ajuste do plural de "dia restante" para "dias restantes"
+                title = diffDays + " dias restantes";
                 if (diffDays <= diasLimiteAmarelo) {
                     color = Color.parseColor("#FFFBEB"); // Laranja suave (Atenção)
                 } else {
-                    title =  (diffDays + " dias");
                     color = Color.parseColor("#F0FDF4"); // Verde suave (Seguro)
                 }
             }
@@ -222,7 +225,7 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             dotBg.setShape(GradientDrawable.OVAL);
 
             // ✅ CONFIGURAÇÃO DINÂMICA DE CORES
-            if (diffDays < 0) {
+            if (diffDays <1) {
                 // 🔴 Caso A: Vencido / Expired
                 bg.setColor(Color.parseColor("#FDF2F2"));
                 dotBg.setColor(Color.parseColor("#EF4444")); // Ponto vermelho
@@ -232,12 +235,17 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 bg.setColor(Color.parseColor("#FFFBEB"));
                 dotBg.setColor(Color.parseColor("#F59E0B")); // Ponto laranja
                 hHolder.title.setTextColor(Color.parseColor("#92400E")); // Texto laranja escuro
+                if (diffDays == 1) {
+                    hHolder.title.setText("Vence Amanhã");
+                } else {
+                    hHolder.title.setText(diffDays + " Dias");
+                }
             } else {
                 // 🟢 Caso C: Seguro / Afastado do limite de aviso (Verde)
                 bg.setColor(Color.parseColor("#F0FDF4"));
                 dotBg.setColor(Color.parseColor("#10B981")); // Ponto verde
                 hHolder.title.setTextColor(Color.parseColor("#065F46")); // Texto verde escuro
-            }
+               }
 
             bg.setCornerRadius(dpToPx(10));
             hHolder.itemView.setBackground(bg);

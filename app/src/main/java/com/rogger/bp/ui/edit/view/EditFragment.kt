@@ -23,22 +23,15 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DecodeFormat
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
-import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentEditBinding
-import com.rogger.bp.ui.animation.ToastCustom
 import com.rogger.bp.ui.base.DialogUtil
 import com.rogger.bp.ui.base.Utils
-import com.rogger.bp.ui.category.data.CategoryDataSource
-import com.rogger.bp.ui.category.data.CategoryRepository
-import com.rogger.bp.ui.category.data.RoomCategoryCache
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.NetworkUtils
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.edit.ContractEdit
-import com.rogger.bp.ui.edit.data.EditDataSource
-import com.rogger.bp.ui.edit.data.EditRepository
 import com.rogger.bp.ui.edit.presentation.EditPresenter
 import com.rogger.bp.ui.gallery.CameraCallback
 import com.rogger.bp.ui.gallery.ImagePikerUtil
@@ -131,14 +124,14 @@ class EditFragment : Fragment(), ContractEdit.View {
             "gallery_result",
             viewLifecycleOwner
         ) { _, bundle ->
-                try {
-                    val uri = Uri.parse(bundle.getString("imageUri"))
-                    val out = ImagePikerUtil.createImageFile(requireContext())
-                    novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
-                    showImageView(novaImagemFile!!.absolutePath)
-                } catch (e: Exception) {
-                    onError(e.message ?: "Erro ao processar imagem da galeria")
-                }
+            try {
+                val uri = Uri.parse(bundle.getString("imageUri"))
+                val out = ImagePikerUtil.createImageFile(requireContext())
+                novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
+                showImageView(novaImagemFile!!.absolutePath)
+            } catch (e: Exception) {
+                onError(e.message ?: "Erro ao processar imagem da galeria")
+            }
 
         }
     }
@@ -184,7 +177,9 @@ class EditFragment : Fragment(), ContractEdit.View {
         }
 
         binding.datePickerButton.setOnClickListener {
-            Utils.showDatePicker(requireContext()) { ts, dataFormatada ->
+            val currentTs = Utils.parseDateToTimestamp(binding.datePickerButton.text.toString())
+
+            Utils.showDatePicker(requireContext(), currentTs) { ts, dataFormatada ->
                 timestamp = ts
                 binding.datePickerButton.text = dataFormatada
             }
@@ -240,7 +235,7 @@ class EditFragment : Fragment(), ContractEdit.View {
             barcode = binding.txtEditBacode.text.toString(),
             imageUri = novaImagemFile?.absolutePath ?: p.imageUri
         )
-        presenter.saveProduct(atualizado,requireContext())
+        presenter.saveProduct(atualizado, requireContext())
     }
 
     private fun confirmarDelete() {
@@ -320,7 +315,7 @@ class EditFragment : Fragment(), ContractEdit.View {
         if (message.contains("lixeira", ignoreCase = true)) {
             if (!NetworkUtils.isNetworkAvailable()) {
                 // 👉 Offline: mostra o loading dialog por um curto período e exibe o toast correto
-               handlerProgressBa()
+                handlerProgressBa()
             } else {
                 // Online
                 //ToastCustom.showCustomToast(requireContext(), "Removido com sucesso!")
@@ -332,7 +327,8 @@ class EditFragment : Fragment(), ContractEdit.View {
             handlerProgressBa()
         }
     }
-    private fun handlerProgressBa(){
+
+    private fun handlerProgressBa() {
         CustomProgressBar.showLoadingDialog(requireContext())
         Handler(Looper.getMainLooper()).postDelayed({
             CustomProgressBar.hideLoadingDialog()

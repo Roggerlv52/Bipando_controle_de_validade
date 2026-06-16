@@ -61,8 +61,7 @@ public class MainActivity extends BaseActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        // ✅ CORREÇÃO EDGE-TO-EDGE SEGURA (Android 15+):
-        // Usamos o ViewCompat no Root View para evitar que a Toolbar suma
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.displayCutout());
 

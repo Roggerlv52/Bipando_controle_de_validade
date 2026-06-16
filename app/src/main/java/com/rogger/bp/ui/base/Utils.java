@@ -44,7 +44,10 @@ public class Utils {
         target.set(Calendar.MILLISECOND, 0);
 
         long diffInMillis = target.getTimeInMillis() - today.getTimeInMillis();
-        return TimeUnit.MILLISECONDS.toDays(diffInMillis);
+
+        // ✅ CORREÇÃO SÉNIOR: Usa divisão decimal e arredondamento próximo para evitar truncamento por fuso horário
+        double diffInDaysDouble = (double) diffInMillis / (1000L * 60 * 60 * 24);
+        return Math.round(diffInDaysDouble);
     }
 
     /**
@@ -73,31 +76,60 @@ public class Utils {
             Context context,
             OnDateSelectedListener listener
     ) {
+        showDatePicker(context, System.currentTimeMillis(), listener);
+    }
+
+    // ✅ NOVO: Converte texto de data exibido no botão em timestamp de forma segura
+    public static long parseDateToTimestamp(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return System.currentTimeMillis();
+        }
+        try {
+            String cleanStr = dateStr.trim();
+            // Suporta formatos "dd/MM/yyyy" ou "d/M/yyyy"
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+            Date date = sdf.parse(cleanStr);
+            return date != null ? date.getTime() : System.currentTimeMillis();
+        } catch (Exception e) {
+            // Em caso de texto inválido (como placeholders), retorna a data atual como fallback
+            return System.currentTimeMillis();
+        }
+    }
+
+    public static void showDatePicker(
+            Context context,
+            long initialTimestamp,
+            OnDateSelectedListener listener
+    ) {
         SpinerData sd = new SpinerData();
 
         DatePickerDialog.OnDateSetListener dateSetListener =
                 (datePicker, year, month, day) -> {
 
-                    // 📌 Data formatada para exibição
+                    // Data formatada para exibição
                     String dataFormatada =
                             sd.makeDateString(day, month + 1, year);
 
-                    // 📌 Timestamp (data real para salvar no banco)
+                    // Timestamp (data real para salvar no banco)
                     Calendar calendar = Calendar.getInstance();
                     calendar.set(year, month, day, 0, 0, 0);
                     calendar.set(Calendar.MILLISECOND, 0);
                     long timestamp = calendar.getTimeInMillis();
 
-                    // 🔁 Retorna os dois valores
+                    // Retorna os dois valores
                     if (listener != null) {
                         listener.onDateSelected(timestamp, dataFormatada);
                     }
                 };
 
-        int[] resultado = sd.retornaVetor("");
-        int day = resultado[0];
-        int month = resultado[1];
-        int year = resultado[2];
+        // Usa o timestamp recebido para definir o dia, mês e ano iniciais
+        Calendar calendar = Calendar.getInstance();
+        if (initialTimestamp > 0) {
+            calendar.setTimeInMillis(initialTimestamp);
+        }
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
 
         DatePickerDialog datePickerDialog =
                 new DatePickerDialog(
