@@ -26,13 +26,13 @@ android {
         }
     }
     namespace = "com.rogger.bp"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.rogger.bp"
         minSdk = 28
-        targetSdk = 35
-        versionCode = 10
+        targetSdk = 36
+        versionCode = 21
         versionName = "1.${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -63,25 +63,25 @@ android {
 }
 
 dependencies {
-    implementation("com.android.billingclient:billing-ktx:6.1.0")
+    implementation("com.android.billingclient:billing-ktx:9.0.0")
     // 🔥 Firebase BOM (CORRETO)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation("com.google.firebase:firebase-storage:20.3.0")
     //Room
-    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.0")
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
-    implementation("androidx.room:room-ktx:2.6.1")
+    implementation("androidx.room:room-ktx:2.7.0")
     implementation(libs.recyclerview)
     implementation(libs.room3.common.jvm)
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.7.0")
     implementation("androidx.work:work-runtime:2.9.0")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    ksp("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:2.7.0")
 
     //ksp("com.github.bumptech.glide:compiler:4.16.0")
 

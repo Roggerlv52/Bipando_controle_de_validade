@@ -244,7 +244,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginTop="5dp"
-                            android:text="Desativar bip"
+                            android:text="Ativar bip"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                     </LinearLayout>
 
@@ -345,8 +345,11 @@
                         android:id="@+id/btn_delete_account"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:backgroundTint="@color/red"
                         android:layout_gravity="center_horizontal"
                         android:padding="10dp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
                         android:text="Deletar conta" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

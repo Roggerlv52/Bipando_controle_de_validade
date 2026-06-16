@@ -74,7 +74,7 @@ class SearchAdapter(
         } else {
             holder.txtContDay.text = "$dias dias"
         }
-        holder.imgCircle.setColorFilter(corCirculo)
+      //  holder.imgCircle.setColorFilter(corCirculo)
 
         // Imagem via Glide
         Glide.with(context)
@@ -96,7 +96,7 @@ class SearchAdapter(
         val txtBarcode: TextView = view.findViewById(R.id.home_barcode)
         val txtDate: TextView = view.findViewById(R.id.txt_home_right)
         val txtContDay: TextView = view.findViewById(R.id.txt_home_left)
-        val imgCircle: ImageView = view.findViewById(R.id.image_home_circle)
+       // val imgCircle: ImageView = view.findViewById(R.id.image_home_circle)
         val imgProduto: ImageView = view.findViewById<ImageView>(R.id.imageview_home).apply {
             // 🔥 Correção para Android 11: Desativa aceleração de hardware para evitar erro de Canvas muito grande
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)

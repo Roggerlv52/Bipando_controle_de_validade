@@ -33,6 +33,10 @@ interface ProductDao {
     @Delete
     suspend fun deleteProduct(product: PostProduct)
 
+    // ✅ ATUALIZAÇÃO: Consulta reativa de TODOS os produtos (ativos + lixeira) para controle do limite Premium
+    @Query("SELECT COUNT(*) FROM products")
+    fun getTotalProductsCountLiveData(): androidx.lifecycle.LiveData<Int>
+
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     suspend fun removeProduct(key: String)
 

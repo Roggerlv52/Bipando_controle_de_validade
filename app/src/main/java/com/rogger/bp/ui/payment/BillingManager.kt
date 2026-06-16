@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
+import com.android.billingclient.api.PendingPurchasesParams
 
 class BillingManager(
     private val context: Context,
@@ -23,9 +24,14 @@ class BillingManager(
     }
 
     private fun setupBillingClient() {
+        // ✅ Correção: Criação do parâmetro obrigatório exigido na v9.0.0
+        val pendingPurchasesParams = PendingPurchasesParams.newBuilder()
+            .enableOneTimeProducts() // Obrigatório para suportar transações pendentes
+            .build()
+
         billingClient = BillingClient.newBuilder(context)
             .setListener(this)
-            .enablePendingPurchases()
+            .enablePendingPurchases(pendingPurchasesParams) // Passa o parâmetro obrigatório
             .build()
 
         startConnection()
@@ -65,14 +71,21 @@ class BillingManager(
             )
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { result, productList ->
+        // ✅ Correção: O segundo parâmetro agora é "queryProductDetailsResult" (do tipo QueryProductDetailsResult)
+        billingClient.queryProductDetailsAsync(params) { result, queryProductDetailsResult ->
+            // Extraímos a lista real de produtos do objeto de resultado da v9.0.0
+            val productList = queryProductDetailsResult.productDetailsList
+
             if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null) {
                 var mensalPrice = "R$ 14,99"
                 var semestralPrice = "R$ 77,70"
 
                 for (productDetails in productList) {
-                    val price = productDetails.subscriptionOfferDetails?.getOrNull(0)
-                        ?.pricingPhases?.pricingPhaseList?.getOrNull(0)?.formattedPrice ?: ""
+                    // Chamadas explícitas de getters evitam problemas de conversão sintética de tipos
+                    val firstOffer = productDetails.getSubscriptionOfferDetails()?.getOrNull(0)
+                    val price = firstOffer?.getPricingPhases()
+                        ?.getPricingPhaseList()?.getOrNull(0)
+                        ?.getFormattedPrice() ?: ""
 
                     if (productDetails.productId == productMensalId) {
                         mensalPrice = price
@@ -89,7 +102,6 @@ class BillingManager(
             }
         }
     }
-
     /**
      * Consulta as assinaturas ativas do usuário na Play Store.
      * Retorna o productId do plano ativo, ou null se não houver assinatura.
@@ -138,10 +150,17 @@ class BillingManager(
             )
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { result, productList ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK && !productList.isNullOrEmpty()) {
-                val productDetails = productList[0]
-                val offerToken = productDetails.subscriptionOfferDetails?.getOrNull(0)?.offerToken ?: ""
+        // ✅ Correção: O segundo parâmetro agora é "queryProductDetailsResult" (do tipo QueryProductDetailsResult)
+        billingClient.queryProductDetailsAsync(params) { result, queryProductDetailsResult ->
+            // Extraímos a lista real de produtos
+            val productList = queryProductDetailsResult.productDetailsList
+
+            if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null && productList.isNotEmpty()) {
+                val productDetails = productList[0] // O indexador [0] agora funciona corretamente
+
+                val offerToken = productDetails.getSubscriptionOfferDetails()
+                    ?.getOrNull(0)
+                    ?.getOfferToken() ?: ""
 
                 val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
                     .setProductDetails(productDetails)
@@ -155,6 +174,8 @@ class BillingManager(
                 activity.runOnUiThread {
                     billingClient.launchBillingFlow(activity, billingFlowParams)
                 }
+            } else {
+                Log.e("Billing", "Falha ao consultar detalhes do produto para compra: ${result.debugMessage}")
             }
         }
     }
