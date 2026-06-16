@@ -39,12 +39,42 @@ public class GalleryFragment extends Fragment {
     private LruCache<String, Bitmap> cache;
     private RecyclerView rc;
 
-    private final ActivityResultLauncher<String> permissionLauncher =
+    // ✅ ATUALIZAÇÃO: Contrato para permissões múltiplas (suporta acesso parcial do Android 14+)
+    private final ActivityResultLauncher<String[]> permissionLauncher =
             registerForActivityResult(
-                    new ActivityResultContracts.RequestPermission(),
-                    granted -> {
-                        if (granted) {
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    result -> {
+                        boolean acessoTotalConcedido = false;
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Boolean imagensGranted = result.get(Manifest.permission.READ_MEDIA_IMAGES);
+                            acessoTotalConcedido = imagensGranted != null && imagensGranted;
+                        } else {
+                            Boolean storageGranted = result.get(Manifest.permission.READ_EXTERNAL_STORAGE);
+                            acessoTotalConcedido = storageGranted != null && storageGranted;
+                        }
+
+                        if (acessoTotalConcedido) {
+                            // Acesso total concedido: Carrega a biblioteca inteira
                             loadImagesAsync();
+                        } else {
+                            // Caso estejamos no Android 14+ e o utilizador deu acesso limitado (parcial):
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                Boolean limitadoGranted = result.get(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED);
+                                if (limitadoGranted != null && limitadoGranted) {
+                                    // Acesso limitado concedido: Carrega apenas os itens selecionados,
+                                    // mas na próxima abertura o app voltará a pedir acesso total.
+                                    loadImagesAsync();
+                                    return;
+                                }
+                            }
+
+                            // Caso o acesso tenha sido totalmente negado
+                            android.widget.Toast.makeText(
+                                    requireContext(),
+                                    "O acesso à galeria é necessário para selecionar imagens.",
+                                    android.widget.Toast.LENGTH_LONG
+                            ).show();
                         }
                     }
             );
@@ -68,26 +98,45 @@ public class GalleryFragment extends Fragment {
         checkPermissionAndLoadImages();
 
     }
+
     private void checkPermissionAndLoadImages() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14+ (API 34)
+            // Verifica se já temos acesso TOTAL à galeria
+            boolean temAcessoTotal = ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED;
 
-        String permission;
+            if (!temAcessoTotal) {
+                // Se não temos acesso total (mesmo que tenhamos acesso parcial), solicitamos AMBAS as permissões.
+                // Isso força o Android 14+ a abrir o diálogo perguntando se deseja "Selecionar mais fotos" ou "Permitir tudo".
+                permissionLauncher.launch(new String[]{
+                        Manifest.permission.READ_MEDIA_IMAGES,
+                        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+                });
+            } else {
+                loadImagesAsync();
+            }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permission = Manifest.permission.READ_MEDIA_IMAGES;
-        } else {
-            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
-        }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 (API 33)
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+            ) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(new String[]{Manifest.permission.READ_MEDIA_IMAGES});
+            } else {
+                loadImagesAsync();
+            }
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                permission
-        ) != PackageManager.PERMISSION_GRANTED) {
-
-            permissionLauncher.launch(permission);
-
-        } else {
-
-            loadImagesAsync();
+        } else { // Android 12 e inferiores
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE});
+            } else {
+                loadImagesAsync();
+            }
         }
     }
 

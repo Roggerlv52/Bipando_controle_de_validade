@@ -17,6 +17,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import com.rogger.bp.R
 import com.rogger.bp.databinding.FragmentPayBinding
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 
 class PayFragment : Fragment() {
 
@@ -222,11 +223,13 @@ class PayFragment : Fragment() {
             onSubscriptionStatusLoaded = { activeProductId ->
                 activePlanId = activeProductId
 
+                // ✅ ATUALIZAÇÃO: Grava o estado Premium com base na presença de uma assinatura ativa
+                val premiumAtivo = activeProductId != null
+                SharedPreferencesManager.setPremiumState(requireContext(), premiumAtivo)
+
                 if (activeProductId != null) {
-                    // Usuário já tem assinatura: pré-seleciona o plano ativo
                     selectPlan(activeProductId as String)
                 } else {
-                    // Sem assinatura: nenhum plano selecionado por padrão
                     selectedPlanId = null
                     updateSubscribeButton()
                 }

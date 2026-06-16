@@ -17,14 +17,17 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.rogger.bp.R
+import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentHomeBinding
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.base.CategoriaDialogUtil
-import com.rogger.bp.ui.base.Utils
+import com.rogger.bp.ui.base.DialogUtil
 import com.rogger.bp.ui.commun.DependencyInjector
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.home.ContractHome
+import com.rogger.bp.ui.home.CustomProgressBar
 import com.rogger.bp.ui.home.OnItemClickListener
 import com.rogger.bp.ui.home.presentation.HomePresenter
 import kotlinx.coroutines.launch
@@ -38,6 +41,7 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var totalDeProdutosDoUtilizador = 0
 
     override lateinit var presenter: ContractHome.Presenter
 
@@ -79,6 +83,11 @@ class HomeFragment : Fragment(), ContractHome.View {
             }
         }
         setupRecyclerView()
+        // ✅ ATUALIZAÇÃO: Escuta dinamicamente a contagem total de produtos no banco de dados local
+        val database = BpDatabase.getDatabase(requireContext())
+        database.productDao().getTotalProductsCountLiveData().observe(viewLifecycleOwner) { count ->
+            totalDeProdutosDoUtilizador = count ?: 0
+        }
         setupFab()
         observePresenterFlows()
         // ── ✅ CORREÇÃO: Lê os argumentos para aplicar filtro de categoria se houver ──
@@ -97,6 +106,7 @@ class HomeFragment : Fragment(), ContractHome.View {
         presenter.fetchCategories()
         // Se não há categoria, fetchProducts() já carregou tudo normalmente
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -134,6 +144,31 @@ class HomeFragment : Fragment(), ContractHome.View {
                         bundle
                     )
                 }
+
+                // ✅ NOVO: Exclusão múltipla de produtos pertencentes ao mesmo lote/grupo
+                override fun onHeaderDeleteClick(productsToDelete: List<PostProduct>, groupTitle: String) {
+                    val total = productsToDelete.size
+                    val mensagem = if (total == 1) {
+                        "Deseja mover o produto \"${productsToDelete.first().name}\" para a lixeira?"
+                    } else {
+                        "Deseja mover estes $total produtos de \"$groupTitle\" para a lixeira?"
+                    }
+
+                    DialogUtil.showDeleteDialog(requireContext(), mensagem) {
+                        CustomProgressBar.showLoadingDialog(requireContext())
+
+                        // Executa a deleção sequencialmente para cada item do lote
+                        productsToDelete.forEach { product ->
+                            presenter.deleteProduct(product)
+                        }
+
+                        // Temporizador simples para ocultar o progresso
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            CustomProgressBar.hideLoadingDialog()
+                            // O fluxo reativo de dados atualizará a UI automaticamente
+                        }, 1000)
+                    }
+                }
             }
         )
 
@@ -143,6 +178,15 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     private fun setupFab() {
         binding.fab.setOnClickListener {
+            val isPremium = SharedPreferencesManager.isPremium(requireContext())
+
+            // ✅ ATUALIZAÇÃO: Bloqueia com base no total absoluto (ativos + lixeira) do banco de dados
+            if (!isPremium && totalDeProdutosDoUtilizador >= 50) {
+                mostrarDialogoLimitePremium()
+                return@setOnClickListener
+            }
+
+            // Fluxo normal de abertura do diálogo de categorias
             CategoriaDialogUtil.mostrarDialogo(
                 requireContext(),
                 currentCategories,
@@ -156,13 +200,11 @@ class HomeFragment : Fragment(), ContractHome.View {
                     }
 
                     override fun onAdicionarCategoria() {
-                        // ✅ MODIFICADO: Apenas notifica o utilizador e redireciona para o ecrã de categorias
                         AlertDialog.Builder(requireContext())
                             .setTitle("Nenhuma Categoria Encontrada")
                             .setMessage("Para começar a gerir os seus produtos, é necessário criar pelo menos uma categoria. Deseja criar uma agora?")
                             .setPositiveButton("Criar Categoria") { dialog, _ ->
                                 dialog.dismiss()
-                                // Navega para o AddEditCategoryFragment utilizando a rota mapeada no grafo de navegação
                                 findNavController().navigate(R.id.nav_category)
                             }
                             .setNegativeButton("Agora não") { dialog, _ ->
@@ -182,7 +224,7 @@ class HomeFragment : Fragment(), ContractHome.View {
                     (presenter as HomePresenter).products.collect { products ->
                         if (products != null) {
                             adapterHome.setDados(products)
-                            adapterHome.ordenarPorDiferencaDeDias()
+                           // adapterHome.ordenarPorDiferencaDeDias()
                             showEmpty(products.isEmpty())
                         }
                     }
@@ -209,17 +251,32 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     override fun showProgress(enable: Boolean) {
         //if (enable) CustomProgressBar.showLoadingDialog(requireContext())
-       // else CustomProgressBar.hideLoadingDialog()
+        // else CustomProgressBar.hideLoadingDialog()
     }
 
     override fun showEmpty(isEmpty: Boolean) {
         val target = if (isEmpty) 1 else 0
         if (binding.viewFlipper.displayedChild != target) {
             binding.viewFlipper.displayedChild = target
-           // binding.txtHomeFlipper.visibility = View.VISIBLE
-           // binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
+            // binding.txtHomeFlipper.visibility = View.VISIBLE
+            // binding.txtHomeFlipper.setText(" Click em mais para adicionar item")
         } else {
         }
+    }
+
+    private fun mostrarDialogoLimitePremium() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Limite Gratuito Atingido")
+            .setMessage("Alcançou o limite máximo de 100 produtos no plano gratuito. Adquira o Plano Premium para desfrutar de capacidade ilimitada e continuar a gerir o seu inventário de forma profissional!")
+            .setPositiveButton("Ver Planos Premium") { dialog, _ ->
+                dialog.dismiss()
+                // Certifique-se de que "payFragment" ou o ID correspondente está mapeado no seu navigation graph
+                findNavController().navigate(R.id.nav_payment)
+            }
+            .setNegativeButton("Mais tarde") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     override fun onSuccess(message: String) {

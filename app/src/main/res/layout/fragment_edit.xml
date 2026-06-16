@@ -92,9 +92,7 @@
                     <EditText
                         android:id="@+id/edt_name_fragment"
                         style="@style/Theme.Bpd.EditTextNameFormat"
-                        android:autofillHints="null"
-                        android:inputType="text"
-                        tools:ignore="LabelFor" />
+                        />
                 </FrameLayout>
             </androidx.cardview.widget.CardView>
 

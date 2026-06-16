@@ -11,6 +11,20 @@ import java.util.List;
 public class SharedPreferencesManager {
     private static final String PREF_NAME = "shared_key_date";
 
+    // ✅ Guarda se o utilizador é Premium
+    public static void setPremiumState(Context context, boolean isPremium) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.putBoolean("is_premium", isPremium);
+        editor.apply();
+    }
+
+    // ✅ Retorna se o utilizador é Premium
+    public static boolean isPremium(Context context) {
+        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPre.getBoolean("is_premium", false);
+    }
+
     // Método para adicionar um valor ao SharedPreferences
     public static void sharedBeepState(Context context, String key, boolean beep) {
         SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

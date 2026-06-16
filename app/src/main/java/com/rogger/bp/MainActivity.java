@@ -1,7 +1,9 @@
 package com.rogger.bp;
 
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,6 +27,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DecodeFormat;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bp.data.database.BpDatabase;
@@ -115,6 +118,27 @@ public class MainActivity extends BaseActivity {
         // 🔥 iniciar animação
         animator = new GradientAnimator(bgView);
         animator.start();
+        BpDatabase db = BpDatabase.Companion.getDatabase(this);
+        // ── ✅ ATUALIZAÇÃO: Escuta reativa do Limite de Produtos Gratuito ──
+        TextView txtNavHeaderLimite = viewProfile.findViewById(R.id.txt_nav_header_limite);
+        if (txtNavHeaderLimite != null) {
+            db.productDao().getTotalProductsCountLiveData().observe(this, count -> {
+                int total = count != null ? count : 0;
+                boolean isPremium = SharedPreferencesManager.isPremium(this);
+
+                if (isPremium) {
+                    txtNavHeaderLimite.setText("Plano Premium Ativo (" + total + " cadastrados)");
+                    txtNavHeaderLimite.setTextColor(Color.parseColor("#4CAF50")); // Cor verde
+                } else {
+                    txtNavHeaderLimite.setText("Limite de Produtos: " + total + "/100");
+                    if (total >= 50) {
+                        txtNavHeaderLimite.setTextColor(Color.RED);
+                    } else {
+                        txtNavHeaderLimite.setTextColor(Color.GREEN);
+                    }
+                }
+            });
+        }
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(this);
         String profileUri = userInfo.get(2);
@@ -125,7 +149,7 @@ public class MainActivity extends BaseActivity {
                     .asBitmap()
                     .load(profileUri)
                     .override(128, 128)
-                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
+                    .format(DecodeFormat.PREFER_RGB_565) // Economiza 50% de memória
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_person_24)
                     .circleCrop()
@@ -193,7 +217,7 @@ public class MainActivity extends BaseActivity {
 
         // ── 3. Contagem reativa de Produtos Deletados (Lixeira) ──
         db.productDao().getDeletedProductsCountLiveData(true).observe(this, count -> {
-            Log.e("teste"," contagem "+count );
+            Log.e("teste", " contagem " + count);
             applyBadge(navigationView, deletedItem, count != null ? count : 0);
         });
     }
@@ -252,7 +276,7 @@ public class MainActivity extends BaseActivity {
 
         // Mensagem de texto amigável com o link fictício gerado dinamicamente com seu package name
         String mensagem = "Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\n" +
-                "Baixe agora na Play Store: https://play.google.com/store/apps/details?id=" + getPackageName();
+                "Baixe agora na Play Store: https://play.google.com/apps/internaltest/4701709773850642852" + getPackageName();
 
         shareIntent.putExtra(Intent.EXTRA_TEXT, mensagem);
 
@@ -261,7 +285,7 @@ public class MainActivity extends BaseActivity {
 
         try {
             startActivity(chooser);
-        } catch (android.content.ActivityNotFoundException ex) {
+        } catch (ActivityNotFoundException ex) {
             Toast.makeText(this, "Nenhum aplicativo encontrado para compartilhar.", Toast.LENGTH_SHORT).show();
         }
     }
