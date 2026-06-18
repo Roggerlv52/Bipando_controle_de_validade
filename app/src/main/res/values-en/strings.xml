@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Limit status in side navigation -->
+    <string name="premium_active_status">Premium Plan Active (%1$d registered)</string>
+    <string name="free_limit_status">Product Limit: %1$d/100</string>
+
+    <!-- App Sharing Flow -->
+    <string name="share_app_message">Check out Bipando - Expiration Date Control! Prevent product waste simply and quickly.\n\nDownload now on the Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
+    <string name="share_app_title">Share Bipando via:</string>
+    <string name="share_app_no_app_found">No app found to share.</string>
+
+    <string name="digitaliz_c_digo_de_barras">Enter barcode</string>
     <!--Notification-->
     <string name="notification_name">Product Validity</string>
     <string name="notification_title">Product expiring</string>
@@ -44,6 +54,8 @@
     <string name="shared_app">"Share"</string>
     <string name="assinatura">Signature</string>
     <string name="menu_payment">Payment</string>
+
+    <string name="logout">To go out</string>
     <!-- editTextView hint  -->
     <string name="edit_hint_name">Product name</string>
     <string name="edit_hint_notes">notes</string>

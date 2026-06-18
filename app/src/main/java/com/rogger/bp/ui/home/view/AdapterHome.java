@@ -233,17 +233,17 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // 🟠 Caso B: Próximo do vencimento / Dentro do limite de aviso (Laranja)
                 bg.setColor(Color.parseColor("#FFFBEB"));
                 dotBg.setColor(Color.parseColor("#F59E0B")); // Ponto laranja
-                hHolder.title.setTextColor(Color.parseColor("#92400E")); // Texto laranja escuro
+                hHolder.title.setTextColor(Color.parseColor("#92400E"));
                 if (diffDays == 1) {
-                    hHolder.title.setText("Vence Amanhã");
+                    hHolder.title.setText(context.getString(R.string.group_tomorrow));
                 } else {
-                    hHolder.title.setText(diffDays + " Dias");
+                    hHolder.title.setText(context.getString(R.string.group_days_left, diffDays));
                 }
             } else {
                 // 🟢 Caso C: Seguro / Afastado do limite de aviso (Verde)
                 bg.setColor(Color.parseColor("#F0FDF4"));
                 dotBg.setColor(Color.parseColor("#10B981")); // Ponto verde
-                hHolder.title.setTextColor(Color.parseColor("#065F46")); // Texto verde escuro
+                hHolder.title.setTextColor(Color.parseColor("#065F46"));
                }
 
             bg.setCornerRadius(dpToPx(10));
