@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -30,30 +29,15 @@ public class ImageUtils {
     // Passo de redução a cada iteração
     private static final int PASSO_QUALIDADE   = 10;
 
-    /**
-     * Processa a imagem vinda da galeria ou da câmera:
-     *  1. Redimensiona para no máximo MAX_DIMENSION no lado maior
-     *  2. Corrige rotação EXIF
-     *  3. Comprime de forma adaptativa até atingir menos de MAX_FILE_SIZE_BYTES
-     *
-     * Funciona para galeria (Uri de conteúdo) e câmera (Uri de arquivo).
-     */
     public static File processImage(Context context, Uri uri, File outputFile) throws Exception {
 
-        // 1. Decodifica já redimensionando (evita OutOfMemory em fotos de câmera)
         Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_DIMENSION, MAX_DIMENSION);
 
-        // 2. Redimensiona proporcionalmente se ainda ultrapassar MAX_DIMENSION
         bitmap = redimensionarSeNecessario(bitmap, MAX_DIMENSION);
 
-        // 3. Corrige rotação EXIF
         bitmap = rotateBitmapIfRequired(context, bitmap, uri);
 
-        // 4. Compressão adaptativa — reduz qualidade até caber em MAX_FILE_SIZE_BYTES
         comprimirAdaptativamente(bitmap, outputFile);
-
-        Log.d(TAG, "Imagem processada: " + outputFile.length() + " bytes"
-                + " | " + bitmap.getWidth() + "x" + bitmap.getHeight() + "px");
 
         return outputFile;
     }
@@ -80,9 +64,6 @@ public class ImageUtils {
         do {
             bos.reset();
             bitmap.compress(Bitmap.CompressFormat.JPEG, qualidade, bos);
-
-            Log.d(TAG, "Compressão qualidade=" + qualidade
-                    + " → " + bos.size() + " bytes");
 
             if (bos.size() <= MAX_FILE_SIZE_BYTES) break;
 

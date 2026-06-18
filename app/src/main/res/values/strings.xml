@@ -1,5 +1,23 @@
 <resources>
-    <string name="app_name">Bipando</string>
+    <string name="app_name" translatable="false">Bipando</string>
+    <!-- Notificação -->
+    <string name="notification_name">Validade de Produtos</string>
+    <string name="notification_title">Produto vencendo</string>
+    <string name="notification_title_2">produto vencendo</string>
+    <string name="expiration_notice">Aviso de vencimento</string>
+    <string name="notification_description">Avisos de produtos próximos ao vencimento</string>
+    <string name="notif_vencendo_body_single">\'%1$s\' está próximo do vencimento.</string>
+    <string name="notif_vencendo_body_multiple">Você tem %1$d produtos próximos do vencimento.</string>
+    <string name="notif_vencidos_title_single">Produto vencido</string>
+    <string name="notif_vencidos_title_multiple">%1$d produtos vencidos</string>
+    <string name="notif_vencidos_body_single">\'%1$s\' já venceu!</string>
+    <string name="notif_vencidos_body_multiple">Você tem %1$d produtos que já venceram!</string>
+
+    <string name="login_with_google">Faça login com o Google</string>
+
+    <string name="product_deleted_success">\"%1$s\" eliminado</string>
+    <string name="product_deleted_restored">\"%1$s\" restaurado</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -16,26 +34,19 @@
     <string name="remove_text">Removido com sucesso!</string>
     <string name="selct_date">Selecione uma data.</string>
     <string name="mesage_scanner">Esse codificador aceita (números) e (letras), digite conforme desejado.</string>
-    <string name="name_barcod_valid_">Nome do produto obrigatorio!</string>
+    <string name="name_barcode_valid_">Nome do produto obrigatorio!</string>
 
     <string name="web_site">https://www.facebook.com/roger.oliveiracharts</string>
     <string name="linkdin">https://www.linkedin.com/in/roger-de-oliveira-b980a3213</string>
     <string name="build_version">Versão (%1$s)</string>
-    <string name="dias">" Dias"</string>
-    <string name="dias_restante">" Dias restante"</string>
+
     <string name="voltar">Voltar</string>
     <string name="home">Home</string>
     <string name="enter_manual_code">Digitar codigo de barras</string>
     <string name="todo">TODO</string>
-    <string name="excluir">Excluir</string>
-    <string name="_01_jan_2020">01 JAN 2020</string>
-    <string name="_5683636373738">5683636373738</string>
-    <string name="_24_de_set_de_2024">24 de Set. de 2024</string>
-    <string name="salvar">Salvar</string>
-    <string name="test_queijo_framengo_fatiado_200g">Queijo Framengo fatiado 200g</string>
-    <string name="cofigure">Configurações</string>
-    <string name="aviso_de_vencimento">Aviso de vencimento</string>
-    <string name="scan_mute_sound">Scan mute sound</string>
+
+    <string name="_01_jan_2020" translatable="false">01 JAN 2020</string>
+    <string name="scan_mute_sound">Ativar bip</string>
     <string name="lovely_moose">Lovely Moose</string>
     <string name="product_deleted">Produto deletados</string>
     <string name="edit">Editar</string>
@@ -46,10 +57,39 @@
     <string name="controle_de_validade">Controle de validade</string>
     <string name="fazer_login_com_facebook">Fazer “login” com Facebook</string>
     <string name="digitaliz_c_digo_de_barras">Digitar código de barras</string>
-    <string name="save">Salvar</string>
-    <string name="add_category">Adicionar\n</string>
+    <!-- EditTextView hint -->
+    <string name="edit_hint_name">Nome do produto</string>
+    <string name="edit_hint_notes">Nota</string>
+    <!-- EditTextView valide -->
+    <string name="edit_validate_fields">Selecione a data de vencimento</string>
+    <string name="edit_txt_mandatory">Campo obrigatório</string>
+    <string name="edit_txt_mandatory_2">Mínimo de 4 caracteres</string>
+    <string name="edit_txt_mandatory_3">Informe um nome</string>
+
+    <!-- Button -->
+    <string name="button_save">Salvar</string>
     <string name="category"> Categorias</string>
-    <string name="add_category_">Criar nova categoria</string>
+    <string name="category_2"> Categoria</string>
+
+    <string name="toast_product_not_loaded">Produto não carregado</string>
+    <string name="toast_msg_error_invalid_product">Produto inválido — identificador ausente</string>
+    <string name="toast_msg_error_img_gallery">Erro ao processar imagem da galeria</string>
+    <string name="toast_msg_error_gallery">Erro ao processar imagem da galeria</string>
+    <string name="toast_msg_error_camera">Erro na camera</string>
+    <string name="toast_no_internet_msg">Sem ligação à Internet. Verifique a sua rede. O produto será guardado localmente.</string>
+    <string name="toast_txt_created">criada</string>
+    <string name="toast_msg_error_img">Erro ao processar imagem</string>
+    <string name="toast_txt_excluded">excluída</string>
+    <string name="toast_msg_error_access">O acesso à galeria é necessário para selecionar imagens.</string>
+    <string name="toast_msg_error_google">Falha no login com Google (código</string>
+    <string name="toast_msg_error_google_token">Não foi possível obter o token do Google.</string>
+    <string name="toast_msg_error_google_invalid_token">Token inválido. Tente novamente.</string>
+    <string name="toast_msg_error_google_invalid_token_2">Token de autenticação inválido</string>
+    <string name="toast_msg_error_google_authentication_failed">Falha na autenticação Google</string>
+    <string name="toast_msg_error_google_user_not_found">Utilizador não encontrado após autenticação</string>
+
+    <string name="category_txt_update">Categoria atualizada para</string>
+    <string name="category_txt_exists">já existe na sua lista</string>
     <string name="menu_gallery">"Galeria "</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
@@ -59,8 +99,9 @@
     <string name="menu_search">Buscar</string>
     <string name="menu_payment">Pagamento</string>
     <string name="search_hint_default">Digite um nome ou escaneie  um código de barras\n</string>
-    <string name="menu_privacy" />
-    <string name="delete_account"><b><font color="#FF0000">Atenção:</font></b>\n \nAo confirmar a <b>exclusão da conta</b>,
+    <string name="menu_privacy"/>
+
+    <string name="delete_account"><b><font color="#FF0000">Atenção:</font></b>\n \n Ao confirmar a <b>exclusão da conta</b>,
         seus dados, como itens cadastrados, serão perdidos. Esta ação não poderá ser desfeita,
 mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; Se você possui um plano ativo os dados do plano serão
         perdido e ao criar a sua conta novamente usando mesmo e-mail será necessario escolher um plano de pagamento novamente.
@@ -73,10 +114,27 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="group_tomorrow">Vence Amanhã</string>
     <string name="group_day_left">%1$d dia restante</string>
     <string name="group_days_left">%1$d dias restantes</string>
-
+    <!-- Dialog bottom -->
+    <string name="dialog_button_accept">Aceitar</string>
+    <string name="dialog_button_cancel">Cancelar</string>
+    <string name="dialog_button_not_now">Agora não</string>
+    <string name="excluir">Excluir</string>
+    <string name="dialog_button_delete_permanently">Excluir definitivamente</string>
+    <string name="dialog_button_restore">Restaurar</string>
     <!-- Diálogos de Confirmação -->
+    <string name="dialog_title_option">O que deseja fazer?</string>
+    <string name="dialog_title_no_category">No Category Found</string>
+    <string name="dialog_title">Confirmar exclusão</string>
+    <string name="dialog_title_delete_item">Item excluído</string>
+    <string name="dialog_title_delete_really">Deseja realmente excluir</string>
+    <string name="dialog_title_delete"> Deseja excluir</string>
+    <string name="dialog_title_select">selecione uma categoria</string>
+    <string name="dialog_add_category_title">Criar categoria</string>
+    <string name="dialog_msg_start_managing">Para começar a gerir os seus produtos, é necessário criar pelo menos uma categoria. Deseja criar uma agora?</string>
+
     <string name="delete_confirm_single">Deseja realmente mover o produto \"%1$s\" para a lixeira?</string>
     <string name="delete_confirm_multiple">Deseja realmente mover estes %1$d produtos de \"%2$s\" para a lixeira?</string>
+
     <string name="delete_account_confirme">Tem certeza, que deseja excluir a conta?
         \nSeus dados serão perdidos.</string>
 
@@ -87,4 +145,8 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="premium_limit_negative">Mais tarde</string>
     <string name="shared_app">"Compartilhar "</string>
     <string name="assinatura">Assinatura</string>
+
+    <!-- Spiner titulo -->
+    <string name="spinner__selected_category">Selecione uma categoria</string>
+    <string name="txt_msg_deleted">Nenhum item excluído</string>
 </resources>

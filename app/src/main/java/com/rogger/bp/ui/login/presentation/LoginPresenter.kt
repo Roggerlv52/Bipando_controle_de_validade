@@ -1,7 +1,9 @@
 package com.rogger.bp.ui.login.presentation
 
+import android.content.Context
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.rogger.bp.R
 import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.ui.login.Login
 import com.rogger.bp.ui.login.data.LoginCallback
@@ -19,16 +21,18 @@ class LoginPresenter(
 
     private val auth = FirebaseAuth.getInstance()
 
-    override fun loginWithGoogle(idToken: String,email : String) {
+    override fun loginWithGoogle(context: Context,idToken: String,email : String) {
 
         if (idToken.isBlank()) {
-            view?.onUserUnauthenticated("Token inválido. Tente novamente.")
+            view?.onUserUnauthenticated(context.getString(
+                R.string.toast_msg_error_google_invalid_token)
+            )
             return
         }
 
         view?.showProgress(true)
 
-        repository.loginWithGoogle(idToken, email,object : LoginCallback {
+        repository.loginWithGoogle(context,idToken, email,object : LoginCallback {
             override fun onSuccess(userAuth: UserAuth) {
                 view?.onUserAuthenticated(userAuth)
                 Log.e("login_google"," ${userAuth.name} \n ${userAuth.email}")

@@ -15,7 +15,6 @@ public final class MenuUtil {
     private MenuUtil() { /* utilitário estático, não instanciável */ }
 
     /**
-     * ✅ NOVA FUNÇÃO: Limpa completamente qualquer item de menu da Toolbar
      * (esconde a pesquisa, os três pontinhos, etc.) enquanto este fragmento estiver ativo.
      * O menu da atividade é restaurado automaticamente ao voltar.
      */

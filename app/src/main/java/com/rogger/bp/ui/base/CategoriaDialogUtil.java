@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.rogger.bp.R;
 import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class CategoriaDialogUtil {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Selecione uma Categoria");
+        builder.setTitle(context.getString(R.string.dialog_title_select));
 
         RecyclerView recyclerView = new RecyclerView(context);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -51,7 +52,7 @@ public class CategoriaDialogUtil {
         recyclerView.setAdapter(adapter);
 
         dialog.setView(recyclerView);
-        dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancelar",
+        dialog.setButton(AlertDialog.BUTTON_NEGATIVE, context.getText(R.string.dialog_button_cancel),
                 (d, which) -> d.dismiss());
 
         dialog.show();

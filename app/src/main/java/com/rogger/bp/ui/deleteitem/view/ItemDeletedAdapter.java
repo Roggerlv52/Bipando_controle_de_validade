@@ -51,7 +51,6 @@ public class ItemDeletedAdapter extends RecyclerView.Adapter<ItemDeletedAdapter.
     @Override
     public void onBindViewHolder(@NonNull ItemDeletedAdapter.ViewHolder holder, int position) {
         PostProduct produto = lista.get(position);
-        Log.d("ADAPTER", "Produto: " + produto.getName() + "");
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
         holder.txt_left.setText(sdf.format(new Date(produto.getTimestamp())));

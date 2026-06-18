@@ -72,7 +72,9 @@ public class GalleryFragment extends Fragment {
                             // Caso o acesso tenha sido totalmente negado
                             android.widget.Toast.makeText(
                                     requireContext(),
-                                    "O acesso à galeria é necessário para selecionar imagens.",
+                                    requireContext().getString(
+                                            R.string.toast_msg_error_access
+                                    ),
                                     android.widget.Toast.LENGTH_LONG
                             ).show();
                         }

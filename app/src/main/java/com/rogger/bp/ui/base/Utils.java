@@ -15,7 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class Utils {
 
@@ -141,23 +140,23 @@ public class Utils {
                         day
                 );
 
-        datePickerDialog.setTitle("Selecione a data de vencimento");
+        datePickerDialog.setTitle(context.getString(R.string.edit_validate_fields));
         datePickerDialog.show();
     }
 
-    public static boolean validEditText(EditText editText) {
+    public static boolean validEditText(EditText editText,Context c) {
         if (editText == null) return false;
 
         String texto = editText.getText().toString().trim();
 
         if (texto.isEmpty()) {
-            editText.setError("Campo obrigatório");
+            editText.setError(c.getString(R.string.edit_txt_mandatory));
             editText.requestFocus();
             return false;
         }
 
         if (texto.length() < 4) {
-            editText.setError("Mínimo de 4 caracteres");
+            editText.setError(c.getString(R.string.edit_txt_mandatory_2));
             editText.requestFocus();
             return false;
         }
@@ -177,7 +176,7 @@ public class Utils {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setCancelable(false)
-                .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
+                .setNegativeButton(context.getString(R.string.dialog_button_cancel), (d, which) -> d.dismiss())
                 .setPositiveButton("OK", null) // controla manualmente
                 .create();
 
@@ -188,12 +187,12 @@ public class Utils {
                 String nome = edtNome.getText().toString().trim();
 
                 if (nome.isEmpty()) {
-                    edtNome.setError("Informe um nome");
+                    edtNome.setError(context.getString(R.string.edit_txt_mandatory_3));
                     return;
                 }
 
                 if (nome.length() < 4) {
-                    edtNome.setError("Mínimo 4 caracteres");
+                    edtNome.setError(context.getString(R.string.edit_txt_mandatory_2));
                     return;
                 }
 

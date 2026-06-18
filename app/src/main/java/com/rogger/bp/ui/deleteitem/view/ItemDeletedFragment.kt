@@ -29,7 +29,6 @@ class ItemDeletedFragment : Fragment(R.layout.fragment_item_deleted), DeletedIte
     private var _binding: FragmentItemDeletedBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: ItemDeletedAdapter
-    //private lateinit var repository: DeleteItemRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,13 +60,23 @@ class ItemDeletedFragment : Fragment(R.layout.fragment_item_deleted), DeletedIte
 
     private fun mostrarDialogo(item: PostProduct) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Item deletado")
-            .setMessage("O que deseja fazer?")
-            .setNegativeButton("Cancelar", null)
-            .setNeutralButton("Restaurar") { _, _ ->
+            .setTitle(requireContext().getString(
+                R.string.dialog_title_delete_item
+            ))
+            .setMessage(requireContext().getString(
+                R.string.dialog_title_option
+            ))
+            .setNegativeButton(requireContext().getString(
+                R.string.dialog_button_cancel
+            ), null)
+            .setNeutralButton(requireContext().getString(
+                R.string.dialog_button_restore
+            )) { _, _ ->
                 presenter.restoreItem(item)
             }
-            .setPositiveButton("Excluir definitivamente") { _, _ ->
+            .setPositiveButton(requireContext().getString(
+                R.string.dialog_button_delete_permanently
+            )) { _, _ ->
                 presenter.deletePermanently(item)
                 if (!item.imageUri.isNullOrEmpty()) {
                     ImagePikerUtil.cleanUpTempFiles(File(item.imageUri))

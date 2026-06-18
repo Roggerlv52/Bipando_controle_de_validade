@@ -34,10 +34,10 @@ public class NotificationUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Validade de Produtos",
+                    c.getString(R.string.notification_name),
                     NotificationManager.IMPORTANCE_DEFAULT
             );
-            channel.setDescription("Avisos de produtos próximos ao vencimento");
+            channel.setDescription(c.getString(R.string.notification_description));
             channel.enableVibration(true);
 
             NotificationManager nm = c.getSystemService(NotificationManager.class);
@@ -83,12 +83,12 @@ public class NotificationUtil {
         // Garante que o canal existe antes de notificar
         createChannel(c);
         String title = produtos.size() == 1
-                ? "Produto vencendo"
-                : produtos.size() + " produtos vencendo";
+                ? c.getString(R.string.notification_title)
+                : produtos.size() + " "+c.getString(R.string.notification_title_2);
 
         String body = produtos.size() == 1
-                ? "'" + produtos.get(0).getName() + "' está próximo do vencimento."
-                : "Você tem " + produtos.size() + " produtos próximos do vencimento.";
+                ? c.getString(R.string.notif_vencendo_body_single, produtos.get(0).getName())
+                : c.getString(R.string.notif_vencendo_body_multiple, produtos.size());
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_bp_logo_small)
@@ -117,12 +117,13 @@ public class NotificationUtil {
         // Garante que o canal existe antes de notificar
         createChannel(c);
         String title = produtos.size() == 1
-                ? "Produto vencido"
-                : produtos.size() + " produtos vencidos";
+                ? c.getString(R.string.notif_vencidos_title_single)
+                : c.getString(R.string.notif_vencidos_title_multiple, produtos.size());
 
+        // ✅ ATUALIZAÇÃO SÉNIOR: Corpo traduzido e formatado dinamicamente
         String body = produtos.size() == 1
-                ? "'" + produtos.get(0).getName() + "' já venceu!"
-                : "Você tem " + produtos.size() + " produtos que já venceram!";
+                ? c.getString(R.string.notif_vencidos_body_single, produtos.get(0).getName())
+                : c.getString(R.string.notif_vencidos_body_multiple, produtos.size());
 
         Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_bp_logo_small)

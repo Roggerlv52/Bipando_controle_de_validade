@@ -72,12 +72,6 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.diasLimiteAmarelo = diasLimiteAmarelo > 0 ? diasLimiteAmarelo : 10;
     }
 
-    public void clear() {
-        rawProducts.clear();
-        displayItems.clear();
-        notifyDataSetChanged();
-    }
-
     @SuppressLint("NotifyDataSetChanged")
     public void setDados(List<PostProduct> dados) {
         this.rawProducts = dados != null ? dados : new ArrayList<>();
@@ -105,18 +99,23 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int color;
 
             if (diffDays < 0) {
-                title = "Expired";
+                title = context.getString(R.string.group_expired);
                 color = Color.parseColor("#FDF2F2"); // Vermelho suave
             } else if (diffDays == 0) {
-                title = "Vence Hoje";
+                title = context.getString(R.string.group_today);
                 color = Color.parseColor("#FFFBEB"); // Laranja suave
             } else if (diffDays == 1) {
                 // ✅ NOVO: Grupo específico para vencer amanhã
-                title = "Vence Amanhã";
+                title = context.getString(R.string.group_tomorrow);
                 color = Color.parseColor("#FFFBEB"); // Laranja suave (Atenção)
             } else {
-                // ✅ CORREÇÃO: Ajuste do plural de "dia restante" para "dias restantes"
-                title = diffDays + " dias restantes";
+
+                if (diffDays == 1) {
+                    title = context.getString(R.string.group_day_left, diffDays);
+                } else {
+                    title = context.getString(R.string.group_days_left, diffDays);
+                }
+
                 if (diffDays <= diasLimiteAmarelo) {
                     color = Color.parseColor("#FFFBEB"); // Laranja suave (Atenção)
                 } else {

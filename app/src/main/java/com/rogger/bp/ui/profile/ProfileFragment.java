@@ -190,7 +190,6 @@ public class ProfileFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull String message) {
                         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
-                        Log.e("ProfileFragment", "Erro -> " + message);
                     }
 
                     @Override

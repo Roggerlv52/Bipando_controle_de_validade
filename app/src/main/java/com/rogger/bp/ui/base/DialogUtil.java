@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.base;
 
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -8,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.rogger.bp.R;
 import com.rogger.bp.data.model.PostCategory;
 
 import java.util.List;
@@ -22,26 +24,6 @@ public class DialogUtil {
         void onSelected(PostCategory categoria);
     }
 
-    public static void showConfirmDialog(
-            @NonNull Context context,
-            @NonNull String mensagem,
-            @NonNull OnConfirmListener listener
-    ) {
-        new AlertDialog.Builder(context)
-                .setTitle("Confirmação")
-                .setMessage(mensagem)
-                .setCancelable(false)
-                .setPositiveButton("Confirmar", (dialog, which) -> {
-                    dialog.dismiss();
-                    listener.onConfirm();
-                })
-                .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
-                .show();
-    }
-
-    /**
-     * Dialog padrão de confirmação para deletar item
-     */
     public static void showDeleteDialog(
             @NonNull Context context,
             @NonNull String mensagem,
@@ -49,14 +31,14 @@ public class DialogUtil {
     ) {
 
         new AlertDialog.Builder(context)
-                .setTitle("Confirmar exclusão")
+                .setTitle(context.getString(R.string.dialog_title))
                 .setMessage(mensagem)
                 .setCancelable(false)
-                .setPositiveButton("Excluir", (dialog, which) -> {
+                .setPositiveButton(context.getString(R.string.excluir), (dialog, which) -> {
                     dialog.dismiss();
                     listener.onConfirm();
                 })
-                .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -79,11 +61,11 @@ public class DialogUtil {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(layout)
                 .setCancelable(true)
-                .setPositiveButton("Aceitar", (dialogInterface, which) -> {
+                .setPositiveButton(context.getString(R.string.dialog_bottom_accept), (dialogInterface, which) -> {
                     dialogInterface.dismiss();
                     listener.onConfirm();
                 })
-                .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
+                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), (d, which) -> d.dismiss())
                 .create();
 
         dialog.show();
@@ -100,11 +82,9 @@ public class DialogUtil {
         }
 
         new AlertDialog.Builder(context)
-                .setTitle("Selecione uma categoria")
-                .setItems(nomes, (dialog, which) -> {
-                    callback.onSelected(categorias.get(which));
-                })
-                .setNegativeButton("Cancelar", null)
+                .setTitle(context.getString(R.string.dialog_title_select))
+                .setItems(nomes, (dialog, which) -> callback.onSelected(categorias.get(which)))
+                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), null)
                 .show();
     }
 }

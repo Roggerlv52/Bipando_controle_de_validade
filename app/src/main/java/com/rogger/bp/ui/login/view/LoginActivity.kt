@@ -149,15 +149,16 @@ class LoginActivity : BaseActivity(), Login.View {
             val idToken = account.idToken
             if (idToken == null) {
                 showProgress(false)
-                onUserUnauthenticated("Não foi possível obter o token do Google")
+                onUserUnauthenticated(this.getString(R.string.toast_msg_error_google_token))
                 return
             }
 
-            Log.d(TAG, "idToken obtido — autenticando no Firebase")
-            presenter.loginWithGoogle(idToken, account.email.toString())
+            presenter.loginWithGoogle(this,idToken, account.email.toString())
         } catch (e: ApiException) {
             showProgress(false)
-            onUserUnauthenticated("Falha no login com Google (código ${e.statusCode})")
+            onUserUnauthenticated("${
+                this.getString(R.string.toast_msg_error_google)
+            } ${e.statusCode})")
         }
     }
 

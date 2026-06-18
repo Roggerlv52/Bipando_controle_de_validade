@@ -1,10 +1,12 @@
 package com.rogger.bp.ui.login.data
 
+import android.content.Context
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.rogger.bp.R
 import com.rogger.bp.data.model.UserAuth
 
 /*
@@ -18,10 +20,12 @@ class FireDataSource : LoginDataSource {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    override fun login(idToken: String, email: String, callback: LoginCallback) {
+    override fun login(context: Context,idToken: String, email: String, callback: LoginCallback) {
 
         if (idToken.isBlank()) {
-            callback.onFailure("Token de autenticação inválido")
+            callback.onFailure(context.getString(
+                R.string.toast_msg_error_google_invalid_token_2
+            ))
             callback.onComplete()
             return
         }
@@ -32,8 +36,8 @@ class FireDataSource : LoginDataSource {
             .addOnCompleteListener { task ->
 
                 if (!task.isSuccessful) {
-                    val msg = task.exception?.message ?: "Falha na autenticação Google"
-                    Log.e(TAG, "signInWithCredential falhou: $msg")
+                    val msg = task.exception?.message ?: context.getString(
+                        R.string.toast_msg_error_google_authentication_failed)
                     callback.onFailure(msg)
                     callback.onComplete()
                     return@addOnCompleteListener
@@ -41,7 +45,9 @@ class FireDataSource : LoginDataSource {
 
                 val user = auth.currentUser
                 if (user == null) {
-                    callback.onFailure("Utilizador não encontrado após autenticação")
+                    callback.onFailure(context.getString(
+                        R.string.toast_msg_error_google_user_not_found
+                    ))
                     callback.onComplete()
                     return@addOnCompleteListener
                 }
@@ -69,12 +75,11 @@ class FireDataSource : LoginDataSource {
                             name = userName,
                             email = finalEmail,
                             password = "",
-                            photoUri = user.photoUrl   // android.net.Uri directo do FirebaseUser
+                            photoUri = user.photoUrl
                         )
                         callback.onSuccess(userAuth)
                     }
                     .addOnFailureListener { exception ->
-                        Log.e(TAG, "Erro ao salvar no Firestore: ${exception.message}")
                         val userAuth = UserAuth(
                             uuid = uid,
                             name = userName,

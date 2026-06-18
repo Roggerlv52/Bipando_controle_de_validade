@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.rogger.bp.ui.deleteitem.ItemDeletedFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
    <ViewFlipper
        android:id="@+id/view_flipper"
@@ -42,7 +41,7 @@
              android:layout_height="wrap_content"
              android:padding="10dp"
              android:textColor="@color/gray"
-             android:text="Nenhum item excluído" />
+             android:text="@string/txt_msg_deleted" />
 
       </LinearLayout>
    </ViewFlipper>

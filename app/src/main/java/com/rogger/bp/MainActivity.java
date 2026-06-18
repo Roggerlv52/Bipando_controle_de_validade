@@ -242,9 +242,7 @@ public class MainActivity extends BaseActivity {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
-        if (id == R.id.menu_add_category) {
 
-        }
         return super.onOptionsItemSelected(item);
     }
 

@@ -126,23 +126,41 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     }
 
     private fun openCreateDialog() {
-        Utils.dialogCategory(requireContext(), "Criar categoria") { nome ->
+        Utils.dialogCategory(
+            requireContext(),
+            requireContext().getString(R.string.dialog_add_category_title)
+        ) { nome ->
             presenter.create(PostCategory(name = nome))
         }
     }
 
     private fun openEditDialog(category: PostCategory) {
-        Utils.dialogCategory(requireContext(), "Editar \"${category.name}\"") { novoNome ->
+        Utils.dialogCategory(
+            requireContext(),
+            requireContext().getString(R.string.edit) + "\"${category.name}\""
+        ) { novoNome ->
             presenter.update(category.copy(name = novoNome))
         }
     }
 
     private fun confirmDeleteSelected(mode: ActionMode) {
-        val selecionadas = adapter.getSelecionadas()
+        val selecionadas = adapter.selecionadas
         val mensagem = if (selecionadas.size == 1)
-            "Deseja excluir \"${selecionadas.first().name}\"?"
+            "${
+                requireContext().getString(
+                    R.string.dialog_title_delete
+                )
+            } \"${selecionadas.first().name}\"?"
         else
-            "Deseja excluir ${selecionadas.size} categorias?"
+            "${
+                requireContext().getString(
+                    R.string.dialog_title_delete
+                )
+            } ${selecionadas.size} ${
+                requireContext().getString(
+                    R.string.category
+                )
+            }?"
 
         DialogUtil.showDeleteDialog(requireContext(), mensagem) {
             presenter.deleteMultiple(selecionadas)
@@ -175,7 +193,6 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
     override fun showProgress(enable: Boolean) {
         binding.progressCategory.visibility = if (enable) View.VISIBLE else View.GONE
-       // binding.recyclerViewCategory.isEnabled = !enable
     }
 
     override fun showEmpty(isEmpty: Boolean) {
@@ -190,7 +207,9 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     override fun onCategoryExists(category: PostCategory) {
         Snackbar.make(
             binding.root,
-            "\"${category.name}\" já existe na sua lista",
+            "\"${category.name}\" ${
+                requireContext().getString(R.string.category_txt_exists)
+            }",
             Snackbar.LENGTH_LONG
         ).show()
     }
@@ -200,15 +219,31 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
     }
 
     override fun onCategoryCreated(category: PostCategory) {
-        onSuccess("Categoria \"${category.name}\" criada")
+        onSuccess(
+            "${
+                requireContext().getString(R.string.category_2)
+            } \"${category.name}\" ${
+                requireContext().getString(R.string.toast_txt_created)
+            }"
+        )
     }
 
     override fun onCategoryUpdated(category: PostCategory) {
-        onSuccess("Categoria atualizada para \"${category.name}\"")
+        onSuccess(
+            "${
+                requireContext().getString(R.string.category_txt_update)
+            } \"${category.name}\""
+        )
     }
 
     override fun onCategoryDeleted(category: PostCategory) {
-        onSuccess("Categoria \"${category.name}\" excluída")
+        onSuccess(
+            "${
+                requireContext().getString(R.string.category_2)
+            } \"${category.name}\" ${
+                requireContext().getString(R.string.toast_txt_excluded)
+            }"
+        )
     }
 
     override fun onDestroyView() {

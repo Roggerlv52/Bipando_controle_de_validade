@@ -37,7 +37,7 @@
         <item name="android:scrollbars">vertical</item>
         <item name="android:maxLines">3</item>
         <item name="android:background">@drawable/custom_edt_text</item>
-        <item name="android:hint">Nome produto</item>
+        <item name="android:hint">@string/edit_hint_name</item>
         <item name="android:paddingEnd">5dp</item>
         <item name="android:paddingStart">60dp</item>
         <item name="android:textSize">20dp</item>
@@ -46,7 +46,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">50dp</item>
         <item name="android:background">@drawable/custom_edt_text</item>
-        <item name="android:hint">Nota</item>
+        <item name="android:hint">@string/edit_hint_notes</item>
         <item name="android:paddingStart">14dp</item>
 		<item name="android:textColor">@color/gray</item>
         <item name="android:textSize">20dp</item>

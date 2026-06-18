@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.login
 
+import android.content.Context
 import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.ui.base.BasePresenter
 import com.rogger.bp.ui.base.BaseView
@@ -11,7 +12,7 @@ import com.rogger.bp.ui.base.BaseView
  */
 interface Login {
     interface Presenter : BasePresenter {
-        fun loginWithGoogle(idToken: String,email : String)
+        fun loginWithGoogle(context: Context, idToken: String, email : String)
         fun checkSession(): Boolean
     }
 

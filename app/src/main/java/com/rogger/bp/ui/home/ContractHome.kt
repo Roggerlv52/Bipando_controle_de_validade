@@ -24,7 +24,7 @@ interface ContractHome {
   fun showProgress(enable: Boolean)
   // fun showProducts(products: List<PostProduct>) // Removido, a View observará o Flow diretamente
   fun showEmpty(isEmpty: Boolean)
-  fun onSuccess(message: String)
+  fun onSuccess(name: String)
   fun onError(message: String)
   // fun showCategories(categories: List<PostCategory>) // Removido, a View observará o Flow diretamente
   fun onProductDeleted(product: PostProduct)

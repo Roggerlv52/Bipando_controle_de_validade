@@ -86,7 +86,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Sign in with Google"
+                        android:text="@string/login_with_google"
                         android:textColor="@color/google_btn_text"
                         android:textSize="14sp" />
 

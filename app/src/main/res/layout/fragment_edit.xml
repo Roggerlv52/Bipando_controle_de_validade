@@ -184,7 +184,7 @@
             <Button
                 android:id="@+id/btn_fgm_save"
                 style="@style/Theme.Bpd.FormatButtom"
-                android:text="@string/save" />
+                android:text="@string/button_save" />
         </LinearLayout>
     </ScrollView>
 

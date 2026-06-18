@@ -1,7 +1,6 @@
 package com.rogger.bp.notification;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -46,10 +45,6 @@ public class NotificationScheduler {
                 .addTag(TAG)
                 .build();
 
-        long minutesUntilRun = initialDelay / 60_000;
-        Log.d(TAG, "Agendando para " + hour + ":" + String.format("%02d", minute)
-                + ". Próximo disparo em " + minutesUntilRun + " minuto(s).");
-
         // CANCEL_AND_REENQUEUE garante que o initialDelay calculado acima
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
                 WORK_NAME,
@@ -62,7 +57,6 @@ public class NotificationScheduler {
      * Cancela o agendamento de notificações.
      */
     public static void stop(Context c) {
-        Log.d(TAG, "Cancelando agendamento de notificações.");
         WorkManager.getInstance(c).cancelUniqueWork(WORK_NAME);
     }
 

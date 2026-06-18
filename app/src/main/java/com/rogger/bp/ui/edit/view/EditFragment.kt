@@ -108,13 +108,17 @@ class EditFragment : Fragment(), ContractEdit.View {
                     novaImagemFile = ImageUtils.processImage(requireContext(), imageUri, imageFile)
                     showImageView(novaImagemFile!!.absolutePath)
                 } catch (e: Exception) {
-                    onError(e.message ?: "Erro ao processar imagem")
+                    onError(e.message ?: requireContext().getString(
+                        R.string.toast_msg_error_img
+                    ))
                 }
             }
 
             override fun onCancel() {}
             override fun onError(e: Exception) {
-                onError(e.message ?: "Erro na câmera")
+                onError(e.message ?:requireContext().getString(
+                    R.string.toast_msg_error_camera
+                ))
             }
         })
     }
@@ -130,7 +134,9 @@ class EditFragment : Fragment(), ContractEdit.View {
                 novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
                 showImageView(novaImagemFile!!.absolutePath)
             } catch (e: Exception) {
-                onError(e.message ?: "Erro ao processar imagem da galeria")
+                onError(e.message ?: requireContext().getString(
+                    R.string.toast_msg_error_img_gallery
+                ))
             }
 
         }
@@ -214,7 +220,9 @@ class EditFragment : Fragment(), ContractEdit.View {
         val productBundle = arguments?.getParcelable("product_bundle") as? PostProduct
 
         if (docId.isNullOrBlank()) {
-            onError("Produto inválido — identificador ausente")
+            onError(
+                requireContext().getString(R.string.toast_msg_error_invalid_product)
+            )
             return
         }
 
@@ -225,8 +233,10 @@ class EditFragment : Fragment(), ContractEdit.View {
     }
 
     private fun salvarProduto() {
-        if (!Utils.validEditText(binding.edtNameFragment)) return
-        val p = produto ?: run { onError("Produto não carregado"); return }
+        if (!Utils.validEditText(binding.edtNameFragment,requireContext())) return
+        val p = produto ?: run { onError(
+            requireContext().getString(R.string.toast_product_not_loaded)
+        ); return }
 
         val atualizado = p.copy(
             name = binding.edtNameFragment.text.toString().trim(),
@@ -240,7 +250,9 @@ class EditFragment : Fragment(), ContractEdit.View {
 
     private fun confirmarDelete() {
         val p = produto ?: return
-        DialogUtil.showDeleteDialog(requireContext(), "Deseja realmente excluir \"${p.name}\"?") {
+        DialogUtil.showDeleteDialog(requireContext(), "${
+            requireContext().getString(R.string.dialog_title_delete_really)
+        } \"${p.name}\"?") {
             presenter.deleteProduct(p)
         }
     }
@@ -297,7 +309,9 @@ class EditFragment : Fragment(), ContractEdit.View {
     override fun showCategories(categories: List<PostCategory>) {
         listaCategorias = categories
 
-        val nomes = mutableListOf("Selecione uma categoria")
+        val nomes = mutableListOf(
+            requireContext().getString(R.string.spinner__selected_category)
+        )
         nomes.addAll(categories.map { it.name })
 
         binding.spinnerEdit.adapter = ArrayAdapter(
@@ -318,12 +332,10 @@ class EditFragment : Fragment(), ContractEdit.View {
                 handlerProgressBa()
             } else {
                 // Online
-                //ToastCustom.showCustomToast(requireContext(), "Removido com sucesso!")
                 handlerProgressBa()
             }
         } else {
             // Se for alteração de qualquer outro campo (nome, data, etc.)
-            //ToastCustom.showCustomToast(requireContext(), "Alterado com sucesso!")
             handlerProgressBa()
         }
     }

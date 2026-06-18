@@ -96,7 +96,9 @@ class HomeFragment : Fragment(), ContractHome.View {
 
         if (categoryId.isNotEmpty()) {
             // Atualiza o título da Toolbar para mostrar que a categoria está ativa
-            (activity as? AppCompatActivity)?.supportActionBar?.title = "Categoria: $categoryNome"
+            (activity as? AppCompatActivity)?.supportActionBar?.title = "${
+                requireContext().getString(R.string.category)
+            }: $categoryNome"
             presenter.fetchProductsByCategory(categoryId)
         } else {
             // Comportamento normal caso venha do menu lateral direto
@@ -147,9 +149,9 @@ class HomeFragment : Fragment(), ContractHome.View {
                 override fun onHeaderDeleteClick(productsToDelete: List<PostProduct>, groupTitle: String) {
                     val total = productsToDelete.size
                     val mensagem = if (total == 1) {
-                        "Deseja mover o produto \"${productsToDelete.first().name}\" para a lixeira?"
+                        getString(R.string.delete_confirm_single, productsToDelete.first().name)
                     } else {
-                        "Deseja mover estes $total produtos de \"$groupTitle\" para a lixeira?"
+                        getString(R.string.delete_confirm_multiple, total, groupTitle)
                     }
 
                     DialogUtil.showDeleteDialog(requireContext(), mensagem) {
@@ -193,19 +195,20 @@ class HomeFragment : Fragment(), ContractHome.View {
                     override fun onCategoriaSelecionada(categoriaId: String) {
                         val nome = currentCategories
                             .firstOrNull { it.firestoreId == categoriaId }?.name ?: ""
-                        Log.e("Home_fragment", " categoria id ${categoriaId} name:${nome}")
                         navegarParaScanner(categoriaId, nome)
                     }
 
                     override fun onAdicionarCategoria() {
                         AlertDialog.Builder(requireContext())
-                            .setTitle("Nenhuma Categoria Encontrada")
-                            .setMessage("Para começar a gerir os seus produtos, é necessário criar pelo menos uma categoria. Deseja criar uma agora?")
-                            .setPositiveButton("Criar Categoria") { dialog, _ ->
+                            .setTitle(getString(R.string.dialog_title_no_category))
+                            .setMessage(getString(R.string.dialog_msg_start_managing))
+                            .setPositiveButton(getString(R.string.dialog_add_category_title)) { dialog, _ ->
                                 dialog.dismiss()
                                 findNavController().navigate(R.id.nav_category)
                             }
-                            .setNegativeButton("Agora não") { dialog, _ ->
+                            .setNegativeButton(getString(
+                                R.string.dialog_button_not_now
+                            )) { dialog, _ ->
                                 dialog.dismiss()
                             }
                             .show()
@@ -258,22 +261,23 @@ class HomeFragment : Fragment(), ContractHome.View {
 
     private fun mostrarDialogoLimitePremium() {
         AlertDialog.Builder(requireContext())
-            .setTitle("Limite Gratuito Atingido")
-            .setMessage("Alcançou o limite máximo de 100 produtos no plano gratuito. Adquira o Plano Premium para desfrutar de capacidade ilimitada e continuar a gerir o seu inventário de forma profissional!")
-            .setPositiveButton("Ver Planos Premium") { dialog, _ ->
+            .setTitle(getString(R.string.premium_limit_title))
+            .setMessage(getString(R.string.premium_limit_message))
+            .setPositiveButton(getString(R.string.premium_limit_positive)) { dialog, _ ->
                 dialog.dismiss()
-                // Certifique-se de que "payFragment" ou o ID correspondente está mapeado no seu navigation graph
                 findNavController().navigate(R.id.nav_payment)
             }
-            .setNegativeButton("Mais tarde") { dialog, _ ->
+            .setNegativeButton(getString(R.string.premium_limit_negative)) { dialog, _ ->
                 dialog.dismiss()
             }
             .show()
     }
 
-    override fun onSuccess(message: String) {
+    override fun onSuccess(name: String) {
         val b = _binding ?: return
-        Snackbar.make(b.root, message, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(b.root,
+            getString(R.string.product_deleted_success, name),
+            Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onError(message: String) {
@@ -282,10 +286,10 @@ class HomeFragment : Fragment(), ContractHome.View {
     }
 
     override fun onProductDeleted(product: PostProduct) {
-        onSuccess("\"${product.name}\" eliminado")
+        onSuccess(getString(R.string.product_deleted_success, product.name))
     }
 
     override fun onProductRestored(product: PostProduct) {
-        onSuccess("\"${product.name}\" restaurado")
+        onSuccess(getString(R.string.product_deleted_restored, product.name))
     }
 }

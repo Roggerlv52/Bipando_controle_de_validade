@@ -1,5 +1,7 @@
 package com.rogger.bp.ui.login.data
 
+import android.content.Context
+
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 14/05/2026
@@ -7,9 +9,8 @@ package com.rogger.bp.ui.login.data
  */
 class LoginRepository(private val dataSource: LoginDataSource) {
 
-    fun loginWithGoogle(idToken: String, email: String, callback: LoginCallback) {
-        // idToken é passado como 'email' para respeitar a interface existente
-        dataSource.login(idToken, email, callback = callback)
+    fun loginWithGoogle(context: Context,idToken: String, email: String, callback: LoginCallback) {
+        dataSource.login(context,idToken, email, callback = callback)
     }
 
 }

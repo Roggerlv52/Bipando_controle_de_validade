@@ -120,11 +120,12 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
                     remoteImageUri = null
                     showLocalImage(photoFile!!)
                 } catch (e: Exception) {
-                    onFailure(e.message ?: "Erro ao processar imagem")
+                    onFailure(e.message ?: requireContext().getString(R.string.toast_msg_error_img))
                 }
             }
             override fun onCancel() {}
-            override fun onError(e: Exception) { onFailure(e.message ?: "Erro na câmera") }
+            override fun onError(e: Exception) { onFailure(e.message ?:
+            requireContext().getString(R.string.toast_msg_error_camera)) }
         })
     }
 
@@ -137,7 +138,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
                 remoteImageUri = null
                 showLocalImage(photoFile!!)
             } catch (e: Exception) {
-                onFailure(e.message ?: "Erro ao processar imagem da galeria")
+                onFailure(e.message ?: requireContext().getString(R.string.toast_msg_error_gallery))
             }
         }
     }
@@ -224,18 +225,17 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
     private fun saveProduct() {
         val nome = binding.edtNameFragmentAdd.text.toString().trim()
-        if (!Utils.validEditText(binding.edtNameFragmentAdd)) return
+        if (!Utils.validEditText(binding.edtNameFragmentAdd,requireContext())) return
 
         // ── VERIFICAÇÃO DE LIGAÇÃO À INTERNET ──
         if (!NetworkUtils.isNetworkAvailable()) {
             Toast.makeText(
                 requireContext(),
-                "Sem ligação à Internet. Verifique a sua rede. O produto será guardado localmente.",
+                requireContext().getString(R.string.toast_no_internet_msg),
                 Toast.LENGTH_LONG
             ).show()
         }
 
-        // 👉 Permite salvar sem foto: se photoFile e remoteImageUri forem nulos, a URI será vazia ("")
         val imageUri: Uri = when {
             remoteImageUri != null -> Uri.parse(remoteImageUri)
             photoFile != null      -> Uri.fromFile(photoFile)
@@ -295,20 +295,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun goToHome() {
-        if (!NetworkUtils.isNetworkAvailable()) {
-            Toast.makeText(
-                requireContext(),
-                "Produto guardado offline com sucesso!",
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            Toast.makeText(
-                requireContext(),
-                "Produto guardado com sucesso!",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
         CustomProgressBar.showLoadingDialog(requireContext())
         Handler(Looper.getMainLooper()).postDelayed({
             CustomProgressBar.hideLoadingDialog()
@@ -319,7 +305,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     override fun showCategories(categories: List<PostCategory>) {
         listaCategorias = categories
 
-        val nomes = mutableListOf("Selecione uma categoria")
+        val nomes = mutableListOf(
+            requireContext().getString(R.string.spinner__selected_category)
+        )
         nomes.addAll(categories.map { it.name })
 
         val adapter = ArrayAdapter(

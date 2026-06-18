@@ -72,6 +72,7 @@ class HomePresenter(
 
     override fun fetchProductsByCategory(categoryId: String) {
         if (categoryId.isEmpty()) {
+
             view?.onError("Categoria inválida")
             return
         }
@@ -99,7 +100,7 @@ class HomePresenter(
 
         repository.delete(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
-                view?.onSuccess("\"${p.name}\" eliminado")
+                view?.onSuccess(p.name)
             }
 
             override fun onFailure(message: String) {
@@ -118,7 +119,7 @@ class HomePresenter(
 
         repository.restore(product, object : HomeCallback {
             override fun onSuccess(p: PostProduct) {
-                view?.onSuccess("\"${p.name}\" restaurado")
+                view?.onSuccess(p.name)
             }
 
             override fun onFailure(message: String) {

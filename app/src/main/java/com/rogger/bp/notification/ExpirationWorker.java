@@ -2,7 +2,6 @@ package com.rogger.bp.notification;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
@@ -30,16 +29,13 @@ public class ExpirationWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.d(TAG, "Worker iniciado — verificando validade dos produtos.");
 
         String userId = obterUserId();
 
         if (userId == null || userId.isEmpty()) {
-            Log.w(TAG, "userId não disponível. Worker encerrado sem verificar.");
             return Result.success();
         }
 
-        Log.d(TAG, "Verificando produtos para userId: " + userId);
 
         // ── ✅ CORREÇÃO CRÍTICA: Carrega e filtra os produtos do Room offline ──
         BpDatabase database = BpDatabase.Companion.getDatabase(getApplicationContext());
@@ -57,7 +53,6 @@ public class ExpirationWorker extends Worker {
         }
 
         if (produtos.isEmpty()) {
-            Log.d(TAG, "Nenhum produto ativo encontrado no Room para este usuário.");
             return Result.success();
         }
 
@@ -70,7 +65,6 @@ public class ExpirationWorker extends Worker {
         long hojeMs = calHoje.getTimeInMillis();
 
         int diasAlerta = NotificationPrefs.getDays(getApplicationContext());
-        Log.d(TAG, "Dias de alerta configurados: " + diasAlerta);
 
         List<PostProduct> vencidos  = new ArrayList<>();
         List<PostProduct> vencendo  = new ArrayList<>();
@@ -97,9 +91,6 @@ public class ExpirationWorker extends Worker {
             }
         }
 
-        Log.d(TAG, "Resultado: " + vencidos.size() + " vencido(s), "
-                + vencendo.size() + " vencendo.");
-
         if (!vencendo.isEmpty()) {
             NotificationUtil.showVencendo(getApplicationContext(), vencendo);
         }
@@ -115,7 +106,6 @@ public class ExpirationWorker extends Worker {
         // Tentativa 1: Firebase Auth
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null && user.getUid() != null) {
-            Log.d(TAG, "userId obtido via FirebaseAuth.");
             return user.getUid();
         }
 
@@ -123,13 +113,6 @@ public class ExpirationWorker extends Worker {
         SharedPreferences prefs = getApplicationContext()
                 .getSharedPreferences(PREF_USER, Context.MODE_PRIVATE);
         String uid = prefs.getString(KEY_UID, null);
-
-        if (uid != null) {
-            Log.d(TAG, "userId obtido via SharedPreferences (fallback).");
-        } else {
-            Log.w(TAG, "userId não encontrado em nenhuma fonte.");
-        }
-
         return uid;
     }
 }
