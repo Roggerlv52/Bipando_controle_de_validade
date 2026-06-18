@@ -38,7 +38,7 @@ public class DialogUtil {
                     dialog.dismiss();
                     listener.onConfirm();
                 })
-                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(context.getString(R.string.dialog_button_cancel), (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -61,11 +61,11 @@ public class DialogUtil {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(layout)
                 .setCancelable(true)
-                .setPositiveButton(context.getString(R.string.dialog_bottom_accept), (dialogInterface, which) -> {
+                .setPositiveButton(context.getString(R.string.dialog_button_accept), (dialogInterface, which) -> {
                     dialogInterface.dismiss();
                     listener.onConfirm();
                 })
-                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), (d, which) -> d.dismiss())
+                .setNegativeButton(context.getString(R.string.dialog_button_cancel), (d, which) -> d.dismiss())
                 .create();
 
         dialog.show();
@@ -84,7 +84,7 @@ public class DialogUtil {
         new AlertDialog.Builder(context)
                 .setTitle(context.getString(R.string.dialog_title_select))
                 .setItems(nomes, (dialog, which) -> callback.onSelected(categorias.get(which)))
-                .setNegativeButton(context.getString(R.string.dialog_bottom_cancel), null)
+                .setNegativeButton(context.getString(R.string.dialog_button_cancel), null)
                 .show();
     }
 }
