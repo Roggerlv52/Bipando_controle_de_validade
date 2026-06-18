@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -126,14 +125,16 @@ public class MainActivity extends BaseActivity {
                 boolean isPremium = SharedPreferencesManager.isPremium(this);
 
                 if (isPremium) {
-                    txtNavHeaderLimite.setText("Plano Premium Ativo (" + total + " cadastrados)");
-                    txtNavHeaderLimite.setTextColor(Color.parseColor("#4CAF50")); // Cor verde
+                    // Carrega do XML passando o total de itens para o placeholder %1$d
+                    txtNavHeaderLimite.setText(getString(R.string.premium_active_status, total));
+                    txtNavHeaderLimite.setTextColor(android.graphics.Color.parseColor("#4CAF50")); // Verde
                 } else {
-                    txtNavHeaderLimite.setText("Limite de Produtos: " + total + "/100");
-                    if (total >= 50) {
-                        txtNavHeaderLimite.setTextColor(Color.RED);
+                    // Carrega do XML passando o total de itens para o placeholder %1$d
+                    txtNavHeaderLimite.setText(getString(R.string.free_limit_status, total));
+                    if (total >= 100) {
+                        txtNavHeaderLimite.setTextColor(android.graphics.Color.RED);
                     } else {
-                        txtNavHeaderLimite.setTextColor(Color.GREEN);
+                        txtNavHeaderLimite.setTextColor(Color.GRAY);
                     }
                 }
             });
@@ -216,7 +217,6 @@ public class MainActivity extends BaseActivity {
 
         // ── 3. Contagem reativa de Produtos Deletados (Lixeira) ──
         db.productDao().getDeletedProductsCountLiveData(true).observe(this, count -> {
-            Log.e("teste", " contagem " + count);
             applyBadge(navigationView, deletedItem, count != null ? count : 0);
         });
     }
@@ -271,19 +271,17 @@ public class MainActivity extends BaseActivity {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
 
-        // Mensagem de texto amigável com o link fictício gerado dinamicamente com seu package name
-        String mensagem = "Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\n" +
-                "Baixe agora na Play Store: https://play.google.com/apps/internaltest/4701709773850642852" + getPackageName();
+        String mensagem = getString(R.string.share_app_message, getPackageName());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, mensagem);
 
         shareIntent.putExtra(Intent.EXTRA_TEXT, mensagem);
 
         // Cria o seletor amigável de aplicativos
-        Intent chooser = Intent.createChooser(shareIntent, "Compartilhar Bipando via:");
-
+        Intent chooser = Intent.createChooser(shareIntent, getString(R.string.share_app_title));
         try {
             startActivity(chooser);
         } catch (ActivityNotFoundException ex) {
-            Toast.makeText(this, "Nenhum aplicativo encontrado para compartilhar.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.share_app_no_app_found), Toast.LENGTH_SHORT).show();
         }
     }
 

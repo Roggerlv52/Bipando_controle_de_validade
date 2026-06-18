@@ -1,5 +1,14 @@
 <resources>
     <string name="app_name" translatable="false">Bipando</string>
+    <!-- Estado do limite na navegação lateral -->
+    <string name="premium_active_status">Plano Premium Ativo (%1$d cadastrados)</string>
+    <string name="free_limit_status">Limite de Produtos: %1$d/100</string>
+
+    <!-- Fluxo de Partilha da Aplicação -->
+    <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
+    <string name="share_app_title">Compartilhar Bipando via:</string>
+    <string name="share_app_no_app_found">Nenhum aplicativo encontrado para compartilhar.</string>
+
     <!-- Notificação -->
     <string name="notification_name">Validade de Produtos</string>
     <string name="notification_title">Produto vencendo</string>
