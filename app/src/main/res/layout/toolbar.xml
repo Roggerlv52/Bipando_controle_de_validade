@@ -18,7 +18,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/voltar"
             android:padding="12dp"
             android:src="@drawable/seta_left" />
 
@@ -28,7 +27,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:text="Adicionar um item"
             android:textColor="@android:color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -50,7 +48,6 @@
             android:padding="8dp"
             android:src="@drawable/ic_more"
 			android:textColor="@color/white"
-            android:text="Salvar"
             android:textSize="20sp"
             android:visibility="gone" />
     </LinearLayout>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -37,11 +38,29 @@
             <!-- Coroa Premium -->
             <ImageView
                 android:id="@+id/img_crown"
-                android:layout_width="match_parent"
-                android:layout_height="450dp"
-                android:src="@drawable/logo_transparente"
+                android:layout_width="wrap_content"
+                android:layout_height="220dp"
+                android:src="@drawable/bipando_logo"
                 app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/txt_control"
+                android:layout_width="215dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="200dp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="5dp"
+                android:text="@string/txt_logo_bottom"
+                android:textColor="#5CB82E"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/img_crown"
+                app:layout_constraintHorizontal_bias="0.722"
+                app:layout_constraintStart_toStartOf="@+id/img_crown"
+                app:layout_constraintTop_toTopOf="@+id/img_crown" />
 
             <LinearLayout
                 android:id="@+id/linearLayout"

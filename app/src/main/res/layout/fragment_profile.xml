@@ -82,7 +82,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Configurações da conta "
+                        android:text="@string/config_account_profile"
                         android:textStyle="normal" />
 
                     <FrameLayout
@@ -96,7 +96,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginBottom="16dp"
-                            android:text="Nome"
+                            android:text="@string/txt_name_profile"
                             android:textSize="18sp"
                             android:textStyle="normal" />
 
@@ -131,7 +131,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginBottom="8dp"
-                            android:text="Aviso vencimento"
+                            android:text="@string/expiration_notice"
                             android:textSize="18sp" />
 
                         <TextView
@@ -172,7 +172,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:padding="10dp"
-                            android:text="Selecione o tema"
+                            android:text="@string/Select_theme"
                             android:textAlignment="center" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -183,7 +183,7 @@
                             android:background="@drawable/circle"
                             android:backgroundTint="@color/bipando_color"
                             android:padding="8dp"
-                            android:text="Thema Azul "
+                            android:text="@string/theme_bipando"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -196,7 +196,7 @@
                             android:backgroundTint="@color/green"
                             android:buttonTint="@color/green"
                             android:padding="8dp"
-                            android:text="Thema Verde  "
+                            android:text="@string/theme_green"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -208,7 +208,7 @@
                             android:background="@drawable/circle"
                             android:backgroundTint="@color/red"
                             android:padding="8dp"
-                            android:text="Thema Vermelho  "
+                            android:text="@string/theme_red"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -244,7 +244,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginTop="5dp"
-                            android:text="Ativar bip"
+                            android:text="@string/active_beep"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                     </LinearLayout>
 
@@ -261,7 +261,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="start"
                             android:layout_marginBottom="4dp"
-                            android:text="Ativar notificação"
+                            android:text="@string/active_notification"
                             tools:ignore="UseSwitchCompatOrMaterialXml" />
                     </LinearLayout>
                 </LinearLayout>
@@ -287,7 +287,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_marginTop="2dp"
-                        android:text="Indicador de vencimento proxímo"
+                        android:text="@string/spinner_indicator"
                         android:textAlignment="center" />
 
                     <LinearLayout
@@ -350,7 +350,7 @@
                         android:padding="10dp"
                         android:textStyle="bold"
                         android:textColor="@color/white"
-                        android:text="Deletar conta" />
+                        android:text="@string/delete_account_button" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

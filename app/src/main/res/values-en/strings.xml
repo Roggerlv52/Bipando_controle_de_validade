@@ -37,8 +37,6 @@
     <string name="mesage_scanner">This encoder accepts (numbers) and (letters), type as desired.</string>
     <string name="name_barcode_valid_">Product name required!</string>
     <string name="build_version">Version (%1$s)</string>
-    <!--ProfileFragment-->
-    <string name="scan_mute_sound">Ativar bip</string>
     <!--EditFragment-->
     <string name="edit">Edit</string>
     <!-- Button -->
@@ -80,7 +78,7 @@
     <string name="toast_msg_error_google_invalid_token">Invalid token. Please try again.</string>
     <string name="toast_msg_error_google_invalid_token_2">Invalid authentication token</string>
     <string name="toast_msg_error_google_authentication_failed">Google authentication failed.</string>
-    <string name="toast_msg_error_google_user_not_found">Utilizador não encontrado após autenticação</string>
+    <string name="toast_msg_error_google_user_not_found">User not found after authentication.</string>
 
     <string name="saved">Saved successfully!</string>
     <string name="remove_text">Successfully removed!</string>
@@ -95,8 +93,8 @@
 
     <!-- Confirmation Dialogs -->
     <string name="dialog_title_option">What do you want to do?</string>
-    <string name="dialog_title_no_category">Nenhuma Categoria Encontrada</string>
-    <string name="dialog_title_delete_item">Item excluído</string>
+    <string name="dialog_title_no_category">No Category Found</string>
+    <string name="dialog_title_delete_item">Deleted item</string>
     <string name="dialog_title_delete_really">Do you really want to delete</string>
     <string name="dialog_title">Confirm deletion</string>
     <string name="dialog_title_delete">Do you want to delete</string>
@@ -114,11 +112,11 @@
     <string name="delete_confirm_single">Do you really want to move the product \"%1$s\" to the trash?</string>
     <string name="delete_confirm_multiple">Do you really want to move these %1$d products from \"%2$s\" to the trash?</string>
 
-    <string name="delete_account"><b><font color="#FF0000">Atenção:</font></b>\n \nAo confirmar a <b>exclusão da conta</b>,
-        seus dados, como itens cadastrados, serão perdidos. Esta ação não poderá ser desfeita,
-mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; Se você possui um plano ativo os dados do plano serão
-        perdido e ao criar a sua conta novamente usando mesmo e-mail será necessario escolher um plano de pagamento novamente.
-    </string>
+    <string name="delete_account"><b><font color="#FF0000">Attention:</font></b>\n \nWhen you confirm the <b>account deletion</b>,
+your data, such as registered items, will be lost. This action cannot be undone,
+but you can create an account by logging in with Google again.\n &#8226; If you have an active plan, the plan data will be
+lost and when you create your account again using the same email, you will need to choose a payment plan again.
+</string>
     <string name="delete_account_confirme">Are you sure you want to delete the account?\n
         Your data will be lost.</string>
 
@@ -130,5 +128,44 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
 
     <!-- Spiner titulo -->
     <string name="spinner__selected_category">Select a category</string>
+
     <string name="txt_msg_deleted">No items deleted</string>
+    <string name="config_account_profile">Account Settings</string>
+    <string name="txt_name_profile">Name</string>
+    <string name="Select_theme">Select the theme</string>
+    <string name="theme_bipando">Default theme</string>
+    <string name="theme_green">Green</string>
+    <string name="theme_red">Red</string>
+    <string name="active_beep">Activate beep</string>
+    <string name="active_notification">Enable notification</string>
+    <string name="spinner_indicator">Indicator of an upcoming expiration date.</string>
+    <string name="delete_account_button">"Delete the account"</string>
+    <string name="title_promotion">Join Premium\nEnjoy unlimited features!</string>
+    <string name="sub_title_promotion">"🔥Thousands of users trust"</string>
+    <string name="text_unlimited_promotion">Unlimited scanning and registration.</string>
+    <string name="text_customized_notification">Customized notifications per product</string>
+    <string name="text_unlimited_categories">Unlimited categories for your inventory.</string>
+    <string name="plan_name_mensal">Monthly</string>
+    <string name="plan_name_semestral">Semiannual</string>
+    <string name="select_plan">Select a plan</string>
+    <string name="information_payment">30 days free, then R$ 14.99/month</string>
+    <string name="information_subscription">The subscription will automatically renew monthly or semi-annually until canceled in the Play Store settings.</string>
+
+    <string name="add_product">Add Product</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="current_plan">✓ Current plan</string>
+    <string name="change_plan_text">Switch to %1$s plan</string>
+    <string name="btn_subscribe_now">Subscribe now</string>
+    <!-- Aviso de alteração de plano na faturação -->
+    <!-- Plan change warning in billing -->
+    <string name="plan_change_info_text">⚠️ By confirming, your plan will be changed to %1$s. The change will take effect in the next billing cycle. You will not be charged now. Manage your subscription at any time on the Google Play Store.</string>
+    <string name="change_subscription">Change subscription plan</string>
+    <string name="dialog_confirm_exchange">Confirm exchange</string>
+    <!-- Free trial period details -->
+    <string name="trial_duration_text">%1$s free, then %2$s/month</string>
+    <!-- Informational message for already active plan -->
+    <string name="plan_active_info_text">%1$s plan active. Plan changes will be automatically applied at the next renewal.</string>
+    <string name="plan_change_dialog_message">You are switching from the %1$s plan to the %2$s plan.\n\n• The change will be applied in the next billing cycle.\n• You will not be charged now for the new plan.\n• Your premium access remains active until the end of the current period.\n\nDo you wish to continue?</string>
+
+    <string name="txt_logo_bottom">VALIDITY CONTROL</string>
 </resources>

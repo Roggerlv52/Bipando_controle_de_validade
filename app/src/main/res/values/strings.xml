@@ -45,26 +45,20 @@
     <string name="mesage_scanner">Esse codificador aceita (números) e (letras), digite conforme desejado.</string>
     <string name="name_barcode_valid_">Nome do produto obrigatorio!</string>
 
-    <string name="web_site">https://www.facebook.com/roger.oliveiracharts</string>
-    <string name="linkdin">https://www.linkedin.com/in/roger-de-oliveira-b980a3213</string>
     <string name="build_version">Versão (%1$s)</string>
 
-    <string name="voltar">Voltar</string>
-    <string name="home">Home</string>
     <string name="enter_manual_code">Digitar codigo de barras</string>
-    <string name="todo">TODO</string>
+    <string name="todo" translatable="false">TODO</string>
 
     <string name="_01_jan_2020" translatable="false">01 JAN 2020</string>
-    <string name="scan_mute_sound">Ativar bip</string>
-    <string name="lovely_moose">Lovely Moose</string>
+    <string name="lovely_moose" translatable="false">Lovely Moose</string>
     <string name="product_deleted">Produto deletados</string>
     <string name="edit">Editar</string>
     <string name="default_web_client_id">959834005776-2847l3lafbdhjak2nh2klk4j86vo0ouh.apps.googleusercontent.com</string>
 
-    <string name="error_login_gmail">Error ao fazer login com Gmail</string>
     <string name="logout">Sair</string>
     <string name="controle_de_validade">Controle de validade</string>
-    <string name="fazer_login_com_facebook">Fazer “login” com Facebook</string>
+
     <string name="digitaliz_c_digo_de_barras">Digitar código de barras</string>
     <!-- EditTextView hint -->
     <string name="edit_hint_name">Nome do produto</string>
@@ -99,16 +93,13 @@
 
     <string name="category_txt_update">Categoria atualizada para</string>
     <string name="category_txt_exists">já existe na sua lista</string>
-    <string name="menu_gallery">"Galeria "</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="dummy_button" translatable="false">Dummy Button</string>
+    <string name="dummy_content" translatable="false">DUMMY\nCONTENT</string>
     <string name="delete_item">Itens deletados</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Escolha uma forma de pagamento</string>
-    <string name="menu_search">Buscar</string>
+
     <string name="menu_payment">Pagamento</string>
     <string name="search_hint_default">Digite um nome ou escaneie  um código de barras\n</string>
-    <string name="menu_privacy"/>
 
     <string name="delete_account"><b><font color="#FF0000">Atenção:</font></b>\n \n Ao confirmar a <b>exclusão da conta</b>,
         seus dados, como itens cadastrados, serão perdidos. Esta ação não poderá ser desfeita,
@@ -157,5 +148,46 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
 
     <!-- Spiner titulo -->
     <string name="spinner__selected_category">Selecione uma categoria</string>
+
     <string name="txt_msg_deleted">Nenhum item excluído</string>
+    <string name="config_account_profile">Configurações da conta</string>
+    <string name="txt_name_profile">Nome</string>
+    <string name="Select_theme">Selecione o tema</string>
+    <string name="theme_bipando">Tema padrão</string>
+    <string name="theme_green">Verde</string>
+    <string name="theme_red">Vermelho</string>
+    <string name="active_beep">Ativar bip</string>
+    <string name="active_notification">Ativar notificação</string>
+    <string name="spinner_indicator">Indicador de vencimento proxímo</string>
+    <string name="delete_account_button">"Excluir a conta"</string>
+    <string name="title_promotion">Junte-se ao Premium\nAproveite recursos\nilimitados!</string>
+    <string name="sub_title_promotion">"🔥Milhares de usuários confiam "</string>
+    <string name="text_unlimited_promotion">Digitalização e registro ilimitados.</string>
+    <string name="text_customized_notification">Notificações customizadas por produto</string>
+    <string name="text_unlimited_categories">Categorias ilimitadas para o seu estoque</string>
+    <string name="plan_name_mensal">Mensal</string>
+    <string name="plan_name_semestral">Semestral</string>
+    <string name="select_plan">Selecione um plano</string>
+    <string name="information_payment">30 dias grátis, depois R$ 14,99/mê</string>
+    <string name="information_subscription">A assinatura será renovada automaticamente mensalmente ou semestralmente até ser cancelada nas configurações da Play Store.</string>
+    <string name="add_product">Adicionar Produto</string>
+    <string name="menu_gallery">Galeria</string>
+
+    <string name="current_plan">✓ Plano atual</string>
+    <string name="change_plan_text">Mudar para o plano %1$s</string>
+    <string name="btn_subscribe_now">Assinar agora</string>
+
+    <!-- Plan change warning in billing -->
+
+    <!-- Aviso de alteração de plano na faturação -->
+    <string name="plan_change_info_text">⚠️ Ao confirmar,o seu plano será alterado para %1$s. A mudança entrará em vigor no próximo ciclo de cobrança. Você não será cobrado agora. Gerencie sua assinatura a qualquer momento na Google Play Store.</string>
+    <string name="change_subscription">Alterar plano de assinatura</string>
+    <string name="dialog_confirm_exchange">Confirmar troca</string>
+    <string name="trial_duration_text">%1$s grátis, depois %2$s/mês</string>
+    <!-- Mensagem informativa de plano já ativo -->
+    <string name="plan_active_info_text">Plano %1$s ativo. Alterações de plano serão aplicadas automaticamente no próximo vencimento.</string>
+    <string name="plan_change_dialog_message">Você está trocando do plano %1$s para o plano %2$s.\n\n• A mudança será aplicada no próximo ciclo de cobrança.\n• Você não será cobrado agora pelo novo plano.\n• Seu acesso premium continua ativo até o fim do período atual.\n\nDeseja continuar?</string>
+    <string name="txt_logo_bottom">CONTROLE DE VALIDADE</string>
+
+
 </resources>

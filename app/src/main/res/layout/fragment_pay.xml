@@ -74,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="sans-serif-black"
-                android:text="Junte-se ao Premium\nAproveite recursos\nilimitados!"
+                android:text="@string/title_promotion"
                 android:textColor="@android:color/white"
                 android:textSize="28sp"
                 android:textStyle="bold"
@@ -89,7 +89,7 @@
                 android:background="#50000000"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
-                android:text="🔥 Milhares de usuários confiam"
+                android:text="@string/sub_title_promotion"
                 android:textColor="#FFC107"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
@@ -110,6 +110,7 @@
                     android:layout_marginBottom="10dp"
                     android:drawableStart="@android:drawable/checkbox_on_background"
                     android:drawablePadding="12dp"
+                    android:visibility="gone"
                     android:text="Experiência 100% sem anúncios"
                     android:textColor="@android:color/white"
                     android:textSize="15sp" />
@@ -120,7 +121,7 @@
                     android:layout_marginBottom="10dp"
                     android:drawableStart="@android:drawable/checkbox_on_background"
                     android:drawablePadding="12dp"
-                    android:text="Escaneamento e cadastro ilimitados"
+                    android:text="@string/text_unlimited_promotion"
                     android:textColor="@android:color/white"
                     android:textSize="15sp" />
 
@@ -130,7 +131,7 @@
                     android:layout_marginBottom="10dp"
                     android:drawableStart="@android:drawable/checkbox_on_background"
                     android:drawablePadding="12dp"
-                    android:text="Notificações customizadas por produto"
+                    android:text="@string/text_customized_notification"
                     android:textColor="@android:color/white"
                     android:textSize="15sp" />
 
@@ -140,7 +141,7 @@
                     android:layout_marginBottom="10dp"
                     android:drawableStart="@android:drawable/checkbox_on_background"
                     android:drawablePadding="12dp"
-                    android:text="Categorias ilimitadas para o seu estoque"
+                    android:text="@string/text_unlimited_categories"
                     android:textColor="@android:color/white"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -174,7 +175,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableEnd="@android:drawable/checkbox_off_background"
-                        android:text="Mensal"
+                        android:text="@string/plan_name_mensal"
                         android:textColor="#8ca5b2"
                         android:textSize="13sp" />
 
@@ -209,7 +210,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableEnd="@android:drawable/checkbox_off_background"
-                        android:text="Semestral"
+                        android:text="@string/plan_name_semestral"
                         android:textColor="#e0f2f1"
                         android:textSize="13sp" />
 
@@ -257,7 +258,7 @@
                 android:layout_marginEnd="10dp"
                 android:backgroundTint="#FF7A00"
                 android:enabled="false"
-                android:text="Selecione um plano"
+                android:text="@string/select_plan"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -269,7 +270,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="30 dias grátis, depois R$ 14,99/mês"
+                android:text="@string/information_payment"
                 android:textColor="#8ca5b2"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -283,7 +284,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="40dp"
                 android:gravity="center"
-                android:text="A assinatura será renovada automaticamente mensalmente ou semestralmente até ser cancelada nas configurações da Play Store."
+                android:text="@string/information_subscription"
                 android:textColor="#8ca5b2"
                 android:textSize="10sp"
                 app:layout_constraintBottom_toBottomOf="parent"

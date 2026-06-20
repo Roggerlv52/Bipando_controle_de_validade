@@ -50,7 +50,7 @@
     <fragment
         android:id="@+id/nav_search"
         android:name="com.rogger.bp.ui.search.SearchFragment"
-        android:label="@string/menu_search"
+        android:label="search"
         tools:layout="@layout/fragment_search">
         <action
             android:id="@+id/action_search_to_barcode_scanner"
@@ -91,8 +91,7 @@
     <fragment
         android:id="@+id/nav_add_fragment"
         android:name="com.rogger.bp.ui.add.view.AddItemFragment"
-        android:label="Adicionar Produto">
-
+        android:label="@string/add_product">
         <argument
             android:name="key_barcode"
             app:argType="string" />
@@ -196,9 +195,5 @@
             android:id="@+id/action_nav_profile_to_nav_home"
             app:destination="@id/nav_home" />
     </fragment>
-    <activity
-        android:id="@+id/mainActivity"
-        android:name="com.rogger.bp.MainActivity"
-        android:label="app_bar_main"
-        tools:layout="@layout/app_bar_main" />
+
 </navigation>

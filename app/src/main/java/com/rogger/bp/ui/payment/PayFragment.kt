@@ -142,29 +142,30 @@ class PayFragment : Fragment() {
         when {
             planId == null -> {
                 binding.btnSubscribe.isEnabled = false
-                binding.btnSubscribe.text = "Selecione um plano"
+                binding.btnSubscribe.text = getString(R.string.select_plan)
                 binding.layoutPlanChangeInfo.visibility = View.GONE
             }
 
             planId == activePlanId -> {
                 // Plano já ativo: botão desabilitado
                 binding.btnSubscribe.isEnabled = false
-                binding.btnSubscribe.text = "✓ Plano atual"
+                binding.btnSubscribe.text = getString(R.string.current_plan)
                 binding.layoutPlanChangeInfo.visibility = View.GONE
             }
 
             activePlanId != null -> {
                 // Tem assinatura ativa, mas quer outro plano
-                val newPlanName = if (planId == billingManager?.productMensalId) "Mensal" else "Semestral"
+                val newPlanName = if (planId == billingManager?.productMensalId)
+                    getString(R.string.plan_name_mensal) else getString(R.string.plan_name_semestral)
                 binding.btnSubscribe.isEnabled = true
-                binding.btnSubscribe.text = "Mudar para o plano $newPlanName"
+                binding.btnSubscribe.text = getString(R.string.change_plan_text, newPlanName)
                 showPlanChangeInfo(newPlanName)
             }
 
             else -> {
                 // Novo assinante
                 binding.btnSubscribe.isEnabled = true
-                binding.btnSubscribe.text = "Assinar agora"
+                binding.btnSubscribe.text = getString(R.string.btn_subscribe_now)
                 binding.layoutPlanChangeInfo.visibility = View.GONE
             }
         }
@@ -178,11 +179,7 @@ class PayFragment : Fragment() {
      */
     private fun showPlanChangeInfo(newPlanName: String) {
         binding.layoutPlanChangeInfo.visibility = View.VISIBLE
-        binding.txtPlanChangeInfo.text =
-            "⚠️ Ao confirmar, seu plano será alterado para $newPlanName. " +
-                    "A mudança entrará em vigor no próximo ciclo de cobrança. " +
-                    "Você não será cobrado agora. Gerencie sua assinatura a qualquer momento " +
-                    "na Google Play Store."
+        binding.txtPlanChangeInfo.text = getString(R.string.plan_change_info_text, newPlanName)
     }
 
     /**
@@ -190,22 +187,18 @@ class PayFragment : Fragment() {
      * para garantir consentimento explícito do usuário antes de alterar uma assinatura ativa.
      */
     private fun showPlanChangeDialog(newPlanId: String) {
-        val currentPlanName = if (activePlanId == billingManager?.productMensalId) "Mensal" else "Semestral"
-        val newPlanName = if (newPlanId == billingManager?.productMensalId) "Mensal" else "Semestral"
+        val currentPlanName = if (activePlanId == billingManager?.productMensalId)
+            getString(R.string.plan_name_mensal)else getString(R.string.plan_name_semestral)
+        val newPlanName = if (newPlanId == billingManager?.productMensalId)
+            getString(R.string.plan_name_mensal) else getString(R.string.plan_name_semestral)
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Alterar plano de assinatura")
-            .setMessage(
-                "Você está trocando do plano $currentPlanName para o plano $newPlanName.\n\n" +
-                        "• A mudança será aplicada no próximo ciclo de cobrança.\n" +
-                        "• Você não será cobrado agora pelo novo plano.\n" +
-                        "• Seu acesso premium continua ativo até o fim do período atual.\n\n" +
-                        "Deseja continuar?"
-            )
-            .setPositiveButton("Confirmar troca") { _, _ ->
+            .setTitle(getString(R.string.change_subscription))
+            .setMessage(getString(R.string.plan_change_dialog_message, currentPlanName, newPlanName))
+            .setPositiveButton(getString(R.string.dialog_confirm_exchange)) { _, _ ->
                 billingManager?.purchaseSubscription(newPlanId)
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(getString(R.string.dialog_button_cancel), null)
             .show()
     }
 
@@ -215,30 +208,55 @@ class PayFragment : Fragment() {
         billingManager = BillingManager(
             context = requireContext(),
             activity = requireActivity(),
-            onPricesLoaded = { mensalPrice, semestralPrice ->
+            onPricesLoaded = { mensalPrice, semestralPrice, trialText ->
                 binding.txtPriceMensal.text = mensalPrice
                 binding.txtPriceSemestral.text = semestralPrice
-                binding.txtTrialDuration.text = "30 dias grátis, depois $mensalPrice/mês"
+
+                if (trialText != null) {
+                    binding.txtTrialDuration.text = trialText
+                    binding.txtTrialDuration.visibility = View.VISIBLE
+                } else {
+                    // Utilizador não é elegível (já usou a oferta antes) ou não há promoção ativa na consola
+                    binding.txtTrialDuration.visibility = View.GONE
+                }
             },
             onSubscriptionStatusLoaded = { activeProductId ->
                 activePlanId = activeProductId
 
-                // ✅ ATUALIZAÇÃO: Grava o estado Premium com base na presença de uma assinatura ativa
+                // Grava o estado Premium com base na presença de uma assinatura ativa
                 val premiumAtivo = activeProductId != null
                 SharedPreferencesManager.setPremiumState(requireContext(), premiumAtivo)
 
                 if (activeProductId != null) {
-                    selectPlan(activeProductId as String)
+                    // ✅ Apenas pré-seleciona se o utilizador ainda não tiver feito uma escolha manual
+                    if (selectedPlanId == null) {
+                        selectPlan(activeProductId as String)
+                    } else {
+                        updateSubscribeButton()
+                    }
+
+                    // ✅ ATUALIZAÇÃO SÉNIOR: Mostra as diretrizes de transição deferida se já tiver assinatura ativa
+                    val activePlanName = if (activeProductId == billingManager?.productMensalId) {
+                        getString(R.string.plan_name_mensal)
+                    } else {
+                        getString(R.string.plan_name_semestral)
+                    }
+                    binding.txtTrialDuration.text = getString(R.string.plan_active_info_text, activePlanName)
+                    binding.txtTrialDuration.visibility = View.VISIBLE
+
                 } else {
-                    selectedPlanId = null
-                    updateSubscribeButton()
+                    if (selectedPlanId == null) {
+                        selectedPlanId = null
+                        updateSubscribeButton()
+                    } else {
+                        updateSubscribeButton()
+                    }
                 }
             }
         )
     }
 
     // ── Sistema (Edge-to-Edge, barras, toolbar) ───────────────────────────────
-
     private fun enableEdgeToEdge() {
         val window = requireActivity().window
         WindowCompat.setDecorFitsSystemWindows(window, false)

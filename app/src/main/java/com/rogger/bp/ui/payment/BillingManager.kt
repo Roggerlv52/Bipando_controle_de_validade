@@ -5,11 +5,13 @@ import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
 import com.android.billingclient.api.PendingPurchasesParams
+import com.rogger.bp.R
 
 class BillingManager(
     private val context: Context,
     private val activity: Activity,
-    private val onPricesLoaded: (mensalPrice: String, semestralPrice: String) -> Unit,
+
+    private val onPricesLoaded: (mensalPrice: String, semestralPrice: String,trialText: String?) -> Unit,
     private val onSubscriptionStatusLoaded: (activeProductId: String?) -> Unit = {}
 ) : PurchasesUpdatedListener {
 
@@ -71,31 +73,44 @@ class BillingManager(
             )
             .build()
 
-        // ✅ Correção: O segundo parâmetro agora é "queryProductDetailsResult" (do tipo QueryProductDetailsResult)
         billingClient.queryProductDetailsAsync(params) { result, queryProductDetailsResult ->
-            // Extraímos a lista real de produtos do objeto de resultado da v9.0.0
             val productList = queryProductDetailsResult.productDetailsList
 
             if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null) {
                 var mensalPrice = "R$ 14,99"
                 var semestralPrice = "R$ 77,70"
+                var trialText: String? = null // ✅ Rastreia se há oferta promocional para este utilizador
 
                 for (productDetails in productList) {
-                    // Chamadas explícitas de getters evitam problemas de conversão sintética de tipos
                     val firstOffer = productDetails.getSubscriptionOfferDetails()?.getOrNull(0)
-                    val price = firstOffer?.getPricingPhases()
+                    val pricingPhases = firstOffer?.getPricingPhases()?.getPricingPhaseList()
+
+                    val regularPrice = firstOffer?.getPricingPhases()
                         ?.getPricingPhaseList()?.getOrNull(0)
                         ?.getFormattedPrice() ?: ""
 
                     if (productDetails.productId == productMensalId) {
-                        mensalPrice = price
+                        mensalPrice = regularPrice
+
+                        // ✅ DETEÇÃO DINÂMICA DE TESTE GRATUITO (FREE TRIAL)
+                        if (pricingPhases != null) {
+                            for (phase in pricingPhases) {
+                                if (phase.getPriceAmountMicros() == 0L) {
+                                    // Detetou fase gratuita! Lê a duração (ex: P1M ou P30D)
+                                    val duration = parseBillingPeriod(phase.getBillingPeriod(), context)
+                                    trialText = context.getString(R.string.trial_duration_text, duration, regularPrice)
+                                    break
+                                }
+                            }
+                        }
                     } else if (productDetails.productId == productSemestralId) {
-                        semestralPrice = price
+                        semestralPrice = regularPrice
                     }
                 }
 
                 activity.runOnUiThread {
-                    onPricesLoaded(mensalPrice, semestralPrice)
+                    // ✅ Envia os dados completos e o estado da promoção
+                    onPricesLoaded(mensalPrice, semestralPrice, trialText)
                 }
             } else {
                 Log.e("Billing", "Falha ao consultar produtos: ${result.debugMessage}")
@@ -203,6 +218,21 @@ class BillingManager(
                     Log.d("Billing", "Assinatura confirmada e liberada!")
                 }
             }
+        }
+    }
+    private fun parseBillingPeriod(period: String, context: Context): String {
+        val regex = """P(\d+)([DWMY])""".toRegex()
+        val matchResult = regex.matchEntire(period) ?: return "30 dias"
+
+        val value = matchResult.groupValues[1].toInt()
+        val unit = matchResult.groupValues[2]
+
+        return when (unit) {
+            "D" -> if (value == 1) "1 dia" else "$value dias"
+            "W" -> if (value == 1) "1 semana" else "$value semanas"
+            "M" -> if (value == 1) "1 mês" else "$value meses"
+            "Y" -> if (value == 1) "1 ano" else "$value anos"
+            else -> "30 dias"
         }
     }
 
