@@ -1,14 +1,12 @@
 package com.rogger.bp.ui.search
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
@@ -20,6 +18,9 @@ import com.rogger.bp.R
 import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.notification.NotificationPrefs
+import com.rogger.bp.ui.base.DialogUtil
+import com.rogger.bp.ui.home.OnItemClickListener
+import com.rogger.bp.ui.home.view.AdapterHome
 import com.rogger.bp.ui.scanner.BarcodeScanFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 
 class SearchFragment : Fragment() {
 
-    private var adapter: SearchAdapter? = null
+    private var adapter: AdapterHome? = null
     private var recyclerSearch: RecyclerView? = null
     private var layoutEmpty: LinearLayout? = null
     private var txtHint: TextView? = null
@@ -64,15 +65,64 @@ class SearchFragment : Fragment() {
 
         val diasAmarelo = NotificationPrefs.getDays(requireContext())
 
-        // ── ✅ CORREÇÃO 1: Inicializando o adapter corretamente ──
-        adapter = SearchAdapter(requireContext(), diasAmarelo) { produto ->
-            // Ao clicar no item buscado, navega para a tela de Edição/Visualização
-            val bundle = Bundle().apply {
-                putString("uuid", produto.uuid)
-                putParcelable("product_bundle", produto)
+        // ✅ REUTILIZAÇÃO SÉNIOR DO ADAPTERHOME: Unifica o comportamento de listagem e cliques
+        adapter = AdapterHome(
+            requireContext(),
+            diasAmarelo,
+            object : OnItemClickListener {
+
+                // 1. Clique simples para editar/visualizar o produto
+                override fun onItemClick(position: Int, data: List<PostProduct>) {
+                    val produto = data.getOrNull(position) ?: return
+                    val bundle = Bundle().apply {
+                        putString("uuid", produto.uuid)
+                        putParcelable("product_bundle", produto)
+                    }
+                    findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
+                }
+
+                // 2. Clique na imagem para pré-visualização
+                override fun onImageClick(uri: String) {
+                    val bundle = Bundle().apply { putString("imageUri", uri) }
+                    findNavController().navigate(R.id.action_nav_search_to_nav_show_fragment, bundle)
+                }
+
+                // 3. Exclusão em massa a partir do cabeçalho do grupo na Pesquisa
+                override fun onHeaderDeleteClick(productsToDelete: List<PostProduct>, groupTitle: String) {
+                    val total = productsToDelete.size
+                    val mensagem = if (total == 1) {
+                        getString(R.string.delete_confirm_single, productsToDelete.first().name)
+                    } else {
+                        getString(R.string.delete_confirm_multiple, total, groupTitle)
+                    }
+
+                    DialogUtil.showDeleteDialog(requireContext(), mensagem) {
+                        // Executa a deleção em segundo plano na IO Thread
+                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            val database = BpDatabase.getDatabase(requireContext())
+
+                            productsToDelete.forEach { product ->
+                                // Marca o produto localmente como deletado
+                                val deletedProduct = product.copy(
+                                    deleted = true,
+                                    deletedAt = System.currentTimeMillis()
+                                )
+                                database.productDao().updateProduct(deletedProduct)
+                            }
+
+                            // Como a busca do Room retorna um Flow reativo,
+                            // a lista de pesquisa atualizar-se-á sozinha instantaneamente!
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            }
+                        }
+                    }
+                }
             }
-            findNavController().navigate(R.id.action_nav_search_to_nav_edit_fragment, bundle)
-        }
+        )
+
+        // Liga o AdapterHome ao RecyclerView
+        recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
+        recyclerSearch?.adapter = adapter
 
         recyclerSearch?.layoutManager = LinearLayoutManager(requireContext())
         recyclerSearch?.adapter = adapter
@@ -83,7 +133,7 @@ class SearchFragment : Fragment() {
         }
 
         val searchView = view.findViewById<SearchView>(R.id.search_view)
-        searchView?.queryHint = "Nome ou codigo de barras"
+        searchView?.queryHint = getString(R.string.name_or_barcode)
         searchView?.setOnQueryTextFocusChangeListener { _, hasFocus ->
             marquee.visibility = if (hasFocus) View.GONE else View.VISIBLE
         }
@@ -99,7 +149,7 @@ class SearchFragment : Fragment() {
                 val q = newText?.trim() ?: ""
                 when {
                     q.length >= 2 -> despacharBusca(q)
-                    q.isEmpty() -> mostrarEstadoVazio("Digite o nome ou o código de barras")
+                    q.isEmpty() -> mostrarEstadoVazio(getString(R.string.enter_name_barcode))
                 }
                 return true
             }
@@ -155,14 +205,12 @@ class SearchFragment : Fragment() {
     // ── ✅ CORREÇÃO 2: Implementando as buscas de forma offline-first e reativa via Room ──
 
     private fun buscarPorNome(query: String) {
-        txtHint?.text = "Buscando produto: $query"
         val database = BpDatabase.getDatabase(requireContext())
         val flow = database.productDao().searchProductsByName(query)
         coletarResultados(flow)
     }
 
     private fun buscarPorCodigoBarras(barcode: String) {
-        txtHint?.text = "🔢 Código de barras: $barcode"
         val database = BpDatabase.getDatabase(requireContext())
         val flow = database.productDao().searchProductsByBarcode(barcode)
         coletarResultados(flow)
@@ -179,7 +227,7 @@ class SearchFragment : Fragment() {
 
     private fun mostrarResultados(produtos: List<PostProduct>?) {
         if (produtos.isNullOrEmpty()) {
-            mostrarEstadoVazio("Nenhum produto encontrado")
+            mostrarEstadoVazio(getString(R.string.txt_no_products))
         } else {
             layoutEmpty?.visibility = View.GONE
             recyclerSearch?.visibility = View.VISIBLE
@@ -191,5 +239,6 @@ class SearchFragment : Fragment() {
         txtHint?.text = mensagem
         layoutEmpty?.visibility = View.VISIBLE
         recyclerSearch?.visibility = View.GONE
+        adapter?.setDados(null)
     }
 }

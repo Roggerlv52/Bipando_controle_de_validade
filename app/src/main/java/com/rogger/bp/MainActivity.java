@@ -3,7 +3,6 @@ package com.rogger.bp;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -119,22 +119,43 @@ public class MainActivity extends BaseActivity {
         BpDatabase db = BpDatabase.Companion.getDatabase(this);
         // ── ✅ ATUALIZAÇÃO: Escuta reativa do Limite de Produtos Gratuito ──
         TextView txtNavHeaderLimite = viewProfile.findViewById(R.id.txt_nav_header_limite);
+        ProgressBar progressNavHeaderLimite = viewProfile.findViewById(R.id.progress_nav_header_limite);
         if (txtNavHeaderLimite != null) {
             db.productDao().getTotalProductsCountLiveData().observe(this, count -> {
                 int total = count != null ? count : 0;
                 boolean isPremium = SharedPreferencesManager.isPremium(this);
 
                 if (isPremium) {
-                    // Carrega do XML passando o total de itens para o placeholder %1$d
+                    // 1. Caso Premium: Exibe o informativo verde e esconde a barra de progresso
                     txtNavHeaderLimite.setText(getString(R.string.premium_active_status, total));
-                    txtNavHeaderLimite.setTextColor(android.graphics.Color.parseColor("#4CAF50")); // Verde
+                    txtNavHeaderLimite.setTextColor(android.graphics.Color.parseColor("#4CAF50")); // Verde limpo
+
+                    if (progressNavHeaderLimite != null) {
+                        progressNavHeaderLimite.setVisibility(android.view.View.GONE);
+                    }
                 } else {
-                    // Carrega do XML passando o total de itens para o placeholder %1$d
+                    // 2. Caso Plano Gratuito: Exibe a contagem fracionada e a barra de limite
                     txtNavHeaderLimite.setText(getString(R.string.free_limit_status, total));
-                    if (total >= 100) {
-                        txtNavHeaderLimite.setTextColor(android.graphics.Color.RED);
-                    } else {
-                        txtNavHeaderLimite.setTextColor(Color.GRAY);
+                    txtNavHeaderLimite.setTextColor(android.graphics.Color.WHITE); // Branco
+
+                    if (progressNavHeaderLimite != null) {
+                        progressNavHeaderLimite.setVisibility(android.view.View.VISIBLE);
+                        progressNavHeaderLimite.setMax(100);
+
+                        // Garante que o progresso não ultrapassa visualmente os 100% da barra
+                        progressNavHeaderLimite.setProgress(Math.min(total, 100));
+
+                        if (total >= 100) {
+                            // Limite atingido: Pinta a barra de Vermelho
+                            progressNavHeaderLimite.setProgressTintList(
+                                    android.content.res.ColorStateList.valueOf(android.graphics.Color.RED)
+                            );
+                        } else {
+                            // Limite disponível: Pinta a barra de Verde Lima (conforme a imagem)
+                            progressNavHeaderLimite.setProgressTintList(
+                                    android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#8BC34A"))
+                            );
+                        }
                     }
                 }
             });
@@ -170,7 +191,7 @@ public class MainActivity extends BaseActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
 
-                navController.get().navigate(R.id.nav_home, null, new NavOptions.Builder()
+                navController.get().navigate(R.id.nav_home,null, new NavOptions.Builder()
                         .setPopUpTo(R.id.nav_home, true)
                         .build());
             } else if (id == R.id.share_app) { // 👉 Adicionada a ação de compartilhar

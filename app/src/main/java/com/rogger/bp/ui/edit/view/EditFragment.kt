@@ -183,7 +183,7 @@ class EditFragment : Fragment(), ContractEdit.View {
         }
 
         binding.datePickerButton.setOnClickListener {
-            val currentTs = Utils.parseDateToTimestamp(binding.datePickerButton.text.toString())
+            val currentTs = Utils.parseDateToTimestamp(requireContext(), binding.datePickerButton.text.toString())
 
             Utils.showDatePicker(requireContext(), currentTs) { ts, dataFormatada ->
                 timestamp = ts
@@ -285,8 +285,10 @@ class EditFragment : Fragment(), ContractEdit.View {
             .into(binding.imageEdit)
     }
 
-    private fun timestampParaData(ts: Long): String =
-        SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).format(Date(ts))
+    private fun timestampParaData(ts: Long): String {
+        val padraoData = getString(R.string.date_format)
+        return SimpleDateFormat(padraoData, Locale.getDefault()).format(Date(ts))
+    }
 
     override fun showProgress(enable: Boolean) {
         binding.btnFgmSave.isEnabled = !enable

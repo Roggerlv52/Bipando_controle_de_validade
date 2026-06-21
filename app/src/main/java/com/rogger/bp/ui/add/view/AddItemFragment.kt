@@ -167,7 +167,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         binding.btnFgmSaveAdd.setOnClickListener { saveProduct() }
 
         binding.datePickerBtnAdd.setOnClickListener {
-            val currentTs = Utils.parseDateToTimestamp(binding.datePickerBtnAdd.text.toString())
+            val currentTs = Utils.parseDateToTimestamp(requireContext(), binding.datePickerBtnAdd.text.toString())
 
             Utils.showDatePicker(requireContext(), currentTs) { ts, dataFormatada ->
                 binding.datePickerBtnAdd.text = dataFormatada

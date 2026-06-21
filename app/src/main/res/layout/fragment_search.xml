@@ -24,7 +24,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Voltar"
+                android:contentDescription="@string/todo"
                 android:src="@drawable/seta_left" />
 
             <FrameLayout
@@ -65,7 +65,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Escanear código de barras"
+                android:contentDescription="@string/todo"
                 android:src="@drawable/ic_barcode_scanner_24" />
 
         </LinearLayout>
@@ -90,15 +90,14 @@
             <ImageView
                 android:layout_width="200dp"
                 android:layout_height="200dp"
-                android:src="@drawable/lista_vazia"
-                android:contentDescription="Sem resultados" />
+                android:contentDescription="@string/todo"
+                android:src="@drawable/lista_vazia" />
 
             <TextView
                 android:id="@+id/txt_search_hint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="12dp"
-                android:text="Digite um nome ou escaneie um código de barras"
                 android:textColor="@color/gray"
                 android:textSize="14sp"
                 android:gravity="center" />

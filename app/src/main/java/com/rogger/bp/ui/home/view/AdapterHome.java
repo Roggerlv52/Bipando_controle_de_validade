@@ -262,7 +262,9 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             String dataFormatada = "";
             if (modelo.getTimestamp() > 0) {
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+                // ✅ ATUALIZAÇÃO SÉNIOR: Carrega o padrão do strings.xml e o Locale do sistema do utilizador
+                String padraoData = context.getString(R.string.date_format);
+                SimpleDateFormat sdf = new SimpleDateFormat(padraoData, Locale.getDefault());
                 dataFormatada = sdf.format(new Date(modelo.getTimestamp()));
             }
             pHolder.txtRight.setText(dataFormatada);
@@ -308,11 +310,10 @@ public class AdapterHome extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageview_home);
             if (imageView != null) imageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-           // imageCircle = itemView.findViewById(R.id.image_home_circle);
             txtLight = itemView.findViewById(R.id.txt_home_left);
             txtRight = itemView.findViewById(R.id.txt_home_right);
             txtTitle = itemView.findViewById(R.id.home_title);
-            txtSubTitle = itemView.findViewById(R.id.home_subTitle);
+            txtSubTitle = itemView.findViewById(R.id.home_category);
             txtBarcode = itemView.findViewById(R.id.home_barcode);
 
             itemView.setOnClickListener(v -> {

@@ -57,7 +57,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Nenhuma categoria cadastrada.\nToque em + para criar uma."
+            android:text="@string/txt_no_categories_registered"
             android:textColor="@color/DarkGray"
             android:textSize="15sp" />
 

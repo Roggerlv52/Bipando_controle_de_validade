@@ -27,11 +27,10 @@
     <string name="product_deleted_success">\"%1$s\" eliminado</string>
     <string name="product_deleted_restored">\"%1$s\" restaurado</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
+    <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
+    <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
+    <string name="nav_header_title" translatable="false">Android Studio</string>
+    <string name="nav_header_subtitle" translatable="false">android.studio@android.com</string>
     <string name="action_settings">Configurações</string>
     <string name="agree_terms_policy"> <b>Política de Privacidade</b></string>
 
@@ -57,7 +56,6 @@
     <string name="default_web_client_id">959834005776-2847l3lafbdhjak2nh2klk4j86vo0ouh.apps.googleusercontent.com</string>
 
     <string name="logout">Sair</string>
-    <string name="controle_de_validade">Controle de validade</string>
 
     <string name="digitaliz_c_digo_de_barras">Digitar código de barras</string>
     <!-- EditTextView hint -->
@@ -123,7 +121,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="dialog_button_restore">Restaurar</string>
     <!-- Diálogos de Confirmação -->
     <string name="dialog_title_option">O que deseja fazer?</string>
-    <string name="dialog_title_no_category">No Category Found</string>
+    <string name="dialog_title_no_category">Nenhuma categoria encontrada</string>
     <string name="dialog_title">Confirmar exclusão</string>
     <string name="dialog_title_delete_item">Item excluído</string>
     <string name="dialog_title_delete_really">Deseja realmente excluir</string>
@@ -188,6 +186,13 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="plan_active_info_text">Plano %1$s ativo. Alterações de plano serão aplicadas automaticamente no próximo vencimento.</string>
     <string name="plan_change_dialog_message">Você está trocando do plano %1$s para o plano %2$s.\n\n• A mudança será aplicada no próximo ciclo de cobrança.\n• Você não será cobrado agora pelo novo plano.\n• Seu acesso premium continua ativo até o fim do período atual.\n\nDeseja continuar?</string>
     <string name="txt_logo_bottom">CONTROLE DE VALIDADE</string>
+    <string name="txt_no_categories_registered">Nenhuma categoria cadastrada.\nToque em + para criar uma.</string>
+    <string name="txt_empty_list">Lista vazia \n Clique em + para adicionar produtos</string>
+    <string name="enter_name_barcode">Digite o nome ou o código de barras</string>
+    <string name="name_or_barcode">Name or barcode</string>
+    <string name="txt_no_products">Nenhum produto encontrado</string>
+    <string name="txt_toolbar_barcode">Codigo de barra</string>
+    <string name="date_format">dd/MM/yyyy</string>
 
 
 </resources>

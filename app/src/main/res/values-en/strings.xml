@@ -168,4 +168,12 @@ lost and when you create your account again using the same email, you will need 
     <string name="plan_change_dialog_message">You are switching from the %1$s plan to the %2$s plan.\n\n• The change will be applied in the next billing cycle.\n• You will not be charged now for the new plan.\n• Your premium access remains active until the end of the current period.\n\nDo you wish to continue?</string>
 
     <string name="txt_logo_bottom">VALIDITY CONTROL</string>
+    <string name="txt_no_categories_registered">No categories registered. \nTap + to create one.</string>
+    <string name="txt_empty_list">Empty list. \nClick + to add products.</string>
+    <string name="enter_name_barcode">Enter the name or barcode.</string>
+    <string name="name_or_barcode">Name or barcode</string>
+    <string name="txt_no_products">No products found</string>
+    <string name="txt_toolbar_barcode">Barcode</string>
+    <string name="date_format">MM/dd/yyyy</string>
+
 </resources>

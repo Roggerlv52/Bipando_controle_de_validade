@@ -79,18 +79,19 @@ public class Utils {
     }
 
     // ✅ NOVO: Converte texto de data exibido no botão em timestamp de forma segura
-    public static long parseDateToTimestamp(String dateStr) {
+    // ✅ ATUALIZAÇÃO SÉNIOR: Aceita o Context para traduzir o padrão de leitura da data de forma inteligente
+    public static long parseDateToTimestamp(Context context, String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
             return System.currentTimeMillis();
         }
         try {
             String cleanStr = dateStr.trim();
-            // Suporta formatos "dd/MM/yyyy" ou "d/M/yyyy"
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+            String padraoData = context.getString(R.string.date_format);
+
+            SimpleDateFormat sdf = new SimpleDateFormat(padraoData, Locale.getDefault());
             Date date = sdf.parse(cleanStr);
             return date != null ? date.getTime() : System.currentTimeMillis();
         } catch (Exception e) {
-            // Em caso de texto inválido (como placeholders), retorna a data atual como fallback
             return System.currentTimeMillis();
         }
     }

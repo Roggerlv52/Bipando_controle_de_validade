@@ -156,7 +156,7 @@ public class BarcodeScanFragment extends Fragment {
         input.setGravity(Gravity.CENTER);
         builder.setView(input);
         barcodeView.pause();
-        builder.setMessage("Insira números do código de barras.")
+        builder.setMessage(getString(R.string.enter_manual_code))
                 .setPositiveButton("OK", (dialog, id) -> {
                     String barcode = input.getText().toString();
                     if (!barcode.isEmpty()) {
@@ -164,7 +164,7 @@ public class BarcodeScanFragment extends Fragment {
                                 gotoAddItem(barcode), 1500);
                     }
                 })
-                .setNegativeButton("Cancelar", (dialog, id) -> {
+                .setNegativeButton(getString(R.string.dialog_button_cancel), (dialog, id) -> {
                     dialog.dismiss();
                     barcodeView.resume();
                 });

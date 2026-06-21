@@ -15,14 +15,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp">
-            <TextView
-                android:id="@+id/txt_home_left"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:textSize="14sp"
-                app:layout_constraintStart_toEndOf="@id/imageview_home"
-                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/txt_home_right"
@@ -30,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:padding="2dp"
-                android:textColor="@color/black"
+                android:textColor="@color/gray"
                 android:text="data teste "
                 android:textSize="14sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -50,34 +42,37 @@
 
             <TextView
                 android:id="@+id/home_title"
-                android:layout_width="250dp"
+                android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
+                android:text="tirulo do produto"
                 android:textSize="18sp"
                 app:layout_constraintStart_toEndOf="@id/imageview_home"
-                app:layout_constraintTop_toBottomOf="@id/txt_home_left" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/home_subTitle"
+                android:id="@+id/home_category"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:textSize="14sp"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/gray"
                 android:text="categoria"
+                android:textSize="14sp"
                 android:textStyle="normal"
-                app:layout_constraintStart_toEndOf="@id/imageview_home"
-                app:layout_constraintTop_toBottomOf="@id/home_title" />
+                app:layout_constraintBottom_toBottomOf="@+id/imageview_home"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView
                 android:id="@+id/home_barcode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
                 android:text="8343847384734743"
+                android:textSize="14sp"
+                android:layout_margin="4dp"
                 android:textStyle="normal"
-                app:layout_constraintStart_toStartOf="@id/home_subTitle"
-                app:layout_constraintTop_toBottomOf="@id/home_subTitle" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageview_home" />
         </androidx.constraintlayout.widget.ConstraintLayout>
         <View
             android:layout_width="match_parent"

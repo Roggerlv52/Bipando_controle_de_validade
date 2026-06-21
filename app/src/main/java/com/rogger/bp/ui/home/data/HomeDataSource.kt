@@ -45,6 +45,7 @@ class HomeDataSource : PostHomeDataSource {
                 note       = data["note"]        as? String ?: "",
                 barcode    = data["barcode"]     as? String ?: "",
                 categoryId = data["categoryId"] as? String ?: "",
+                categoryName = data["categoryName"] as? String ?: "",
                 timestamp  = data["timestamp"]   as? Long ?: 0L,
                 imageUri   = data["imageUri"]    as? String ?: "",
                 deleted    = data["deleted"]     as? Boolean ?: false,
@@ -55,8 +56,6 @@ class HomeDataSource : PostHomeDataSource {
             null
         }
     }
-
-    // ── Buscar todos os produtos activos ──────────────────────────────────
 
     override fun fetchProducts(callback: FetchProductsCallback) {
         val ref = productsRef()

@@ -75,6 +75,7 @@ class EditDataSource : PostEditDataSource {
                         note = data["note"] as? String ?: "",
                         barcode = data["barcode"] as? String ?: "",
                         categoryId = data["categoryId"] as? String ?: "",
+                        categoryName = data["categoryName"] as? String ?: "",
                         timestamp = data["timestamp"] as? Long ?: 0L,
                         imageUri = data["imageUri"] as? String ?: "",
                         deleted = data["deleted"] as? Boolean ?: false,
@@ -222,6 +223,7 @@ class EditDataSource : PostEditDataSource {
             "note" to produto.note,
             "timestamp" to produto.timestamp,
             "categoryId" to produto.categoryId,
+            "categoryName" to produto.categoryName,
             "imageUri" to imageUri,
             "barcode" to produto.barcode
         )

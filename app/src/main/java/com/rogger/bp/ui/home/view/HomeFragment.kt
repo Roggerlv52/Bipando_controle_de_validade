@@ -96,9 +96,7 @@ class HomeFragment : Fragment(), ContractHome.View {
 
         if (categoryId.isNotEmpty()) {
             // Atualiza o título da Toolbar para mostrar que a categoria está ativa
-            (activity as? AppCompatActivity)?.supportActionBar?.title = "${
-                requireContext().getString(R.string.category)
-            }: $categoryNome"
+            (activity as? AppCompatActivity)?.supportActionBar?.title = " $categoryNome"
             presenter.fetchProductsByCategory(categoryId)
         } else {
             // Comportamento normal caso venha do menu lateral direto
@@ -106,7 +104,6 @@ class HomeFragment : Fragment(), ContractHome.View {
         }
 
         presenter.fetchCategories()
-        // Se não há categoria, fetchProducts() já carregou tudo normalmente
     }
 
     override fun onDestroyView() {
@@ -181,7 +178,7 @@ class HomeFragment : Fragment(), ContractHome.View {
             val isPremium = SharedPreferencesManager.isPremium(requireContext())
 
             // ✅ ATUALIZAÇÃO: Bloqueia com base no total absoluto (ativos + lixeira) do banco de dados
-            if (!isPremium && totalDeProdutosDoUtilizador >= 50) {
+            if (!isPremium && totalDeProdutosDoUtilizador >= 100) {
                 mostrarDialogoLimitePremium()
                 return@setOnClickListener
             }

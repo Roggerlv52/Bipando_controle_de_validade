@@ -56,6 +56,7 @@ class FireRegisterDataSource : ItemDataSource {
                     "note"       to produto.note,
                     "barcode"    to produto.barcode,
                     "categoryId" to produto.categoryId,
+                    "categoryName" to produto.categoryName,
                     "deleted"    to produto.deleted,
                     "timestamp"  to produto.timestamp,
                 )

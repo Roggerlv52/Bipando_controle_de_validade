@@ -3,7 +3,7 @@ package com.rogger.bp.ui.commun;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,14 +29,15 @@ public class SharedPreferencesManager {
     public static void sharedBeepState(Context context, String key, boolean beep) {
         SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedp.edit();
-        editor.putBoolean(key,beep);
+        editor.putBoolean(key, beep);
         editor.apply();
     }
+
     // Método para atualizar um  valor do SharedPreferences
     public static void updateThemeNumber(Context context, String key, int newThemeNumber) {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPre.edit();
-        editor.putInt(key,newThemeNumber);
+        editor.putInt(key, newThemeNumber);
         editor.apply();
     }
 
@@ -45,40 +46,46 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getInt(key, 0);
     }
+
     public static boolean getBeepState(Context context, String key) {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }
-    public static void setLoginState(Context context,String key,boolean state){
+
+    public static void setLoginState(Context context, String key, boolean state) {
         SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedp.edit();
-        editor.putBoolean(key,state);
+        editor.putBoolean(key, state);
         editor.apply();
 
     }
-    public static boolean getLoginState(Context context,String key){
+
+    public static boolean getLoginState(Context context, String key) {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getBoolean(key, false);
     }
-    public static void saveUserInfo(Context context,String uid, String name, String imageUrl,String email){
+
+    public static void saveUserInfo(Context context, String uid, String name, String imageUrl, String email) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("userUid",uid);
-        editor.putString("nameUser",name);
-        editor.putString("profile_image_url",imageUrl );
-        editor.putString("email_",email);
+        editor.putString("userUid", uid);
+        editor.putString("nameUser", name);
+        editor.putString("profile_image_url", imageUrl);
+        editor.putString("email_", email);
         editor.apply();
     }
-    public static List<String> getUserInfo(Context context){
+
+    public static List<String> getUserInfo(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         List<String> userInfo = new ArrayList<>();
-        userInfo.add(sharedPreferences.getString("userUid",null));//  3
+        userInfo.add(sharedPreferences.getString("userUid", null));//  3
         userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));// 0
         userInfo.add(sharedPreferences.getString("profile_image_url", null));
         userInfo.add(sharedPreferences.getString("email_", "No email"));
         return userInfo;
     }
-    public static void clearUserInfo(Context context){
+
+    public static void clearUserInfo(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear(); // remove tudo
