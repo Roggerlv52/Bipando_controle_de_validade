@@ -31,6 +31,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.rogger.bp.data.database.BpDatabase;
 import com.rogger.bp.data.image.notification.ImageSyncScheduler;
+import com.rogger.bp.data.model.PostProduct;
 import com.rogger.bp.databinding.ActivityMainBinding;
 import com.rogger.bp.notification.NotificationScheduler;
 import com.rogger.bp.notification.NotificationUtil;
@@ -263,8 +264,50 @@ public class MainActivity extends BaseActivity {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
+        // ── ✅ ATUALIZAÇÃO SÉNIOR: Gatilhos de Exportação de Dados ──
+        if (id == R.id.menu_export_pdf) {
+            processarExportacao(true);
+            return true;
+        }
+        if (id == R.id.menu_export_excel) {
+            processarExportacao(false);
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+    private void processarExportacao(boolean isPdf) {
+        BpDatabase db = BpDatabase.Companion.getDatabase(this);
+        String currentUid = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "";
+
+        if (currentUid.isEmpty()) {
+            Toast.makeText(this, "Utilizador não autenticado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Executa a leitura em cache numa Thread secundária (Thread-Safe)
+        new Thread(() -> {
+            List<PostProduct> todosProdutos = db.productDao().getAllCachedProducts();
+            List<PostProduct> ativosDoUsuario = new java.util.ArrayList<>();
+
+            if (todosProdutos != null) {
+                for (PostProduct p : todosProdutos) {
+                    // Filtra apenas produtos pertencentes a este utilizador e que não estão na lixeira
+                    if (p.getUserId() != null && p.getUserId().equals(currentUid) && !p.getDeleted()) {
+                        ativosDoUsuario.add(p);
+                    }
+                }
+            }
+
+            // Devolve o resultado à Main Thread para interagir com o utilizador
+            runOnUiThread(() -> {
+                if (isPdf) {
+                    com.rogger.bp.util.PdfExportHelper.exportToPdf(this, ativosDoUsuario);
+                } else {
+                    com.rogger.bp.util.ExcelExportHelper.exportToExcel(this, ativosDoUsuario);
+                }
+            });
+        }).start();
     }
 
     private void applyBadge(NavigationView navigationView, MenuItem item, int count) {

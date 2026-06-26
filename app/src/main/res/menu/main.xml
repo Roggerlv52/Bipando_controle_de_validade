@@ -13,4 +13,20 @@
         android:orderInCategory="100"
         android:title="@string/logout"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_exporta"
+        android:orderInCategory="100"
+        android:title="@string/menu_exporta"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/menu_export_pdf"
+                android:orderInCategory="100"
+                android:title="@string/menu_exporta_pdf" />
+            <item
+                android:id="@+id/menu_export_excel"
+                android:orderInCategory="100"
+                android:title="@string/menu_exporta_excel" />
+        </menu>
+    </item>
 </menu>

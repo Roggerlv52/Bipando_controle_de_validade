@@ -62,7 +62,7 @@ class PayFragment : Fragment() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.btnClosePay) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = systemBars.top + 40
+                topMargin = 50
             }
             insets
         }

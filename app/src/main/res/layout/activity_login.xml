@@ -36,10 +36,11 @@
             android:padding="24dp">
 
             <!-- Coroa Premium -->
+
             <ImageView
                 android:id="@+id/img_crown"
                 android:layout_width="wrap_content"
-                android:layout_height="220dp"
+                android:layout_height="226dp"
                 android:src="@drawable/bipando_logo"
                 app:layout_constraintBottom_toTopOf="@+id/linearLayout"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -48,9 +49,10 @@
 
             <TextView
                 android:id="@+id/txt_control"
-                android:layout_width="215dp"
+                android:layout_width="266dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="200dp"
+                android:layout_marginTop="202dp"
+                android:textAlignment="textEnd"
                 android:fontFamily="sans-serif-medium"
                 android:paddingStart="5dp"
                 android:text="@string/txt_logo_bottom"
@@ -58,7 +60,6 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="@+id/img_crown"
-                app:layout_constraintHorizontal_bias="0.722"
                 app:layout_constraintStart_toStartOf="@+id/img_crown"
                 app:layout_constraintTop_toTopOf="@+id/img_crown" />
 

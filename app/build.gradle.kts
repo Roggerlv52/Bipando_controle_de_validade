@@ -32,7 +32,7 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 28
         targetSdk = 36
-        versionCode = 24
+        versionCode = 26
         versionName = "1.${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

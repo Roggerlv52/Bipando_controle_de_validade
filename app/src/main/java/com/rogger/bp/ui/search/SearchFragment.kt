@@ -149,7 +149,7 @@ class SearchFragment : Fragment() {
                 val q = newText?.trim() ?: ""
                 when {
                     q.length >= 2 -> despacharBusca(q)
-                    q.isEmpty() -> mostrarEstadoVazio(getString(R.string.enter_name_barcode))
+                    q.isEmpty() -> mostrarEstadoVazio(getString(R.string.txt_no_products))
                 }
                 return true
             }
