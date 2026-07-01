@@ -11,7 +11,14 @@ class BillingManager(
     private val context: Context,
     private val activity: Activity,
 
-    private val onPricesLoaded: (mensalPrice: String, semestralPrice: String,trialText: String?) -> Unit,
+    // ✅ Correção: agora envia o texto de trial SEPARADO por plano (Mensal/Semestral),
+    // em vez de um único texto genérico que era exibido independente do plano selecionado.
+    private val onPricesLoaded: (
+        mensalPrice: String,
+        semestralPrice: String,
+        mensalTrialText: String?,
+        semestralTrialText: String?
+    ) -> Unit,
     private val onSubscriptionStatusLoaded: (activeProductId: String?) -> Unit = {}
 ) : PurchasesUpdatedListener {
 
@@ -79,7 +86,8 @@ class BillingManager(
             if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null) {
                 var mensalPrice = "R$ 14,99"
                 var semestralPrice = "R$ 77,70"
-                var trialText: String? = null // ✅ Rastreia se há oferta promocional para este utilizador
+                var mensalTrialText: String? = null    // ✅ Trial específico do plano Mensal
+                var semestralTrialText: String? = null // ✅ Trial específico do plano Semestral
 
                 for (productDetails in productList) {
                     val firstOffer = productDetails.getSubscriptionOfferDetails()?.getOrNull(0)
@@ -89,28 +97,33 @@ class BillingManager(
                         ?.getPricingPhaseList()?.getOrNull(0)
                         ?.getFormattedPrice() ?: ""
 
-                    if (productDetails.productId == productMensalId) {
-                        mensalPrice = regularPrice
-
-                        // ✅ DETEÇÃO DINÂMICA DE TESTE GRATUITO (FREE TRIAL)
-                        if (pricingPhases != null) {
-                            for (phase in pricingPhases) {
-                                if (phase.getPriceAmountMicros() == 0L) {
-                                    // Detetou fase gratuita! Lê a duração (ex: P1M ou P30D)
-                                    val duration = parseBillingPeriod(phase.getBillingPeriod(), context)
-                                    trialText = context.getString(R.string.trial_duration_text, duration, regularPrice)
-                                    break
-                                }
+                    // ✅ DETEÇÃO DINÂMICA DE TESTE GRATUITO (FREE TRIAL)
+                    // Antes só era verificado para o Mensal; agora verifica qualquer plano,
+                    // já que o Google Play permite configurar trial em qualquer oferta.
+                    var detectedTrialText: String? = null
+                    if (pricingPhases != null) {
+                        for (phase in pricingPhases) {
+                            if (phase.getPriceAmountMicros() == 0L) {
+                                // Detetou fase gratuita! Lê a duração (ex: P1M ou P30D)
+                                val duration = parseBillingPeriod(phase.getBillingPeriod(), context)
+                                detectedTrialText = context.getString(R.string.trial_duration_text, duration, regularPrice)
+                                break
                             }
                         }
+                    }
+
+                    if (productDetails.productId == productMensalId) {
+                        mensalPrice = regularPrice
+                        mensalTrialText = detectedTrialText
                     } else if (productDetails.productId == productSemestralId) {
                         semestralPrice = regularPrice
+                        semestralTrialText = detectedTrialText
                     }
                 }
 
                 activity.runOnUiThread {
-                    // ✅ Envia os dados completos e o estado da promoção
-                    onPricesLoaded(mensalPrice, semestralPrice, trialText)
+                    // ✅ Envia os dados completos e o estado da promoção, por plano
+                    onPricesLoaded(mensalPrice, semestralPrice, mensalTrialText, semestralTrialText)
                 }
             } else {
                 Log.e("Billing", "Falha ao consultar produtos: ${result.debugMessage}")

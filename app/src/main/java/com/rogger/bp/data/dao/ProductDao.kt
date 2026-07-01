@@ -72,7 +72,7 @@ interface ProductDao {
     fun removeCachedProduct(key: String)
 
     @Query("DELETE FROM products")
-   suspend fun clearAllProducts()
+    suspend fun clearAllProducts()
     @Query("SELECT * FROM products WHERE deleted = 0 AND name LIKE '%' || :query || '%' ORDER BY timestamp DESC")
     fun searchProductsByName(query: String): Flow<List<PostProduct>>
 
@@ -83,7 +83,7 @@ interface ProductDao {
     fun searchProductsByCategoryName(query: String): Flow<List<PostProduct>>
 
     @Transaction
-   suspend fun replaceAllProducts(products: List<PostProduct>) {
+    suspend fun replaceAllProducts(products: List<PostProduct>) {
         clearAllProducts()
         insertAllProducts(products)
     }

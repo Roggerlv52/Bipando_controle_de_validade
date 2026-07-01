@@ -57,6 +57,4 @@ class RegisterItemRepository(
         dataSource.uploadImage(image, callback)
     }
 }
-
-// Alias ou Wrapper para compatibilidade com o DependencyInjector
 typealias RegisterRepository = RegisterItemRepository

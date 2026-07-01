@@ -263,7 +263,11 @@
                 android:textStyle="bold"
                 app:layout_constraintTop_toBottomOf="@id/layout_plan_change_info" />
 
-            <!-- Subtítulo informativo do teste -->
+            <!-- Subtítulo informativo do teste — oculto por padrão; só fica visível
+                 quando updateTrialBanner() decide, com dados reais do Google Play,
+                 que há uma oferta válida para o plano selecionado (ou que o usuário
+                 já tem assinatura ativa). Evita mostrar uma promessa de trial genérica
+                 (ex: "30 dias grátis") antes da conexão com a Play Store responder. -->
             <TextView
                 android:id="@+id/txt_trial_duration"
                 android:layout_width="wrap_content"
@@ -272,6 +276,7 @@
                 android:text="@string/information_payment"
                 android:textColor="#8ca5b2"
                 android:textSize="12sp"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/btn_subscribe" />

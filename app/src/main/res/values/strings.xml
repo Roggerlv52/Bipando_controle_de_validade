@@ -166,7 +166,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="plan_name_mensal">Mensal</string>
     <string name="plan_name_semestral">Semestral</string>
     <string name="select_plan">Selecione um plano</string>
-    <string name="information_payment">30 dias grátis, depois R$ 14,99/mê</string>
+    <string name="information_payment">30 dias grátis, depois R$ 14,99/mês</string>
     <string name="information_subscription">A assinatura será renovada automaticamente mensalmente ou semestralmente até ser cancelada nas configurações da Play Store.</string>
     <string name="add_product">Adicionar Produto</string>
     <string name="menu_gallery">Galeria</string>
@@ -189,13 +189,13 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="txt_no_categories_registered">Nenhuma categoria cadastrada.\nToque em + para criar uma.</string>
     <string name="txt_empty_list">Lista vazia \n Clique em + para adicionar produtos</string>
     <string name="enter_name_barcode">Digite o nome ou o código de barras</string>
-    <string name="name_or_barcode">Name or barcode</string>
+    <string name="name_or_barcode">Nome ou código de barras</string>
     <string name="txt_no_products">Nenhum produto encontrado</string>
     <string name="txt_toolbar_barcode">Código de barras</string>
     <string name="date_format">dd/MM/yyyy</string>
-    <string name="menu_exporta">Exporta</string>
-    <string name="menu_exporta_pdf">PDF</string>excel
-    <string name="menu_exporta_excel">EXCEL</string>
+    <string name="menu_exporta">Exportar</string>
+    <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
+    <string name="menu_exporta_excel" translatable="false">EXCEL</string>
 
 
 </resources>

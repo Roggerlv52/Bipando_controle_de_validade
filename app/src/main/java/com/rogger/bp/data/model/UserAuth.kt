@@ -10,3 +10,4 @@ data class UserAuth (
     val password: String,
     val photoUri: Uri?,
 ): Serializable
+

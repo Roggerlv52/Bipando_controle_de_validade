@@ -41,7 +41,7 @@
                 android:id="@+id/img_crown"
                 android:layout_width="wrap_content"
                 android:layout_height="226dp"
-                android:src="@drawable/bipando_logo"
+                android:src="@drawable/bipando_smoll"
                 app:layout_constraintBottom_toTopOf="@+id/linearLayout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

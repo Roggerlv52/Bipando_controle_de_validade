@@ -38,11 +38,12 @@ class CategoryPresenter(
         view?.showProgress(true)
         repository.create(category.copy(name = validatedName), object : CategoryCallback {
             override fun onSuccess(cat: PostCategory) {
-                view?.onSuccess("Categoria \"${cat.name}\" criada")
+                view?.onCategoryCreated(cat)
             }
 
             override fun onAlreadyExists(cat: PostCategory) {
                 view?.onCategoryExists(cat)
+                fetchCategories()
             }
 
             override fun onFailure(message: String) {
@@ -66,7 +67,7 @@ class CategoryPresenter(
         view?.showProgress(true)
         repository.update(category.copy(name = validatedName), object : CategoryCallback {
             override fun onSuccess(cat: PostCategory) {
-                view?.onSuccess("Categoria atualizada para \"${cat.name}\"")
+                view?.onCategoryUpdated(cat)
             }
 
             override fun onAlreadyExists(cat: PostCategory) {
@@ -88,7 +89,7 @@ class CategoryPresenter(
         view?.showProgress(true)
         repository.delete(category, object : CategoryCallback {
             override fun onSuccess(cat: PostCategory) {
-                view?.onSuccess("Categoria \"${cat.name}\" excluída")
+                view?.onCategoryDeleted(cat)
             }
 
             override fun onAlreadyExists(cat: PostCategory) { /* não aplicável */
@@ -136,7 +137,7 @@ class CategoryPresenter(
                             val msg = if (total == 1)
                                 "Categoria \"${categories.first().name}\" excluída"
                             else "$total categorias excluídas"
-                            view?.onSuccess(msg)
+                            view?.onCategoryDeleted(category)
                         } else {
                             view?.onError("$errors de $total categorias falharam ao excluir")
                         }

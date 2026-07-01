@@ -57,9 +57,6 @@ class CategoryRepository(
         // 2. Envia para o Firestore em segundo plano
         remoteDataSource.createCategory(category, callback)
 
-        // 3. Retorna sucesso imediatamente para fechar o diálogo
-        callback.onSuccess(category)
-        callback.onComplete()
     }
 
     fun update(category: PostCategory, callback: CategoryCallback) {
@@ -70,10 +67,6 @@ class CategoryRepository(
 
         // 2. Envia para o Firestore em segundo plano
         remoteDataSource.updateCategory(category, callback)
-
-        // 3. Retorna sucesso imediatamente
-        callback.onSuccess(category)
-        callback.onComplete()
     }
 
     fun delete(category: PostCategory, callback: CategoryCallback) {

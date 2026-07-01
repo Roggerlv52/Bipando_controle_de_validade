@@ -175,6 +175,6 @@ lost and when you create your account again using the same email, you will need 
     <string name="txt_no_products">No products found</string>
     <string name="txt_toolbar_barcode">Barcode</string>
     <string name="date_format">MM/dd/yyyy</string>
-    <string name="menu_exporta">Exporta</string>
+    <string name="menu_exporta">Export</string>
 
 </resources>

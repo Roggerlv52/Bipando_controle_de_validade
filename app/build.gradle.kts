@@ -30,9 +30,9 @@ android {
 
     defaultConfig {
         applicationId = "com.rogger.bp"
-        minSdk = 28
-        targetSdk = 36
-        versionCode = 26
+        minSdk = 24
+        targetSdk = 37
+        versionCode = 31
         versionName = "1.${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -63,12 +63,12 @@ android {
 }
 
 dependencies {
-    implementation("com.android.billingclient:billing-ktx:9.0.0")
+    implementation(libs.billing.ktx)
     // 🔥 Firebase BOM (CORRETO)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-storage:20.3.0")
+    implementation(libs.firebase.storage.v2030)
     //Room
     implementation("androidx.room:room-runtime:2.7.0")
     implementation(libs.legacy.support.v4)

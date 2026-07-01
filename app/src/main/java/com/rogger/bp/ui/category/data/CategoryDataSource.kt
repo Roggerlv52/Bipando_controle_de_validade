@@ -43,7 +43,7 @@ class CategoryDataSource : PostCategoryDataSource {
 
         if (ref == null || uid == null) {
 
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Unauthenticated user")
             callback.onComplete()
             return
 
@@ -86,7 +86,7 @@ class CategoryDataSource : PostCategoryDataSource {
             .addOnFailureListener { exception ->
 
                 callback.onFailure(
-                    exception.message ?: "Erro ao verificar categoria"
+                    exception.message ?: "Error verifying category"
                 )
 
                 callback.onComplete()
@@ -97,14 +97,14 @@ class CategoryDataSource : PostCategoryDataSource {
 
     override fun updateCategory(category: PostCategory, callback: CategoryCallback) {
         val ref = categoriasRef() ?: run {
-            callback.onFailure("Usuário não autenticado")
-            callback.onComplete()
+            callback.onFailure("Unauthenticated user")
+            //callback.onComplete()
             return
         }
 
         if (category.firestoreId.isBlank()) {
-            callback.onFailure("Categoria sem ID Firestore — não é possível atualizar")
-            callback.onComplete()
+            callback.onFailure("Category without Firestore ID — cannot update")
+            //callback.onComplete()
             return
         }
 
@@ -122,11 +122,11 @@ class CategoryDataSource : PostCategoryDataSource {
                 ref.document(category.firestoreId)
                     .update("name", category.name.trim())
                     .addOnSuccessListener { callback.onSuccess(category) }
-                    .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro") }
+                    .addOnFailureListener { e -> callback.onFailure(e.message ?: "Error") }
                     .addOnCompleteListener { callback.onComplete() }
             }
             .addOnFailureListener { e ->
-                callback.onFailure(e.message ?: "Erro ao verificar nome")
+                callback.onFailure(e.message ?: "Error verifying name")
                 callback.onComplete()
             }
     }
@@ -141,13 +141,13 @@ class CategoryDataSource : PostCategoryDataSource {
 
     override fun deleteCategory(category: PostCategory, callback: CategoryCallback) {
         val ref = categoriasRef() ?: run {
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Unauthenticated user")
             callback.onComplete()
             return
         }
 
         if (category.firestoreId.isBlank()) {
-            callback.onFailure("Categoria sem ID Firestore")
+            callback.onFailure("Category without Firestore ID")
             callback.onComplete()
             return
         }
@@ -155,7 +155,7 @@ class CategoryDataSource : PostCategoryDataSource {
         ref.document(category.firestoreId)
             .delete()
             .addOnSuccessListener { callback.onSuccess(category) }
-            .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro ao deletar") }
+            .addOnFailureListener { e -> callback.onFailure(e.message ?: "Error deleting") }
             .addOnCompleteListener { callback.onComplete() }
     }
 
@@ -167,7 +167,7 @@ class CategoryDataSource : PostCategoryDataSource {
 
         if (ref == null) {
 
-            callback.onFailure("Usuário não autenticado")
+            callback.onFailure("Unauthenticated user")
 
             callback.onComplete()
 
@@ -201,11 +201,6 @@ class CategoryDataSource : PostCategoryDataSource {
 
                 }
 
-                Log.d(
-                    TAG,
-                    "Categorias carregadas: ${list.size}"
-                )
-
                 callback.onSuccess(list)
 
             }
@@ -213,7 +208,7 @@ class CategoryDataSource : PostCategoryDataSource {
 
                 callback.onFailure(
                     exception.message
-                        ?: "Erro ao buscar categorias"
+                        ?: "Error retrieving categories"
                 )
 
             }
@@ -236,8 +231,7 @@ class CategoryDataSource : PostCategoryDataSource {
         return ref.orderBy("name")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Erro no listener de categorias: ${error.message}")
-                    callback.onFailure(error.message ?: "Erro no listener de categorias")
+                    callback.onFailure(error.message ?: "Error in the category listener")
                     callback.onComplete()
                     return@addSnapshotListener
                 }
@@ -251,14 +245,10 @@ class CategoryDataSource : PostCategoryDataSource {
                                 userId = document.getString("userId") ?: ""
                             )
                         } catch (exception: Exception) {
-                            Log.e(
-                                TAG,
-                                "Erro ao mapear categoria via listener: ${exception.message}"
-                            )
                             null
                         }
                     }
-                    Log.d(TAG, "Categorias atualizadas via listener: ${list.size}")
+
                     callback.onSuccess(list)
                 }
             }

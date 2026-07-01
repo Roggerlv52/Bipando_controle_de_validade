@@ -32,6 +32,12 @@ class PayFragment : Fragment() {
     // Rastreia o plano atual da assinatura ativa (se houver)
     private var activePlanId: String? = null
 
+    // ✅ Correção: texto de trial guardado SEPARADO por plano. Antes existia um único
+    // texto genérico exibido independente do plano selecionado, o que podia mostrar
+    // "30 dias grátis" mesmo quando o usuário tinha escolhido um plano sem trial.
+    private var mensalTrialText: String? = null
+    private var semestralTrialText: String? = null
+
     private val mainToolbar: Toolbar?
         get() = activity?.findViewById(R.id.toolbar)
 
@@ -111,6 +117,10 @@ class PayFragment : Fragment() {
 
         // Atualiza o botão de ação conforme estado da assinatura
         updateSubscribeButton()
+
+        // ✅ Correção: o banner de trial depende do plano selecionado, então precisa
+        // ser recalculado sempre que a seleção muda (Mensal pode ter trial, Semestral não, ou vice-versa)
+        updateTrialBanner()
     }
 
     // ── Botão de Assinatura ───────────────────────────────────────────────────
@@ -202,23 +212,65 @@ class PayFragment : Fragment() {
             .show()
     }
 
+    /**
+     * ✅ Correção central: decide o que mostrar no banner de trial/plano ativo
+     * com base no ESTADO ATUAL completo (plano ativo + plano selecionado + trial de cada plano),
+     * em vez de cada callback assíncrono escrever direto na view (o que causava uma
+     * condição de corrida: dependendo da ordem de resposta da rede, o banner de trial
+     * podia sobrescrever a mensagem de "plano já ativo", ou vice-versa).
+     *
+     * Regras:
+     * 1) Se o usuário JÁ tem assinatura ativa, isso tem prioridade — mostramos o status
+     *    do plano ativo, nunca uma oferta de trial (ele não é mais um novo usuário).
+     * 2) Caso contrário, mostramos o trial correspondente ESPECIFICAMENTE ao plano que
+     *    está selecionado na tela (Mensal ou Semestral). Se o plano selecionado não tiver
+     *    trial configurado no Google Play, o banner é ocultado — nunca mostramos a oferta
+     *    de um plano diferente do que o usuário escolheu.
+     */
+    private fun updateTrialBanner() {
+        val activeId = activePlanId
+
+        if (activeId != null) {
+            val activePlanName = if (activeId == billingManager?.productMensalId) {
+                getString(R.string.plan_name_mensal)
+            } else {
+                getString(R.string.plan_name_semestral)
+            }
+            binding.txtTrialDuration.text = getString(R.string.plan_active_info_text, activePlanName)
+            binding.txtTrialDuration.visibility = View.VISIBLE
+            return
+        }
+
+        val trialForSelectedPlan = when (selectedPlanId) {
+            billingManager?.productMensalId -> mensalTrialText
+            billingManager?.productSemestralId -> semestralTrialText
+            else -> null
+        }
+
+        if (trialForSelectedPlan != null) {
+            binding.txtTrialDuration.text = trialForSelectedPlan
+            binding.txtTrialDuration.visibility = View.VISIBLE
+        } else {
+            binding.txtTrialDuration.visibility = View.GONE
+        }
+    }
+
     // ── BillingManager ────────────────────────────────────────────────────────
 
     private fun initBillingManager() {
         billingManager = BillingManager(
             context = requireContext(),
             activity = requireActivity(),
-            onPricesLoaded = { mensalPrice, semestralPrice, trialText ->
+            onPricesLoaded = { mensalPrice, semestralPrice, mensalTrial, semestralTrial ->
                 binding.txtPriceMensal.text = mensalPrice
                 binding.txtPriceSemestral.text = semestralPrice
 
-                if (trialText != null) {
-                    binding.txtTrialDuration.text = trialText
-                    binding.txtTrialDuration.visibility = View.VISIBLE
-                } else {
-                    // Utilizador não é elegível (já usou a oferta antes) ou não há promoção ativa na consola
-                    binding.txtTrialDuration.visibility = View.GONE
-                }
+                // ✅ Apenas guarda o estado; quem decide o que mostrar é updateTrialBanner(),
+                // evitando que esta resposta assíncrona sobrescreva, por ordem de chegada,
+                // uma mensagem de "plano ativo" já exibida por onSubscriptionStatusLoaded.
+                mensalTrialText = mensalTrial
+                semestralTrialText = semestralTrial
+                updateTrialBanner()
             },
             onSubscriptionStatusLoaded = { activeProductId ->
                 activePlanId = activeProductId
@@ -234,24 +286,13 @@ class PayFragment : Fragment() {
                     } else {
                         updateSubscribeButton()
                     }
-
-                    // ✅ ATUALIZAÇÃO SÉNIOR: Mostra as diretrizes de transição deferida se já tiver assinatura ativa
-                    val activePlanName = if (activeProductId == billingManager?.productMensalId) {
-                        getString(R.string.plan_name_mensal)
-                    } else {
-                        getString(R.string.plan_name_semestral)
-                    }
-                    binding.txtTrialDuration.text = getString(R.string.plan_active_info_text, activePlanName)
-                    binding.txtTrialDuration.visibility = View.VISIBLE
-
                 } else {
-                    if (selectedPlanId == null) {
-                        selectedPlanId = null
-                        updateSubscribeButton()
-                    } else {
-                        updateSubscribeButton()
-                    }
+                    updateSubscribeButton()
                 }
+
+                // ✅ Sempre recalcula o banner com o estado atual completo (independente
+                // de qual callback chegou primeiro — corrige a condição de corrida)
+                updateTrialBanner()
             }
         )
     }

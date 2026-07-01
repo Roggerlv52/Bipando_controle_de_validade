@@ -94,7 +94,7 @@ class AddItemPresenter(
             return
         }
         // ✅ Inicia a sincronização em segundo plano de imagens salvas em modo offline
-       // ImageSyncScheduler.start(context)
+        // ImageSyncScheduler.start(context)
         view?.showProgress(true)
 
         val isLocalImage = product.imageUri.startsWith("file://") ||
