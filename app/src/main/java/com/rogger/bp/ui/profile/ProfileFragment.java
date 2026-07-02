@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,10 +88,12 @@ public class ProfileFragment extends Fragment {
             activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
-
+        int countDays = NotificationPrefs.getDays(requireContext());
         binding.swNotification.setChecked(NotificationPrefs.getAlert(requireContext()));
-        binding.sliderYellow.setValue(NotificationPrefs.getDays(requireContext()));
-        binding.txtYellow.setText((int) binding.sliderYellow.getValue() + " dias");
+        binding.sliderYellow.setValue(countDays);
+
+        binding.txtYellow.setText(getResources().getQuantityString(R.plurals.days_selected_count, countDays, countDays));
+
         updateTimeText();
 
         List<String> userInfo = SharedPreferencesManager.getUserInfo(requireContext());
@@ -151,7 +152,7 @@ public class ProfileFragment extends Fragment {
         binding.sliderYellow.addOnChangeListener((slider, value, fromUser) -> {
             if (fromUser) {
                 int dias = (int) value;
-                binding.txtYellow.setText(dias + " dias");
+                binding.txtYellow.setText(getResources().getQuantityString(R.plurals.days_selected_count, dias, dias));
                 NotificationPrefs.saveDays(requireContext(), dias);
 
                 // Reagenda para aplicar o novo valor de dias imediatamente

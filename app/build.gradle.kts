@@ -32,7 +32,7 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 37
-        versionCode = 31
+        versionCode = 32
         versionName = "1.${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,7 +43,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // 🚀 Ativa a ofuscação e otimização de código
+            isShrinkResources = true // 🚀 Remove recursos (imagens/XMLs) não utilizados
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
