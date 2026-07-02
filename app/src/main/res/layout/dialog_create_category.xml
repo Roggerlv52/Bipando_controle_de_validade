@@ -9,7 +9,6 @@
         android:id="@+id/txt_category_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nova categoria"
         android:textSize="18sp"
         android:textStyle="bold"
         android:paddingBottom="12dp" />
@@ -18,7 +17,7 @@
         android:id="@+id/edt_category_nome"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nome da categoria"
+        android:hint="@string/edit_hint_category"
         android:inputType="textCapWords"
         android:maxLines="1" />
 </LinearLayout>

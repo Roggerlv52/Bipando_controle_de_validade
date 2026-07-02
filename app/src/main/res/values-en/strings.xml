@@ -56,6 +56,7 @@
     <string name="logout">To go out</string>
     <!-- editTextView hint  -->
     <string name="edit_hint_name">Product name</string>
+    <string name="edit_hint_category">Category name</string>
     <string name="edit_hint_notes">notes</string>
     <string name="search_hint_default">Enter a name or scan a barcode.</string>
     <string name="edit_validate_fields">Select the due date.</string>
@@ -176,5 +177,17 @@ lost and when you create your account again using the same email, you will need 
     <string name="txt_toolbar_barcode">Barcode</string>
     <string name="date_format">MM/dd/yyyy</string>
     <string name="menu_exporta">Export</string>
+
+    <plurals name="categories_selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="days_selected_count">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+
+    <string name="day__count">%1$d day</string>
+    <string name="days__count">%1$d days</string>
 
 </resources>

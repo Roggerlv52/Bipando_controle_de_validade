@@ -60,6 +60,7 @@
     <string name="digitaliz_c_digo_de_barras">Digitar código de barras</string>
     <!-- EditTextView hint -->
     <string name="edit_hint_name">Nome do produto</string>
+    <string name="edit_hint_category">Nome da categoria</string>
     <string name="edit_hint_notes">Nota</string>
     <!-- EditTextView valide -->
     <string name="edit_validate_fields">Selecione a data de vencimento</string>
@@ -197,5 +198,15 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
     <string name="menu_exporta_excel" translatable="false">EXCEL</string>
 
+    <plurals name="categories_selected_count">
+        <item quantity="one">%1$d selecionada</item>
+        <item quantity="other">%1$d selecionadas</item>
+    </plurals>
+    <string name="day__count">%1$d dia</string>
+    <string name="days__count">%1$d dias</string>
+    <plurals name="days_selected_count">
+        <item quantity="one">%1$d dia</item>
+        <item quantity="other">%1$d dias</item>
+    </plurals>
 
 </resources>

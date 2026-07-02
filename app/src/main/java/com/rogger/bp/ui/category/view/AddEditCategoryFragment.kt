@@ -81,7 +81,7 @@ class AddEditCategoryFragment : Fragment(), ContractCategory.View {
 
                     total == 0 -> actionMode?.finish()
                 }
-                actionMode?.title = "$total selecionada(s)"
+                actionMode?.title = resources.getQuantityString(R.plurals.categories_selected_count, total, total)
             }
         })
     }

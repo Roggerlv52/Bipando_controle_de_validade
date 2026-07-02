@@ -1,21 +1,12 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ✅ Preserva os modelos de dados usados pelo Firestore e pelo Room
+# (Impede o R8 de renomear os campos de reflexão dos seus produtos e categorias)
+-keep class com.rogger.bp.data.model.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Mantém os metadados e anotações do Firebase/Firestore
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Mantém as classes internas do Firebase
+-keep class com.google.firebase.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Mantém as classes do Google Play Billing (Faturação Premium)
+-keep class com.android.billingclient.** { *; }
