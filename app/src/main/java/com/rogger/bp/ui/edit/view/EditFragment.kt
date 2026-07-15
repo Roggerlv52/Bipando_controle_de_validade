@@ -15,6 +15,8 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -33,9 +35,9 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import com.rogger.bp.ui.commun.ShowSelectDialog
 import com.rogger.bp.ui.edit.ContractEdit
 import com.rogger.bp.ui.edit.presentation.EditPresenter
-import com.rogger.bp.ui.gallery.CameraCallback
-import com.rogger.bp.ui.gallery.ImagePikerUtil
-import com.rogger.bp.ui.gallery.ImageUtils
+import com.rogger.bp.util.ImagePikerUtil.CameraCallback
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import com.rogger.bp.ui.home.CustomProgressBar
 import java.io.File
 import java.text.SimpleDateFormat
@@ -62,6 +64,20 @@ class EditFragment : Fragment(), ContractEdit.View {
 
     private val imagePickerUtil = ImagePikerUtil()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    // ✅ ATUALIZAÇÃO SÉNIOR: Lançador do Photo Picker oficial na edição
+    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            try {
+                val out = ImagePikerUtil.createImageFile(requireContext())
+                novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
+                showImageView(novaImagemFile!!.absolutePath)
+            } catch (e: Exception) {
+                onError(e.message ?: "Erro ao processar imagem da galeria")
+            }
+        } else {
+            Log.d("PhotoPicker", "Nenhuma imagem selecionada")
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -82,7 +98,6 @@ class EditFragment : Fragment(), ContractEdit.View {
         binding.imageEdit.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
 
         setupCamera()
-        setupGalleryResult()
         setupSpinnerListener()
         setupClicks()
         setupMenu()
@@ -122,26 +137,6 @@ class EditFragment : Fragment(), ContractEdit.View {
             }
         })
     }
-
-    private fun setupGalleryResult() {
-        parentFragmentManager.setFragmentResultListener(
-            "gallery_result",
-            viewLifecycleOwner
-        ) { _, bundle ->
-            try {
-                val uri = Uri.parse(bundle.getString("imageUri"))
-                val out = ImagePikerUtil.createImageFile(requireContext())
-                novaImagemFile = ImageUtils.processImage(requireContext(), uri, out)
-                showImageView(novaImagemFile!!.absolutePath)
-            } catch (e: Exception) {
-                onError(e.message ?: requireContext().getString(
-                    R.string.toast_msg_error_img_gallery
-                ))
-            }
-
-        }
-    }
-
     private fun setupSpinnerListener() {
         binding.spinnerEdit.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -173,7 +168,8 @@ class EditFragment : Fragment(), ContractEdit.View {
         binding.imageEdit.setOnClickListener {
             ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
                 override fun openGallery() {
-                    findNavController().navigate(R.id.action_editFragment_to_galerryFragment)
+                    // ✅ Lança o seletor nativo do sistema
+                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
 
                 override fun openCamera() {

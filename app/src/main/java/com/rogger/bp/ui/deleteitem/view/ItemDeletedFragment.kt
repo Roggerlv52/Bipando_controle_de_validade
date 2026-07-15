@@ -13,9 +13,8 @@ import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.databinding.FragmentItemDeletedBinding
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.deleteitem.DeletedItem
-import com.rogger.bp.ui.deleteitem.data.DeleteItemRepository
 import com.rogger.bp.ui.deleteitem.presenation.DeletedItemPresenter
-import com.rogger.bp.ui.gallery.ImagePikerUtil
+import com.rogger.bp.util.ImagePikerUtil
 import java.io.File
 
 /*

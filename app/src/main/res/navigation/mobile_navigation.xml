@@ -81,13 +81,7 @@
         <argument
             android:name="uuid"
             app:argType="string" />
-        <action
-            android:id="@+id/action_editFragment_to_galerryFragment"
-            app:destination="@id/nav_gallery_fragment"
-            app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out" />
+
         <action
             android:id="@+id/action_editFragment_to_nav_barcode_show"
             app:destination="@id/nav_barcode_show"
@@ -112,13 +106,6 @@
             android:name="categoria_id"
             android:defaultValue="-1"
             app:argType="string" />
-        <action
-            android:id="@+id/action_addFragment_to_nav_gallery_fragment"
-            app:destination="@id/nav_gallery_fragment"
-            app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/fade_out" />
     </fragment>
 
     <fragment
@@ -157,13 +144,6 @@
             android:name="edtF_barcode"
             app:argType="string" />
     </fragment>
-
-
-    <fragment
-        android:id="@+id/nav_gallery_fragment"
-        android:name="com.rogger.bp.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
 
     <fragment
         android:id="@+id/nav_category"

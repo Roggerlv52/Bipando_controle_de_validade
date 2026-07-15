@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.gallery;
+package com.rogger.bp.util;
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,13 +19,28 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/*
+ * Desenvolvido por Roger de Oliveira
+ * Data: 15/07/2026
+ * Hora: 13:39
+ */
+
 public class ImagePikerUtil {
     private Uri photoUri;
     private File photoFile;
     private CameraCallback callback;
+
     /**
      * Registra o launcher (chamar no onCreate ou onViewCreated)
      */
+    public interface CameraCallback {
+        void onImageCaptured(@NonNull Uri imageUri, @NonNull File imageFile);
+
+        void onCancel();
+
+        void onError(@NonNull Exception e);
+    }
+
     public ActivityResultLauncher<Intent> register(
             @NonNull Fragment fragment,
             @NonNull CameraCallback callback
@@ -65,6 +80,7 @@ public class ImagePikerUtil {
             callback.onError(e);
         }
     }
+
     /**
      * Cria arquivo temporário
      */
@@ -82,6 +98,7 @@ public class ImagePikerUtil {
                 storageDir
         );
     }
+
     /**
      * Limpa todos os arquivos temporários criados pelo ImagePickerUtil.
      * Deve ser chamado no onDestroy() do Fragment/Activity para garantir a limpeza.
@@ -92,4 +109,3 @@ public class ImagePikerUtil {
         }
     }
 }
-
