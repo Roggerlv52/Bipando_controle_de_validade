@@ -152,9 +152,9 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="config_account_profile">Configurações da conta</string>
     <string name="txt_name_profile">Nome</string>
     <string name="Select_theme">Selecione o tema</string>
-    <string name="theme_bipando">Tema padrão</string>
-    <string name="theme_green">Verde</string>
-    <string name="theme_red">Vermelho</string>
+    <string name="theme_bipando">Tema Clássico (Escuro)</string>
+    <string name="theme_green">Tema verde do Android</string>
+    <string name="theme_red">Tema vermelho</string>
     <string name="active_beep">Ativar bip</string>
     <string name="active_notification">Ativar notificação</string>
     <string name="spinner_indicator">Indicador de vencimento proxímo</string>

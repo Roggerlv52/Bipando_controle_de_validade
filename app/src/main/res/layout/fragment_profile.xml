@@ -175,41 +175,42 @@
                             android:text="@string/Select_theme"
                             android:textAlignment="center" />
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/box_profile_1"
+                        <!-- ✅ NOVO: Grupo de opções para seleção do Tema do Bipando -->
+                        <RadioGroup
+                            android:id="@+id/radioGroupThemes"
                             android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/circle"
-                            android:backgroundTint="@color/bipando_color"
-                            android:padding="8dp"
-                            android:text="@string/theme_bipando"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="8dp">
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/box_profile_2"
-                            android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center"
-                            android:layout_marginTop="5dp"
-                            android:background="@drawable/circle"
-                            android:backgroundTint="@color/green"
-                            android:buttonTint="@color/green"
-                            android:padding="8dp"
-                            android:text="@string/theme_green"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            <RadioButton
+                                android:id="@+id/box_profile_1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/theme_bipando"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="15sp"
+                                android:padding="12dp" />
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/box_profile_3"
-                            android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            android:layout_gravity="start"
-                            android:layout_marginTop="5dp"
-                            android:background="@drawable/circle"
-                            android:backgroundTint="@color/red"
-                            android:padding="8dp"
-                            android:text="@string/theme_red"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            <RadioButton
+                                android:id="@+id/box_profile_2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/theme_green"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="15sp"
+                                android:padding="12dp" />
+
+                            <RadioButton
+                                android:id="@+id/box_profile_3"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/theme_red"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="15sp"
+                                android:padding="12dp" />
+
+                        </RadioGroup>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/box_profile_4"

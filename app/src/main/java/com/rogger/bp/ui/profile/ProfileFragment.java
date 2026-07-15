@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -253,33 +254,24 @@ public class ProfileFragment extends Fragment {
         SharedPreferencesManager.sharedBeepState(requireContext(), "beep", beep);
     }
 
-    private void uncheckOthers(@SuppressLint("UseSwitchCompatOrMaterialCode") SwitchMaterial selected) {
-        if (selected != binding.boxProfile1) binding.boxProfile1.setChecked(false);
-        if (selected != binding.boxProfile2) binding.boxProfile2.setChecked(false);
-        if (selected != binding.boxProfile3) binding.boxProfile3.setChecked(false);
-        if (selected != binding.boxProfile4) binding.boxProfile4.setChecked(false);
-    }
 
     private void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if (!isChecked) return;
+        if (!isChecked) return; // Se o botão foi desmarcado pelo RadioGroup, ignora para evitar loops
+
         if (buttonView.getId() == R.id.box_profile_1) {
             SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 1);
-            uncheckOthers(binding.boxProfile1);
             requireActivity().setTheme(R.style.Theme_Bpd);
             requireActivity().recreate();
         } else if (buttonView.getId() == R.id.box_profile_2) {
             SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 2);
-            uncheckOthers(binding.boxProfile2);
             requireActivity().setTheme(R.style.Theme_Bpd_2);
             requireActivity().recreate();
         } else if (buttonView.getId() == R.id.box_profile_3) {
             SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 3);
-            uncheckOthers(binding.boxProfile3);
             requireActivity().setTheme(R.style.Theme_Bpd_3);
             requireActivity().recreate();
         } else if (buttonView.getId() == R.id.box_profile_4) {
             SharedPreferencesManager.updateThemeNumber(requireContext(), "chave", 4);
-            uncheckOthers(binding.boxProfile4);
             requireActivity().setTheme(R.style.Theme_Bpd_4);
             requireActivity().recreate();
         }

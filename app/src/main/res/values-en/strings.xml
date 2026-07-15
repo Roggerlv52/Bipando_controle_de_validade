@@ -134,9 +134,9 @@ lost and when you create your account again using the same email, you will need 
     <string name="config_account_profile">Account Settings</string>
     <string name="txt_name_profile">Name</string>
     <string name="Select_theme">Select the theme</string>
-    <string name="theme_bipando">Default theme</string>
-    <string name="theme_green">Green</string>
-    <string name="theme_red">Red</string>
+    <string name="theme_bipando">Classic Theme (Dark)</string>
+    <string name="theme_green">Green Android theme</string>
+    <string name="theme_red">Red theme</string>
     <string name="active_beep">Activate beep</string>
     <string name="active_notification">Enable notification</string>
     <string name="spinner_indicator">Indicator of an upcoming expiration date.</string>

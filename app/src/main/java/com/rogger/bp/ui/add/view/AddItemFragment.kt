@@ -13,6 +13,8 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -24,15 +26,14 @@ import com.rogger.bp.data.model.UserAuth
 import com.rogger.bp.databinding.FragmentAddBinding
 import com.rogger.bp.ui.add.RegisterAdd
 import com.rogger.bp.ui.add.presentation.AddItemPresenter
-import com.rogger.bp.ui.animation.ToastCustom
 import com.rogger.bp.ui.base.MenuUtil
 import com.rogger.bp.ui.base.Utils
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.NetworkUtils
 import com.rogger.bp.ui.commun.ShowSelectDialog
-import com.rogger.bp.ui.gallery.CameraCallback
-import com.rogger.bp.ui.gallery.ImagePikerUtil
-import com.rogger.bp.ui.gallery.ImageUtils
+import com.rogger.bp.util.ImagePikerUtil.CameraCallback
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import com.rogger.bp.ui.home.CustomProgressBar
 import java.io.File
 
@@ -61,6 +62,21 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
     private val cameraUtil = ImagePikerUtil()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    // ✅ ATUALIZAÇÃO SÉNIOR: Lançador do Photo Picker oficial sem necessidade de qualquer permissão
+    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            try {
+                val out = ImagePikerUtil.createImageFile(requireContext())
+                photoFile = ImageUtils.processImage(requireContext(), uri, out)
+                remoteImageUri = null
+                showLocalImage(photoFile!!)
+            } catch (e: Exception) {
+                onFailure(e.message ?: "Erro ao processar imagem")
+            }
+        } else {
+            Log.d("PhotoPicker", "Nenhuma imagem selecionada")
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -85,10 +101,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         timestamp = Utils.getCurrentTimestamp()
 
         setupCamera()
-        setupGalleryResult()
         setupSpinner()
         setupListeners()
-
         readArguments()
 
         presenter.fetchCategories()
@@ -128,21 +142,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
             requireContext().getString(R.string.toast_msg_error_camera)) }
         })
     }
-
-    private fun setupGalleryResult() {
-        parentFragmentManager.setFragmentResultListener("gallery_result", viewLifecycleOwner) { _, bundle ->
-            try {
-                val img  = Uri.parse(bundle.getString("imageUri"))
-                val file = ImagePikerUtil.createImageFile(requireContext())
-                photoFile      = ImageUtils.processImage(requireContext(), img, file)
-                remoteImageUri = null
-                showLocalImage(photoFile!!)
-            } catch (e: Exception) {
-                onFailure(e.message ?: requireContext().getString(R.string.toast_msg_error_gallery))
-            }
-        }
-    }
-
     private fun setupSpinner() {
         binding.spinnerAdd.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -164,7 +163,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     // ── Listeners gerais ──────────────────────────────────────────────────
 
     private fun setupListeners() {
-        binding.btnFgmSaveAdd.setOnClickListener { saveProduct() }
+        binding.btnFgmSaveAdd.setOnClickListener { saveProduct()
+
+        }
 
         binding.datePickerBtnAdd.setOnClickListener {
             val currentTs = Utils.parseDateToTimestamp(requireContext(), binding.datePickerBtnAdd.text.toString())
@@ -177,8 +178,16 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
         }
 
         binding.fragmentImgAdd.setOnClickListener {
-            if (remoteImageUri != null) return@setOnClickListener
-            openMediaPicker()
+            ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
+                override fun openGallery() {
+                    // ✅ Lança o seletor nativo do sistema
+                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }
+
+                override fun openCamera() {
+                    cameraUtil.openCamera(requireContext(), cameraLauncher)
+                }
+            })
         }
     }
 
@@ -213,14 +222,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
             .override(500, 500)
             .centerCrop()
             .into(binding.fragmentImgAdd)
-        binding.fragmentImgAdd.isClickable = false
-    }
-
-    private fun openMediaPicker() {
-        ShowSelectDialog.show(requireContext(), object : ShowSelectDialog.selectedCallback {
-            override fun openGallery() { this@AddItemFragment.openGallery() }
-            override fun openCamera()  { this@AddItemFragment.openCamera() }
-        })
     }
 
     private fun saveProduct() {
@@ -281,8 +282,6 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
 
     override fun onImageNotFound() {
         binding.progressUploadAdd.visibility = View.INVISIBLE
-        // Garante que o utilizador pode clicar para adicionar uma imagem manualmente
-        binding.fragmentImgAdd.isClickable = true
     }
 
     override fun openCamera() {
@@ -291,7 +290,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add), RegisterAdd.View {
     }
 
     override fun openGallery() {
-        findNavController().navigate(R.id.action_addFragment_to_nav_gallery_fragment)
+        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
     override fun goToHome() {
