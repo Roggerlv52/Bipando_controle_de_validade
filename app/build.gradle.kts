@@ -4,7 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
-    alias(libs.plugins.kotlin.android)
+    //alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     id("kotlin-parcelize")
 }
@@ -59,12 +59,16 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    kotlinOptions {
-        jvmTarget = "17"
+
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
 dependencies {
+    implementation("com.google.guava:listenablefuture:1.0")
     implementation(libs.billing.ktx)
     // 🔥 Firebase BOM (CORRETO)
     implementation(platform(libs.firebase.bom))

@@ -1,6 +1,7 @@
 package com.rogger.bp.ui.payment
 
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import com.rogger.bp.R
 import com.rogger.bp.databinding.FragmentPayBinding
+import com.rogger.bp.ui.base.BaseActivity
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 
 class PayFragment : Fragment() {
@@ -301,19 +303,27 @@ class PayFragment : Fragment() {
     private fun enableEdgeToEdge() {
         val window = requireActivity().window
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
+
+        // ✅ CORREÇÃO SÉNIOR: Ignora chamadas descontinuadas no Android 15+ (API 35+)
+        if (Build.VERSION.SDK_INT < 35) {
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+        }
     }
 
     private fun restoreSystemBars() {
         val window = requireActivity().window
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        window.statusBarColor = getThemeColor(R.attr._color_theme_status)
-        window.navigationBarColor = getThemeColor(R.attr._color_theme_navigation)
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.show(WindowInsetsCompat.Type.systemBars())
-    }
 
+        // ✅ CORREÇÃO SÉNIOR: Ignora chamadas descontinuadas no Android 15+ (API 35+)
+        if (Build.VERSION.SDK_INT < 35) {
+            window.statusBarColor = getThemeColor(R.attr._color_theme_status)
+            window.navigationBarColor = getThemeColor(R.attr._color_theme_navigation)
+        }
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller?.show(WindowInsetsCompat.Type.systemBars())
+    }
     private fun getThemeColor(@AttrRes attrColor: Int): Int {
         val typedValue = TypedValue()
         requireContext().theme.resolveAttribute(attrColor, typedValue, true)

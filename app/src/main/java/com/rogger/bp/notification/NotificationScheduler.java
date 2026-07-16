@@ -37,7 +37,7 @@ public class NotificationScheduler {
                 .build();
 
         PeriodicWorkRequest periodicWork = new PeriodicWorkRequest.Builder(
-                ExpirationWorker.class,
+                ExpirationWork.class,
                 24, TimeUnit.HOURS          // intervalo diário
         )
                 .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)

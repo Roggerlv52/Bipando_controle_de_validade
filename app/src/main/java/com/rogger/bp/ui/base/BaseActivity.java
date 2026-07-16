@@ -37,26 +37,25 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void enableEdgeToEdge() {
         Window window = this.getWindow();
-
-        // Diz ao sistema que o app vai gerenciar os insets manualmente
         WindowCompat.setDecorFitsSystemWindows(window, false);
 
-        // Torna as barras transparentes
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
+        // ✅ CORREÇÃO SÉNIOR: Ignora chamadas descontinuadas no Android 15+ (API 35+)
+        if (android.os.Build.VERSION.SDK_INT < 35) {
+            window.setStatusBarColor(Color.TRANSPARENT);
+            window.setNavigationBarColor(Color.TRANSPARENT);
+        }
     }
 
     protected void restoreSystemBars() {
         Window window = this.getWindow();
-
-        // Volta a encaixar a UI dentro das barras
         WindowCompat.setDecorFitsSystemWindows(window, true);
 
-        // Restaura as cores originais do app
-        window.setStatusBarColor(getThemeColor(R.attr._color_theme_status));
-        window.setNavigationBarColor(getThemeColor(R.attr._color_theme_navigation));
+        // ✅ CORREÇÃO SÉNIOR: Ignora chamadas descontinuadas no Android 15+ (API 35+)
+        if (android.os.Build.VERSION.SDK_INT < 35) {
+            window.setStatusBarColor(getThemeColor(R.attr._color_theme_status));
+            window.setNavigationBarColor(getThemeColor(R.attr._color_theme_navigation));
+        }
 
-        // Garante que as barras estejam visíveis
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(window, window.getDecorView());
 

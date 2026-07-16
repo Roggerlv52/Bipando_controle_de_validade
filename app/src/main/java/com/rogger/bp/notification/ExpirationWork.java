@@ -16,13 +16,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class ExpirationWorker extends Worker {
-    private static final String TAG = "ExpirationWorker";
+public class ExpirationWork extends Worker {
 
     private static final String PREF_USER = "shared_key_date";
-    private static final String KEY_UID   = "userUid";
+    private static final String KEY_UID = "userUid";
 
-    public ExpirationWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+    public ExpirationWork(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
@@ -46,7 +45,8 @@ public class ExpirationWorker extends Worker {
         if (todosProdutosCached != null) {
             for (PostProduct p : todosProdutosCached) {
                 // Filtra apenas produtos do usuário ativo e que não estão na lixeira
-                if (p.getUserId() != null && p.getUserId().equals(userId) && !p.getDeleted()) {
+                p.getUserId();
+                if (p.getUserId().equals(userId) && !p.getDeleted()) {
                     produtos.add(p);
                 }
             }
@@ -59,15 +59,15 @@ public class ExpirationWorker extends Worker {
         // Zera horas do dia atual para comparação apenas por data
         Calendar calHoje = Calendar.getInstance();
         calHoje.set(Calendar.HOUR_OF_DAY, 0);
-        calHoje.set(Calendar.MINUTE,      0);
-        calHoje.set(Calendar.SECOND,      0);
+        calHoje.set(Calendar.MINUTE, 0);
+        calHoje.set(Calendar.SECOND, 0);
         calHoje.set(Calendar.MILLISECOND, 0);
         long hojeMs = calHoje.getTimeInMillis();
 
         int diasAlerta = NotificationPrefs.getDays(getApplicationContext());
 
-        List<PostProduct> vencidos  = new ArrayList<>();
-        List<PostProduct> vencendo  = new ArrayList<>();
+        List<PostProduct> vencidos = new ArrayList<>();
+        List<PostProduct> vencendo = new ArrayList<>();
 
         for (PostProduct p : produtos) {
             if (p.getTimestamp() == 0L) continue;
@@ -76,12 +76,12 @@ public class ExpirationWorker extends Worker {
             Calendar calProd = Calendar.getInstance();
             calProd.setTimeInMillis(p.getTimestamp());
             calProd.set(Calendar.HOUR_OF_DAY, 0);
-            calProd.set(Calendar.MINUTE,      0);
-            calProd.set(Calendar.SECOND,      0);
+            calProd.set(Calendar.MINUTE, 0);
+            calProd.set(Calendar.SECOND, 0);
             calProd.set(Calendar.MILLISECOND, 0);
             long prodMs = calProd.getTimeInMillis();
 
-            long diffMs   = prodMs - hojeMs;
+            long diffMs = prodMs - hojeMs;
             long diffDias = diffMs / (1000L * 60 * 60 * 24);
 
             if (diffDias < 0) {
@@ -105,14 +105,14 @@ public class ExpirationWorker extends Worker {
     private String obterUserId() {
         // Tentativa 1: Firebase Auth
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && user.getUid() != null) {
+        if (user != null) {
+            user.getUid();
             return user.getUid();
         }
 
         // Tentativa 2: SharedPreferences (fallback offline)
         SharedPreferences prefs = getApplicationContext()
                 .getSharedPreferences(PREF_USER, Context.MODE_PRIVATE);
-        String uid = prefs.getString(KEY_UID, null);
-        return uid;
+        return prefs.getString(KEY_UID, null);
     }
 }
