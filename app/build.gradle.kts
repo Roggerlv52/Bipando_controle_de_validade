@@ -2,10 +2,11 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
+
     alias(libs.plugins.android.application)
-    alias(libs.plugins.google.gms.google.services)
-    //alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
@@ -43,8 +44,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true // 🚀 Ativa a ofuscação e otimização de código
-            isShrinkResources = true // 🚀 Remove recursos (imagens/XMLs) não utilizados
+            isMinifyEnabled = true
+            isShrinkResources = true
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -59,37 +60,35 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    kotlin {
 
-}
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        jvmToolchain(17)
     }
 }
 
+
+
 dependencies {
-    implementation("com.google.guava:listenablefuture:1.0")
+
     implementation(libs.billing.ktx)
-    // 🔥 Firebase BOM (CORRETO)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.storage.v2030)
-    //Room
-    implementation("androidx.room:room-runtime:2.7.0")
+    implementation(libs.firebase.storage)
+
+    implementation(libs.guava)
+
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.work.runtime.ktx)
+
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
-    implementation("androidx.room:room-ktx:2.7.0")
     implementation(libs.recyclerview)
-    implementation(libs.room3.common.jvm)
-    annotationProcessor("androidx.room:room-compiler:2.7.0")
-    implementation("androidx.work:work-runtime:2.9.0")
 
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-
-    ksp("androidx.room:room-compiler:2.7.0")
-
-    //ksp("com.github.bumptech.glide:compiler:4.16.0")
+    implementation(libs.glide)
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -99,15 +98,12 @@ dependencies {
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
 
-
     implementation(libs.play.services.auth)
-
     implementation(libs.coordinatorlayout)
-    //implementation(libs.play.services.ads) gerar anuncios
-    testImplementation(libs.junit)
-
     implementation(libs.okhttp)
     implementation(libs.zxing.android.embedded)
+
+    testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
