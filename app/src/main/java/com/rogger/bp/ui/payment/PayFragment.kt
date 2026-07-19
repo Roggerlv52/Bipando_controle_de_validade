@@ -21,6 +21,7 @@ import com.rogger.bp.databinding.FragmentPayBinding
 import com.rogger.bp.ui.base.BaseActivity
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 
+@Suppress("DEPRECATION")
 class PayFragment : Fragment() {
 
     private var billingManager: BillingManager? = null

@@ -176,6 +176,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="txt_no_products">No products found</string>
     <string name="txt_toolbar_barcode">Barcode</string>
     <string name="date_format">MM/dd/yyyy</string>
+    <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Export</string>
 
     <plurals name="categories_selected_count">
@@ -189,5 +190,12 @@ lost and when you create your account again using the same email, you will need 
 
     <string name="day__count">%1$d day</string>
     <string name="days__count">%1$d days</string>
+    <!--PdfExportHelper-->
+    <string name="msg_no_active_products">No active products to export</string>
+    <string name="bp_expiration_date_control">Bipando - Expiration Date Control</string>
+    <string name="report_generated_on">Report generated on: </string>
+    <string name="product">Product</string>
+    <string name="expiration_date"> Expiration date</string>
+    <string name="days_remaining">Days left</string>
 
 </resources>

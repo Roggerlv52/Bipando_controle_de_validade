@@ -194,6 +194,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="txt_no_products">Nenhum produto encontrado</string>
     <string name="txt_toolbar_barcode">Código de barras</string>
     <string name="date_format">dd/MM/yyyy</string>
+    <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Exportar</string>
     <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
     <string name="menu_exporta_excel" translatable="false">EXCEL</string>
@@ -208,5 +209,12 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
         <item quantity="one">%1$d dia</item>
         <item quantity="other">%1$d dias</item>
     </plurals>
+    <!--PdfExportHelper-->
+    <string name="msg_no_active_products">Nenhum produto ativo para exportar</string>
+    <string name="bp_expiration_date_control">Bipando - Controle de Validade</string>
+    <string name="report_generated_on">Relatório gerado em: </string>
+    <string name="product">Produto</string>
+    <string name="expiration_date">Vencimento</string>
+    <string name="days_remaining">Dias rest.</string>
 
 </resources>

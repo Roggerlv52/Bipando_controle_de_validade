@@ -1,6 +1,5 @@
 package com.rogger.bp.util;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
@@ -34,7 +33,7 @@ public class PdfExportHelper {
 
     public static void exportToPdf(Context context, List<PostProduct> products) {
         if (products == null || products.isEmpty()) {
-            Toast.makeText(context, "Nenhum produto ativo para exportar", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,  context.getString(R.string.msg_no_active_products), Toast.LENGTH_SHORT).show();
             return;
         }
         // ✅ ATUALIZAÇÃO SÉNIOR: Ordenação explícita do menor número de dias restantes para o maior
@@ -62,22 +61,22 @@ public class PdfExportHelper {
         paint.setColor(Color.WHITE);
         paint.setTextSize(18);
         paint.setFakeBoldText(true);
-        canvas.drawText("Bipando - Controle de Validade", 24, 46, paint);
+        canvas.drawText(context.getString(R.string.bp_expiration_date_control), 24, 46, paint);
 
         paint.setTextSize(10);
         paint.setFakeBoldText(false);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        canvas.drawText("Relatório gerado em: " + sdf.format(new Date()), 24, 66, paint);
+        SimpleDateFormat sdf = new SimpleDateFormat(context.getString(R.string.date_format_hour), Locale.getDefault());
+        canvas.drawText(context.getString(R.string.report_generated_on) + sdf.format(new Date()), 24, 66, paint);
 
         // 2. Títulos das Colunas da Tabela
         paint.setColor(Color.BLACK);
         paint.setTextSize(11);
         paint.setFakeBoldText(true);
 
-        canvas.drawText("Produto", 24, 115, paint);
-        canvas.drawText("Código de Barras", 220, 115, paint);
-        canvas.drawText("Vencimento", 390, 115, paint);
-        canvas.drawText("Dias rest.", 490, 115, paint);
+        canvas.drawText(context.getString(R.string.product), 24, 115, paint);
+        canvas.drawText(context.getString(R.string.txt_toolbar_barcode), 220, 115, paint);
+        canvas.drawText(context.getString(R.string.expiration_date), 390, 115, paint);
+        canvas.drawText(context.getString(R.string.days_remaining), 490, 115, paint);
 
         // Linha divisória
         paint.setStrokeWidth(1.5f);
@@ -88,7 +87,7 @@ public class PdfExportHelper {
         paint.setTextSize(9);
         int y = 145;
 
-        SimpleDateFormat dateSdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        SimpleDateFormat dateSdf = new SimpleDateFormat(context.getString(R.string.date_format), Locale.getDefault());
 
         for (PostProduct product : products) {
             // Se exceder a margem inferior da folha, abre uma nova página A4 automaticamente
@@ -109,11 +108,11 @@ public class PdfExportHelper {
             long daysLeft = com.rogger.bp.ui.base.Utils.calcDifferencInDays(product.getTimestamp());
             String daysStr;
             if (daysLeft < 0) {
-                daysStr = "Vencido";
+                daysStr = context.getString(R.string.group_expired);
             } else if (daysLeft == 0) {
-                daysStr = "Vence Hoje";
+                daysStr = context.getString(R.string.group_today);
             } else if (daysLeft == 1) {
-                daysStr = "Vence Amanhã";
+                daysStr = context.getString(R.string.group_tomorrow);
             } else {
                 daysStr = String.valueOf(daysLeft);
             }

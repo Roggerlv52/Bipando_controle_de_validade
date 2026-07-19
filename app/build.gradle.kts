@@ -33,7 +33,7 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 37
-        versionCode = 34
+        versionCode = 36
         versionName = "1.${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -51,6 +51,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
     compileOptions {
