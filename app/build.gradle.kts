@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
 }
@@ -34,7 +35,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 37
-        versionName = "1.${versionCode}"
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {
@@ -72,9 +73,16 @@ android {
 
 
 dependencies {
+    //compose
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.navigation.compose)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.androidx.compose.material.icons.extended)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.billing.ktx)
-
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
