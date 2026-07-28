@@ -216,5 +216,6 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="product">Produto</string>
     <string name="expiration_date">Vencimento</string>
     <string name="days_remaining">Dias rest.</string>
+    <string name="share_pdf_report">Compartilhar Relatório PDF:</string>
 
 </resources>

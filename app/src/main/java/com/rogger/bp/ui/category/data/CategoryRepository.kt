@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CategoryRepository(
     private val remoteDataSource: PostCategoryDataSource,
@@ -25,32 +26,41 @@ class CategoryRepository(
         stopListeningForCategories()
 
         repositoryScope.launch {
+
             localCache.getAllCategoriesFlow().firstOrNull()?.let { cached ->
-                if (cached.isNotEmpty()) callback.onSuccess(cached)
+                if (cached.isNotEmpty()) {
+
+                    withContext(Dispatchers.Main) {
+                        callback.onSuccess(cached)
+                    }
+                }
             }
             // Agora stopListeningForCategories() dentro deste escopo é seguro
             categoryListenerRegistration =
-                remoteDataSource.addCategoriesSnapshotListener(object : FetchCategoriesCallback {
-                    override fun onSuccess(categories: List<PostCategory>) {
-                        CoroutineScope(Dispatchers.IO).launch {
+                remoteDataSource.addCategoriesSnapshotListener(
+                    object : FetchCategoriesCallback {
 
-                            localCache.replaceAllCategories(categories)
+                        override fun onSuccess(categories: List<PostCategory>) {
+                            repositoryScope.launch {
+                                localCache.replaceAllCategories(categories)
+                            }
+                        }
+
+                        override fun onFailure(message: String) {
+                                callback.onFailure(message)
+                        }
+
+                        override fun onComplete() {
+                                callback.onComplete()
                         }
                     }
-
-                    override fun onFailure(message: String) {
-                    }
-
-                    override fun onComplete() {
-                    }
-
-                })
+                )
         }
     }
 
     fun create(category: PostCategory, callback: CategoryCallback) {
         // 1. Salva no cache local do Room imediatamente
-        CoroutineScope(Dispatchers.IO).launch {
+        repositoryScope.launch {
             localCache.insertCategory(category)
         }
 
@@ -61,7 +71,7 @@ class CategoryRepository(
 
     fun update(category: PostCategory, callback: CategoryCallback) {
         // 1. Atualiza no cache local do Room imediatamente
-        CoroutineScope(Dispatchers.IO).launch {
+        repositoryScope.launch {
             localCache.updateCategory(category)
         }
 

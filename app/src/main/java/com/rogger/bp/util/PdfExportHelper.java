@@ -148,13 +148,13 @@ public class PdfExportHelper {
 
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-            Intent chooser = Intent.createChooser(shareIntent, "Compartilhar Relatório PDF:");
+            Intent chooser = Intent.createChooser(shareIntent, context.getString(R.string.share_pdf_report));
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(chooser);
 
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(context, "Erro ao gerar PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Error generating PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         } finally {
             document.close();
         }

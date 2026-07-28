@@ -197,5 +197,6 @@ lost and when you create your account again using the same email, you will need 
     <string name="product">Product</string>
     <string name="expiration_date"> Expiration date</string>
     <string name="days_remaining">Days left</string>
+    <string name="share_pdf_report">Share PDF Report:</string>
 
 </resources>
