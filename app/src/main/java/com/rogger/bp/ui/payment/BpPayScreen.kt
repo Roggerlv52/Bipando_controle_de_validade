@@ -1,4 +1,4 @@
-package com.rogger.bp.ui.screen
+package com.rogger.bp.ui.payment
 
 /*
  * Desenvolvido por Roger de Oliveira
