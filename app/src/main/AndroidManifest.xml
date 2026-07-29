@@ -38,18 +38,25 @@
             android:configChanges="screenSize|orientation"
             android:exported="false"
             android:theme="@style/Theme.Bpd">
-
         </activity>
-        <activity
-            android:name="com.rogger.bp.ui.login.view.LoginActivity"
-            android:screenOrientation="fullSensor"
-            android:configChanges="orientation|screenSize"
-            android:exported="true">
 
+        <activity
+            android:name="com.rogger.bp.ui.ModernActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Bpd"
+            android:configChanges="screenSize|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.rogger.bp.ui.login.view.LoginActivity"
+            android:screenOrientation="fullSensor"
+            android:configChanges="orientation|screenSize"
+            android:exported="false">
+
         </activity>
         <activity
             android:name="com.rogger.bp.ui.scanner.ImageBarcode"
