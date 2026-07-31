@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,20 +41,28 @@ private val RedColorScheme = lightColorScheme(
 
 private val DarkColorScheme = darkColorScheme(
     primary = BipandoPrimary,
+    onPrimary = White,
     secondary = BipandoSecondary,
+    onSecondary = Black,
     background = Black,
-    surface = GrayDarker
+    onBackground = White,
+    surface = GrayDarker,
+    onSurface = White,
+    surfaceVariant = Color(0xFF3B3B3B),
+    onSurfaceVariant = Silver,
+    outline = Silver
 )
 
 @Composable
 fun BipandoTheme(
+    themeType: BipandoThemeType? = null,
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val themeNumber = remember { mutableStateOf(SharedPreferencesManager.getThemeNumber(context, "chave")) }
+    val storedThemeNumber = remember { mutableStateOf(SharedPreferencesManager.getThemeNumber(context, "chave")) }
 
-    val themeType = when (themeNumber.value) {
+    val currentThemeType = themeType ?: when (storedThemeNumber.value) {
         1 -> BipandoThemeType.CLASSIC
         2 -> BipandoThemeType.GREEN
         3 -> BipandoThemeType.RED
@@ -62,9 +71,9 @@ fun BipandoTheme(
     }
 
     val colorScheme = when {
-        themeType == BipandoThemeType.DARK || (themeType == BipandoThemeType.CLASSIC && darkTheme) -> DarkColorScheme
-        themeType == BipandoThemeType.GREEN -> GreenColorScheme
-        themeType == BipandoThemeType.RED -> RedColorScheme
+        currentThemeType == BipandoThemeType.DARK || (currentThemeType == BipandoThemeType.CLASSIC && darkTheme) -> DarkColorScheme
+        currentThemeType == BipandoThemeType.GREEN -> GreenColorScheme
+        currentThemeType == BipandoThemeType.RED -> RedColorScheme
         else -> ClassicColorScheme
     }
 

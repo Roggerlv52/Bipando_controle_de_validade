@@ -43,6 +43,7 @@ class CategoryRepository(
                         override fun onSuccess(categories: List<PostCategory>) {
                             repositoryScope.launch {
                                 localCache.replaceAllCategories(categories)
+                                callback.onComplete()
                             }
                         }
 
@@ -51,7 +52,7 @@ class CategoryRepository(
                         }
 
                         override fun onComplete() {
-                                callback.onComplete()
+
                         }
                     }
                 )

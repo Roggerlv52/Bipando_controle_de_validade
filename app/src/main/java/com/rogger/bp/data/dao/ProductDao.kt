@@ -21,6 +21,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE firestoreDocId = :key")
     fun getProductByDocId(key: String): PostProduct?
 
+    @Query("SELECT * FROM products WHERE firestoreDocId = :uuid")
+    fun getProductByUuidFlow(uuid: String): Flow<PostProduct?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: PostProduct)
 
@@ -46,9 +49,13 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products WHERE deleted = 0")
     fun getActiveProductsCountLiveData(): androidx.lifecycle.LiveData<Int>
 
-    // 👉 Consulta reativa de produtos na lixeira
-    @Query("SELECT COUNT(*) FROM products WHERE deleted =  :isDeleted")
+    // 👉 Consulta reativa de contagem de produtos deletados ou não
+    @Query("SELECT COUNT(*) FROM products WHERE deleted = :isDeleted")
     fun getDeletedProductsCountLiveData(isDeleted: Boolean): androidx.lifecycle.LiveData<Int>
+
+    // 👉 Consulta reativa de produtos na lixeira
+    @Query("SELECT * FROM products WHERE deleted = 1 ORDER BY timestamp DESC")
+    fun getDeletedProductsFlow(): Flow<List<PostProduct>>
 
     // Apenas produtos não deletados — garante que o Flow nunca exponha
     // itens com deleted=true para a HomeFragment.
@@ -81,6 +88,9 @@ interface ProductDao {
 
     @Query("SELECT * FROM products WHERE deleted = 0 AND categoryName LIKE '%' || :query || '%' ORDER BY timestamp DESC")
     fun searchProductsByCategoryName(query: String): Flow<List<PostProduct>>
+
+    @Query("SELECT * FROM products WHERE deleted = 0 AND (name LIKE '%' || :query || '%' OR barcode LIKE '%' || :query || '%' OR categoryName LIKE '%' || :query || '%') ORDER BY timestamp DESC")
+    fun searchAllFields(query: String): Flow<List<PostProduct>>
 
     @Transaction
     suspend fun replaceAllProducts(products: List<PostProduct>) {

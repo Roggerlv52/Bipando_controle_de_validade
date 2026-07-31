@@ -22,6 +22,11 @@ class HomeRepository(
     private var productsListenerRegistration: ListenerRegistration? = null
 
     fun fetchAll(callback: FetchProductsCallback) {
+        if (productsListenerRegistration != null) {
+            callback.onComplete()
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             // 1. Mostrar dados do cache imediatamente (se houver)
             localCache.getAllProductsFlow().firstOrNull()?.let { cachedProducts ->
@@ -36,6 +41,7 @@ class HomeRepository(
                     override fun onSuccess(products: List<PostProduct>) {
                         CoroutineScope(Dispatchers.IO).launch {
                             localCache.replaceAllProducts(products)
+                            callback.onComplete()
                         }
                     }
 
@@ -43,7 +49,9 @@ class HomeRepository(
                         callback.onFailure(message)
                     }
 
-                    override fun onComplete() {}
+                    override fun onComplete() {
+
+                    }
                 })
         }
     }

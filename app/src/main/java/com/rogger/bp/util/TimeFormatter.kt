@@ -1,9 +1,26 @@
 package com.rogger.bp.util
 
-/*
- * Desenvolvido por Roger de Oliveira
- * Data: 28/07/2026
- * Hora: 13:56
- */
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
+
 object TimeFormatter {
+    private val locale = Locale("pt", "BR")
+
+    fun formatTimestamp(timestamp: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", locale)
+        return sdf.format(Date(timestamp))
+    }
+
+    fun getDaysRemaining(expirationTimestamp: Long): Long {
+        val now = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val diff = expirationTimestamp - now
+        return TimeUnit.MILLISECONDS.toDays(diff)
+    }
 }
