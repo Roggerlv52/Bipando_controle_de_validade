@@ -135,14 +135,18 @@ class HomeViewModel(
 
     private fun observeCounters() {
         viewModelScope.launch {
-            homeRepository.getCachedProductsFlow().collect { products ->
+            combine(
+                homeRepository.getCachedProductsFlow(),
+                categoryRepository.getCachedCategoriesFlow()
+            ) { products, categories ->
                 _uiState.update { state ->
                     state.copy(
                         activeCount = products.count { !it.deleted },
-                        deletedCount = products.count { it.deleted }
+                        deletedCount = products.count { it.deleted },
+                        categoryCount = categories.size
                     )
                 }
-            }
+            }.collect {}
         }
     }
 

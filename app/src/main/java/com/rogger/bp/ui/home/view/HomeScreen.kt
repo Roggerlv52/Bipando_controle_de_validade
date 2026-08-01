@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    initialCategoryId: String? = null,
+    initialCategoryName: String? = null,
     onProductClick: (Product) -> Unit,
     onImageClick: (String) -> Unit,
     onScannerNavigate: (String, String) -> Unit,
@@ -65,6 +67,9 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.syncAndFetchProducts(context)
         viewModel.fetchCategories()
+        if (initialCategoryId != null) {
+            viewModel.fetchProducts(initialCategoryId, initialCategoryName)
+        }
     }
 
     ModalNavigationDrawer(

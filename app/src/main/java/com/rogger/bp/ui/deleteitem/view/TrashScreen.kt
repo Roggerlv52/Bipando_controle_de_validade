@@ -16,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +56,7 @@ fun TrashScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (state.items.isEmpty() && !state.isLoading) {
                 EmptyTrashState()
@@ -116,7 +115,9 @@ fun TrashItem(
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancelar") }
             },
             shape = RoundedCornerShape(16.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
@@ -132,14 +133,16 @@ fun TrashItem(
                         onRestore()
                         showRestoreConfirm = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) { Text("Restaurar") }
             },
             dismissButton = {
                 TextButton(onClick = { showRestoreConfirm = false }) { Text("Cancelar") }
             },
             shape = RoundedCornerShape(16.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
@@ -150,7 +153,10 @@ fun TrashItem(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Row(
@@ -165,7 +171,7 @@ fun TrashItem(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF0F0F0))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -174,21 +180,30 @@ fun TrashItem(
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Vencimento: ${TimeFormatter.formatTimestamp(product.timestamp)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Row {
                     IconButton(onClick = { showRestoreConfirm = true }) {
-                        Icon(Icons.Default.Restore, contentDescription = "Restaurar", tint = Color(0xFF388E3C))
+                        Icon(
+                            imageVector = Icons.Default.Restore, 
+                            contentDescription = "Restaurar", 
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                     IconButton(onClick = { showDeleteConfirm = true }) {
-                        Icon(Icons.Default.DeleteForever, contentDescription = "Excluir", tint = Color(0xFFD32F2F))
+                        Icon(
+                            imageVector = Icons.Default.DeleteForever, 
+                            contentDescription = "Excluir", 
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }
@@ -207,13 +222,13 @@ fun EmptyTrashState() {
             painter = painterResource(id = R.drawable.ic_deleted_products),
             contentDescription = null,
             modifier = Modifier.size(100.dp),
-            tint = Color.LightGray
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Sua lixeira está vazia",
-            fontSize = 18.sp,
-            color = Color.Gray,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }

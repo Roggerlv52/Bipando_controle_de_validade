@@ -11,7 +11,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.repository.AuthRepositoryImpl
 import com.rogger.bp.data.repository.ProductRepositoryImpl
-import com.rogger.bp.domain.usecase.GetProductsUseCase
 import com.rogger.bp.domain.usecase.LoginUseCase
 import com.rogger.bp.ui.login.presentation.LoginViewModel
 import com.rogger.bp.ui.login.view.LoginScreen
@@ -85,7 +84,16 @@ fun BipandoNavGraph(navController: NavHostController) {
             )
         }
         
-        composable(Routes.HOME) {
+        composable(
+            route = "${Routes.HOME}?categoryId={categoryId}&categoryName={categoryName}",
+            arguments = listOf(
+                navArgument("categoryId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("categoryName") { type = NavType.StringType; nullable = true; defaultValue = null }
+            )
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId")
+            val categoryName = backStackEntry.arguments?.getString("categoryName")
+
             val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
             val homeRepository = DependencyInjector.registerHomeRepository(context)
             val categoryRepository = DependencyInjector.registerCategoryRepository(context)
@@ -109,6 +117,8 @@ fun BipandoNavGraph(navController: NavHostController) {
             BipandoTheme(themeType = themeType) {
                 HomeScreen(
                     viewModel = viewModel,
+                    initialCategoryId = categoryId,
+                    initialCategoryName = categoryName,
                     onProductClick = { product ->
                         navController.navigate("edit_product/${product.uuid}")
                     },
@@ -164,7 +174,10 @@ fun BipandoNavGraph(navController: NavHostController) {
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onCategoryClick = { category ->
-                        navController.navigate("scanner/${category.id}")
+                        val encodedName = java.net.URLEncoder.encode(category.name, "UTF-8")
+                        navController.navigate("${Routes.HOME}?categoryId=${category.id}&categoryName=$encodedName") {
+                            popUpTo(Routes.HOME) { inclusive = true }
+                        }
                     }
                 )
             }

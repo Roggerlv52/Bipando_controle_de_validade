@@ -25,6 +25,7 @@ import com.rogger.bp.R
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.ui.category.presentation.CategoryViewModel
 import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
+import com.rogger.bp.ui.componentes.BipandoTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,13 +43,11 @@ fun CategoryScreen(
             onDismissRequest = { showAddDialog = false },
             title = { Text("Nova Categoria") },
             text = {
-                OutlinedTextField(
+                BipandoTextField(
                     value = newCategoryName,
                     onValueChange = { newCategoryName = it },
-                    label = { Text("Nome da Categoria") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                    label = "Nome da Categoria",
+                    leadingIcon = Icons.Default.Category
                 )
             },
             confirmButton = {
@@ -101,7 +100,7 @@ fun CategoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (state.categories.isEmpty() && !state.isLoading) {
                 EmptyCategoriesState(onAddClick = { showAddDialog = true })
@@ -141,7 +140,10 @@ fun CategoryItem(category: Category, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -160,16 +162,17 @@ fun CategoryItem(category: Category, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             
             Text(
-                text = category.name,
+                text = "${category.name} (${category.itemCount})",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -187,11 +190,18 @@ fun EmptyCategoriesState(onAddClick: () -> Unit) {
         Text(
             text = stringResource(id = R.string.txt_no_categories_registered),
             textAlign = TextAlign.Center,
-            fontSize = 18.sp,
-            color = Color.Gray
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onAddClick) {
+        Button(
+            onClick = onAddClick,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("Criar Minha Primeira Categoria")
         }
     }
