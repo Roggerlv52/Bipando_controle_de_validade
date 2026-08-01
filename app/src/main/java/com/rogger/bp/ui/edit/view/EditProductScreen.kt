@@ -81,7 +81,7 @@ fun EditProductScreen(
                 Button(
                     onClick = {
                         viewModel.deleteProduct()
-                        showDeleteDialog = false
+                        showDeleteDialog = true
                     },
                     enabled = !state.isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)

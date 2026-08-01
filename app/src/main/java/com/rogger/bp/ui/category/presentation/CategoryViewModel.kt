@@ -50,7 +50,7 @@ class CategoryViewModel(
         viewModelScope.launch {
             categoryRepository.getCachedCategoriesWithCountsFlow()
                 .map { list -> 
-                    list.map { Category(id = it.firestoreId, name = it.name) } 
+                    list.map { Category(id = it.firestoreId, name = it.name, itemCount = it.itemCount) }
                 }
                 .collect { categoryList ->
                     _uiState.update { it.copy(categories = categoryList) }
