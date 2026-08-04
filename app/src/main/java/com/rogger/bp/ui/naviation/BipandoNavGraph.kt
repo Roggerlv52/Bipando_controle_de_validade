@@ -117,6 +117,7 @@ fun BipandoNavGraph(navController: NavHostController) {
             BipandoTheme(themeType = themeType) {
                 HomeScreen(
                     viewModel = viewModel,
+                    navController = navController,
                     initialCategoryId = categoryId,
                     initialCategoryName = categoryName,
                     onProductClick = { product ->
@@ -125,6 +126,9 @@ fun BipandoNavGraph(navController: NavHostController) {
                     onImageClick = { uri ->
                         val encodedUri = java.net.URLEncoder.encode(uri, "UTF-8")
                         navController.navigate("image_preview?uri=$encodedUri")
+                    },
+                    onScannerSearch = {
+                        navController.navigate("scanner/SEARCH")
                     },
                     onScannerNavigate = { categoryId, categoryName ->
                         navController.navigate("scanner/$categoryId")
@@ -197,8 +201,14 @@ fun BipandoNavGraph(navController: NavHostController) {
             BipandoTheme(themeType = themeType) {
                 ScannerScreen(
                     onBarcodeScanned = { barcode ->
-                        navController.navigate("add_product/$barcode/$categoryId") {
-                            popUpTo(Routes.SCANNER) { inclusive = true }
+                        if (categoryId == "SEARCH") {
+                            // Envia o barcode de volta através do savedStateHandle
+                            navController.previousBackStackEntry?.savedStateHandle?.set("search_barcode", barcode)
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate("add_product/$barcode/$categoryId") {
+                                popUpTo(Routes.SCANNER) { inclusive = true }
+                            }
                         }
                     },
                     onBackClick = { navController.popBackStack() }

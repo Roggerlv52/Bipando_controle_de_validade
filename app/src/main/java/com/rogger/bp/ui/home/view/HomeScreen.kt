@@ -1,19 +1,84 @@
 package com.rogger.bp.ui.home.view
 
 import android.content.Intent
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,27 +91,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
 import com.rogger.bp.R
+import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.domain.model.Product
-import com.rogger.bp.ui.home.presentation.HomeViewModel
 import com.rogger.bp.ui.home.presentation.HomeState
+import com.rogger.bp.ui.home.presentation.HomeViewModel
+import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.util.CategorySelectionDialog
 import com.rogger.bp.util.DeleteConfirmationDialog
-import com.rogger.bp.data.model.PostCategory
-import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.util.TimeFormatter
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    navController: NavController,
     initialCategoryId: String? = null,
     initialCategoryName: String? = null,
     onProductClick: (Product) -> Unit,
@@ -56,6 +122,7 @@ fun HomeScreen(
     onCategoryClick: () -> Unit,
     onTrashClick: () -> Unit,
     onPaymentClick: () -> Unit,
+    onScannerSearch: () -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -63,6 +130,16 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Observa o resultado do scanner para pesquisa vindo do savedStateHandle
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(navBackStackEntry) {
+        navBackStackEntry?.savedStateHandle?.get<String>("search_barcode")?.let { barcode ->
+            viewModel.toggleSearch(true)
+            viewModel.onSearchQueryChange(barcode)
+            navBackStackEntry?.savedStateHandle?.remove<String>("search_barcode")
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.syncAndFetchProducts(context)
@@ -74,10 +151,23 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        scrimColor = Color.Black.copy(alpha = 0.8f), // Adiciona uma sombra mais intensa ao fundo
         drawerContent = {
             ModalDrawerSheet {
                 DrawerHeader(state)
                 Spacer(modifier = Modifier.height(8.dp))
+                DrawerItem(
+                    label = "Home",
+                    icon = Icons.Default.Home,
+                    count = state.activeCount,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        // Se estiver filtrado por categoria, limpa o filtro. Caso contrário, não faz nada (já está na Home)
+                        if (state.categoryFilterName != null) {
+                            viewModel.fetchProducts(null, null)
+                        }
+                    }
+                )
                 DrawerItem(
                     label = "Categorias",
                     icon = Icons.Default.Category,
@@ -134,6 +224,7 @@ fun HomeScreen(
             onMenuClick = { scope.launch { drawerState.open() } },
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onToggleSearch = viewModel::toggleSearch,
+            onScannerSearch = onScannerSearch,
             onDeleteProducts = viewModel::deleteProducts,
             onLogout = { viewModel.logout(context, onLogout) },
             onExportPdf = { viewModel.exportPdf(context) },
@@ -162,19 +253,19 @@ fun DrawerHeader(state: HomeState) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(Color.White),
+                    .background(MaterialTheme.colorScheme.surface),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = state.userName,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
             Text(
                 text = state.userEmail,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                 fontSize = 14.sp
             )
         }
@@ -216,7 +307,12 @@ private fun compartilharApp(context: android.content.Context) {
         val message = context.getString(R.string.share_app_message, context.packageName)
         putExtra(Intent.EXTRA_TEXT, message)
     }
-    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_app_title)))
+    context.startActivity(
+        Intent.createChooser(
+            shareIntent,
+            context.getString(R.string.share_app_title)
+        )
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -231,13 +327,23 @@ fun HomeScreenContent(
     onMenuClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onToggleSearch: (Boolean) -> Unit,
+    onScannerSearch: () -> Unit,
     onDeleteProducts: (List<Product>) -> Unit,
     onLogout: () -> Unit,
     onExportPdf: () -> Unit,
     onExportExcel: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     var showCategoryDialog by remember { mutableStateOf(false) }
     var deleteDialogProducts by remember { mutableStateOf<Pair<List<Product>, String>?>(null) }
+    val removingProductUuids = remember { mutableStateListOf<String>() }
+
+    // Estado derivado para evitar que o "EmptyState" apareça enquanto itens ainda estão sendo removidos visualmente
+    val isListVisuallyEmpty by remember(state.products, removingProductUuids) {
+        derivedStateOf {
+            state.products.isEmpty() || state.products.all { removingProductUuids.contains(it.uuid) }
+        }
+    }
 
     if (showCategoryDialog) {
         CategorySelectionDialog(
@@ -259,7 +365,21 @@ fun HomeScreenContent(
         DeleteConfirmationDialog(
             message = message,
             onDismiss = { deleteDialogProducts = null },
-            onConfirm = { onDeleteProducts(products) }
+            onConfirm = {
+                val uuids = products.map { it.uuid }
+                removingProductUuids.addAll(uuids)
+                scope.launch {
+                    // Tempo da animação (600ms) + um pequeno buffer para garantir suavidade
+                    kotlinx.coroutines.delay(650) 
+                    onDeleteProducts(products)
+                    
+                    // Aguardamos o processamento do DB e a emissão do novo Flow de produtos
+                    // Isso evita que o item 'pisque' de volta caso a lista local ainda contenha o item
+                    kotlinx.coroutines.delay(400)
+                    removingProductUuids.removeAll(uuids)
+                    deleteDialogProducts = null
+                }
+            }
         )
     }
 
@@ -269,6 +389,7 @@ fun HomeScreenContent(
                 SearchTopAppBar(
                     query = state.searchQuery,
                     onQueryChange = onSearchQueryChange,
+                    onBarcodeClick = onScannerSearch,
                     onCloseClick = { onToggleSearch(false) }
                 )
             } else {
@@ -297,9 +418,9 @@ fun HomeScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            if (state.products.isEmpty() && !state.isLoading) {
+            if (isListVisuallyEmpty && !state.isLoading) {
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
                     onAddClick = { showCategoryDialog = true }
@@ -314,37 +435,40 @@ fun HomeScreenContent(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(top = 0.5.dp, bottom = 80.dp)
                 ) {
                     groupedProducts.forEach { (days, items) ->
+                        val isGroupRemoving =
+                            items.all { removingProductUuids.contains(it.first.uuid) }
+
                         item {
                             ProductGroupHeader(
                                 daysRemaining = days,
+                                isGroupRemoving,
                                 yellowWarningLimit = state.yellowWarningDays,
                                 onRemoveGroup = { statusText ->
                                     deleteDialogProducts = items.map { it.first } to statusText
                                 }
                             )
                         }
-                        
-                        items(
+
+                        itemsIndexed(
                             items = items,
-                            key = { it.first.uuid },
-                            contentType = { "product" }
-                        ) { (product, _) ->
+                            key = { _, item -> item.first.uuid },
+                            contentType = { _, _ -> "product" }
+                        ) { index, (product, _) ->
+                            val isItemVisible = !removingProductUuids.contains(product.uuid)
+                            val itemOnClick = remember(product.uuid) { { onProductClick(product) } }
+                            val itemOnImageClick = remember(product.uuid) { 
+                                { if (product.imageUri.isNotEmpty()) onImageClick(product.imageUri) } 
+                            }
+
                             ProductItem(
-                                product = product, 
-                                onClick = { onProductClick(product) },
-                                onImageClick = { 
-                                    if (product.imageUri.isNotEmpty()) {
-                                        onImageClick(product.imageUri)
-                                    }
-                                }
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                thickness = 0.5.dp,
-                                color = Color.LightGray.copy(alpha = 0.5f)
+                                product = product,
+                                isItemVisible = isItemVisible,
+                                showDivider = index < items.lastIndex,
+                                onClick = itemOnClick,
+                                onImageClick = itemOnImageClick
                             )
                         }
                     }
@@ -361,10 +485,18 @@ fun HomeScreenContent(
 @Composable
 fun ProductGroupHeader(
     daysRemaining: Long,
+    isGroupRemoving : Boolean,
     yellowWarningLimit: Int,
     onRemoveGroup: (String) -> Unit
 ) {
-    val (backgroundColor, dotColor, textColor, statusText) = remember(daysRemaining, yellowWarningLimit) {
+    val isDark =
+        MaterialTheme.colorScheme.surface.run { (red * 0.299 + green * 0.587 + blue * 0.114) < 0.5 }
+
+    val (backgroundColor, dotColor, textColor, statusText) = remember(
+        daysRemaining,
+        yellowWarningLimit,
+        isDark
+    ) {
         val bg: Color
         val dot: Color
         val txt: Color
@@ -373,63 +505,72 @@ fun ProductGroupHeader(
         when {
             daysRemaining < 1 -> {
                 // 🔴 Caso A: Vencido / Expired
-                bg = Color(0xFFFDF2F2)
+                bg = if (isDark) Color(0xFF450A0A) else Color(0xFFFDF2F2)
                 dot = Color(0xFFEF4444)
-                txt = Color(0xFF991B1B)
+                txt = if (isDark) Color(0xFFFECACA) else Color(0xFF991B1B)
                 label = if (daysRemaining == 0L) "Hoje" else "Vencido"
             }
+
             daysRemaining <= yellowWarningLimit -> {
                 // 🟠 Caso B: Próximo do vencimento (Laranja/Amarelo)
-                bg = Color(0xFFFFFBEB)
+                bg = if (isDark) Color(0xFF451A03) else Color(0xFFFFFBEB)
                 dot = Color(0xFFF59E0B)
-                txt = Color(0xFF92400E)
+                txt = if (isDark) Color(0xFFFED7AA) else Color(0xFF92400E)
                 label = if (daysRemaining == 1L) "Amanhã" else "$daysRemaining dias restantes"
             }
+
             else -> {
                 // 🟢 Caso C: Seguro (Verde)
-                bg = Color(0xFFF0FDF4)
+                bg = if (isDark) Color(0xFF064E3B) else Color(0xFFF0FDF4)
                 dot = Color(0xFF10B981)
-                txt = Color(0xFF065F46)
+                txt = if (isDark) Color(0xFFD1FAE5) else Color(0xFF065F46)
                 label = "$daysRemaining dias restantes"
             }
         }
         listOf(bg, dot, txt, label)
     }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(backgroundColor as Color)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+    AnimatedVisibility(
+        visible = !isGroupRemoving,
+        exit = shrinkVertically(
+            animationSpec = tween(600),
+            shrinkTowards = Alignment.Top,
+        ) + fadeOut()
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(dotColor as Color)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = statusText as String,
-                color = textColor as Color,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-        }
-        
-        IconButton(
-            onClick = { onRemoveGroup(statusText as String) },
-            modifier = Modifier.size(20.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(backgroundColor as Color)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Remover Grupo",
-                tint = Color(0xFF9CA3AF),
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(dotColor as Color)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = statusText as String,
+                    color = textColor as Color,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+
+            IconButton(
+                onClick = { onRemoveGroup(statusText as String) },
                 modifier = Modifier.size(20.dp)
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remover Grupo",
+                    tint = (textColor as Color).copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
@@ -473,7 +614,12 @@ fun HomeTopAppBar(
                             showMenu = false
                             onExportPdf()
                         },
-                        leadingIcon = { Icon(Icons.Default.PictureAsPdf, contentDescription = null) }
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.PictureAsPdf,
+                                contentDescription = null
+                            )
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text("Exportar Excel") },
@@ -490,7 +636,12 @@ fun HomeTopAppBar(
                             showMenu = false
                             onLogout()
                         },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) }
+                        leadingIcon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = null
+                            )
+                        }
                     )
                 }
             }
@@ -511,6 +662,7 @@ fun HomeTopAppBar(
 fun SearchTopAppBar(
     query: String,
     onQueryChange: (String) -> Unit,
+    onBarcodeClick: () -> Unit,
     onCloseClick: () -> Unit
 ) {
     TopAppBar(
@@ -519,14 +671,28 @@ fun SearchTopAppBar(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Pesquisar produtos...", color = Color.White.copy(alpha = 0.7f)) },
+                placeholder = {
+                    Text(
+                        "Pesquisar produtos...",
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                    )
+                },
                 singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = onBarcodeClick) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode,
+                            contentDescription = "Escanear Código",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    cursorColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    cursorColor = MaterialTheme.colorScheme.onPrimary,
+                    focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 )
@@ -534,7 +700,11 @@ fun SearchTopAppBar(
         },
         navigationIcon = {
             IconButton(onClick = onCloseClick) {
-                Icon(Icons.Default.Close, contentDescription = "Fechar Pesquisa", tint = Color.White)
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Fechar Pesquisa",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -577,98 +747,118 @@ fun EmptyState(isSearch: Boolean, onAddClick: () -> Unit) {
 }
 
 @Composable
-fun ProductItem(product: Product, onClick: () -> Unit, onImageClick: () -> Unit) {
+fun ProductItem(
+    product: Product,
+    isItemVisible: Boolean,
+    showDivider: Boolean,
+    onClick: () -> Unit,
+    onImageClick: () -> Unit
+) {
     val formattedDate = remember(product.timestamp) {
         TimeFormatter.formatTimestamp(product.timestamp)
     }
 
     val context = LocalContext.current
-    val imageRequest = remember(product.imageUri, product.uuid) {
+    val imageRequest = remember(product.imageUri) {
         ImageRequest.Builder(context)
             .data(product.imageUri.ifEmpty { R.drawable.ic_shopping })
-            .crossfade(true)
-            .size(180, 180) 
-            .precision(Precision.EXACT)
+            .crossfade(false) // Desativado para scroll ultra-suave
+            .size(240, 240)
             .build()
     }
 
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.White
+    AnimatedVisibility(
+        visible = isItemVisible,
+        exit = shrinkVertically(
+            animationSpec = tween(500),
+            shrinkTowards = Alignment.Top
+        ) + fadeOut()
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .clickable(onClick = onClick)
         ) {
-            AsyncImage(
-                model = imageRequest,
-                contentDescription = product.name,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFFF0F0F0))
-                    .then(
-                        if (product.imageUri.isNotEmpty()) {
-                            Modifier.clickable { onImageClick() }
-                        } else {
-                            Modifier
+            Column {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    AsyncImage(
+                        model = imageRequest,
+                        contentDescription = product.name,
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(8.dp)) // Border radius maior e mais moderno
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .then(
+                                if (product.imageUri.isNotEmpty()) {
+                                    Modifier.clickable { onImageClick() }
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(R.drawable.ic_shopping),
+                        placeholder = painterResource(R.drawable.ic_shopping)
+                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = product.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold, // Nome mais destacado
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    ),
-                contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.ic_shopping),
-                placeholder = painterResource(R.drawable.ic_shopping)
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.DarkGray,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = formattedDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
+                        Text(
+                            text = product.barcode,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            letterSpacing = 1.sp
+                        )
+
+                        Text(
+                            text = product.categoryName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = product.barcode,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray,
-                    letterSpacing = 1.sp
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Text(
-                        text = product.categoryName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray,
-                        textAlign = TextAlign.End
+                if (showDivider) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                     )
                 }
             }
@@ -683,10 +873,30 @@ fun HomeScreenPreview() {
         HomeScreenContent(
             state = HomeState(
                 products = listOf(
-                    Product(name = "Tirolez Mussarela U lactose 150g", categoryName = "Queijos", barcode = "7896030520198", timestamp = System.currentTimeMillis() - 86400000),
-                    Product(name = "Verde Campo Lacfree Cottage", categoryName = "Queijos", barcode = "7898205920239", timestamp = System.currentTimeMillis() + 86400000 * 13),
-                    Product(name = "Mussarela Búfala Bom Destino 550g", categoryName = "Queijos", barcode = "7898130990468", timestamp = System.currentTimeMillis() + 86400000 * 15),
-                    Product(name = "Seara Bacon Double Smoked 180g", categoryName = "Embutidos", barcode = "7894904097296", timestamp = System.currentTimeMillis() + 86400000 * 15)
+                    Product(
+                        name = "Tirolez Mussarela U lactose 150g",
+                        categoryName = "Queijos",
+                        barcode = "7896030520198",
+                        timestamp = System.currentTimeMillis() - 86400000
+                    ),
+                    Product(
+                        name = "Verde Campo Lacfree Cottage",
+                        categoryName = "Queijos",
+                        barcode = "7898205920239",
+                        timestamp = System.currentTimeMillis() + 86400000 * 13
+                    ),
+                    Product(
+                        name = "Mussarela Búfala Bom Destino 550g",
+                        categoryName = "Queijos",
+                        barcode = "7898130990468",
+                        timestamp = System.currentTimeMillis() + 86400000 * 15
+                    ),
+                    Product(
+                        name = "Seara Bacon Double Smoked 180g",
+                        categoryName = "Embutidos",
+                        barcode = "7894904097296",
+                        timestamp = System.currentTimeMillis() + 86400000 * 15
+                    )
                 ),
                 isLoading = false
             ),
@@ -699,6 +909,7 @@ fun HomeScreenPreview() {
             onSearchQueryChange = {},
             onToggleSearch = {},
             onDeleteProducts = {},
+            onScannerSearch = {},
             onLogout = {},
             onExportPdf = {},
             onExportExcel = {}

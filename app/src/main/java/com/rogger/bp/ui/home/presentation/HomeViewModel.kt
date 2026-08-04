@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 data class HomeState(
     val products: List<Product> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true, // Inicia como true para evitar flicker do EmptyState
     val errorMessage: String? = null,
     val categoryFilterName: String? = null,
     val searchQuery: String = "",
