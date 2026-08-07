@@ -128,7 +128,6 @@ fun HomeScreen(
     onScannerNavigate: (String, String) -> Unit,
     onProfileClick: () -> Unit,
     onCategoryClick: () -> Unit,
-    onTrashClick: () -> Unit,
     onPaymentClick: () -> Unit,
     onScannerSearch: () -> Unit,
     onLogout: () -> Unit
@@ -238,15 +237,6 @@ fun HomeScreen(
                     onClick = {
                         scope.launch { drawerState.close() }
                         onCategoryClick()
-                    }
-                )
-                DrawerItem(
-                    label = "Lixeira",
-                    icon = Icons.Default.Delete,
-                    count = state.deletedCount,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        onTrashClick()
                     }
                 )
                 DrawerItem(

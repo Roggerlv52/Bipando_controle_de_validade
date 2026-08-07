@@ -1,6 +1,10 @@
 package com.rogger.bp.ui.profile.view
 
 import android.app.TimePickerDialog
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,18 +24,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.rogger.bp.R
-import com.rogger.bp.domain.model.Product
 import com.rogger.bp.notification.NotificationPrefs
+import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.profile.presentation.ProfileState
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.theme.BipandoThemeType
+import com.rogger.bp.util.NotificationSoundDialog
+import com.rogger.bp.util.SystemSoundPickerDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,9 +49,19 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.onNotificationToggle(context, true)
+        }
+    }
+
     var showEditNameDialog by remember { mutableStateOf(false) }
     var editedName by remember { mutableStateOf("") }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showSoundDialog by remember { mutableStateOf(false) }
+    var showSystemSoundPicker by remember { mutableStateOf(false) }
 
     if (showEditNameDialog) {
         AlertDialog(
@@ -101,6 +114,32 @@ fun ProfileScreen(
                 TextButton(onClick = { showDeleteAccountDialog = false }) {
                     Text("Cancelar")
                 }
+            }
+        )
+    }
+
+    if (showSoundDialog) {
+        NotificationSoundDialog(
+            onDismiss = { showSoundDialog = false },
+            onOptionSelected = { type, uri, name ->
+                if (type == 3) {
+                    showSystemSoundPicker = true
+                } else {
+                    viewModel.onSoundTypeChange(context, type, uri, name)
+                }
+            },
+            currentType = state.soundType,
+            currentUri = state.soundUri
+        )
+    }
+
+    if (showSystemSoundPicker) {
+        SystemSoundPickerDialog(
+            context = context,
+            onDismiss = { showSystemSoundPicker = false },
+            onSoundSelected = { uri, name ->
+                viewModel.onSoundTypeChange(context, 3, uri, name)
+                showSoundDialog = false
             }
         )
     }
@@ -205,7 +244,19 @@ fun ProfileScreen(
                     title = "Ativar Notificações",
                     icon = Icons.Default.Notifications,
                     checked = state.isNotificationEnabled,
-                    onCheckedChange = { viewModel.onNotificationToggle(context, it) }
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            if (NotificationUtil.temPermissao(context)) {
+                                viewModel.onNotificationToggle(context, true)
+                            } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            }
+                        } else {
+                            viewModel.onNotificationToggle(context, false)
+                        }
+                    }
                 )
 
                 if (state.isNotificationEnabled) {
@@ -233,6 +284,14 @@ fun ProfileScreen(
                             }, hour, minute, true).show()
                         }
                     )
+
+                    ListItem(
+                        headlineContent = { Text("Som da Notificação") },
+                        supportingContent = { Text(state.soundName) },
+                        leadingContent = { Icon(Icons.Default.MusicNote, contentDescription = null) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                        modifier = Modifier.clickable { showSoundDialog = true }
+                    )
                 }
             }
 
@@ -250,7 +309,20 @@ fun ProfileScreen(
                     headlineContent = { Text("Lixeira") },
                     supportingContent = { Text("Ver itens removidos") },
                     leadingContent = { Icon(Icons.Default.Delete, contentDescription = null) },
-                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                    trailingContent = { 
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (state.deletedProductsCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                ) {
+                                    Text(state.deletedProductsCount.toString())
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                        }
+                    },
                     modifier = Modifier.clickable(onClick = onTrashClick),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )

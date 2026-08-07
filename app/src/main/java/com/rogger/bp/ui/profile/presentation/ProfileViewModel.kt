@@ -23,12 +23,16 @@ data class ProfileState(
     val userEmail: String = "",
     val userPhotoUrl: String = "",
     val totalProductsCount: Int = 0,
+    val deletedProductsCount: Int = 0,
     val isPremium: Boolean = false,
     val themeType: BipandoThemeType = BipandoThemeType.CLASSIC,
     val isBeepEnabled: Boolean = false,
     val isNotificationEnabled: Boolean = false,
     val notificationDays: Int = 7,
     val notificationTime: String = "08:00",
+    val soundType: Int = 2,
+    val soundName: String = "Padrão",
+    val soundUri: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isLoggedOut: Boolean = false
@@ -49,7 +53,12 @@ class ProfileViewModel(
     private fun observeProductCount() {
         viewModelScope.launch {
             productDao.getTotalProductsCountLiveData().asFlow().collect { count ->
-                _uiState.update { it.copy(totalProductsCount = count) }
+                _uiState.update { it.copy(totalProductsCount = count ?: 0) }
+            }
+        }
+        viewModelScope.launch {
+            productDao.getDeletedProductsCountLiveData(true).asFlow().collect { count ->
+                _uiState.update { it.copy(deletedProductsCount = count ?: 0) }
             }
         }
     }
@@ -63,6 +72,9 @@ class ProfileViewModel(
         val notifDays = NotificationPrefs.getDays(context)
         val hour = NotificationPrefs.getHour(context)
         val minute = NotificationPrefs.getMinute(context)
+        val soundType = NotificationPrefs.getSoundType(context)
+        val soundName = NotificationPrefs.getSoundName(context)
+        val soundUri = NotificationPrefs.getSoundUri(context)
 
         val themeType = when (themeNumber) {
             2 -> BipandoThemeType.GREEN
@@ -83,7 +95,10 @@ class ProfileViewModel(
                 isBeepEnabled = beepState,
                 isNotificationEnabled = notifEnabled,
                 notificationDays = notifDays,
-                notificationTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
+                notificationTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute),
+                soundType = soundType,
+                soundName = soundName,
+                soundUri = soundUri
             )
         }
 
@@ -184,6 +199,14 @@ class ProfileViewModel(
         _uiState.update { 
             it.copy(notificationTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute))
         }
+    }
+
+    fun onSoundTypeChange(context: Context, type: Int, uri: String, name: String) {
+        NotificationPrefs.saveSoundType(context, type)
+        if (type == 3 || type == 2) {
+            NotificationPrefs.saveSoundUri(context, uri, name)
+        }
+        _uiState.update { it.copy(soundType = type, soundName = name, soundUri = uri) }
     }
 
     fun logout(context: Context) {

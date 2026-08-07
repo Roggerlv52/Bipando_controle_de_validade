@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.naviation
 
+import com.rogger.bp.ui.profile.view.ProfileScreen
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -20,17 +21,12 @@ import com.rogger.bp.ui.category.presentation.CategoryViewModel
 import com.rogger.bp.ui.category.view.CategoryScreen
 import com.rogger.bp.ui.scanner.ScannerScreen
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
-import com.rogger.bp.ui.profile.view.ProfileScreen
 import com.rogger.bp.ui.edit.presentation.EditProductViewModel
 import com.rogger.bp.ui.edit.view.EditProductScreen
 import com.rogger.bp.ui.deleteitem.presentation.TrashViewModel
 import com.rogger.bp.ui.deleteitem.view.TrashScreen
 import com.rogger.bp.domain.usecase.*
 import androidx.compose.ui.platform.LocalContext
-
-import com.rogger.bp.domain.usecase.SaveCategoryUseCase
-
-import com.rogger.bp.domain.usecase.DeleteCategoryUseCase
 
 import com.rogger.bp.domain.usecase.SaveProductUseCase
 import com.rogger.bp.ui.add.presentation.AddProductViewModel
@@ -139,9 +135,6 @@ fun BipandoNavGraph(navController: NavHostController) {
                     },
                     onCategoryClick = {
                         navController.navigate(Routes.CATEGORY)
-                    },
-                    onTrashClick = {
-                        navController.navigate(Routes.TRASH)
                     },
                     onPaymentClick = {
                         navController.navigate(Routes.PAYMENT)

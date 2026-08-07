@@ -12,6 +12,13 @@ import android.os.Build;
 
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.net.Uri;
+import android.provider.Settings;
+import android.media.AudioAttributes;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -22,35 +29,77 @@ import com.rogger.bp.data.model.PostProduct;
 import java.util.List;
 
 public class NotificationUtil {
-    public static final String CHANNEL_ID = "validade_channel";
+    // ID base do canal. Concatenamos o tipo para forçar a atualização das configurações no Android 8+
+    public static String getChannelId(Context c) {
+        int type = NotificationPrefs.getSoundType(c);
+        String uri = NotificationPrefs.getSoundUri(c);
+        // O ID muda conforme a preferência de som para que o Android aplique a nova config (canais são imutáveis)
+        return "validade_channel_v2_" + type + "_" + uri.hashCode();
+    }
 
     /**
-     * Cria o canal de notificação.
-     * DEVE ser chamado o mais cedo possível — na Application.onCreate()
-     * e também aqui para garantir. É idempotente: criar um canal que já
-     * existe não causa efeito colateral.
+     * Cria o canal de notificação baseado nas preferências do usuário.
      */
     public static void createChannel(Context c) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    c.getString(R.string.notification_name),
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            channel.setDescription(c.getString(R.string.notification_description));
-            channel.enableVibration(true);
+            String channelId = getChannelId(c);
+            int soundType = NotificationPrefs.getSoundType(c);
+            String soundUriString = NotificationPrefs.getSoundUri(c);
 
             NotificationManager nm = c.getSystemService(NotificationManager.class);
-            if (nm != null) {
-                nm.createNotificationChannel(channel);
+            if (nm == null) return;
+
+            // Se o canal já existe, não faz nada
+            if (nm.getNotificationChannel(channelId) != null) return;
+
+            // Remove canais antigos para não poluir as configurações do sistema
+            for (NotificationChannel oldChannel : nm.getNotificationChannels()) {
+                if (oldChannel.getId().startsWith("validade_channel_v2_")) {
+                    nm.deleteNotificationChannel(oldChannel.getId());
+                }
             }
+
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            if (soundType == 0) importance = NotificationManager.IMPORTANCE_LOW; // Mudo
+            
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    c.getString(R.string.notification_name),
+                    importance
+            );
+            channel.setDescription(c.getString(R.string.notification_description));
+
+            // Configura vibração
+            if (soundType == 1 || soundType == 2 || soundType == 3) {
+                channel.enableVibration(true);
+            } else {
+                channel.enableVibration(false);
+            }
+
+            // Configura som
+            if (soundType == 2 || soundType == 3) {
+                Uri soundUri;
+                if (soundType == 3 && !soundUriString.isEmpty()) {
+                    soundUri = Uri.parse(soundUriString);
+                } else {
+                    soundUri = Settings.System.DEFAULT_NOTIFICATION_URI;
+                }
+
+                AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build();
+                channel.setSound(soundUri, audioAttributes);
+            } else {
+                channel.setSound(null, null);
+            }
+
+            nm.createNotificationChannel(channel);
         }
     }
 
     /**
      * Verifica se o app tem permissão para postar notificações.
-     * No Android 13+ (TIRAMISU) a permissão POST_NOTIFICATIONS é runtime.
-     * Abaixo disso, sempre retorna true.
      */
     public static boolean temPermissao(Context c) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -80,8 +129,9 @@ public class NotificationUtil {
             return;
         }
 
-        // Garante que o canal existe antes de notificar
         createChannel(c);
+        String channelId = getChannelId(c);
+        
         String title = produtos.size() == 1
                 ? c.getString(R.string.notification_title)
                 : produtos.size() + " "+c.getString(R.string.notification_title_2);
@@ -90,23 +140,38 @@ public class NotificationUtil {
                 ? c.getString(R.string.notif_vencendo_body_single, produtos.get(0).getName())
                 : c.getString(R.string.notif_vencendo_body_multiple, produtos.size());
 
-        Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c, channelId)
                 .setSmallIcon(R.drawable.ic_bp_logo_small)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setColor(ContextCompat.getColor(c, R.color.bipando_color))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .setContentIntent(getPendingIntent(c))
-                .setAutoCancel(true)
-                .build();
+                .setAutoCancel(true);
 
-        if (ActivityCompat.checkSelfPermission(c,
-                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        // Som para versões antigas (< Oreo)
+        int soundType = NotificationPrefs.getSoundType(c);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            if (soundType == 2 || soundType == 3) {
+                String soundUriString = NotificationPrefs.getSoundUri(c);
+                Uri uri = (soundType == 3 && !soundUriString.isEmpty()) 
+                        ? Uri.parse(soundUriString) 
+                        : Settings.System.DEFAULT_NOTIFICATION_URI;
+                builder.setSound(uri);
+            }
+            if (soundType == 1 || soundType == 2 || soundType == 3) {
+                builder.setDefaults(Notification.DEFAULT_VIBRATE);
+            }
+        }
+
+        if (ActivityCompat.checkSelfPermission(c, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        NotificationManagerCompat.from(c).notify(1001, n);
+        NotificationManagerCompat.from(c).notify(1001, builder.build());
     }
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     public static void showVencidos(Context c, List<PostProduct> produtos) {
         if (produtos == null || produtos.isEmpty()) return;
 
@@ -114,25 +179,46 @@ public class NotificationUtil {
             return;
         }
 
-        // Garante que o canal existe antes de notificar
         createChannel(c);
+        String channelId = getChannelId(c);
+
         String title = produtos.size() == 1
                 ? c.getString(R.string.notif_vencidos_title_single)
                 : c.getString(R.string.notif_vencidos_title_multiple, produtos.size());
 
-        // ✅ ATUALIZAÇÃO SÉNIOR: Corpo traduzido e formatado dinamicamente
         String body = produtos.size() == 1
                 ? c.getString(R.string.notif_vencidos_body_single, produtos.get(0).getName())
                 : c.getString(R.string.notif_vencidos_body_multiple, produtos.size());
 
-        Notification n = new NotificationCompat.Builder(c, CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c, channelId)
                 .setSmallIcon(R.drawable.ic_bp_logo_small)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setColor(ContextCompat.getColor(c, R.color.bipando_color))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .setContentIntent(getPendingIntent(c))
-                .setAutoCancel(true)
-                .build();
-        NotificationManagerCompat.from(c).notify(1002, n);
+                .setAutoCancel(true);
+
+        // Som para versões antigas (< Oreo)
+        int soundType = NotificationPrefs.getSoundType(c);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            if (soundType == 2 || soundType == 3) {
+                String soundUriString = NotificationPrefs.getSoundUri(c);
+                Uri uri = (soundType == 3 && !soundUriString.isEmpty()) 
+                        ? Uri.parse(soundUriString) 
+                        : Settings.System.DEFAULT_NOTIFICATION_URI;
+                builder.setSound(uri);
+            }
+            if (soundType == 1 || soundType == 2 || soundType == 3) {
+                builder.setDefaults(Notification.DEFAULT_VIBRATE);
+            }
+        }
+
+        if (ActivityCompat.checkSelfPermission(c, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        NotificationManagerCompat.from(c).notify(1002, builder.build());
     }
 }
