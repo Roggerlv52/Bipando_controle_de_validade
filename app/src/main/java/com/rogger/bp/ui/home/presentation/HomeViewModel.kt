@@ -17,13 +17,17 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.notification.NotificationPrefs
+import com.rogger.bp.ui.profile.data.FetchProfileCallback
+import com.rogger.bp.ui.profile.data.ProfileRepository
+import com.rogger.bp.ui.profile.data.UpdateProfileCallback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class HomeState(
     val products: List<Product> = emptyList(),
-    val isLoading: Boolean = true, // Inicia como true para evitar flicker do EmptyState
+    val isLoading: Boolean = false,
+    val isFirstLoad: Boolean = true, // Novo flag para controlar a primeira carga absoluta
     val errorMessage: String? = null,
     val categoryFilterName: String? = null,
     val searchQuery: String = "",
@@ -31,6 +35,7 @@ data class HomeState(
     val userName: String = "",
     val userEmail: String = "",
     val userPhoto: String = "",
+    val isPremium: Boolean = false,
     val activeCount: Int = 0,
     val categoryCount: Int = 0,
     val deletedCount: Int = 0,
@@ -40,7 +45,8 @@ data class HomeState(
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val authRepository: AuthRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeState())
@@ -96,8 +102,31 @@ class HomeViewModel(
     }
 
     fun syncAndFetchProducts(context: Context) {
-        // Só mostra loading se a lista estiver vazia (primeira carga)
-        if (_uiState.value.products.isEmpty()) {
+        // Carrega dados do perfil do Firestore
+        profileRepository.getUserProfile(object : FetchProfileCallback {
+            override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean) {
+                _uiState.update { 
+                    it.copy(
+                        userName = name,
+                        userEmail = email,
+                        userPhoto = photoUrl,
+                        isPremium = isPremium
+                    )
+                }
+                SharedPreferencesManager.saveUserInfo(context, "", name, photoUrl, email)
+                SharedPreferencesManager.setPremiumState(context, isPremium)
+            }
+            override fun onFailure(message: String) {}
+            override fun onComplete() {}
+        })
+
+        // Se já tivermos produtos, marcamos que não é mais a primeira carga
+        if (_uiState.value.products.isNotEmpty()) {
+            _uiState.update { it.copy(isFirstLoad = false) }
+        }
+
+        // Só mostra loading se a lista estiver vazia E ainda não estiver sincronizando
+        if (_uiState.value.products.isEmpty() && !homeRepository.isSyncing()) {
             _uiState.update { it.copy(isLoading = true) }
         }
         
@@ -107,15 +136,18 @@ class HomeViewModel(
         
         homeRepository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                // Pipeline reativo cuida da atualização
+                // Quando o repositório retorna o cache inicial ou dados do servidor
+                if (products.isNotEmpty()) {
+                    _uiState.update { it.copy(isFirstLoad = false) }
+                }
             }
 
             override fun onFailure(message: String) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+                _uiState.update { it.copy(isLoading = false, isFirstLoad = false, errorMessage = message) }
             }
 
             override fun onComplete() {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, isFirstLoad = false) }
             }
         })
     }
@@ -200,6 +232,51 @@ class HomeViewModel(
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
         _uiState.update { it.copy(searchQuery = newQuery) }
+    }
+
+    fun updateUserName(context: Context, newName: String) {
+        if (newName.isBlank()) return
+
+        profileRepository.updateUserName(newName, object : UpdateProfileCallback {
+            override fun onSuccess() {
+                _uiState.update { it.copy(userName = newName) }
+                val userInfo = SharedPreferencesManager.getUserInfo(context)
+                SharedPreferencesManager.saveUserInfo(
+                    context,
+                    userInfo.getOrNull(0) ?: "",
+                    newName,
+                    userInfo.getOrNull(2) ?: "",
+                    userInfo.getOrNull(3) ?: ""
+                )
+            }
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message) }
+            }
+            override fun onComplete() {}
+        })
+    }
+
+    fun uploadProfileImage(context: Context, imageUri: android.net.Uri) {
+        _uiState.update { it.copy(isLoading = true) }
+        profileRepository.uploadProfileImage(imageUri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
+            override fun onSuccess(photoUrl: String) {
+                _uiState.update { it.copy(userPhoto = photoUrl) }
+                val userInfo = SharedPreferencesManager.getUserInfo(context)
+                SharedPreferencesManager.saveUserInfo(
+                    context,
+                    userInfo.getOrNull(0) ?: "",
+                    userInfo.getOrNull(1) ?: "",
+                    photoUrl,
+                    userInfo.getOrNull(3) ?: ""
+                )
+            }
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message) }
+            }
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
     }
 
     fun toggleSearch(active: Boolean) {

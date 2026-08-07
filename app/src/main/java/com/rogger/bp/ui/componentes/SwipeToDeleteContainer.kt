@@ -1,8 +1,5 @@
 package com.rogger.bp.ui.componentes
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,56 +12,74 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SwipeToDeleteContainer(
     item: T,
     onDelete: (T) -> Unit,
+    onEdit: ((T) -> Unit)? = null,
     animationDuration: Int = 500,
     content: @Composable (T) -> Unit
 ) {
-    var isRemoved by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                isRemoved = true
-                onDelete(item)
-                true
-            } else {
-                false
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete(item)
+                    false // Retorna false para que o item não suma imediatamente, permitindo a confirmação externa
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    if (onEdit != null) {
+                        onEdit(item)
+                    }
+                    false
+                }
+                else -> false
             }
         }
     )
 
-    AnimatedVisibility(
-        visible = !isRemoved,
-        exit = fadeOut(tween(animationDuration))
-    ) {
-        SwipeToDismissBox(
-            state = dismissState,
-            backgroundContent = {
-                val color = when (dismissState.dismissDirection) {
-                    SwipeToDismissBoxValue.EndToStart -> Color(0xFFD32F2F)
-                    else -> Color.Transparent
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(color)
-                        .padding(horizontal = 20.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val color = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> Color(0xFFD32F2F) // Vermelho para deletar
+                SwipeToDismissBoxValue.StartToEnd -> Color(0xFF1976D2) // Azul para editar
+                else -> Color.Transparent
+            }
+
+            val alignment = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                else -> Alignment.Center
+            }
+
+            val icon = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                else -> null
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                icon?.let {
                     Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Excluir",
+                        it,
+                        contentDescription = null,
                         tint = Color.White
                     )
                 }
-            },
-            enableDismissFromStartToEnd = false,
-            content = { content(item) }
-        )
-    }
+            }
+        },
+        enableDismissFromStartToEnd = onEdit != null,
+        content = { content(item) }
+    )
 }

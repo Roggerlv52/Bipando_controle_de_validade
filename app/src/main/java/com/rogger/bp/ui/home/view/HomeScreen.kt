@@ -1,6 +1,9 @@
 package com.rogger.bp.ui.home.view
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -17,11 +20,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,6 +49,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -61,9 +67,11 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -131,6 +139,46 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.uploadProfileImage(context, it) }
+    }
+
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var editedName by remember { mutableStateOf("") }
+
+    if (showEditNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditNameDialog = false },
+            title = { Text("Editar Nome") },
+            text = {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Seu Nome") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateUserName(context, editedName)
+                        showEditNameDialog = false
+                    }
+                ) {
+                    Text("Salvar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditNameDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     // Observa o resultado do scanner para pesquisa vindo do savedStateHandle
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     LaunchedEffect(navBackStackEntry) {
@@ -153,8 +201,20 @@ fun HomeScreen(
         drawerState = drawerState,
         scrimColor = Color.Black.copy(alpha = 0.8f), // Adiciona uma sombra mais intensa ao fundo
         drawerContent = {
-            ModalDrawerSheet {
-                DrawerHeader(state)
+            ModalDrawerSheet(
+                modifier = Modifier.width(300.dp), // Define uma largura fixa menor para aumentar a margem à direita
+                windowInsets = WindowInsets(0, 0, 0, 0) // Remove insets para o header encostar no topo
+            ) {
+                DrawerHeader(
+                    state = state,
+                    onNameClick = {
+                        editedName = state.userName
+                        showEditNameDialog = true
+                    },
+                    onImageClick = {
+                        imagePickerLauncher.launch("image/*")
+                    }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 DrawerItem(
                     label = "Home",
@@ -162,9 +222,12 @@ fun HomeScreen(
                     count = state.activeCount,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        // Se estiver filtrado por categoria, limpa o filtro. Caso contrário, não faz nada (já está na Home)
-                        if (state.categoryFilterName != null) {
-                            viewModel.fetchProducts(null, null)
+                        // Se estiver filtrado por categoria ou se houver uma busca/filtro ativo,
+                        // navegamos para a rota base "home" sem argumentos, resetando o estado da navegação.
+                        if (state.categoryFilterName != null || state.isSearchActive) {
+                            navController.navigate("home") {
+                                popUpTo("home") { inclusive = true }
+                            }
                         }
                     }
                 )
@@ -234,12 +297,13 @@ fun HomeScreen(
 }
 
 @Composable
-fun DrawerHeader(state: HomeState) {
+fun DrawerHeader(state: HomeState, onNameClick: () -> Unit, onImageClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
             .background(MaterialTheme.colorScheme.primary)
+            .statusBarsPadding()
+            .height(180.dp)
             .padding(16.dp),
         contentAlignment = Alignment.BottomStart
     ) {
@@ -253,7 +317,8 @@ fun DrawerHeader(state: HomeState) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable(onClick = onImageClick),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -261,7 +326,8 @@ fun DrawerHeader(state: HomeState) {
                 text = state.userName,
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                modifier = Modifier.clickable(onClick = onNameClick)
             )
             Text(
                 text = state.userEmail,
@@ -420,7 +486,11 @@ fun HomeScreenContent(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (isListVisuallyEmpty && !state.isLoading) {
+            if (state.isFirstLoad || (state.isLoading && state.products.isEmpty())) {
+                // Não mostra nada ou apenas o progresso durante a primeira carga
+                // Isso evita que o "EmptyState" (imagem de lista vazia) apareça
+                // enquanto o Room ainda está lendo os dados.
+            } else if (isListVisuallyEmpty) {
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
                     onAddClick = { showCategoryDialog = true }
@@ -475,7 +545,7 @@ fun HomeScreenContent(
                 }
             }
 
-            if (state.isLoading) {
+            if (state.isFirstLoad) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
@@ -762,106 +832,123 @@ fun ProductItem(
     val imageRequest = remember(product.imageUri) {
         ImageRequest.Builder(context)
             .data(product.imageUri.ifEmpty { R.drawable.ic_shopping })
-            .crossfade(false) // Desativado para scroll ultra-suave
-            .size(240, 240)
+            .size(200, 200) // Tamanho otimizado para thumbnail
+            .precision(Precision.INEXACT) // Maior performance no cache
+            .crossfade(false) // Sem animação para scroll ultra-suave
             .build()
     }
 
-    AnimatedVisibility(
-        visible = isItemVisible,
-        exit = shrinkVertically(
-            animationSpec = tween(500),
-            shrinkTowards = Alignment.Top
-        ) + fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .clickable(onClick = onClick)
+    // Só aplica AnimatedVisibility se o item estiver em processo de remoção
+    // Isso reduz a profundidade da árvore de UI durante o scroll normal
+    if (isItemVisible) {
+        ProductItemContent(product, formattedDate, imageRequest, showDivider, onClick, onImageClick)
+    } else {
+        AnimatedVisibility(
+            visible = false,
+            exit = shrinkVertically(
+                animationSpec = tween(500),
+                shrinkTowards = Alignment.Top
+            ) + fadeOut()
         ) {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    AsyncImage(
-                        model = imageRequest,
-                        contentDescription = product.name,
-                        modifier = Modifier
-                            .size(70.dp)
-                            .clip(RoundedCornerShape(8.dp)) // Border radius maior e mais moderno
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .then(
-                                if (product.imageUri.isNotEmpty()) {
-                                    Modifier.clickable { onImageClick() }
-                                } else {
-                                    Modifier
-                                }
-                            ),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(R.drawable.ic_shopping),
-                        placeholder = painterResource(R.drawable.ic_shopping)
-                    )
+            ProductItemContent(product, formattedDate, imageRequest, showDivider, onClick, onImageClick)
+        }
+    }
+}
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = product.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold, // Nome mais destacado
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = formattedDate,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+@Composable
+private fun ProductItemContent(
+    product: Product,
+    formattedDate: String,
+    imageRequest: ImageRequest,
+    showDivider: Boolean,
+    onClick: () -> Unit,
+    onImageClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = product.name,
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .then(
+                        if (product.imageUri.isNotEmpty()) {
+                            Modifier.clickable { onImageClick() }
+                        } else {
+                            Modifier
                         }
+                    ),
+                contentScale = ContentScale.Crop,
+                error = painterResource(R.drawable.ic_shopping),
+                placeholder = painterResource(R.drawable.ic_shopping)
+            )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-                        Text(
-                            text = product.barcode,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            letterSpacing = 1.sp
-                        )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                        Text(
-                            text = product.categoryName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-                
-                if (showDivider) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = formattedDate,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = product.barcode,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    letterSpacing = 1.sp
+                )
+
+                Text(
+                    text = product.categoryName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
+        }
+
+        if (showDivider) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+            )
         }
     }
 }

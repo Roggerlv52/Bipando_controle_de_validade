@@ -2,9 +2,14 @@ package com.rogger.bp.ui.profile.presentation
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.asFlow
+import com.rogger.bp.data.dao.ProductDao
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.notification.NotificationScheduler
 import com.rogger.bp.ui.commun.SharedPreferencesManager
+import com.rogger.bp.ui.profile.data.FetchProfileCallback
+import com.rogger.bp.ui.profile.data.ProfileRepository
 import com.rogger.bp.ui.theme.BipandoThemeType
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +20,10 @@ import kotlinx.coroutines.launch
 
 data class ProfileState(
     val userName: String = "",
+    val userEmail: String = "",
     val userPhotoUrl: String = "",
+    val totalProductsCount: Int = 0,
+    val isPremium: Boolean = false,
     val themeType: BipandoThemeType = BipandoThemeType.CLASSIC,
     val isBeepEnabled: Boolean = false,
     val isNotificationEnabled: Boolean = false,
@@ -26,13 +34,29 @@ data class ProfileState(
     val isLoggedOut: Boolean = false
 )
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(
+    private val profileRepository: ProfileRepository,
+    private val productDao: ProductDao
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileState())
     val uiState: StateFlow<ProfileState> = _uiState.asStateFlow()
 
+    init {
+        observeProductCount()
+    }
+
+    private fun observeProductCount() {
+        viewModelScope.launch {
+            productDao.getTotalProductsCountLiveData().asFlow().collect { count ->
+                _uiState.update { it.copy(totalProductsCount = count) }
+            }
+        }
+    }
+
     fun loadProfile(context: Context) {
-        val userInfo = SharedPreferencesManager.getUserInfo(context)
+        // Carrega preferências locais
+        val isPremium = SharedPreferencesManager.isPremium(context)
         val themeNumber = SharedPreferencesManager.getThemeNumber(context, "chave")
         val beepState = SharedPreferencesManager.getBeepState(context, "beep")
         val notifEnabled = NotificationPrefs.getAlert(context)
@@ -47,10 +71,14 @@ class ProfileViewModel : ViewModel() {
             else -> BipandoThemeType.CLASSIC
         }
 
+        // Carrega dados iniciais do cache local (SharedPreferences) para feedback imediato
+        val userInfo = SharedPreferencesManager.getUserInfo(context)
         _uiState.update {
             it.copy(
                 userName = userInfo.getOrNull(1) ?: "",
+                userEmail = userInfo.getOrNull(3) ?: "",
                 userPhotoUrl = userInfo.getOrNull(2) ?: "",
+                isPremium = isPremium,
                 themeType = themeType,
                 isBeepEnabled = beepState,
                 isNotificationEnabled = notifEnabled,
@@ -58,6 +86,60 @@ class ProfileViewModel : ViewModel() {
                 notificationTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
             )
         }
+
+        // Busca dados atualizados do Firebase
+        _uiState.update { it.copy(isLoading = true) }
+        profileRepository.getUserProfile(object : FetchProfileCallback {
+            override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean) {
+                _uiState.update { 
+                    it.copy(
+                        userName = name,
+                        userEmail = email,
+                        userPhotoUrl = photoUrl,
+                        isPremium = isPremium
+                    )
+                }
+                // Sincroniza o cache local com os dados do Firebase
+                SharedPreferencesManager.saveUserInfo(context, "", name, photoUrl, email)
+                SharedPreferencesManager.setPremiumState(context, isPremium)
+            }
+
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message) }
+            }
+
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
+    }
+
+    fun updateUserName(context: Context, newName: String) {
+        if (newName.isBlank()) return
+
+        _uiState.update { it.copy(isLoading = true) }
+        profileRepository.updateUserName(newName, object : com.rogger.bp.ui.profile.data.UpdateProfileCallback {
+            override fun onSuccess() {
+                _uiState.update { it.copy(userName = newName) }
+                // Atualiza cache local
+                val userInfo = SharedPreferencesManager.getUserInfo(context)
+                SharedPreferencesManager.saveUserInfo(
+                    context,
+                    userInfo.getOrNull(0) ?: "",
+                    newName,
+                    userInfo.getOrNull(2) ?: "",
+                    userInfo.getOrNull(3) ?: ""
+                )
+            }
+
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message) }
+            }
+
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
     }
 
     fun onThemeChange(context: Context, themeType: BipandoThemeType) {
@@ -108,5 +190,22 @@ class ProfileViewModel : ViewModel() {
         SharedPreferencesManager.setLoginState(context, "state", false)
         SharedPreferencesManager.clearUserInfo(context)
         _uiState.update { it.copy(isLoggedOut = true) }
+    }
+
+    fun deleteAccount(context: Context) {
+        _uiState.update { it.copy(isLoading = true) }
+        profileRepository.deleteUserAccount(object : com.rogger.bp.ui.profile.data.DeleteAccountCallback {
+            override fun onSuccess() {
+                logout(context)
+            }
+
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message, isLoading = false) }
+            }
+
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
     }
 }

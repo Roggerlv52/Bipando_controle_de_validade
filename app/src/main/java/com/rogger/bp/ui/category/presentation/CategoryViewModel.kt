@@ -29,7 +29,10 @@ class CategoryViewModel(
     }
 
     private fun syncAndFetchCategories() {
-        _uiState.update { it.copy(isLoading = true) }
+        // Só mostra loading se a lista estiver vazia E ainda não estiver sincronizando
+        if (_uiState.value.categories.isEmpty() && !categoryRepository.isSyncing()) {
+            _uiState.update { it.copy(isLoading = true) }
+        }
         
         // 1. Inicia sincronização do Firebase para o Room
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
@@ -58,6 +61,28 @@ class CategoryViewModel(
         }
     }
 
+    fun saveCategory(name: String) {
+        if (name.isBlank()) return
+
+        val postCategory = PostCategory(name = name)
+
+        _uiState.update { it.copy(isLoading = true) }
+        categoryRepository.create(postCategory, object : CategoryCallback {
+            override fun onSuccess(category: PostCategory) {
+                _uiState.update { it.copy(isLoading = false, successMessage = "Categoria salva!") }
+            }
+            override fun onAlreadyExists(category: PostCategory) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Categoria já existe") }
+            }
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+            }
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
+    }
+
     fun deleteCategory(category: Category) {
         val postCategory = PostCategory(firestoreId = category.id, name = category.name)
         categoryRepository.delete(postCategory, object : CategoryCallback {
@@ -70,27 +95,27 @@ class CategoryViewModel(
         })
     }
 
-    fun saveCategory(name: String) {
-        if (name.isBlank()) return
-
-        val newCategory = PostCategory(
-            firestoreId = "", // Firestore gera se vazio na criação
-            name = name
+    fun updateCategory(category: Category, newName: String) {
+        if (newName.isBlank()) return
+        
+        val postCategory = PostCategory(
+            firestoreId = category.id,
+            name = newName
         )
-
+        
         _uiState.update { it.copy(isLoading = true) }
-        categoryRepository.create(newCategory, object : CategoryCallback {
+        categoryRepository.update(postCategory, object : CategoryCallback {
             override fun onSuccess(category: PostCategory) {
-                _uiState.update { it.copy(isLoading = false, successMessage = "Categoria salva!") }
+                _uiState.update { it.copy(isLoading = false, successMessage = "Categoria atualizada!") }
             }
             override fun onAlreadyExists(category: PostCategory) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Categoria já existe") }
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Nome de categoria já existe") }
             }
             override fun onFailure(message: String) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = message) }
             }
             override fun onComplete() {
-                _uiState.update { it.updateLoadingState() }
+                _uiState.update { it.copy(isLoading = false) }
             }
         })
     }

@@ -97,11 +97,12 @@ fun BipandoNavGraph(navController: NavHostController) {
             val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
             val homeRepository = DependencyInjector.registerHomeRepository(context)
             val categoryRepository = DependencyInjector.registerCategoryRepository(context)
+            val profileRepository = DependencyInjector.profileRepository()
             
             val viewModel: HomeViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return HomeViewModel(homeRepository, authRepository, categoryRepository) as T
+                        return HomeViewModel(homeRepository, authRepository, categoryRepository, profileRepository) as T
                     }
                 }
             )
@@ -262,7 +263,15 @@ fun BipandoNavGraph(navController: NavHostController) {
         }
 
         composable(Routes.PROFILE) {
-            val viewModel: ProfileViewModel = viewModel()
+            val profileRepository = DependencyInjector.profileRepository()
+            val productDao = database.productDao()
+            val viewModel: ProfileViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ProfileViewModel(profileRepository, productDao) as T
+                    }
+                }
+            )
             val state by viewModel.uiState.collectAsState()
 
             BipandoTheme(themeType = state.themeType) {
@@ -317,7 +326,14 @@ fun BipandoNavGraph(navController: NavHostController) {
         }
 
         composable(Routes.PAYMENT) {
-            val viewModel: PaymentViewModel = viewModel()
+            val profileRepository = DependencyInjector.profileRepository()
+            val viewModel: PaymentViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return PaymentViewModel(profileRepository) as T
+                    }
+                }
+            )
             PaymentScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() }

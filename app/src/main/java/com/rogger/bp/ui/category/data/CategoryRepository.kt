@@ -21,9 +21,14 @@ class CategoryRepository(
 
     private var categoryListenerRegistration: ListenerRegistration? = null
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    fun fetchAll(callback: FetchCategoriesCallback) {
 
-        stopListeningForCategories()
+    fun isSyncing(): Boolean = categoryListenerRegistration != null
+
+    fun fetchAll(callback: FetchCategoriesCallback) {
+        if (isSyncing()) {
+            callback.onComplete()
+            return
+        }
 
         repositoryScope.launch {
 

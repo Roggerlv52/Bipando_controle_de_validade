@@ -20,6 +20,7 @@ import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.login.data.FireDataSource
 import com.rogger.bp.ui.login.data.LoginRepository
+import com.rogger.bp.ui.profile.data.ProfileRepository
 
 object DependencyInjector {
 
@@ -67,6 +68,10 @@ object DependencyInjector {
         val roomProductCache = RoomProductCache(productDao)
         return DeleteItemRepository(DeleteItemDataSource(), roomProductCache)
 
+    }
+
+    fun profileRepository(): ProfileRepository {
+        return ProfileRepository()
     }
 
     // ── Novos repositórios de imagem ──────────────────────────────────────

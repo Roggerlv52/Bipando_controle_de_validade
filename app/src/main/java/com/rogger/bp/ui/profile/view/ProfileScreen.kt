@@ -21,12 +21,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.rogger.bp.R
+import com.rogger.bp.domain.model.Product
 import com.rogger.bp.notification.NotificationPrefs
+import com.rogger.bp.ui.profile.presentation.ProfileState
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.theme.BipandoThemeType
 
@@ -42,6 +45,65 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var editedName by remember { mutableStateOf("") }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
+    if (showEditNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditNameDialog = false },
+            title = { Text("Editar Nome") },
+            text = {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Seu Nome") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateUserName(context, editedName)
+                        showEditNameDialog = false
+                    }
+                ) {
+                    Text("Salvar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditNameDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            title = { Text("Excluir Conta") },
+            text = { Text("Tem certeza que deseja excluir sua conta permanentemente? Todos os seus produtos e categorias serão removidos. Esta ação não pode ser desfeita.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteAccount(context)
+                        showDeleteAccountDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Excluir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile(context)
@@ -93,7 +155,12 @@ fun ProfileScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                Column {
+                Column(
+                    modifier = Modifier.clickable {
+                        editedName = state.userName
+                        showEditNameDialog = true
+                    }
+                ) {
                     Text(
                         text = state.userName,
                         style = MaterialTheme.typography.titleLarge,
@@ -101,12 +168,14 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Gerencie suas preferências",
+                        text = state.userEmail,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+
+            PremiumStatusSection(state = state, onPaymentClick = onPaymentClick)
 
             SettingsSection(title = "Aparência") {
                 ThemeOption(
@@ -199,16 +268,22 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { viewModel.logout(context) },
+                onClick = { showDeleteAccountDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
+                Icon(Icons.Default.DeleteForever, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Sair da Conta")
+                Text("Excluir Conta")
             }
 
             Spacer(modifier = Modifier.height(48.dp))
+        }
+
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
@@ -234,6 +309,95 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 content()
+            }
+        }
+    }
+}
+
+@Composable
+fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
+    SettingsSection(title = "Uso do Plano") {
+        if (state.isPremium) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.VerifiedUser,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Assinante Premium",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Você possui cadastro ilimitado",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Produtos Cadastrados",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "${state.totalProductsCount}/100",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (state.totalProductsCount >= 100) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LinearProgressIndicator(
+                    progress = { (state.totalProductsCount.toFloat() / 100f).coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                    color = if (state.totalProductsCount >= 100) Color.Red else Color(0xFF8BC34A),
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+
+                if (state.totalProductsCount >= 90) {
+                    Text(
+                        text = if (state.totalProductsCount >= 100) 
+                            "Limite atingido! Torne-se Premium para continuar." 
+                            else "Você está atingindo o limite gratuito.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onPaymentClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Remover Limites")
+                }
             }
         }
     }

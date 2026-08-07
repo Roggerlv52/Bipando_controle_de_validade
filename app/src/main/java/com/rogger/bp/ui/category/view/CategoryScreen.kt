@@ -37,6 +37,11 @@ fun CategoryScreen(
     val state by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var categoryToEdit by remember { mutableStateOf<Category?>(null) }
+    var editCategoryName by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     if (showAddDialog) {
         AlertDialog(
@@ -63,6 +68,62 @@ fun CategoryScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog && categoryToEdit != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Editar Categoria") },
+            text = {
+                BipandoTextField(
+                    value = editCategoryName,
+                    onValueChange = { editCategoryName = it },
+                    label = "Nome da Categoria",
+                    leadingIcon = Icons.Default.Category
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        categoryToEdit?.let {
+                            viewModel.updateCategory(it, editCategoryName)
+                        }
+                        showEditDialog = false
+                    }
+                ) {
+                    Text("Salvar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog && categoryToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Excluir Categoria") },
+            text = { Text("Tem certeza que deseja excluir a categoria \"${categoryToDelete?.name}\"? Esta ação não pode ser desfeita.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        categoryToDelete?.let { viewModel.deleteCategory(it) }
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Excluir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancelar")
                 }
             }
@@ -116,7 +177,15 @@ fun CategoryScreen(
                     ) { category ->
                         SwipeToDeleteContainer(
                             item = category,
-                            onDelete = { viewModel.deleteCategory(category) }
+                            onDelete = {
+                                categoryToDelete = it
+                                showDeleteDialog = true
+                            },
+                            onEdit = {
+                                categoryToEdit = it
+                                editCategoryName = it.name
+                                showEditDialog = true
+                            }
                         ) {
                             CategoryItem(
                                 category = category,

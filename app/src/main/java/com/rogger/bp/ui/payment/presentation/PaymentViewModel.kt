@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.payment.BillingManager
+import com.rogger.bp.ui.profile.data.ProfileRepository
+import com.rogger.bp.ui.profile.data.UpdateProfileCallback
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -20,7 +22,9 @@ data class PaymentState(
     val errorMessage: String? = null
 )
 
-class PaymentViewModel : ViewModel() {
+class PaymentViewModel(
+    private val profileRepository: ProfileRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PaymentState())
     val uiState: StateFlow<PaymentState> = _uiState.asStateFlow()
@@ -46,7 +50,18 @@ class PaymentViewModel : ViewModel() {
             onSubscriptionStatusLoaded = { activeProductId ->
                 _uiState.update { it.copy(activePlanId = activeProductId) }
                 val premiumAtivo = activeProductId != null
+                
+                // 1. Salva localmente para feedback imediato
                 SharedPreferencesManager.setPremiumState(activity, premiumAtivo)
+                
+                // 2. Sincroniza com o Firebase para persistência permanente
+                profileRepository.updatePremiumStatus(premiumAtivo, object : UpdateProfileCallback {
+                    override fun onSuccess() {}
+                    override fun onFailure(message: String) {
+                        _uiState.update { it.copy(errorMessage = message) }
+                    }
+                    override fun onComplete() {}
+                })
                 
                 // Pré-selecionar plano ativo se nada estiver selecionado
                 if (_uiState.value.selectedPlanId == null && activeProductId != null) {

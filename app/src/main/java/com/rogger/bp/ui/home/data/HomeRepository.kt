@@ -21,6 +21,8 @@ class HomeRepository(
 
     private var productsListenerRegistration: ListenerRegistration? = null
 
+    fun isSyncing(): Boolean = productsListenerRegistration != null
+
     fun fetchAll(callback: FetchProductsCallback) {
         if (productsListenerRegistration != null) {
             callback.onComplete()
