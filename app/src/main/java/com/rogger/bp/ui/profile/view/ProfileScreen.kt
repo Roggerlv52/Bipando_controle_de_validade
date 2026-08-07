@@ -33,8 +33,15 @@ import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.profile.presentation.ProfileState
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.theme.BipandoThemeType
+import com.rogger.bp.util.ImagePickerBottomSheet
+import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.NotificationSoundDialog
 import com.rogger.bp.util.SystemSoundPickerDialog
+import android.net.Uri
+import android.content.Intent
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +69,34 @@ fun ProfileScreen(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showSoundDialog by remember { mutableStateOf(false) }
     var showSystemSoundPicker by remember { mutableStateOf(false) }
+    var showImagePicker by remember { mutableStateOf(false) }
+
+    var cameraImageFile by remember { mutableStateOf<File?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.uploadProfileImage(context, it) }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraImageFile != null) {
+            viewModel.uploadProfileImage(context, Uri.fromFile(cameraImageFile))
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val file = ImagePikerUtil.createImageFile(context)
+            cameraImageFile = file
+            val uri = ImagePikerUtil.getUriForFile(context, file)
+            cameraLauncher.launch(uri)
+        }
+    }
 
     if (showEditNameDialog) {
         AlertDialog(
@@ -192,6 +227,7 @@ fun ProfileScreen(
                         .size(80.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showImagePicker = true }
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(
@@ -326,15 +362,6 @@ fun ProfileScreen(
                     modifier = Modifier.clickable(onClick = onTrashClick),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                ListItem(
-                    headlineContent = { Text("Assinatura Premium") },
-                    supportingContent = { Text("Gerencie seu plano") },
-                    leadingContent = { Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFBC02D)) },
-                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
-                    modifier = Modifier.clickable(onClick = onPaymentClick),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -349,6 +376,22 @@ fun ProfileScreen(
                 Text("Excluir Conta")
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Política de Privacidade",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://roggerlv52.github.io/bipando/"))
+                        context.startActivity(intent)
+                    },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                textDecoration = TextDecoration.Underline
+            )
+
             Spacer(modifier = Modifier.height(48.dp))
         }
 
@@ -356,6 +399,19 @@ fun ProfileScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        }
+
+        if (showImagePicker) {
+            ImagePickerBottomSheet(
+                title = "Foto de perfil",
+                onDismiss = { showImagePicker = false },
+                onCameraClick = {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                },
+                onGalleryClick = {
+                    imagePickerLauncher.launch("image/*")
+                }
+            )
         }
     }
 }

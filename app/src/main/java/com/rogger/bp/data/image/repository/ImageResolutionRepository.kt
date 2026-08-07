@@ -5,6 +5,7 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.image.datasource.GlobalImageDataSource
 import com.rogger.bp.data.image.datasource.UserImageDataSource
+import android.content.Context
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 28/05/2026
@@ -107,12 +108,13 @@ class ImageResolutionRepository(
      * @param imageUri     URI local da imagem
      */
     suspend fun uploadGlobalImage(
+        context: Context,
         barcode: String,
         productName: String,
         imageUri: String
     ): UploadResult {
         Log.d(TAG, "Criando imagem global para barcode=$barcode")
-        return globalImageDataSource.createGlobalImageIfAbsent(barcode, productName, imageUri)
+        return globalImageDataSource.createGlobalImageIfAbsent(context, barcode, productName, imageUri)
     }
 
     // ── 3. Salvar imagem personalizada (utilizador altera a sua view) ──────
@@ -126,9 +128,9 @@ class ImageResolutionRepository(
      * @param barcode   código de barras do produto
      * @param imageUri  URI local da nova imagem
      */
-    suspend fun saveUserImage(barcode: String, imageUri: String): UploadResult {
+    suspend fun saveUserImage(context: Context, barcode: String, imageUri: String): UploadResult {
         Log.d(TAG, "Salvando imagem personalizada para barcode=$barcode")
-        return userImageDataSource.saveUserImage(barcode, imageUri)
+        return userImageDataSource.saveUserImage(context, barcode, imageUri)
     }
 
     // ── 4. Remover imagem personalizada ───────────────────────────────────

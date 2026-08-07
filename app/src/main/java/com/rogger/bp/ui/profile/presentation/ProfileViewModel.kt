@@ -231,4 +231,30 @@ class ProfileViewModel(
             }
         })
     }
+
+    fun uploadProfileImage(context: Context, uri: android.net.Uri) {
+        _uiState.update { it.copy(isLoading = true) }
+        profileRepository.uploadProfileImage(context, uri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
+            override fun onSuccess(photoUrl: String) {
+                _uiState.update { it.copy(userPhotoUrl = photoUrl) }
+                // Atualiza cache local
+                val userInfo = SharedPreferencesManager.getUserInfo(context)
+                SharedPreferencesManager.saveUserInfo(
+                    context,
+                    userInfo.getOrNull(0) ?: "",
+                    userInfo.getOrNull(1) ?: "",
+                    photoUrl,
+                    userInfo.getOrNull(3) ?: ""
+                )
+            }
+
+            override fun onFailure(message: String) {
+                _uiState.update { it.copy(errorMessage = message) }
+            }
+
+            override fun onComplete() {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        })
+    }
 }

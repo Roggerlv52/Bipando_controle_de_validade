@@ -7,8 +7,11 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.ui.commun.NetworkUtils
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import android.content.Context
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 28/05/2026
@@ -81,6 +84,7 @@ class GlobalImageDataSource {
      * souberem que a imagem global existe.
      */
     suspend fun createGlobalImageIfAbsent(
+        context: Context,
         barcode: String,
         productName: String,
         imageUri: String
@@ -94,6 +98,7 @@ class GlobalImageDataSource {
             return UploadResult.Error("OFFLINE")
         }
 
+        var tempFile: File? = null
         return try {
             // ── Verificação de existência (guarda de segurança) ──────────
             val existing = db.collection("imageProdutos")
@@ -109,19 +114,27 @@ class GlobalImageDataSource {
                 }
             }
 
-            // ── Upload para o Storage ─────────────────────────────────────
-            val fileUri: Uri = when {
+            // ── Otimização e Upload para o Storage ────────────────────────
+            val sourceUri: Uri = when {
                 imageUri.startsWith("content://") -> Uri.parse(imageUri)
                 imageUri.startsWith("file://")    -> Uri.parse(imageUri)
                 else                              -> Uri.fromFile(File(imageUri))
             }
 
+            tempFile = ImagePikerUtil.createImageFile(context)
+            ImageUtils.processImage(context, sourceUri, tempFile)
+            val processedUri = Uri.fromFile(tempFile)
+
             val imageRef = storage.reference
                 .child("imagens_produtos/$barcode.jpg")
 
-            Log.d(TAG, "Iniciando upload da imagem global para: imagens_produtos/$barcode.jpg")
+            Log.d(TAG, "Iniciando upload da imagem global (otimizada) para: imagens_produtos/$barcode.jpg")
 
-            imageRef.putFile(fileUri).await()
+            val metadata = com.google.firebase.storage.storageMetadata {
+                contentType = "image/jpeg"
+            }
+
+            imageRef.putFile(processedUri, metadata).await()
 
             val downloadUrl = imageRef.downloadUrl.await().toString()
 
@@ -137,17 +150,18 @@ class GlobalImageDataSource {
                 .set(postImage)
                 .await()
 
-            Log.d(TAG, "Imagem global criada com sucesso para barcode=$barcode")
+            Log.d(TAG, "Imagem global criada e otimizada com sucesso para barcode=$barcode")
             UploadResult.Success(downloadUrl)
 
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao criar imagem global: ${e.message}")
-            // 👉 Se falhar devido à falta de rede durante a execução, retorna OFFLINE de forma amigável
             if (e.message?.contains("offline", ignoreCase = true) == true ||
                 e.message?.contains("unavailable", ignoreCase = true) == true) {
                 return UploadResult.Error("OFFLINE")
             }
             UploadResult.Error(e.message ?: "Erro ao criar imagem global")
+        } finally {
+            tempFile?.let { ImagePikerUtil.cleanUpTempFiles(it) }
         }
     }
 }

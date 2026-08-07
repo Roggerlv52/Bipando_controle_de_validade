@@ -11,5 +11,5 @@ object Routes {
     const val EDIT_PRODUCT = "edit_product/{uuid}"
     const val TRASH = "trash"
     const val PAYMENT = "payment"
-    const val IMAGE_PREVIEW = "image_preview?uri={uri}"
+    const val IMAGE_PREVIEW = "image_preview?uri={uri}&barcode={barcode}"
 }

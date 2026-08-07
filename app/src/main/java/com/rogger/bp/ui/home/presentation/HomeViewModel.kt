@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.home.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.Context
@@ -113,7 +114,8 @@ class HomeViewModel(
                         isPremium = isPremium
                     )
                 }
-                SharedPreferencesManager.saveUserInfo(context, "", name, photoUrl, email)
+                val uid = authRepository.getCurrentUser()?.uuid ?: ""
+                SharedPreferencesManager.saveUserInfo(context, uid, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
             }
             override fun onFailure(message: String) {}
@@ -257,23 +259,31 @@ class HomeViewModel(
     }
 
     fun uploadProfileImage(context: Context, imageUri: android.net.Uri) {
+        Log.d("HomeViewModel", "Iniciando uploadProfileImage com URI: $imageUri")
         _uiState.update { it.copy(isLoading = true) }
-        profileRepository.uploadProfileImage(imageUri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
+        profileRepository.uploadProfileImage(context, imageUri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
             override fun onSuccess(photoUrl: String) {
+                Log.d("HomeViewModel", "Upload com sucesso! Nova URL: $photoUrl")
                 _uiState.update { it.copy(userPhoto = photoUrl) }
                 val userInfo = SharedPreferencesManager.getUserInfo(context)
+                val uid = userInfo.getOrNull(0) ?: authRepository.getCurrentUser()?.uuid ?: ""
+                val name = userInfo.getOrNull(1) ?: _uiState.value.userName
+                val email = userInfo.getOrNull(3) ?: _uiState.value.userEmail
+                
                 SharedPreferencesManager.saveUserInfo(
                     context,
-                    userInfo.getOrNull(0) ?: "",
-                    userInfo.getOrNull(1) ?: "",
+                    uid,
+                    name,
                     photoUrl,
-                    userInfo.getOrNull(3) ?: ""
+                    email
                 )
             }
             override fun onFailure(message: String) {
+                Log.e("HomeViewModel", "Erro no upload: $message")
                 _uiState.update { it.copy(errorMessage = message) }
             }
             override fun onComplete() {
+                Log.d("HomeViewModel", "Upload concluído (onComplete)")
                 _uiState.update { it.copy(isLoading = false) }
             }
         })

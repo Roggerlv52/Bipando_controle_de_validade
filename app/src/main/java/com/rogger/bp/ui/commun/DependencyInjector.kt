@@ -30,7 +30,7 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        return RegisterItemRepository(FireRegisterDataSource(), roomProductCache)
+        return RegisterItemRepository(FireRegisterDataSource(context), roomProductCache)
     }
 
     fun registerCategoryRepository(context: Context): CategoryRepository {
@@ -54,7 +54,7 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        return EditRepository(EditDataSource(), roomProductCache)
+        return EditRepository(EditDataSource(context), roomProductCache)
     }
 
     fun loginRepository(): LoginRepository {

@@ -220,7 +220,11 @@ fun BipandoNavGraph(navController: NavHostController) {
             val barcode = backStackEntry.arguments?.getString("barcode")
             val categoryId = backStackEntry.arguments?.getString("categoryId")
             
-            val productRepository = ProductRepositoryImpl(database)
+            val productRepository = ProductRepositoryImpl(
+                context,
+                database,
+                DependencyInjector.imageResolutionRepository()
+            )
             val saveProductUseCase = SaveProductUseCase(productRepository)
             val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
 
@@ -250,6 +254,9 @@ fun BipandoNavGraph(navController: NavHostController) {
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
+                    },
+                    onBarcodeClick = { code ->
+                        navController.navigate("image_preview?barcode=$code")
                     }
                 )
             }
@@ -287,7 +294,11 @@ fun BipandoNavGraph(navController: NavHostController) {
         }
 
         composable(Routes.TRASH) {
-            val productRepository = ProductRepositoryImpl(database)
+            val productRepository = ProductRepositoryImpl(
+                context,
+                database,
+                DependencyInjector.imageResolutionRepository()
+            )
             val getDeletedProductsUseCase = GetDeletedProductsUseCase(productRepository)
             val deleteItemRepository = DependencyInjector.itemDeletedRepository(context)
 
@@ -339,7 +350,11 @@ fun BipandoNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val uuid = backStackEntry.arguments?.getString("uuid") ?: ""
             
-            val productRepository = ProductRepositoryImpl(database)
+            val productRepository = ProductRepositoryImpl(
+                context,
+                database,
+                DependencyInjector.imageResolutionRepository()
+            )
             val getProductByUuidUseCase = GetProductByUuidUseCase(productRepository)
             val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
             val saveProductUseCase = SaveProductUseCase(productRepository)
@@ -375,6 +390,9 @@ fun BipandoNavGraph(navController: NavHostController) {
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
+                    },
+                    onBarcodeClick = { barcode ->
+                        navController.navigate("image_preview?barcode=$barcode")
                     }
                 )
             }
@@ -382,16 +400,19 @@ fun BipandoNavGraph(navController: NavHostController) {
 
         composable(
             route = Routes.IMAGE_PREVIEW,
-            arguments = listOf(navArgument("uri") { 
-                type = NavType.StringType
-                defaultValue = ""
-            })
+            arguments = listOf(
+                navArgument("uri") { 
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("barcode") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
         ) { backStackEntry ->
             val uri = backStackEntry.arguments?.getString("uri") ?: ""
-            // Navigation already decodes query parameters, so we don't need manual decode here.
-            // If the URI was double-encoded, we might need one decode. 
-            // But usually one encode for the route is enough.
-            val decodedUri = uri
+            val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
             
             val themeNumber = SharedPreferencesManager.getThemeNumber(context, "chave")
             val themeType = when (themeNumber) {
@@ -403,7 +424,8 @@ fun BipandoNavGraph(navController: NavHostController) {
 
             BipandoTheme(themeType = themeType) {
                 ImagePreviewScreen(
-                    imageUri = decodedUri,
+                    imageUri = uri,
+                    barcode = barcode,
                     onBackClick = { navController.popBackStack() }
                 )
             }

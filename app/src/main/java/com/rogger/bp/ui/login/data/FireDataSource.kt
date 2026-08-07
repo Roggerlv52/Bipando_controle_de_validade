@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.login.data
 
 import android.content.Context
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +19,7 @@ class FireDataSource : LoginDataSource {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    override fun login(context: Context,idToken: String, email: String, callback: LoginCallback) {
+    override fun login(context: Context, idToken: String, email: String, callback: LoginCallback) {
 
         if (idToken.isBlank()) {
             callback.onFailure(context.getString(
@@ -54,45 +53,46 @@ class FireDataSource : LoginDataSource {
 
                 val uid = user.uid
                 val userName = user.displayName ?: ""
-                val photoUrl = user.photoUrl?.toString() ?: ""
-
+                val googlePhotoUrl = user.photoUrl?.toString() ?: ""
                 val finalEmail = email
 
-                val firestoreData = hashMapOf(
-                    "uid" to uid,
-                    "name" to userName,
-                    "email" to finalEmail,
-                    "photoUrl" to photoUrl
-                )
-                Log.d("AUTH", auth.currentUser?.uid ?: "NULL")
-                firestore.collection("users")
-                    .document(uid)
-                    .set(firestoreData, SetOptions.merge())
-                    .addOnSuccessListener {
-                        // ── Devolve UserAuth completo com photoUri ────────
-                        val userAuth = UserAuth(
-                            uuid = uid,
-                            name = userName,
-                            email = finalEmail,
-                            password = "",
-                            photoUri = user.photoUrl
+                firestore.collection("users").document(uid).get()
+                    .addOnSuccessListener { document ->
+                        val firestoreData = hashMapOf<String, Any>(
+                            "uid" to uid,
+                            "name" to userName,
+                            "email" to finalEmail
                         )
-                        callback.onSuccess(userAuth)
+
+                        // Só adiciona a foto do Google se o campo photoUrl no Firestore estiver vazio ou não existir
+                        val existingPhoto = document.getString("photoUrl")
+                        if (existingPhoto.isNullOrEmpty()) {
+                            firestoreData["photoUrl"] = googlePhotoUrl
+                        }
+
+                        firestore.collection("users")
+                            .document(uid)
+                            .set(firestoreData, SetOptions.merge())
+                            .addOnSuccessListener {
+                                val userAuth = UserAuth(
+                                    uuid = uid,
+                                    name = userName,
+                                    email = finalEmail,
+                                    password = "",
+                                    photoUri = if (!existingPhoto.isNullOrEmpty()) android.net.Uri.parse(existingPhoto) else user.photoUrl
+                                )
+                                callback.onSuccess(userAuth)
+                            }
+                            .addOnFailureListener {
+                                callback.onFailure("Erro ao salvar dados do usuário")
+                            }
                     }
-                    .addOnFailureListener { exception ->
-                        val userAuth = UserAuth(
-                            uuid = uid,
-                            name = userName,
-                            email = finalEmail,
-                            password = "",
-                            photoUri = user.photoUrl
-                        )
-                        callback.onSuccess(userAuth)
+                    .addOnFailureListener {
+                        callback.onFailure("Erro ao verificar usuário existente")
                     }
                     .addOnCompleteListener {
                         callback.onComplete()
                     }
             }
     }
-
 }

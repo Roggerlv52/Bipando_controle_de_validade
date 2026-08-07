@@ -9,12 +9,20 @@ import com.rogger.bp.domain.repository.ProductRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.rogger.bp.data.image.UploadResult
+import com.rogger.bp.data.image.repository.ImageResolutionRepository
+import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.Dispatchers
+import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class ProductRepositoryImpl(private val database: BpDatabase) : ProductRepository {
+class ProductRepositoryImpl(
+    private val context: Context,
+    private val database: BpDatabase,
+    private val imageResolutionRepository: ImageResolutionRepository? = null
+) : ProductRepository {
 
     override fun getProducts(): Flow<List<Product>> {
         return database.productDao().getAllProducts().map { list ->
@@ -63,6 +71,40 @@ class ProductRepositoryImpl(private val database: BpDatabase) : ProductRepositor
     }
 
     override suspend fun saveProduct(product: Product) = withContext(Dispatchers.IO) {
+        var finalImageUri = product.imageUri
+
+        // 0. Processamento de imagem (Upload para Firebase Storage se for local)
+        val isLocalPath = finalImageUri.isNotEmpty() &&
+                (finalImageUri.startsWith("/") || finalImageUri.startsWith("file://") || finalImageUri.startsWith("content://"))
+
+        if (isLocalPath && NetworkUtils.isNetworkAvailable() && imageResolutionRepository != null) {
+            try {
+                val globalExists = imageResolutionRepository.globalImageExists(product.barcode)
+                val result = if (!globalExists) {
+                    imageResolutionRepository.uploadGlobalImage(
+                        context = context,
+                        barcode = product.barcode,
+                        productName = product.name,
+                        imageUri = finalImageUri
+                    )
+                } else {
+                    imageResolutionRepository.saveUserImage(
+                        context = context,
+                        barcode = product.barcode,
+                        imageUri = finalImageUri
+                    )
+                }
+
+                if (result is UploadResult.Success) {
+                    finalImageUri = result.url
+                } else if (result is UploadResult.Error && result.message.startsWith("ALREADY_EXISTS:")) {
+                    finalImageUri = result.message.removePrefix("ALREADY_EXISTS:")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ProductRepo", "Erro ao fazer upload da imagem: ${e.message}")
+            }
+        }
+
         val original = database.productDao().getProductByDocId(product.uuid)
         val postProduct = if (original != null) {
             original.copy(
@@ -70,14 +112,18 @@ class ProductRepositoryImpl(private val database: BpDatabase) : ProductRepositor
                 barcode = product.barcode,
                 categoryId = product.categoryId,
                 categoryName = product.categoryName,
-                imageUri = product.imageUri,
+                imageUri = finalImageUri,
                 timestamp = product.timestamp,
                 note = product.note,
                 deleted = false,
-                deletedAt = null // Garante que não está na lixeira
+                deletedAt = null
             )
         } else {
-            product.toData().copy(deleted = false, deletedAt = null)
+            product.toData().copy(
+                imageUri = finalImageUri,
+                deleted = false,
+                deletedAt = null
+            )
         }
         
         // 1. Atualiza Local (Room)

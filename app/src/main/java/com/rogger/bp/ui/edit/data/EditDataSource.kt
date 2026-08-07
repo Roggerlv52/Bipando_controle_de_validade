@@ -13,13 +13,14 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.content.Context
 
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 14/05/2026
  * Hora: 19:54
  */
-class EditDataSource : PostEditDataSource {
+class EditDataSource(private val context: Context) : PostEditDataSource {
 
     private val TAG = "EditDataSource"
     private val db = FirebaseFirestore.getInstance()
@@ -109,7 +110,7 @@ class EditDataSource : PostEditDataSource {
 
         val imageUri = produto.imageUri
         val isLocalPath = imageUri.isNotEmpty() &&
-                (imageUri.startsWith("/") || imageUri.startsWith("file://"))
+                (imageUri.startsWith("/") || imageUri.startsWith("file://") || imageUri.startsWith("content://"))
 
         if (isLocalPath) {
             Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
@@ -147,6 +148,7 @@ class EditDataSource : PostEditDataSource {
                 // ── Sem imagem global: cria a imagem global ────────────────
                 Log.d(TAG, "Sem imagem global — criando para barcode=${produto.barcode}")
                 val result = imageRepository.uploadGlobalImage(
+                    context = context,
                     barcode = produto.barcode,
                     productName = produto.name,
                     imageUri = localPath
@@ -160,6 +162,7 @@ class EditDataSource : PostEditDataSource {
                     "Imagem global existe — salvando personalizada para barcode=${produto.barcode}"
                 )
                 val result = imageRepository.saveUserImage(
+                    context = context,
                     barcode = produto.barcode,
                     imageUri = localPath
                 )

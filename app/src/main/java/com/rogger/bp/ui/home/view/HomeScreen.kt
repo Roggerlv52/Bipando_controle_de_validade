@@ -2,6 +2,7 @@ package com.rogger.bp.ui.home.view
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavController
@@ -37,9 +38,11 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
@@ -102,11 +105,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
 import com.rogger.bp.R
+import com.rogger.bp.R.drawable
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.ui.home.presentation.HomeState
@@ -114,6 +119,8 @@ import com.rogger.bp.ui.home.presentation.HomeViewModel
 import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.util.CategorySelectionDialog
 import com.rogger.bp.util.DeleteConfirmationDialog
+import com.rogger.bp.util.ImagePickerBottomSheet
+import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.TimeFormatter
 import kotlinx.coroutines.launch
 
@@ -138,10 +145,38 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    var showImagePicker by remember { mutableStateOf(false) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            tempCameraUri?.let { viewModel.uploadProfileImage(context, it) }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            try {
+                val file = ImagePikerUtil.createImageFile(context)
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                tempCameraUri = uri
+                cameraLauncher.launch(uri)
+            } catch (_: Exception) {
+                // Erro ao criar arquivo ou obter URI
+            }
+        }
+    }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { viewModel.uploadProfileImage(context, it) }
+        uri?.let { viewModel.uploadProfileImage(context, uri)
+            Log.d("HomeScreen", "Upload concluído (onComplete) com URI: $uri")
+        }
     }
 
     var showEditNameDialog by remember { mutableStateOf(false) }
@@ -211,7 +246,7 @@ fun HomeScreen(
                         showEditNameDialog = true
                     },
                     onImageClick = {
-                        imagePickerLauncher.launch("image/*")
+                        showImagePicker = true
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -264,6 +299,14 @@ fun HomeScreen(
                         compartilharApp(context)
                     }
                 )
+                DrawerItem(
+                    label = "Suporte",
+                    icon = Icons.Default.Email,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        abrirSuporteEmail(context)
+                    }
+                )
             }
         }
     ) {
@@ -283,6 +326,18 @@ fun HomeScreen(
             onExportPdf = { viewModel.exportPdf(context) },
             onExportExcel = { viewModel.exportExcel(context) }
         )
+
+        if (showImagePicker) {
+            ImagePickerBottomSheet(
+                onDismiss = { showImagePicker = false },
+                onCameraClick = {
+                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                },
+                onGalleryClick = {
+                    imagePickerLauncher.launch("image/*")
+                }
+            )
+        }
     }
 }
 
@@ -298,19 +353,51 @@ fun DrawerHeader(state: HomeState, onNameClick: () -> Unit, onImageClick: () -> 
         contentAlignment = Alignment.BottomStart
     ) {
         Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(state.userPhoto.ifEmpty { R.drawable.ic_person_24 })
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
+            Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface)
                     .clickable(onClick = onImageClick),
-                contentScale = ContentScale.Crop
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(state.userPhoto.ifEmpty { R.drawable.ic_person_24 })
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentScale = ContentScale.Crop
+                )
+                
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .align(Alignment.BottomEnd),
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.onSecondary
+                            )
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = state.userName,
@@ -360,7 +447,7 @@ fun DrawerItem(
 private fun compartilharApp(context: android.content.Context) {
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        val message = context.getString(R.string.share_app_message, context.packageName)
+        val message = context.getString(R.string.share_app_message)
         putExtra(Intent.EXTRA_TEXT, message)
     }
     context.startActivity(
@@ -369,6 +456,18 @@ private fun compartilharApp(context: android.content.Context) {
             context.getString(R.string.share_app_title)
         )
     )
+}
+
+private fun abrirSuporteEmail(context: android.content.Context) {
+    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:bipandosuporte@gmail.com")
+        putExtra(Intent.EXTRA_SUBJECT, "Suporte Bipando - Sugestões/Dúvidas")
+    }
+    try {
+        context.startActivity(Intent.createChooser(emailIntent, "Enviar e-mail de suporte"))
+    } catch (_: Exception) {
+        // Tratar caso não tenha app de email
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -740,10 +839,10 @@ fun SearchTopAppBar(
                 singleLine = true,
                 trailingIcon = {
                     IconButton(onClick = onBarcodeClick) {
-                        Icon(
-                            imageVector = Icons.Default.QrCode,
-                            contentDescription = "Escanear Código",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                        AsyncImage(
+                            model =   drawable.ic_barcode_scanner_24,
+                            contentDescription = null,
+                            modifier = Modifier.size(25.dp)
                         )
                     }
                 },

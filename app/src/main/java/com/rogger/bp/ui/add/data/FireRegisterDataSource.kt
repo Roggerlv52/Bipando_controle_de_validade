@@ -14,8 +14,9 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.content.Context
 
-class FireRegisterDataSource : ItemDataSource {
+class FireRegisterDataSource(private val context: Context) : ItemDataSource {
 
     private val TAG = "FireRegisterDataSource"
 
@@ -164,6 +165,7 @@ class FireRegisterDataSource : ItemDataSource {
 
     private suspend fun uploadGlobalImageInternal(image: PostImage, callback: SaveImageCallback) {
         val uploadResult = imageRepository.uploadGlobalImage(
+            context     = context,
             barcode     = image.barcode,
             productName = image.name,
             imageUri    = image.uri
@@ -205,6 +207,7 @@ class FireRegisterDataSource : ItemDataSource {
 
     private suspend fun saveUserImageInternal(image: PostImage, callback: SaveImageCallback) {
         val uploadResult = imageRepository.saveUserImage(
+            context  = context,
             barcode  = image.barcode,
             imageUri = image.uri
         )

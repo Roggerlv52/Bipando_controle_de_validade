@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.home.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -13,20 +14,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.google.zxing.BarcodeFormat
+import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.rogger.bp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePreviewScreen(
-    imageUri: String,
+    imageUri: String = "",
+    barcode: String = "",
     onBackClick: () -> Unit
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
@@ -35,7 +41,12 @@ fun ImagePreviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Visualizar Imagem", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        if (barcode.isNotEmpty()) "Visualizar Código" else "Visualizar Imagem", 
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -70,51 +81,92 @@ fun ImagePreviewScreen(
                 },
             contentAlignment = Alignment.Center
         ) {
-            val context = LocalContext.current
-            val imageRequest = remember(imageUri) {
-                ImageRequest.Builder(context)
-                    .data(imageUri.ifEmpty { R.drawable.ic_shopping })
-                    .crossfade(true)
-                    .build()
-            }
-
-            SubcomposeAsyncImage(
-                model = imageRequest,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    ),
-                contentScale = ContentScale.Fit,
-                loading = {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color.White)
+            if (barcode.isNotEmpty()) {
+                val barcodeBitmap = remember(barcode) {
+                    try {
+                        val barcodeEncoder = BarcodeEncoder()
+                        val format = if (barcode.length == 13 && barcode.all { it.isDigit() })
+                            BarcodeFormat.EAN_13 else BarcodeFormat.CODE_128
+                        barcodeEncoder.encodeBitmap(barcode, format, 1000, 500)
+                    } catch (e: Exception) {
+                        null
                     }
-                },
-                error = {
+                }
+
+                if (barcodeBitmap != null) {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        modifier = Modifier.graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        )
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_shopping),
-                            contentDescription = "Erro ao carregar imagem",
-                            tint = Color.White.copy(alpha = 0.5f),
-                            modifier = Modifier.size(64.dp)
+                        Image(
+                            bitmap = barcodeBitmap.asImageBitmap(),
+                            contentDescription = "Código de barras",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .background(Color.White)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Erro ao carregar imagem",
-                            color = Color.White.copy(alpha = 0.5f)
+                            text = barcode,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp
                         )
                     }
                 }
-            )
+            } else {
+                val context = LocalContext.current
+                val imageRequest = remember(imageUri) {
+                    ImageRequest.Builder(context)
+                        .data(imageUri.ifEmpty { R.drawable.ic_shopping })
+                        .crossfade(true)
+                        .build()
+                }
+
+                SubcomposeAsyncImage(
+                    model = imageRequest,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        ),
+                    contentScale = ContentScale.Fit,
+                    loading = {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color.White)
+                        }
+                    },
+                    error = {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_shopping),
+                                contentDescription = "Erro ao carregar imagem",
+                                tint = Color.White.copy(alpha = 0.5f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Erro ao carregar imagem",
+                                color = Color.White.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 }

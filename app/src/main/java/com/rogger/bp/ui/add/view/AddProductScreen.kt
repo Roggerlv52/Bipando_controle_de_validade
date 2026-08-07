@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,11 +30,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.rogger.bp.R
+import com.rogger.bp.R.drawable
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.ui.add.presentation.AddProductViewModel
 import com.rogger.bp.ui.componentes.BipandoButton
 import com.rogger.bp.ui.componentes.BipandoTextField
+import com.rogger.bp.util.ImagePickerBottomSheet
+import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.TimeFormatter
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +47,8 @@ fun AddProductScreen(
     barcode: String? = null,
     initialCategoryId: String? = null,
     onBackClick: () -> Unit,
-    onSaveSuccess: () -> Unit
+    onSaveSuccess: () -> Unit,
+    onBarcodeClick: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
@@ -50,11 +56,33 @@ fun AddProductScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
+    var showImagePicker by remember { mutableStateOf(false) }
 
-    val pickMedia = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+    var cameraImageFile by remember { mutableStateOf<File?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        viewModel.onImageChange(uri)
+        uri?.let { viewModel.onImageChange(it) }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraImageFile != null) {
+            viewModel.onImageChange(Uri.fromFile(cameraImageFile))
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val file = ImagePikerUtil.createImageFile(context)
+            cameraImageFile = file
+            val uri = ImagePikerUtil.getUriForFile(context, file)
+            cameraLauncher.launch(uri)
+        }
     }
 
     LaunchedEffect(barcode) {
@@ -127,7 +155,7 @@ fun AddProductScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFF0F0F0))
                     .clickable {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        showImagePicker = true
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -146,6 +174,33 @@ fun AddProductScreen(
                 }
             }
 
+            if (state.barcode.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                        .clickable { onBarcodeClick(state.barcode) },
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model =   drawable.ic_barcode_scanner_24,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = state.barcode,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             BipandoTextField(
@@ -153,15 +208,6 @@ fun AddProductScreen(
                 onValueChange = viewModel::onNameChange,
                 label = "Nome do Produto",
                 leadingIcon = Icons.Default.ShoppingBasket
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            BipandoTextField(
-                value = state.barcode,
-                onValueChange = viewModel::onBarcodeChange,
-                label = "Código de Barras",
-                leadingIcon = Icons.Default.QrCode
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -245,7 +291,8 @@ fun AddProductScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Selecione uma Categoria", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text("Selecione uma Categoria", style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(state.categories) { category ->
                         ListItem(
@@ -253,12 +300,25 @@ fun AddProductScreen(
                             modifier = Modifier.clickable {
                                 viewModel.onCategoryChange(category)
                                 showCategoryPicker = false
-                            }
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showImagePicker) {
+        ImagePickerBottomSheet(
+            onDismiss = { showImagePicker = false },
+            onCameraClick = {
+                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+            },
+            onGalleryClick = {
+                imagePickerLauncher.launch("image/*")
+            }
+        )
     }
 }
