@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.home.view
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -122,6 +124,7 @@ import com.rogger.bp.util.DeleteConfirmationDialog
 import com.rogger.bp.util.ImagePickerBottomSheet
 import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.TimeFormatter
+import com.rogger.bp.util.VoiceSearchDialog
 import kotlinx.coroutines.launch
 
 @Composable
@@ -147,6 +150,7 @@ fun HomeScreen(
 
     var showImagePicker by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var showVoiceSearchDialog by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -168,6 +172,14 @@ fun HomeScreen(
             } catch (_: Exception) {
                 // Erro ao criar arquivo ou obter URI
             }
+        }
+    }
+
+    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showVoiceSearchDialog = true
         }
     }
 
@@ -321,6 +333,9 @@ fun HomeScreen(
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onToggleSearch = viewModel::toggleSearch,
             onScannerSearch = onScannerSearch,
+            onVoiceSearchClick = {
+                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            },
             onDeleteProducts = viewModel::deleteProducts,
             onLogout = { viewModel.logout(context, onLogout) },
             onExportPdf = { viewModel.exportPdf(context) },
@@ -335,6 +350,15 @@ fun HomeScreen(
                 },
                 onGalleryClick = {
                     imagePickerLauncher.launch("image/*")
+                }
+            )
+        }
+
+        if (showVoiceSearchDialog) {
+            VoiceSearchDialog(
+                onDismiss = { showVoiceSearchDialog = false },
+                onResult = { result ->
+                    viewModel.onSearchQueryChange(result)
                 }
             )
         }
@@ -483,6 +507,7 @@ fun HomeScreenContent(
     onSearchQueryChange: (String) -> Unit,
     onToggleSearch: (Boolean) -> Unit,
     onScannerSearch: () -> Unit,
+    onVoiceSearchClick: () -> Unit,
     onDeleteProducts: (List<Product>) -> Unit,
     onLogout: () -> Unit,
     onExportPdf: () -> Unit,
@@ -545,6 +570,7 @@ fun HomeScreenContent(
                     query = state.searchQuery,
                     onQueryChange = onSearchQueryChange,
                     onBarcodeClick = onScannerSearch,
+                    onVoiceSearchClick = onVoiceSearchClick,
                     onCloseClick = { onToggleSearch(false) }
                 )
             } else {
@@ -822,6 +848,7 @@ fun SearchTopAppBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onBarcodeClick: () -> Unit,
+    onVoiceSearchClick: () -> Unit,
     onCloseClick: () -> Unit
 ) {
     TopAppBar(
@@ -838,12 +865,22 @@ fun SearchTopAppBar(
                 },
                 singleLine = true,
                 trailingIcon = {
-                    IconButton(onClick = onBarcodeClick) {
-                        AsyncImage(
-                            model =   drawable.ic_barcode_scanner_24,
-                            contentDescription = null,
-                            modifier = Modifier.size(25.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onVoiceSearchClick) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = "Pesquisa por Voz",
+                                modifier = Modifier.size(25.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        IconButton(onClick = onBarcodeClick) {
+                            AsyncImage(
+                                model = drawable.ic_barcode_scanner_24,
+                                contentDescription = null,
+                                modifier = Modifier.size(25.dp)
+                            )
+                        }
                     }
                 },
                 colors = TextFieldDefaults.colors(
@@ -1084,8 +1121,9 @@ fun HomeScreenPreview() {
             onMenuClick = {},
             onSearchQueryChange = {},
             onToggleSearch = {},
-            onDeleteProducts = {},
             onScannerSearch = {},
+            onVoiceSearchClick = {},
+            onDeleteProducts = {},
             onLogout = {},
             onExportPdf = {},
             onExportExcel = {}

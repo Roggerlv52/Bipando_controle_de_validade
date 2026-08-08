@@ -92,4 +92,16 @@ public class SharedPreferencesManager {
         editor.apply();
     }
 
+    public static void setDatePickerType(Context context, int type) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.putInt("date_picker_type", type);
+        editor.apply();
+    }
+
+    public static int getDatePickerType(Context context) {
+        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPre.getInt("date_picker_type", 0); // 0 = Calendário (padrão)
+    }
+
 }

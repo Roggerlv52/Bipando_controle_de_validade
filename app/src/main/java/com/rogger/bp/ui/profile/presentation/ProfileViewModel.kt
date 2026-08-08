@@ -33,6 +33,7 @@ data class ProfileState(
     val soundType: Int = 2,
     val soundName: String = "Padrão",
     val soundUri: String = "",
+    val datePickerType: Int = 0, // 0 = Calendário, 1 = Spinner
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isLoggedOut: Boolean = false
@@ -75,6 +76,7 @@ class ProfileViewModel(
         val soundType = NotificationPrefs.getSoundType(context)
         val soundName = NotificationPrefs.getSoundName(context)
         val soundUri = NotificationPrefs.getSoundUri(context)
+        val datePickerType = SharedPreferencesManager.getDatePickerType(context)
 
         val themeType = when (themeNumber) {
             2 -> BipandoThemeType.GREEN
@@ -98,7 +100,8 @@ class ProfileViewModel(
                 notificationTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute),
                 soundType = soundType,
                 soundName = soundName,
-                soundUri = soundUri
+                soundUri = soundUri,
+                datePickerType = datePickerType
             )
         }
 
@@ -171,6 +174,11 @@ class ProfileViewModel(
     fun onBeepToggle(context: Context, enabled: Boolean) {
         SharedPreferencesManager.sharedBeepState(context, "beep", enabled)
         _uiState.update { it.copy(isBeepEnabled = enabled) }
+    }
+
+    fun onDatePickerTypeChange(context: Context, type: Int) {
+        SharedPreferencesManager.setDatePickerType(context, type)
+        _uiState.update { it.copy(datePickerType = type) }
     }
 
     fun onNotificationToggle(context: Context, enabled: Boolean) {

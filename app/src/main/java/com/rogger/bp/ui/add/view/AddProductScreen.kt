@@ -33,6 +33,7 @@ import com.rogger.bp.R
 import com.rogger.bp.R.drawable
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.ui.add.presentation.AddProductViewModel
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.componentes.BipandoButton
 import com.rogger.bp.ui.componentes.BipandoTextField
 import com.rogger.bp.util.ImagePickerBottomSheet
@@ -104,22 +105,46 @@ fun AddProductScreen(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = state.expirationDate
-        )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
-                    showDatePicker = false
-                }) { Text("Confirmar") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+        val pickerType = SharedPreferencesManager.getDatePickerType(context)
+        
+        if (pickerType == 1) { // Spinner
+            val calendar = java.util.Calendar.getInstance().apply {
+                timeInMillis = state.expirationDate
             }
-        ) {
-            DatePicker(state = datePickerState)
+            val datePickerDialog = android.app.DatePickerDialog(
+                context,
+                android.R.style.Theme_Holo_Light_Dialog_MinWidth, // Estilo Spinner (legado)
+                { _, year, month, dayOfMonth ->
+                    val selectedCalendar = java.util.Calendar.getInstance()
+                    selectedCalendar.set(year, month, dayOfMonth)
+                    viewModel.onDateChange(selectedCalendar.timeInMillis)
+                    showDatePicker = false
+                },
+                calendar.get(java.util.Calendar.YEAR),
+                calendar.get(java.util.Calendar.MONTH),
+                calendar.get(java.util.Calendar.DAY_OF_MONTH)
+            )
+            datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+            datePickerDialog.setOnDismissListener { showDatePicker = false }
+            datePickerDialog.show()
+        } else { // Calendário (Padrao)
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = state.expirationDate
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
+                        showDatePicker = false
+                    }) { Text("Confirmar") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
         }
     }
 

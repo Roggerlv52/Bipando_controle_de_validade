@@ -252,21 +252,56 @@ fun ProfileScreen(
 
             PremiumStatusSection(state = state, onPaymentClick = onPaymentClick)
 
+            SettingsSection(title = "Preferências") {
+                Text(
+                    text = "Tipo de Seletor de Data",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                ThemeOption(
+                    title = "Calendário (Padrão)",
+                    selected = state.datePickerType == 0,
+                    onClick = { viewModel.onDatePickerTypeChange(context, 0) }
+                )
+                ThemeOption(
+                    title = "Spinner (Rolagem)",
+                    selected = state.datePickerType == 1,
+                    onClick = { viewModel.onDatePickerTypeChange(context, 1) }
+                )
+            }
+
             SettingsSection(title = "Aparência") {
                 ThemeOption(
-                    title = "Tema Clássico (Escuro)",
+                    title = "Tema Clássico",
                     selected = state.themeType == BipandoThemeType.CLASSIC,
                     onClick = { viewModel.onThemeChange(context, BipandoThemeType.CLASSIC) }
                 )
                 ThemeOption(
                     title = "Tema Verde",
                     selected = state.themeType == BipandoThemeType.GREEN,
-                    onClick = { viewModel.onThemeChange(context, BipandoThemeType.GREEN) }
+                    isPremiumOnly = true,
+                    isUserPremium = state.isPremium,
+                    onClick = { 
+                        if (state.isPremium) {
+                            viewModel.onThemeChange(context, BipandoThemeType.GREEN)
+                        } else {
+                            onPaymentClick()
+                        }
+                    }
                 )
                 ThemeOption(
                     title = "Tema Vermelho",
                     selected = state.themeType == BipandoThemeType.RED,
-                    onClick = { viewModel.onThemeChange(context, BipandoThemeType.RED) }
+                    isPremiumOnly = true,
+                    isUserPremium = state.isPremium,
+                    onClick = { 
+                        if (state.isPremium) {
+                            viewModel.onThemeChange(context, BipandoThemeType.RED)
+                        } else {
+                            onPaymentClick()
+                        }
+                    }
                 )
                 ThemeOption(
                     title = "Tema Noturno",
@@ -532,7 +567,15 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
 }
 
 @Composable
-fun ThemeOption(title: String, selected: Boolean, onClick: () -> Unit) {
+fun ThemeOption(
+    title: String,
+    selected: Boolean,
+    isPremiumOnly: Boolean = false,
+    isUserPremium: Boolean = true,
+    onClick: () -> Unit
+) {
+    val alpha = if (isPremiumOnly && !isUserPremium) 0.6f else 1f
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -540,12 +583,32 @@ fun ThemeOption(title: String, selected: Boolean, onClick: () -> Unit) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(selected = selected, onClick = onClick)
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            enabled = if (isPremiumOnly) isUserPremium else true
+        )
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+            modifier = Modifier.weight(1f)
         )
+        if (isPremiumOnly && !isUserPremium) {
+            Surface(
+                color = Color(0xFFFFD700).copy(alpha = 0.2f),
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(
+                    text = "PREMIUM",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFB8860B),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
     }
 }
 

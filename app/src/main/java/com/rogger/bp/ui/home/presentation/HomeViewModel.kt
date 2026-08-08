@@ -88,18 +88,26 @@ class HomeViewModel(
             _searchQuery,
             _categoryId
         ) { products, query, categoryId ->
+            val normalizedQuery = query.normalizeForSearch()
+            
             products.filter { !it.deleted }
                 .filter { if (categoryId != null) it.categoryId == categoryId else true }
                 .filter { 
-                    query.isEmpty() || 
-                    it.name.contains(query, ignoreCase = true) || 
-                    it.barcode.contains(query) ||
-                    it.categoryName.contains(query, ignoreCase = true)
+                    normalizedQuery.isEmpty() || 
+                    it.name.normalizeForSearch().contains(normalizedQuery) || 
+                    it.barcode.lowercase().contains(normalizedQuery) ||
+                    it.categoryName.normalizeForSearch().contains(normalizedQuery)
                 }
                 .map { it.toDomain() }
         }.onEach { productList ->
             _uiState.update { it.copy(products = productList) }
         }.launchIn(viewModelScope)
+    }
+
+    private fun String.normalizeForSearch(): String {
+        return java.text.Normalizer.normalize(this, java.text.Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+            .lowercase()
     }
 
     fun syncAndFetchProducts(context: Context) {

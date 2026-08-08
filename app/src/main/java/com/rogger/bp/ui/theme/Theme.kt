@@ -71,7 +71,7 @@ fun BipandoTheme(
     }
 
     val colorScheme = when {
-        currentThemeType == BipandoThemeType.DARK || (currentThemeType == BipandoThemeType.CLASSIC && darkTheme) -> DarkColorScheme
+        currentThemeType == BipandoThemeType.DARK -> DarkColorScheme
         currentThemeType == BipandoThemeType.GREEN -> GreenColorScheme
         currentThemeType == BipandoThemeType.RED -> RedColorScheme
         else -> ClassicColorScheme
