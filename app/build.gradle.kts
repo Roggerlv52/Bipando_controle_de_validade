@@ -28,12 +28,12 @@ android {
         }
     }
     namespace = "com.rogger.bp"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.rogger.bp"
         minSdk = 24
-        targetSdk = 37
+        targetSdk = 35
         versionCode = 37
         versionName = "1.3.0"
 

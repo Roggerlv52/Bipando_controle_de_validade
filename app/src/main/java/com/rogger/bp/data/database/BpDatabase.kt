@@ -10,15 +10,18 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.rogger.bp.data.dao.CategoryDao
+import com.rogger.bp.data.dao.GroupDao
 import com.rogger.bp.data.dao.ProductDao
 import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.data.model.PostProduct
 
-@Database(entities = [PostProduct::class, PostCategory::class], version = 2, exportSchema = false)
+@Database(entities = [PostProduct::class, PostCategory::class, PostGroup::class], version = 3, exportSchema = false)
 abstract class BpDatabase : RoomDatabase() {
 
     abstract fun productDao(): ProductDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun groupDao(): GroupDao
 
     companion object {
         @Volatile

@@ -1,9 +1,13 @@
 package com.rogger.bp.ui.profile.presentation
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.asFlow
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.rogger.bp.R
 import com.rogger.bp.data.dao.ProductDao
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.notification.NotificationScheduler
@@ -16,12 +20,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 data class ProfileState(
     val userName: String = "",
     val userEmail: String = "",
     val userPhotoUrl: String = "",
+    val userUid: String = "",
+    val groupName: String = "",
+    val groupInviteCode: String = "",
+    val hasCustomGroupName: Boolean = false,
     val totalProductsCount: Int = 0,
     val deletedProductsCount: Int = 0,
     val isPremium: Boolean = false,
@@ -34,14 +45,20 @@ data class ProfileState(
     val soundName: String = "Padrão",
     val soundUri: String = "",
     val datePickerType: Int = 0, // 0 = Calendário, 1 = Spinner
+    val workMode: Int = 0, // 0 = Individual, 1 = Grupo
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isLoggedOut: Boolean = false
+    val isLoggedOut: Boolean = false,
+    val syncSuccess: Boolean = false
 )
 
 class ProfileViewModel(
     private val profileRepository: ProfileRepository,
-    private val productDao: ProductDao
+    private val productDao: ProductDao,
+    private val groupRepository: com.rogger.bp.ui.groups.data.GroupRepository,
+    private val homeRepository: com.rogger.bp.ui.home.data.HomeRepository,
+    private val categoryRepository: com.rogger.bp.ui.category.data.CategoryRepository,
+    private val authRepository: com.rogger.bp.domain.repository.AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileState())
@@ -49,6 +66,32 @@ class ProfileViewModel(
 
     init {
         observeProductCount()
+        observeGroup()
+    }
+
+    private fun observeGroup() {
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        groupRepository.getLocalGroupFlow().onEach { group ->
+            if (group != null) {
+                val shortCode = group.shareCode.take(8).uppercase()
+                val isCollaborative = group.adminId != currentUser?.uid || (group.name != "Meu Grupo" && group.name.isNotEmpty())
+                _uiState.update { 
+                    it.copy(
+                        groupName = group.name,
+                        groupInviteCode = shortCode,
+                        hasCustomGroupName = isCollaborative
+                    )
+                }
+            } else {
+                _uiState.update { 
+                    it.copy(
+                        groupName = "",
+                        groupInviteCode = "",
+                        hasCustomGroupName = false
+                    )
+                }
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun observeProductCount() {
@@ -65,7 +108,6 @@ class ProfileViewModel(
     }
 
     fun loadProfile(context: Context) {
-        // Carrega preferências locais
         val isPremium = SharedPreferencesManager.isPremium(context)
         val themeNumber = SharedPreferencesManager.getThemeNumber(context, "chave")
         val beepState = SharedPreferencesManager.getBeepState(context, "beep")
@@ -77,6 +119,7 @@ class ProfileViewModel(
         val soundName = NotificationPrefs.getSoundName(context)
         val soundUri = NotificationPrefs.getSoundUri(context)
         val datePickerType = SharedPreferencesManager.getDatePickerType(context)
+        val workMode = SharedPreferencesManager.getWorkMode(context)
 
         val themeType = when (themeNumber) {
             2 -> BipandoThemeType.GREEN
@@ -85,10 +128,12 @@ class ProfileViewModel(
             else -> BipandoThemeType.CLASSIC
         }
 
-        // Carrega dados iniciais do cache local (SharedPreferences) para feedback imediato
         val userInfo = SharedPreferencesManager.getUserInfo(context)
+        val userId = userInfo.getOrNull(0) ?: ""
+        
         _uiState.update {
             it.copy(
+                userUid = userId,
                 userName = userInfo.getOrNull(1) ?: "",
                 userEmail = userInfo.getOrNull(3) ?: "",
                 userPhotoUrl = userInfo.getOrNull(2) ?: "",
@@ -101,12 +146,17 @@ class ProfileViewModel(
                 soundType = soundType,
                 soundName = soundName,
                 soundUri = soundUri,
-                datePickerType = datePickerType
+                datePickerType = datePickerType,
+                workMode = workMode
             )
         }
 
-        // Busca dados atualizados do Firebase
         _uiState.update { it.copy(isLoading = true) }
+        
+        viewModelScope.launch {
+            groupRepository.syncUserGroup(userId)
+        }
+
         profileRepository.getUserProfile(object : FetchProfileCallback {
             override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean) {
                 _uiState.update { 
@@ -117,43 +167,12 @@ class ProfileViewModel(
                         isPremium = isPremium
                     )
                 }
-                // Sincroniza o cache local com os dados do Firebase
-                SharedPreferencesManager.saveUserInfo(context, "", name, photoUrl, email)
+                SharedPreferencesManager.saveUserInfo(context, userId, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
             }
-
             override fun onFailure(message: String) {
                 _uiState.update { it.copy(errorMessage = message) }
             }
-
-            override fun onComplete() {
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        })
-    }
-
-    fun updateUserName(context: Context, newName: String) {
-        if (newName.isBlank()) return
-
-        _uiState.update { it.copy(isLoading = true) }
-        profileRepository.updateUserName(newName, object : com.rogger.bp.ui.profile.data.UpdateProfileCallback {
-            override fun onSuccess() {
-                _uiState.update { it.copy(userName = newName) }
-                // Atualiza cache local
-                val userInfo = SharedPreferencesManager.getUserInfo(context)
-                SharedPreferencesManager.saveUserInfo(
-                    context,
-                    userInfo.getOrNull(0) ?: "",
-                    newName,
-                    userInfo.getOrNull(2) ?: "",
-                    userInfo.getOrNull(3) ?: ""
-                )
-            }
-
-            override fun onFailure(message: String) {
-                _uiState.update { it.copy(errorMessage = message) }
-            }
-
             override fun onComplete() {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -180,6 +199,47 @@ class ProfileViewModel(
         SharedPreferencesManager.setDatePickerType(context, type)
         _uiState.update { it.copy(datePickerType = type) }
     }
+
+    fun onWorkModeChange(context: Context, mode: Int) {
+        SharedPreferencesManager.setWorkMode(context, mode)
+        _uiState.update { it.copy(workMode = mode) }
+    }
+
+    fun syncProductsToGroup() {
+        val userId = _uiState.value.userUid
+        
+        _uiState.update { it.copy(isLoading = true, syncSuccess = false) }
+        
+        viewModelScope.launch {
+            val group = groupRepository.getLocalGroupFlow().firstOrNull()
+            val groupId = group?.groupId
+            
+            Log.d("ProfileViewModel", "syncProductsToGroup: userId=$userId, groupId=$groupId")
+
+            if (userId.isEmpty() || groupId == null) {
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Dados insuficientes para sincronizar (ID ou Grupo não encontrados)"
+                    ) 
+                }
+                return@launch
+            }
+
+            val result = groupRepository.syncUserToGroup(userId, groupId)
+            if (result.isSuccess) {
+                android.util.Log.d("ProfileViewModel", "Sync success!")
+                _uiState.update { it.copy(syncSuccess = true) }
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Erro desconhecido"
+                android.util.Log.e("ProfileViewModel", "Sync failed: $error")
+                _uiState.update { it.copy(errorMessage = error) }
+            }
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun resetSyncFlag() = _uiState.update { it.copy(syncSuccess = false) }
 
     fun onNotificationToggle(context: Context, enabled: Boolean) {
         NotificationPrefs.onAlert(context, enabled)
@@ -218,9 +278,29 @@ class ProfileViewModel(
     }
 
     fun logout(context: Context) {
-        SharedPreferencesManager.setLoginState(context, "state", false)
-        SharedPreferencesManager.clearUserInfo(context)
-        _uiState.update { it.copy(isLoggedOut = true) }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            // Google Sign Out
+            try {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+                GoogleSignIn.getClient(context, gso).signOut()
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Erro ao fazer logout do Google: ${e.message}")
+            }
+
+            homeRepository.stopListeningForProducts()
+            homeRepository.clearLocalCache()
+            categoryRepository.clearLocalCache()
+            groupRepository.clearLocalCache()
+            authRepository.logout()
+            SharedPreferencesManager.setLoginState(context, "state", false)
+            SharedPreferencesManager.clearUserInfo(context)
+            _uiState.update { it.copy(isLoggedOut = true) }
+        }
     }
 
     fun deleteAccount(context: Context) {
@@ -240,29 +320,50 @@ class ProfileViewModel(
         })
     }
 
-    fun uploadProfileImage(context: Context, uri: android.net.Uri) {
+    fun createGroup(name: String) {
+        if (name.isBlank()) return
+        val userUid = _uiState.value.userUid
+        if (userUid.isEmpty()) return
+
         _uiState.update { it.copy(isLoading = true) }
-        profileRepository.uploadProfileImage(context, uri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
-            override fun onSuccess(photoUrl: String) {
-                _uiState.update { it.copy(userPhotoUrl = photoUrl) }
-                // Atualiza cache local
-                val userInfo = SharedPreferencesManager.getUserInfo(context)
-                SharedPreferencesManager.saveUserInfo(
-                    context,
-                    userInfo.getOrNull(0) ?: "",
-                    userInfo.getOrNull(1) ?: "",
-                    photoUrl,
-                    userInfo.getOrNull(3) ?: ""
-                )
+        viewModelScope.launch {
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            val shortCode = userUid.take(8).uppercase()
+            val newGroup = com.rogger.bp.data.model.PostGroup(
+                groupId = userUid,
+                name = name,
+                adminId = userUid,
+                shareCode = shortCode,
+                createdAt = System.currentTimeMillis()
+            )
+            val adminMember = com.rogger.bp.data.model.PostMember(
+                userId = userUid,
+                name = user?.displayName ?: "",
+                email = user?.email ?: "",
+                photoUrl = user?.photoUrl?.toString() ?: "",
+                role = "Admin"
+            )
+            val result = groupRepository.createGroup(newGroup, adminMember)
+            if (result.isFailure) {
+                _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
             }
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
 
-            override fun onFailure(message: String) {
-                _uiState.update { it.copy(errorMessage = message) }
-            }
+    fun leaveGroup() {
+        val userId = _uiState.value.userUid
 
-            override fun onComplete() {
-                _uiState.update { it.copy(isLoading = false) }
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            val group = groupRepository.getLocalGroupFlow().firstOrNull()
+            val groupId = group?.groupId ?: return@launch
+
+            val result = groupRepository.leaveGroup(userId, groupId)
+            if (result.isFailure) {
+                _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
             }
-        })
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }
 }

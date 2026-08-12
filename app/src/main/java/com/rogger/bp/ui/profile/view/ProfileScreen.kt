@@ -33,15 +33,17 @@ import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.profile.presentation.ProfileState
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.theme.BipandoThemeType
-import com.rogger.bp.util.ImagePickerBottomSheet
-import com.rogger.bp.util.ImagePikerUtil
-import com.rogger.bp.util.NotificationSoundDialog
+import com.rogger.bp.util.ShareUtil
 import com.rogger.bp.util.SystemSoundPickerDialog
+import com.rogger.bp.util.NotificationSoundDialog
+import com.rogger.bp.util.CreateGroupDialog
 import android.net.Uri
 import android.content.Intent
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import java.io.File
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,76 +66,37 @@ fun ProfileScreen(
         }
     }
 
-    var showEditNameDialog by remember { mutableStateOf(false) }
-    var editedName by remember { mutableStateOf("") }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showSoundDialog by remember { mutableStateOf(false) }
     var showSystemSoundPicker by remember { mutableStateOf(false) }
-    var showImagePicker by remember { mutableStateOf(false) }
+    var showCreateGroupDialog by remember { mutableStateOf(false) }
+    var showRemoveGroupDialog by remember { mutableStateOf(false) }
 
-    var cameraImageFile by remember { mutableStateOf<File?>(null) }
+    val clipboardManager = LocalClipboardManager.current
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { viewModel.uploadProfileImage(context, it) }
-    }
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && cameraImageFile != null) {
-            viewModel.uploadProfileImage(context, Uri.fromFile(cameraImageFile))
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            val file = ImagePikerUtil.createImageFile(context)
-            cameraImageFile = file
-            val uri = ImagePikerUtil.getUriForFile(context, file)
-            cameraLauncher.launch(uri)
-        }
-    }
-
-    if (showEditNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditNameDialog = false },
-            title = { Text("Editar Nome") },
-            text = {
-                OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    label = { Text("Seu Nome") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateUserName(context, editedName)
-                        showEditNameDialog = false
-                    }
-                ) {
-                    Text("Salvar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditNameDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
 
     if (showDeleteAccountDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAccountDialog = false },
-            title = { Text("Excluir Conta") },
-            text = { Text("Tem certeza que deseja excluir sua conta permanentemente? Todos os seus produtos e categorias serão removidos. Esta ação não pode ser desfeita.") },
+            title = { Text("Excluir Conta permanentemente") },
+            text = {
+                Column {
+                    Text(
+                        text = "ATENÇÃO: Esta ação é irreversível.",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Ao excluir sua conta, todos os seus dados serão apagados definitivamente do nosso sistema:")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("• Todos os seus produtos e categorias.")
+                    Text("• Todas as imagens de produtos enviadas por você.")
+                    Text("• Seu perfil e configurações de grupo.")
+                    Text("• Status de assinatura Premium.")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Deseja realmente prosseguir com a exclusão total dos seus dados?")
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -142,7 +105,7 @@ fun ProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Excluir")
+                    Text("Excluir Tudo")
                 }
             },
             dismissButton = {
@@ -175,6 +138,55 @@ fun ProfileScreen(
             onSoundSelected = { uri, name ->
                 viewModel.onSoundTypeChange(context, 3, uri, name)
                 showSoundDialog = false
+            }
+        )
+    }
+
+    if (showCreateGroupDialog) {
+        CreateGroupDialog(
+            onDismiss = { showCreateGroupDialog = false },
+            onCreate = { name ->
+                viewModel.createGroup(name)
+                showCreateGroupDialog = false
+            },
+            isLoading = state.isLoading,
+            error = state.errorMessage
+        )
+    }
+
+    if (showRemoveGroupDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveGroupDialog = false },
+            title = { Text("Remover Grupo") },
+            text = { Text("Tem certeza que deseja sair deste grupo ou remover sua configuração colaborativa? Você voltará para o modo individual.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.leaveGroup()
+                        showRemoveGroupDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Remover")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveGroupDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (state.syncSuccess) {
+        AlertDialog(
+            onDismissRequest = { viewModel.resetSyncFlag() },
+            title = { Text("Sincronização Concluída") },
+            text = { Text("Seus produtos e categorias foram copiados para o grupo com sucesso!") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.resetSyncFlag() }) {
+                    Text("OK")
+                }
             }
         )
     }
@@ -214,39 +226,156 @@ fun ProfileScreen(
                 .padding(16.dp)
         ) {
             // Header Perfil
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 24.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
                     model = state.userPhotoUrl.ifEmpty { R.drawable.ic_person_24 },
                     contentDescription = "Foto de perfil",
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(100.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { showImagePicker = true }
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(
-                    modifier = Modifier.clickable {
-                        editedName = state.userName
-                        showEditNameDialog = true
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = state.userName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = state.userEmail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                // Sempre mostra o código pessoal do usuário (baseado no UID)
+                val personalCode = remember(state.userUid) { 
+                    if (state.userUid.isNotEmpty()) state.userUid.take(8).uppercase() else "" 
+                }
+
+                if (personalCode.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(personalCode))
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Seu Código: $personalCode",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            IconButton(
+                                onClick = { ShareUtil.shareUserCode(context, personalCode) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Compartilhar Código",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
+                }
+            }
+
+            if (!state.hasCustomGroupName) {
+                Button(
+                    onClick = { showCreateGroupDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
-                    Text(
-                        text = state.userName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Icon(Icons.Default.GroupAdd, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Criar Grupo Colaborativo")
+                }
+            } else {
+                SettingsSection(title = "Meu Grupo") {
+                    ListItem(
+                        headlineContent = { Text(state.groupName, fontWeight = FontWeight.Bold) },
+                        supportingContent = { Text("Colaborativo") },
+                        leadingContent = { Icon(Icons.Default.Group, contentDescription = null) },
+                        trailingContent = { 
+                            IconButton(onClick = { showRemoveGroupDialog = true }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Sair do Grupo", tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
                     )
-                    Text(
-                        text = state.userEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    
+                    Text("Exibir produtos de:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                    
+                    var showSyncDialog by remember { mutableStateOf(false) }
+
+                    ThemeOption(
+                        title = "Meus Produtos (Individual)",
+                        selected = state.workMode == 0,
+                        onClick = { viewModel.onWorkModeChange(context, 0) }
                     )
+                    ThemeOption(
+                        title = "Grupo (${state.groupName})",
+                        selected = state.workMode == 1,
+                        onClick = { 
+                            if (state.workMode != 1) {
+                                showSyncDialog = true
+                            }
+                        }
+                    )
+
+                    if (showSyncDialog) {
+                        AlertDialog(
+                            onDismissRequest = { 
+                                showSyncDialog = false
+                                viewModel.onWorkModeChange(context, 1)
+                            },
+                            title = { Text("Sincronizar Produtos?") },
+                            text = { Text("Deseja copiar seus produtos e categorias individuais para o grupo colaborativo agora? Isso permitirá que outros membros vejam seus itens atuais.") },
+                            confirmButton = {
+                                Button(onClick = {
+                                    viewModel.syncProductsToGroup()
+                                    viewModel.onWorkModeChange(context, 1)
+                                    showSyncDialog = false
+                                }) {
+                                    Text("Sincronizar e Ativar")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    viewModel.onWorkModeChange(context, 1)
+                                    showSyncDialog = false
+                                }) {
+                                    Text("Apenas Ativar")
+                                }
+                            }
+                        )
+                    }
+                    
+                    if (state.syncSuccess) {
+                        LaunchedEffect(Unit) {
+                            delay(3000)
+                            viewModel.resetSyncFlag()
+                        }
+                    }
                 }
             }
 
@@ -428,25 +557,6 @@ fun ProfileScreen(
             )
 
             Spacer(modifier = Modifier.height(48.dp))
-        }
-
-        if (state.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-
-        if (showImagePicker) {
-            ImagePickerBottomSheet(
-                title = "Foto de perfil",
-                onDismiss = { showImagePicker = false },
-                onCameraClick = {
-                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                },
-                onGalleryClick = {
-                    imagePickerLauncher.launch("image/*")
-                }
-            )
         }
     }
 }

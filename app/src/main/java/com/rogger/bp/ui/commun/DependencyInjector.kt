@@ -16,6 +16,8 @@ import com.rogger.bp.ui.deleteitem.data.DeleteItemDataSource
 import com.rogger.bp.ui.deleteitem.data.DeleteItemRepository
 import com.rogger.bp.ui.edit.data.EditDataSource
 import com.rogger.bp.ui.edit.data.EditRepository
+import com.rogger.bp.ui.groups.data.FireGroupDataSource
+import com.rogger.bp.ui.groups.data.GroupRepository
 import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.login.data.FireDataSource
@@ -37,17 +39,18 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val categoryDao = database.categoryDao()
         val productDao = database.productDao() // 👉 Adicionado para buscar contagem
+        val groupDao = database.groupDao()
         val roomCategoryCache = RoomCategoryCache(categoryDao)
-        val categoryDataSource = CategoryDataSource()
-        return CategoryRepository(categoryDataSource, roomCategoryCache,productDao)
+        val categoryDataSource = CategoryDataSource(context, groupDao)
+        return CategoryRepository(categoryDataSource, roomCategoryCache, productDao, groupDao)
     }
 
     fun registerHomeRepository(context: Context): HomeRepository {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        val homeDataSource = HomeDataSource()
-        return HomeRepository(homeDataSource, roomProductCache)
+        val homeDataSource = HomeDataSource(context, database.groupDao())
+        return HomeRepository(homeDataSource, roomProductCache, database.groupDao())
     }
 
     fun registerEditRepository(context: Context): EditRepository {
@@ -65,13 +68,19 @@ object DependencyInjector {
 
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
+        val groupDao = database.groupDao()
         val roomProductCache = RoomProductCache(productDao)
-        return DeleteItemRepository(DeleteItemDataSource(), roomProductCache)
+        return DeleteItemRepository(DeleteItemDataSource(context, groupDao), roomProductCache)
 
     }
 
     fun profileRepository(): ProfileRepository {
         return ProfileRepository()
+    }
+
+    fun registerGroupRepository(context: Context): GroupRepository {
+        val database = BpDatabase.getDatabase(context)
+        return GroupRepository(FireGroupDataSource(), database.groupDao())
     }
 
     // ── Novos repositórios de imagem ──────────────────────────────────────

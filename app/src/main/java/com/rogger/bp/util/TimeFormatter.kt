@@ -7,11 +7,13 @@ import java.util.concurrent.TimeUnit
 object TimeFormatter {
     private val locale = Locale("pt", "BR")
 
+    @JvmStatic
     fun formatTimestamp(timestamp: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy", locale)
         return sdf.format(Date(timestamp))
     }
 
+    @JvmStatic
     fun getDaysRemaining(expirationTimestamp: Long): Long {
         val now = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)

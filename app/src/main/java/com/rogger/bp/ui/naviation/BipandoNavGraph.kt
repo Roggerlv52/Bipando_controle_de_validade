@@ -1,5 +1,7 @@
 package com.rogger.bp.ui.naviation
 
+import com.rogger.bp.ui.groups.presentation.GroupsViewModel
+import com.rogger.bp.ui.groups.view.GroupsScreen
 import com.rogger.bp.ui.profile.view.ProfileScreen
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
@@ -61,11 +63,19 @@ fun BipandoNavGraph(navController: NavHostController) {
         composable(Routes.LOGIN) {
             val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
             val loginUseCase = LoginUseCase(authRepository)
+            val homeRepository = DependencyInjector.registerHomeRepository(context)
+            val categoryRepository = DependencyInjector.registerCategoryRepository(context)
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
             
             val viewModel: LoginViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return LoginViewModel(loginUseCase) as T
+                        return LoginViewModel(
+                            loginUseCase, 
+                            homeRepository, 
+                            categoryRepository, 
+                            groupRepository
+                        ) as T
                     }
                 }
             )
@@ -94,11 +104,18 @@ fun BipandoNavGraph(navController: NavHostController) {
             val homeRepository = DependencyInjector.registerHomeRepository(context)
             val categoryRepository = DependencyInjector.registerCategoryRepository(context)
             val profileRepository = DependencyInjector.profileRepository()
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
             
             val viewModel: HomeViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return HomeViewModel(homeRepository, authRepository, categoryRepository, profileRepository) as T
+                        return HomeViewModel(
+                            homeRepository, 
+                            authRepository, 
+                            categoryRepository, 
+                            profileRepository,
+                            groupRepository
+                        ) as T
                     }
                 }
             )
@@ -154,7 +171,7 @@ fun BipandoNavGraph(navController: NavHostController) {
             val viewModel: CategoryViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return CategoryViewModel(categoryRepository) as T
+                        return CategoryViewModel(context, categoryRepository) as T
                     }
                 }
             )
@@ -227,11 +244,19 @@ fun BipandoNavGraph(navController: NavHostController) {
             )
             val saveProductUseCase = SaveProductUseCase(productRepository)
             val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
+            val registerItemRepository = DependencyInjector.registerProductRepository(context)
+            val categoryRepository = DependencyInjector.registerCategoryRepository(context)
 
             val viewModel: AddProductViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return AddProductViewModel(saveProductUseCase, getCategoriesUseCase) as T
+                        return AddProductViewModel(
+                            context,
+                            saveProductUseCase, 
+                            getCategoriesUseCase,
+                            registerItemRepository,
+                            categoryRepository
+                        ) as T
                     }
                 }
             )
@@ -262,13 +287,52 @@ fun BipandoNavGraph(navController: NavHostController) {
             }
         }
 
+        composable(Routes.GROUPS) {
+            val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
+            val viewModel: GroupsViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return GroupsViewModel(authRepository, groupRepository) as T
+                    }
+                }
+            )
+
+            val themeNumber = SharedPreferencesManager.getThemeNumber(context, "chave")
+            val themeType = when (themeNumber) {
+                2 -> BipandoThemeType.GREEN
+                3 -> BipandoThemeType.RED
+                4 -> BipandoThemeType.DARK
+                else -> BipandoThemeType.CLASSIC
+            }
+
+            BipandoTheme(themeType = themeType) {
+                GroupsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+        }
+
         composable(Routes.PROFILE) {
             val profileRepository = DependencyInjector.profileRepository()
             val productDao = database.productDao()
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
+            val homeRepository = DependencyInjector.registerHomeRepository(context)
+            val categoryRepository = DependencyInjector.registerCategoryRepository(context)
+            val authRepository = AuthRepositoryImpl(auth)
+
             val viewModel: ProfileViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return ProfileViewModel(profileRepository, productDao) as T
+                        return ProfileViewModel(
+                            profileRepository, 
+                            productDao, 
+                            groupRepository,
+                            homeRepository,
+                            categoryRepository,
+                            authRepository
+                        ) as T
                     }
                 }
             )
@@ -301,13 +365,15 @@ fun BipandoNavGraph(navController: NavHostController) {
             )
             val getDeletedProductsUseCase = GetDeletedProductsUseCase(productRepository)
             val deleteItemRepository = DependencyInjector.itemDeletedRepository(context)
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
 
             val viewModel: TrashViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return TrashViewModel(
                             getDeletedProductsUseCase,
-                            deleteItemRepository
+                            deleteItemRepository,
+                            groupRepository
                         ) as T
                     }
                 }
@@ -359,15 +425,20 @@ fun BipandoNavGraph(navController: NavHostController) {
             val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
             val saveProductUseCase = SaveProductUseCase(productRepository)
             val deleteProductUseCase = DeleteProductUseCase(productRepository)
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
+            val categoryRepository = DependencyInjector.registerCategoryRepository(context)
 
             val viewModel: EditProductViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return EditProductViewModel(
+                            context,
                             getProductByUuidUseCase,
                             getCategoriesUseCase,
                             saveProductUseCase,
-                            deleteProductUseCase
+                            deleteProductUseCase,
+                            groupRepository,
+                            categoryRepository
                         ) as T
                     }
                 }

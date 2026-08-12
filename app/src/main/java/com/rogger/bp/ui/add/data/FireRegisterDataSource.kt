@@ -39,29 +39,37 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
             return
         }
 
-        // 👉 Usa o ID gerado client-side se existir, garantindo consistência absoluta entre Room e Firestore
-        val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else db.collection("users").document(uid).collection("products").document().id
+        // 👉 Determina o local de gravação baseado no groupId
+        val docRef = if (produto.groupId.isNotEmpty()) {
+            db.collection("groups").document(produto.groupId).collection("products")
+        } else {
+            db.collection("users").document(uid).collection("products")
+        }
+
+        val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else docRef.document().id
         val finalUuid = if (produto.uuid.isNotEmpty()) produto.uuid else docId
 
-        db.collection("users")
-            .document(uid)
-            .collection("products")
-            .document(docId) // 👉 Cria o documento com o exato mesmo ID do Room
-            .set(
-                hashMapOf(
-                    "uid"        to finalUuid,
-                    "userId"     to uid,
-                    "id"         to produto.id,
-                    "imageUri"   to produto.imageUri,
-                    "name"       to produto.name,
-                    "note"       to produto.note,
-                    "barcode"    to produto.barcode,
-                    "categoryId" to produto.categoryId,
-                    "categoryName" to produto.categoryName,
-                    "deleted"    to produto.deleted,
-                    "timestamp"  to produto.timestamp,
-                )
-            )
+        val data = hashMapOf(
+            "uid"        to finalUuid,
+            "userId"     to uid,
+            "id"         to produto.id,
+            "imageUri"   to produto.imageUri,
+            "name"       to produto.name,
+            "note"       to produto.note,
+            "barcode"    to produto.barcode,
+            "categoryId" to produto.categoryId,
+            "categoryName" to produto.categoryName,
+            "deleted"    to produto.deleted,
+            "timestamp"  to produto.timestamp,
+        )
+
+        // Se for produto de grupo, salva o groupId no documento
+        if (produto.groupId.isNotEmpty()) {
+            data["groupId"] = produto.groupId
+        }
+
+        docRef.document(docId)
+            .set(data)
             .addOnSuccessListener { callback.onSuccess(null) }
             .addOnFailureListener { e -> callback.onFailure(e.message.toString()) }
             .addOnCompleteListener { callback.onComplete() }

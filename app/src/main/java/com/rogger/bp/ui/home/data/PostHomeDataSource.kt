@@ -14,5 +14,5 @@ interface PostHomeDataSource {
     fun deleteProduct(product: PostProduct, callback: HomeCallback)
     fun restoreProduct(product: PostProduct, callback: HomeCallback)
 
-    fun addProductsSnapshotListener(callback: FetchProductsCallback): ListenerRegistration?
+    fun addProductsSnapshotListener(groupId: String?, callback: FetchProductsCallback): ListenerRegistration?
 }

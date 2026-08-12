@@ -202,7 +202,7 @@ fun AddProductScreen(
             if (state.barcode.isNotEmpty()) {
                 Surface(
                     modifier = Modifier
-                        .padding(top = 12.dp)
+                        .padding(top = 10.dp)
                         .clickable { onBarcodeClick(state.barcode) },
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
@@ -213,7 +213,7 @@ fun AddProductScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AsyncImage(
-                            model =   drawable.ic_barcode_scanner_24,
+                            model = drawable.ic_barcode_scanner_24,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )

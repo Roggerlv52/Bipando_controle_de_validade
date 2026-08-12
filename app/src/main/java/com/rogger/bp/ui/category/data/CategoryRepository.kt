@@ -16,35 +16,61 @@ import kotlinx.coroutines.withContext
 class CategoryRepository(
     private val remoteDataSource: PostCategoryDataSource,
     private val localCache: RoomCategoryCache,
-    private val productDao: ProductDao
+    private val productDao: ProductDao,
+    private val groupDao: com.rogger.bp.data.dao.GroupDao
 ) {
 
     private var categoryListenerRegistration: ListenerRegistration? = null
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var currentTargetGroupId: String? = null
+    private var currentWorkMode: Int = -1
 
     fun isSyncing(): Boolean = categoryListenerRegistration != null
 
-    fun fetchAll(callback: FetchCategoriesCallback) {
-        if (isSyncing()) {
-            callback.onComplete()
-            return
-        }
-
+    fun fetchAll(callback: FetchCategoriesCallback, forceRefresh: Boolean = false, workMode: Int = 0) {
         repositoryScope.launch {
+            // Se for modo grupo, tentamos obter o grupo. Se não existir no DB local ainda, 
+            // aguardamos um breve momento ou tentamos novamente, pois o syncUserGroup pode estar ocorrendo.
+            var activeGroup = groupDao.getGroup()
+            
+            // Pequeno retry-loop para garantir que membros peguem o groupId recém-sincronizado
+            if (workMode == 1 && activeGroup == null) {
+                kotlinx.coroutines.delay(500)
+                activeGroup = groupDao.getGroup()
+            }
+
+            val targetGroupId = if (workMode == 1) activeGroup?.groupId else null
+
+            // Se o modo é GRUPO mas não temos groupId ainda, não inicia fetch individual
+            if (workMode == 1 && targetGroupId == null) {
+                android.util.Log.w("CategoryRepository", "FetchAll: Modo grupo ativo mas groupId ainda não disponível")
+                callback.onComplete()
+                return@launch
+            }
+
+            if (!forceRefresh && categoryListenerRegistration != null && 
+                currentTargetGroupId == targetGroupId && currentWorkMode == workMode) {
+                callback.onComplete()
+                return@launch
+            }
+
+            currentTargetGroupId = targetGroupId
+            currentWorkMode = workMode
 
             localCache.getAllCategoriesFlow().firstOrNull()?.let { cached ->
                 if (cached.isNotEmpty()) {
-
                     withContext(Dispatchers.Main) {
                         callback.onSuccess(cached)
                     }
                 }
             }
-            // Agora stopListeningForCategories() dentro deste escopo é seguro
+
+            stopListeningForCategories()
+
             categoryListenerRegistration =
                 remoteDataSource.addCategoriesSnapshotListener(
+                    targetGroupId,
                     object : FetchCategoriesCallback {
-
                         override fun onSuccess(categories: List<PostCategory>) {
                             repositoryScope.launch {
                                 localCache.replaceAllCategories(categories)
@@ -53,12 +79,10 @@ class CategoryRepository(
                         }
 
                         override fun onFailure(message: String) {
-                                callback.onFailure(message)
+                            callback.onFailure(message)
                         }
 
-                        override fun onComplete() {
-
-                        }
+                        override fun onComplete() {}
                     }
                 )
         }
@@ -79,6 +103,8 @@ class CategoryRepository(
         // 1. Atualiza no cache local do Room imediatamente
         repositoryScope.launch {
             localCache.updateCategory(category)
+            // ✅ Sincroniza o nome da categoria nos produtos vinculados no Room
+            productDao.updateCategoryNameInProducts(category.firestoreId, category.name)
         }
 
         // 2. Envia para o Firestore em segundo plano
@@ -86,6 +112,14 @@ class CategoryRepository(
     }
 
     fun delete(category: PostCategory, callback: CategoryCallback) {
+        // 1. Remove do cache local imediatamente
+        repositoryScope.launch {
+            localCache.remove(category.firestoreId)
+            // ✅ Limpa a referência da categoria nos produtos vinculados no Room
+            productDao.clearCategoryInProducts(category.firestoreId)
+        }
+
+        // 2. Remove do Firestore
         remoteDataSource.deleteCategory(category, object : CategoryCallback {
             override fun onSuccess(p: PostCategory) {
                 // Não deletar manualmente do cache aqui.
@@ -103,6 +137,10 @@ class CategoryRepository(
     fun stopListeningForCategories() {
         categoryListenerRegistration?.remove()
         categoryListenerRegistration = null
+    }
+
+    suspend fun clearLocalCache() {
+        localCache.clear()
     }
 
     fun getCachedCategoriesFlow(): Flow<List<PostCategory>> {

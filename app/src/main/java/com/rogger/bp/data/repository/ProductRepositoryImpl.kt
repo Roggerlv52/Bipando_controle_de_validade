@@ -24,6 +24,8 @@ class ProductRepositoryImpl(
     private val imageResolutionRepository: ImageResolutionRepository? = null
 ) : ProductRepository {
 
+    private val groupDao = database.groupDao()
+
     override fun getProducts(): Flow<List<Product>> {
         return database.productDao().getAllProducts().map { list ->
             list.map { it.toDomain() }
@@ -38,6 +40,10 @@ class ProductRepositoryImpl(
 
     override fun getProductByUuid(uuid: String): Flow<Product?> {
         return database.productDao().getProductByUuidFlow(uuid).map { it?.toDomain() }
+    }
+
+    override suspend fun getProductByBarcode(barcode: String): Product? {
+        return database.productDao().getProductByBarcode(barcode)?.toDomain()
     }
 
     override fun getProductsByCategory(categoryId: String): Flow<List<Product>> {
@@ -105,6 +111,10 @@ class ProductRepositoryImpl(
             }
         }
 
+        val workMode = com.rogger.bp.ui.commun.SharedPreferencesManager.getWorkMode(context)
+        val group = groupDao.getGroup()
+        val groupId = if (workMode == 1) (group?.groupId ?: "") else ""
+
         val original = database.productDao().getProductByDocId(product.uuid)
         val postProduct = if (original != null) {
             original.copy(
@@ -116,13 +126,15 @@ class ProductRepositoryImpl(
                 timestamp = product.timestamp,
                 note = product.note,
                 deleted = false,
-                deletedAt = null
+                deletedAt = null,
+                groupId = groupId
             )
         } else {
             product.toData().copy(
                 imageUri = finalImageUri,
                 deleted = false,
-                deletedAt = null
+                deletedAt = null,
+                groupId = groupId
             )
         }
         
@@ -152,9 +164,17 @@ class ProductRepositoryImpl(
         }
     }
 
-    private fun syncProductToFirestore(product: PostProduct) {
+    private suspend fun syncProductToFirestore(product: PostProduct) {
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+            
+            // Determina se deve usar groupId baseado no parâmetro do produto ou no modo atual
+            val workMode = com.rogger.bp.ui.commun.SharedPreferencesManager.getWorkMode(context)
+            val group = groupDao.getGroup()
+            val effectiveGroupId = if (product.groupId.isNotEmpty()) product.groupId 
+                                   else if (workMode == 1) (group?.groupId ?: "") 
+                                   else ""
+
             val updates = hashMapOf(
                 "name" to product.name,
                 "barcode" to product.barcode,
@@ -165,16 +185,23 @@ class ProductRepositoryImpl(
                 "note" to product.note,
                 "deleted" to product.deleted,
                 "deletedAt" to product.deletedAt,
-                "userId" to product.userId
+                "userId" to uid,
+                "uid" to product.uuid,
+                "groupId" to effectiveGroupId
             )
             
-            // Usar o documentId correto (firestoreDocId)
-            FirebaseFirestore.getInstance()
-                .collection("users").document(uid)
-                .collection("products").document(product.firestoreDocId)
-                .set(updates, SetOptions.merge())
+            val db = FirebaseFirestore.getInstance()
+            val docRef = if (effectiveGroupId.isNotEmpty()) {
+                db.collection("groups").document(effectiveGroupId)
+                    .collection("products").document(product.firestoreDocId)
+            } else {
+                db.collection("users").document(uid)
+                    .collection("products").document(product.firestoreDocId)
+            }
+
+            docRef.set(updates, SetOptions.merge())
                 .addOnSuccessListener {
-                    android.util.Log.d("ProductRepo", "Firestore sync success: ${product.name}")
+                    android.util.Log.d("ProductRepo", "Firestore sync success: ${product.name} to ${if (effectiveGroupId.isNotEmpty()) "Group" else "User"}")
                 }
                 .addOnFailureListener { e ->
                     android.util.Log.e("ProductRepo", "Firestore sync failed: ${e.message}")
@@ -198,10 +225,17 @@ class ProductRepositoryImpl(
         
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@withContext
-            FirebaseFirestore.getInstance()
-                .collection("users").document(uid)
-                .collection("products").document(product.uuid)
-                .delete()
+            
+            val db = FirebaseFirestore.getInstance()
+            val docRef = if (product.groupId.isNotEmpty()) {
+                db.collection("groups").document(product.groupId)
+                    .collection("products").document(product.uuid)
+            } else {
+                db.collection("users").document(uid)
+                    .collection("products").document(product.uuid)
+            }
+            
+            docRef.delete()
         } catch (e: Exception) {}
     }
 
@@ -219,7 +253,9 @@ fun PostProduct.toDomain(): Product = Product(
     imageUri = this.imageUri,
     timestamp = this.timestamp,
     note = this.note,
-    deleted = this.deleted
+    deleted = this.deleted,
+    deletedAt = this.deletedAt,
+    groupId = this.groupId
 )
 
 fun Product.toData(): PostProduct = PostProduct(
@@ -232,5 +268,7 @@ fun Product.toData(): PostProduct = PostProduct(
     imageUri = this.imageUri,
     timestamp = this.timestamp,
     note = this.note,
-    deleted = this.deleted
+    deleted = this.deleted,
+    deletedAt = this.deletedAt,
+    groupId = this.groupId
 )

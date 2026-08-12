@@ -3,11 +3,9 @@ package com.rogger.bp.ui.home.view
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -39,25 +37,22 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TableChart
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -72,9 +67,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -84,6 +77,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -107,7 +101,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -118,14 +111,16 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.ui.home.presentation.HomeState
 import com.rogger.bp.ui.home.presentation.HomeViewModel
+import com.rogger.bp.ui.naviation.Routes
 import com.rogger.bp.ui.theme.BipandoTheme
+import com.rogger.bp.ui.componentes.LoadingDialog
 import com.rogger.bp.util.CategorySelectionDialog
 import com.rogger.bp.util.DeleteConfirmationDialog
-import com.rogger.bp.util.ImagePickerBottomSheet
-import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ShareUtil
 import com.rogger.bp.util.TimeFormatter
 import com.rogger.bp.util.VoiceSearchDialog
 import kotlinx.coroutines.launch
+import okhttp3.internal.notify
 
 @Composable
 fun HomeScreen(
@@ -148,32 +143,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    var showImagePicker by remember { mutableStateOf(false) }
-    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var showVoiceSearchDialog by remember { mutableStateOf(false) }
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            tempCameraUri?.let { viewModel.uploadProfileImage(context, it) }
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            try {
-                val file = ImagePikerUtil.createImageFile(context)
-                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-                tempCameraUri = uri
-                cameraLauncher.launch(uri)
-            } catch (_: Exception) {
-                // Erro ao criar arquivo ou obter URI
-            }
-        }
-    }
 
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -181,48 +151,6 @@ fun HomeScreen(
         if (isGranted) {
             showVoiceSearchDialog = true
         }
-    }
-
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { viewModel.uploadProfileImage(context, uri)
-            Log.d("HomeScreen", "Upload concluído (onComplete) com URI: $uri")
-        }
-    }
-
-    var showEditNameDialog by remember { mutableStateOf(false) }
-    var editedName by remember { mutableStateOf("") }
-
-    if (showEditNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditNameDialog = false },
-            title = { Text("Editar Nome") },
-            text = {
-                OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    label = { Text("Seu Nome") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateUserName(context, editedName)
-                        showEditNameDialog = false
-                    }
-                ) {
-                    Text("Salvar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditNameDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
     }
 
     // Observa o resultado do scanner para pesquisa vindo do savedStateHandle
@@ -235,11 +163,28 @@ fun HomeScreen(
         }
     }
 
+    // Refresh ao carregar ou voltar para a tela (Resume)
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.updateWorkMode(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.syncAndFetchProducts(context)
-        viewModel.fetchCategories()
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)
+        }
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let {
+            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -251,16 +196,7 @@ fun HomeScreen(
                 modifier = Modifier.width(300.dp), // Define uma largura fixa menor para aumentar a margem à direita
                 windowInsets = WindowInsets(0, 0, 0, 0) // Remove insets para o header encostar no topo
             ) {
-                DrawerHeader(
-                    state = state,
-                    onNameClick = {
-                        editedName = state.userName
-                        showEditNameDialog = true
-                    },
-                    onImageClick = {
-                        showImagePicker = true
-                    }
-                )
+                DrawerHeader(state = state)
                 Spacer(modifier = Modifier.height(8.dp))
                 DrawerItem(
                     label = "Home",
@@ -302,13 +238,21 @@ fun HomeScreen(
                         onPaymentClick()
                     }
                 )
+                DrawerItem(
+                    label = "Grupos",
+                    icon = Icons.Default.Group,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        navController.navigate(Routes.GROUPS)
+                    }
+                )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 DrawerItem(
                     label = "Compartilhar App",
                     icon = Icons.Default.Share,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        compartilharApp(context)
+                        ShareUtil.shareApp(context)
                     }
                 )
                 DrawerItem(
@@ -342,17 +286,7 @@ fun HomeScreen(
             onExportExcel = { viewModel.exportExcel(context) }
         )
 
-        if (showImagePicker) {
-            ImagePickerBottomSheet(
-                onDismiss = { showImagePicker = false },
-                onCameraClick = {
-                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                },
-                onGalleryClick = {
-                    imagePickerLauncher.launch("image/*")
-                }
-            )
-        }
+        LoadingDialog(isLoading = state.isLoading)
 
         if (showVoiceSearchDialog) {
             VoiceSearchDialog(
@@ -366,7 +300,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun DrawerHeader(state: HomeState, onNameClick: () -> Unit, onImageClick: () -> Unit) {
+fun DrawerHeader(state: HomeState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -379,8 +313,7 @@ fun DrawerHeader(state: HomeState, onNameClick: () -> Unit, onImageClick: () -> 
         Column {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clickable(onClick = onImageClick),
+                    .size(64.dp),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -395,40 +328,13 @@ fun DrawerHeader(state: HomeState, onNameClick: () -> Unit, onImageClick: () -> 
                         .background(MaterialTheme.colorScheme.surface),
                     contentScale = ContentScale.Crop
                 )
-                
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 3.dp
-                    )
-                } else {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .align(Alignment.BottomEnd),
-                        shadowElevation = 2.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.onSecondary
-                            )
-                        }
-                    }
-                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = state.userName,
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.clickable(onClick = onNameClick)
+                fontSize = 18.sp
             )
             Text(
                 text = state.userEmail,
@@ -465,20 +371,6 @@ fun DrawerItem(
         onClick = onClick,
         icon = { Icon(icon, contentDescription = null) },
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-    )
-}
-
-private fun compartilharApp(context: android.content.Context) {
-    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        val message = context.getString(R.string.share_app_message)
-        putExtra(Intent.EXTRA_TEXT, message)
-    }
-    context.startActivity(
-        Intent.createChooser(
-            shareIntent,
-            context.getString(R.string.share_app_title)
-        )
     )
 }
 
@@ -575,7 +467,7 @@ fun HomeScreenContent(
                 )
             } else {
                 HomeTopAppBar(
-                    title = state.categoryFilterName ?: "",
+                    title =  state.currentGroupName,
                     onSearchClick = { onToggleSearch(true) },
                     onMenuClick = onMenuClick,
                     onLogout = onLogout,
@@ -602,9 +494,7 @@ fun HomeScreenContent(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (state.isFirstLoad || (state.isLoading && state.products.isEmpty())) {
-                // Não mostra nada ou apenas o progresso durante a primeira carga
-                // Isso evita que o "EmptyState" (imagem de lista vazia) apareça
-                // enquanto o Room ainda está lendo os dados.
+                // Espaço reservado para o LoadingDialog global
             } else if (isListVisuallyEmpty) {
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
@@ -658,10 +548,6 @@ fun HomeScreenContent(
                         }
                     }
                 }
-            }
-
-            if (state.isFirstLoad) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -772,9 +658,14 @@ fun HomeTopAppBar(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    CenterAlignedTopAppBar(
+    TopAppBar(
         title = {
-            Text(text = title, fontWeight = FontWeight.Bold)
+            Text(
+                text = title, 
+                fontWeight = FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         },
         navigationIcon = {
             IconButton(onClick = onMenuClick) {

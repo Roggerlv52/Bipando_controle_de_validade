@@ -27,6 +27,7 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
+        <package android:name="com.google.android.gms" />
     </queries>
 
     <application
@@ -40,12 +41,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bpd"
         tools:targetApi="31">
-        <activity
-            android:name="com.rogger.bp.MainActivity"
-            android:configChanges="screenSize|orientation"
-            android:exported="false"
-            android:theme="@style/Theme.Bpd">
-        </activity>
 
         <activity
             android:name="com.rogger.bp.ui.ModernActivity"
@@ -57,17 +52,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name="com.rogger.bp.ui.login.view.LoginActivity"
-            android:screenOrientation="fullSensor"
-            android:configChanges="orientation|screenSize"
-            android:exported="false">
-
-        </activity>
-        <activity
-            android:name="com.rogger.bp.ui.scanner.ImageBarcode"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

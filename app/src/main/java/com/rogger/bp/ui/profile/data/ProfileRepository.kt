@@ -8,6 +8,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.ImageUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class ProfileRepository {
 
@@ -140,64 +145,94 @@ class ProfileRepository {
     }
 
     fun deleteUserAccount(callback: DeleteAccountCallback) {
-
         val user = auth.currentUser
-
-        if (user != null) {
-
-            val uid = user.uid
-
-            // 🔥 Remove dados do Firestore primeiro
-            firestore.collection("users")
-                .document(uid)
-                .delete()
-                .addOnSuccessListener {
-
-                    // 🔥 Depois remove autenticação
-                    user.delete()
-                        .addOnCompleteListener { task ->
-
-                            if (task.isSuccessful) {
-
-                                callback.onSuccess()
-
-                            } else {
-
-                                val exception = task.exception
-
-                                val errorMessage = when (exception) {
-
-                                    is FirebaseAuthRecentLoginRequiredException -> {
-                                        Log.e("DeleteUser","Error:" +exception.toString())
-                                        "Por segurança, esta operação requer login recente."
-                                    }
-
-                                    else -> {
-                                        exception?.message
-                                            ?: "Erro ao remover conta"
-                                    }
-                                }
-
-                                callback.onFailure(errorMessage)
-                            }
-
-                            callback.onComplete()
-                        }
-
-                }
-                .addOnFailureListener { e ->
-                    Log.e("Profile", e.toString())
-                    callback.onFailure(
-                        e.message ?: "Erro ao remover dados do usuário"
-                    )
-
-                    callback.onComplete()
-                }
-
-        } else {
-
+        if (user == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
+            return
+        }
+
+        val uid = user.uid
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. Deletar subcoleções do usuário no Firestore
+                deleteSubcollection("users/$uid/products")
+                deleteSubcollection("users/$uid/category")
+                deleteSubcollection("users/$uid/productImages")
+
+                // 2. Se o usuário for dono de um grupo (ID do grupo = UID), removemos o grupo e seus dados
+                try {
+                    deleteSubcollection("groups/$uid/products")
+                    deleteSubcollection("groups/$uid/category")
+                    deleteSubcollection("groups/$uid/members")
+                    deleteSubcollection("groups/$uid/invitations")
+                    firestore.collection("groups").document(uid).delete().await()
+                } catch (e: Exception) {
+                    Log.w("ProfileRepository", "Erro ao remover grupo próprio: ${e.message}")
+                }
+
+                // 3. Remover usuário de outros grupos onde ele é membro
+                try {
+                    val memberQuery = firestore.collectionGroup("members")
+                        .whereEqualTo("userId", uid)
+                        .get().await()
+                    
+                    for (doc in memberQuery.documents) {
+                        doc.reference.delete().await()
+                    }
+                } catch (e: Exception) {
+                    Log.w("ProfileRepository", "Erro ao remover de outros grupos: ${e.message}")
+                }
+
+                // 3. Deletar imagens no Storage
+                // Imagem de perfil
+                try {
+                    storage.reference.child("profile_images/$uid.jpg").delete().await()
+                } catch (e: Exception) { /* Ignora se não existir */ }
+
+                // Imagens privadas de produtos (pasta do usuário)
+                try {
+                    val productImagesFolder = storage.reference.child("produtos/$uid")
+                    val listResult = productImagesFolder.listAll().await()
+                    for (item in listResult.items) {
+                        item.delete().await()
+                    }
+                } catch (e: Exception) { /* Ignora se pasta não existir */ }
+
+                // 4. Deletar documento principal do usuário
+                firestore.collection("users").document(uid).delete().await()
+
+                // 5. Deletar a conta do Auth (Pode exigir reautenticação se for login antigo)
+                user.delete().await()
+
+                withContext(Dispatchers.Main) {
+                    callback.onSuccess()
+                    callback.onComplete()
+                }
+            } catch (e: Exception) {
+                Log.e("ProfileRepository", "Erro crítico ao deletar conta: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    val errorMessage = if (e is FirebaseAuthRecentLoginRequiredException) {
+                        "Por segurança, esta operação requer login recente. Por favor, saia e entre novamente antes de excluir."
+                    } else {
+                        e.message ?: "Erro ao remover conta e dados"
+                    }
+                    callback.onFailure(errorMessage)
+                    callback.onComplete()
+                }
+            }
+        }
+    }
+
+    private suspend fun deleteSubcollection(path: String) {
+        try {
+            val snapshot = firestore.collection(path).get().await()
+            for (doc in snapshot.documents) {
+                doc.reference.delete().await()
+            }
+        } catch (e: Exception) {
+            Log.w("ProfileRepository", "Falha ao limpar subcoleção $path: ${e.message}")
         }
     }
 }

@@ -10,6 +10,9 @@ import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+import com.rogger.bp.ui.commun.SharedPreferencesManager
+import android.content.Context
+
 data class CategoryState(
     val categories: List<Category> = emptyList(),
     val isLoading: Boolean = false,
@@ -18,6 +21,7 @@ data class CategoryState(
 )
 
 class CategoryViewModel(
+    private val context: Context,
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
@@ -29,6 +33,8 @@ class CategoryViewModel(
     }
 
     private fun syncAndFetchCategories() {
+        val workMode = SharedPreferencesManager.getWorkMode(context)
+        
         // Só mostra loading se a lista estiver vazia E ainda não estiver sincronizando
         if (_uiState.value.categories.isEmpty() && !categoryRepository.isSyncing()) {
             _uiState.update { it.copy(isLoading = true) }
@@ -47,7 +53,7 @@ class CategoryViewModel(
             override fun onComplete() {
                 _uiState.update { it.copy(isLoading = false) }
             }
-        })
+        }, forceRefresh = true, workMode = workMode)
 
         // 2. Observa o Room para ter os dados atualizados (com contagens se necessário)
         viewModelScope.launch {

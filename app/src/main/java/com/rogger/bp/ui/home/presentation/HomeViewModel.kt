@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.Context
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.rogger.bp.R
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.data.repository.toData
 import com.rogger.bp.data.repository.toDomain
@@ -20,15 +23,14 @@ import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.profile.data.FetchProfileCallback
 import com.rogger.bp.ui.profile.data.ProfileRepository
-import com.rogger.bp.ui.profile.data.UpdateProfileCallback
-import kotlinx.coroutines.delay
+import com.rogger.bp.ui.groups.data.GroupRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class HomeState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
-    val isFirstLoad: Boolean = true, // Novo flag para controlar a primeira carga absoluta
+    val isFirstLoad: Boolean = true,
     val errorMessage: String? = null,
     val categoryFilterName: String? = null,
     val searchQuery: String = "",
@@ -40,15 +42,21 @@ data class HomeState(
     val activeCount: Int = 0,
     val categoryCount: Int = 0,
     val deletedCount: Int = 0,
-    val yellowWarningDays: Int = 3
+    val yellowWarningDays: Int = 3,
+    val groupId: String? = null,
+    val currentGroupName: String = "",
+    val workMode: Int = 0
 )
 
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val authRepository: AuthRepository,
     private val categoryRepository: CategoryRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
+
+    private var isLoggingOut = false
 
     private val _uiState = MutableStateFlow(HomeState())
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
@@ -64,6 +72,38 @@ class HomeViewModel(
         observeProductsPipeline()
         observeCategories()
         observeCounters()
+        observeGroupChanges()
+    }
+
+    private fun observeGroupChanges() {
+        // ... (removed empty observeInvitations placeholder)
+        groupRepository.getLocalGroupFlow().onEach { group ->
+            val newGroupId = group?.groupId
+            val oldGroupId = _uiState.value.groupId
+            
+            if (newGroupId != oldGroupId) {
+                _uiState.update { it.copy(groupId = newGroupId) }
+                // Quando o grupo muda, forçamos o reinício do listener do Firestore
+                refreshProducts()
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    fun updateWorkMode(context: android.content.Context) {
+        viewModelScope.launch {
+            val group = groupRepository.getLocalGroupFlow().firstOrNull()
+            val mode = SharedPreferencesManager.getWorkMode(context)
+            val displayName = if (mode == 1 && group != null && group.name != "Meu Grupo") group.name else ""
+            
+            _uiState.update { it.copy(currentGroupName = displayName, workMode = mode) }
+            refreshProducts()
+            
+            categoryRepository.fetchAll(object : FetchCategoriesCallback {
+                override fun onSuccess(categories: List<PostCategory>) {}
+                override fun onFailure(message: String) {}
+                override fun onComplete() {}
+            }, forceRefresh = true, workMode = mode)
+        }
     }
 
     private fun observeCategories() {
@@ -75,11 +115,12 @@ class HomeViewModel(
     }
 
     fun fetchCategories() {
+        val workMode = _uiState.value.workMode
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {}
             override fun onFailure(message: String) {}
             override fun onComplete() {}
-        })
+        }, workMode = workMode)
     }
 
     private fun observeProductsPipeline() {
@@ -101,6 +142,10 @@ class HomeViewModel(
                 .map { it.toDomain() }
         }.onEach { productList ->
             _uiState.update { it.copy(products = productList) }
+            // Se já temos produtos no cache (ex: vieram do login), não precisamos mostrar o spinner de "primeira carga"
+            if (productList.isNotEmpty()) {
+                _uiState.update { it.copy(isFirstLoad = false) }
+            }
         }.launchIn(viewModelScope)
     }
 
@@ -111,7 +156,12 @@ class HomeViewModel(
     }
 
     fun syncAndFetchProducts(context: Context) {
-        // Carrega dados do perfil do Firestore
+        val workMode = SharedPreferencesManager.getWorkMode(context)
+        _uiState.update { it.copy(workMode = workMode) }
+        performSync(context)
+    }
+
+    private fun performSync(context: Context) {
         profileRepository.getUserProfile(object : FetchProfileCallback {
             override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean) {
                 _uiState.update { 
@@ -130,36 +180,61 @@ class HomeViewModel(
             override fun onComplete() {}
         })
 
-        // Se já tivermos produtos, marcamos que não é mais a primeira carga
-        if (_uiState.value.products.isNotEmpty()) {
-            _uiState.update { it.copy(isFirstLoad = false) }
-        }
-
-        // Só mostra loading se a lista estiver vazia E ainda não estiver sincronizando
-        if (_uiState.value.products.isEmpty() && !homeRepository.isSyncing()) {
-            _uiState.update { it.copy(isLoading = true) }
-        }
+        startInvitationListener(context)
         
         _uiState.update { 
             it.copy(yellowWarningDays = NotificationPrefs.getDays(context)) 
         }
         
+        refreshProducts()
+    }
+
+    private fun refreshProducts() {
+        if (isLoggingOut) return
+
+        val user = authRepository.getCurrentUser()
+        if (user == null) {
+            Log.d("HomeViewModel", "refreshProducts: skipping because user is null (probably logging out)")
+            return
+        }
+
+        val currentState = _uiState.value
+        
+        if (currentState.products.isEmpty() && !homeRepository.isSyncing()) {
+            _uiState.update { it.copy(isLoading = true) }
+        }
+
+        // Além dos produtos, força a atualização das categorias no modo correto
+        fetchCategories()
+
         homeRepository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                // Quando o repositório retorna o cache inicial ou dados do servidor
-                if (products.isNotEmpty()) {
-                    _uiState.update { it.copy(isFirstLoad = false) }
-                }
+                _uiState.update { it.copy(isFirstLoad = false) }
             }
-
             override fun onFailure(message: String) {
                 _uiState.update { it.copy(isLoading = false, isFirstLoad = false, errorMessage = message) }
             }
-
             override fun onComplete() {
                 _uiState.update { it.copy(isLoading = false, isFirstLoad = false) }
             }
-        })
+        }, forceRefresh = true, workMode = currentState.workMode)
+    }
+
+    private var invitationJob: kotlinx.coroutines.Job? = null
+    
+    private fun startInvitationListener(context: Context) {
+        if (invitationJob != null) return
+        
+        val user = authRepository.getCurrentUser() ?: return
+        invitationJob = groupRepository.getInvitationsFlow(user.uuid).onEach { invites ->
+            invites.forEach { invitation ->
+                com.rogger.bp.notification.NotificationUtil.showInvitation(
+                    context,
+                    invitation.senderName,
+                    invitation.groupName
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun loadUserInfo() {
@@ -171,6 +246,10 @@ class HomeViewModel(
                     userEmail = it.email,
                     userPhoto = it.photoUri?.toString() ?: ""
                 )
+            }
+            // Sincronização prioritária do grupo para usuários membros
+            viewModelScope.launch {
+                groupRepository.syncUserGroup(it.uuid)
             }
         }
     }
@@ -193,11 +272,30 @@ class HomeViewModel(
     }
 
     fun logout(context: Context, onLogout: () -> Unit) {
-        homeRepository.stopListeningForProducts()
-        authRepository.logout()
-        SharedPreferencesManager.setLoginState(context, "state", false)
-        SharedPreferencesManager.clearUserInfo(context)
-        onLogout()
+        isLoggingOut = true
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            
+            // Google Sign Out
+            try {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+                GoogleSignIn.getClient(context, gso).signOut()
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Erro ao fazer logout do Google: ${e.message}")
+            }
+
+            homeRepository.stopListeningForProducts()
+            homeRepository.clearLocalCache()
+            categoryRepository.clearLocalCache()
+            groupRepository.clearLocalCache()
+            authRepository.logout()
+            SharedPreferencesManager.setLoginState(context, "state", false)
+            SharedPreferencesManager.clearUserInfo(context)
+            onLogout()
+        }
     }
 
     fun exportPdf(context: Context) {
@@ -206,18 +304,6 @@ class HomeViewModel(
 
     fun exportExcel(context: Context) {
         ExcelExportHelper.exportToExcel(context, _uiState.value.products.map { it.toData() })
-    }
-
-    fun deleteProduct(product: Product) {
-        viewModelScope.launch {
-            homeRepository.delete(product.toData(), object : com.rogger.bp.ui.home.data.HomeCallback {
-                override fun onSuccess(product: PostProduct) {}
-                override fun onFailure(message: String) {
-                    _uiState.update { it.copy(errorMessage = message) }
-                }
-                override fun onComplete() {}
-            })
-        }
     }
 
     fun deleteProducts(products: List<Product>) {
@@ -242,59 +328,6 @@ class HomeViewModel(
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
         _uiState.update { it.copy(searchQuery = newQuery) }
-    }
-
-    fun updateUserName(context: Context, newName: String) {
-        if (newName.isBlank()) return
-
-        profileRepository.updateUserName(newName, object : UpdateProfileCallback {
-            override fun onSuccess() {
-                _uiState.update { it.copy(userName = newName) }
-                val userInfo = SharedPreferencesManager.getUserInfo(context)
-                SharedPreferencesManager.saveUserInfo(
-                    context,
-                    userInfo.getOrNull(0) ?: "",
-                    newName,
-                    userInfo.getOrNull(2) ?: "",
-                    userInfo.getOrNull(3) ?: ""
-                )
-            }
-            override fun onFailure(message: String) {
-                _uiState.update { it.copy(errorMessage = message) }
-            }
-            override fun onComplete() {}
-        })
-    }
-
-    fun uploadProfileImage(context: Context, imageUri: android.net.Uri) {
-        Log.d("HomeViewModel", "Iniciando uploadProfileImage com URI: $imageUri")
-        _uiState.update { it.copy(isLoading = true) }
-        profileRepository.uploadProfileImage(context, imageUri, object : com.rogger.bp.ui.profile.data.UploadProfileImageCallback {
-            override fun onSuccess(photoUrl: String) {
-                Log.d("HomeViewModel", "Upload com sucesso! Nova URL: $photoUrl")
-                _uiState.update { it.copy(userPhoto = photoUrl) }
-                val userInfo = SharedPreferencesManager.getUserInfo(context)
-                val uid = userInfo.getOrNull(0) ?: authRepository.getCurrentUser()?.uuid ?: ""
-                val name = userInfo.getOrNull(1) ?: _uiState.value.userName
-                val email = userInfo.getOrNull(3) ?: _uiState.value.userEmail
-                
-                SharedPreferencesManager.saveUserInfo(
-                    context,
-                    uid,
-                    name,
-                    photoUrl,
-                    email
-                )
-            }
-            override fun onFailure(message: String) {
-                Log.e("HomeViewModel", "Erro no upload: $message")
-                _uiState.update { it.copy(errorMessage = message) }
-            }
-            override fun onComplete() {
-                Log.d("HomeViewModel", "Upload concluído (onComplete)")
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        })
     }
 
     fun toggleSearch(active: Boolean) {

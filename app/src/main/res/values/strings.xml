@@ -196,7 +196,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="date_format">dd/MM/yyyy</string>
     <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Exportar</string>
-    <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
+    <string name="menu_exporta_pdf" translatable="false">PDF</string>
     <string name="menu_exporta_excel" translatable="false">EXCEL</string>
 
     <plurals name="categories_selected_count">

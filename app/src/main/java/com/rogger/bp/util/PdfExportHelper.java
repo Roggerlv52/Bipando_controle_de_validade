@@ -14,6 +14,7 @@ import androidx.core.content.FileProvider;
 
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.PostProduct;
+import com.rogger.bp.notification.NotificationPrefs;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,8 +41,8 @@ public class PdfExportHelper {
         products.sort(new Comparator<PostProduct>() {
             @Override
             public int compare(PostProduct p1, PostProduct p2) {
-                long dias1 = com.rogger.bp.ui.base.Utils.calcDifferencInDays(p1.getTimestamp());
-                long dias2 = com.rogger.bp.ui.base.Utils.calcDifferencInDays(p2.getTimestamp());
+                long dias1 = TimeFormatter.getDaysRemaining(p1.getTimestamp());
+                long dias2 = TimeFormatter.getDaysRemaining(p2.getTimestamp());
                 return Long.compare(dias1, dias2);
             }
         });
@@ -88,6 +89,7 @@ public class PdfExportHelper {
         int y = 145;
 
         SimpleDateFormat dateSdf = new SimpleDateFormat(context.getString(R.string.date_format), Locale.getDefault());
+        int yellowLimit = NotificationPrefs.getDays(context);
 
         for (PostProduct product : products) {
             // Se exceder a margem inferior da folha, abre uma nova página A4 automaticamente
@@ -105,7 +107,23 @@ public class PdfExportHelper {
                 name = name.substring(0, 25) + "...";
             }
 
-            long daysLeft = com.rogger.bp.ui.base.Utils.calcDifferencInDays(product.getTimestamp());
+            long daysLeft = TimeFormatter.getDaysRemaining(product.getTimestamp());
+            
+            // ✅ Aplicar cor sutil na linha baseada no vencimento
+            if (daysLeft < 1) {
+                // Vencido: Fundo vermelho bem sutil e texto em tom de vermelho
+                paint.setColor(0x0F991B1B); // ~6% opacidade
+                canvas.drawRect(24, y - 12, 571, y + 6, paint);
+                paint.setColor(Color.BLACK);
+            } else if (daysLeft <= yellowLimit) {
+                // Próximo: Fundo amarelo bem sutil e texto em tom de amarelo/laranja
+                paint.setColor(0xFFFFFBEB); // ~6% opacidade
+                canvas.drawRect(24, y - 12, 571, y + 6, paint);
+                paint.setColor(Color.BLACK);
+            } else {
+                paint.setColor(Color.BLACK);
+            }
+
             String daysStr;
             if (daysLeft < 0) {
                 daysStr = context.getString(R.string.group_expired);

@@ -54,7 +54,7 @@ class FireDataSource : LoginDataSource {
                 val uid = user.uid
                 val userName = user.displayName ?: ""
                 val googlePhotoUrl = user.photoUrl?.toString() ?: ""
-                val finalEmail = email
+                val finalEmail = if (email.isNotEmpty()) email else user.email ?: ""
 
                 firestore.collection("users").document(uid).get()
                     .addOnSuccessListener { document ->
@@ -63,6 +63,11 @@ class FireDataSource : LoginDataSource {
                             "name" to userName,
                             "email" to finalEmail
                         )
+
+                        // Se for um novo usuário, inicializa isPremium como false
+                        if (!document.exists()) {
+                            firestoreData["isPremium"] = false
+                        }
 
                         // Só adiciona a foto do Google se o campo photoUrl no Firestore estiver vazio ou não existir
                         val existingPhoto = document.getString("photoUrl")

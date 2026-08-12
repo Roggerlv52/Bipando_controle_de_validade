@@ -8,6 +8,7 @@ interface ProductRepository {
     fun getProducts(): Flow<List<Product>>
     fun getDeletedProducts(): Flow<List<Product>>
     fun getProductByUuid(uuid: String): Flow<Product?>
+    suspend fun getProductByBarcode(barcode: String): Product?
     fun getProductsByCategory(categoryId: String): Flow<List<Product>>
     fun searchProducts(query: String): Flow<List<Product>>
     fun getCategories(): Flow<List<Category>>

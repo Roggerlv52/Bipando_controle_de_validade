@@ -22,7 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.rogger.bp.MainActivity;
+import com.rogger.bp.ui.ModernActivity;
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.PostProduct;
 
@@ -111,7 +111,7 @@ public class NotificationUtil {
     }
 
     private static PendingIntent getPendingIntent(Context c) {
-        Intent intent = new Intent(c, MainActivity.class);
+        Intent intent = new Intent(c, ModernActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
@@ -220,5 +220,29 @@ public class NotificationUtil {
             return;
         }
         NotificationManagerCompat.from(c).notify(1002, builder.build());
+    }
+
+    public static void showInvitation(Context c, String senderName, String groupName) {
+        if (!temPermissao(c)) return;
+
+        createChannel(c);
+        String channelId = getChannelId(c);
+
+        String title = "Novo Convite de Grupo";
+        String body = senderName + " convidou você para o grupo " + groupName;
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c, channelId)
+                .setSmallIcon(R.drawable.ic_bp_logo_small)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setColor(ContextCompat.getColor(c, R.color.bipando_color))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(getPendingIntent(c));
+
+        if (ActivityCompat.checkSelfPermission(c, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        NotificationManagerCompat.from(c).notify(1003, builder.build());
     }
 }

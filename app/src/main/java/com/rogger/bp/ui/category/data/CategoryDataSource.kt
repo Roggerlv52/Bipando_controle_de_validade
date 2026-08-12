@@ -7,37 +7,45 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.ui.commun.SharedPreferencesManager
+import android.content.Context
+import com.rogger.bp.data.dao.GroupDao
+import kotlinx.coroutines.runBlocking
 
-class CategoryDataSource : PostCategoryDataSource {
+class CategoryDataSource(
+    private val context: Context,
+    private val groupDao: GroupDao
+) : PostCategoryDataSource {
     private val TAG = "CategoryDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    /**
-     * UID do usuário autenticado
-     */
     private fun getUserId(): String? {
         return auth.currentUser?.uid
     }
 
-    /**
-     * Referência:
-     * users/{uid}/category
-     */
-    private fun categoriasRef(): CollectionReference? {
+    private fun categoriasRef(groupId: String? = null): CollectionReference? {
         val uid = getUserId() ?: return null
-        return db
-            .collection("users")
-            .document(uid)
-            .collection("category")
+        
+        return if (!groupId.isNullOrEmpty()) {
+            db.collection("groups")
+                .document(groupId)
+                .collection("category")
+        } else {
+            db.collection("users")
+                .document(uid)
+                .collection("category")
+        }
     }
 
     override fun createCategory(
         category: PostCategory,
         callback: CategoryCallback
     ) {
-
-        val ref = categoriasRef()
+        val mode = SharedPreferencesManager.getWorkMode(context)
+        val group = runBlocking { groupDao.getGroup() }
+        val targetGroupId = if (mode == 1) group?.groupId else null
+        val ref = categoriasRef(targetGroupId)
 
         val uid = getUserId()
 
@@ -96,7 +104,10 @@ class CategoryDataSource : PostCategoryDataSource {
     }
 
     override fun updateCategory(category: PostCategory, callback: CategoryCallback) {
-        val ref = categoriasRef() ?: run {
+        val mode = SharedPreferencesManager.getWorkMode(context)
+        val group = runBlocking { groupDao.getGroup() }
+        val targetGroupId = if (mode == 1) group?.groupId else null
+        val ref = categoriasRef(targetGroupId) ?: run {
             callback.onFailure("Unauthenticated user")
             //callback.onComplete()
             return
@@ -121,7 +132,29 @@ class CategoryDataSource : PostCategoryDataSource {
                 // 2. Atualizar diretamente pelo documentId
                 ref.document(category.firestoreId)
                     .update("name", category.name.trim())
-                    .addOnSuccessListener { callback.onSuccess(category) }
+                    .addOnSuccessListener {
+                        // 3. Atualizar o categoryName em todos os produtos vinculados no Firestore
+                        val uid = getUserId() ?: return@addOnSuccessListener
+                        
+                        // Busca produtos no local correto (User ou Grupo)
+                        val productsRef = if (!targetGroupId.isNullOrEmpty()) {
+                            db.collection("groups").document(targetGroupId).collection("products")
+                        } else {
+                            db.collection("users").document(uid).collection("products")
+                        }
+
+                        productsRef.whereEqualTo("categoryId", category.firestoreId)
+                            .get()
+                            .addOnSuccessListener { snapshot ->
+                                val batch = db.batch()
+                                for (doc in snapshot.documents) {
+                                    batch.update(doc.reference, "categoryName", category.name.trim())
+                                }
+                                batch.commit()
+                            }
+                        
+                        callback.onSuccess(category) 
+                    }
                     .addOnFailureListener { e -> callback.onFailure(e.message ?: "Error") }
                     .addOnCompleteListener { callback.onComplete() }
             }
@@ -140,7 +173,10 @@ class CategoryDataSource : PostCategoryDataSource {
     }
 
     override fun deleteCategory(category: PostCategory, callback: CategoryCallback) {
-        val ref = categoriasRef() ?: run {
+        val mode = SharedPreferencesManager.getWorkMode(context)
+        val group = runBlocking { groupDao.getGroup() }
+        val targetGroupId = if (mode == 1) group?.groupId else null
+        val ref = categoriasRef(targetGroupId) ?: run {
             callback.onFailure("Unauthenticated user")
             callback.onComplete()
             return
@@ -152,9 +188,36 @@ class CategoryDataSource : PostCategoryDataSource {
             return
         }
 
+        val uid = getUserId() ?: return
+
+        // 1. Deletar a categoria
         ref.document(category.firestoreId)
             .delete()
-            .addOnSuccessListener { callback.onSuccess(category) }
+            .addOnSuccessListener {
+                // 2. Limpar a referência da categoria em todos os produtos vinculados no Firestore
+                // Busca produtos no local correto (User ou Grupo)
+                val productsRef = if (!targetGroupId.isNullOrEmpty()) {
+                    db.collection("groups").document(targetGroupId).collection("products")
+                } else {
+                    db.collection("users").document(uid).collection("products")
+                }
+
+                productsRef.whereEqualTo("categoryId", category.firestoreId)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        val batch = db.batch()
+                        for (doc in snapshot.documents) {
+                            batch.update(doc.reference, "categoryId", "", "categoryName", "")
+                        }
+                        batch.commit()
+                            .addOnSuccessListener { callback.onSuccess(category) }
+                            .addOnFailureListener { e -> callback.onFailure("Category deleted, but failed to update products: ${e.message}") }
+                    }
+                    .addOnFailureListener { e ->
+                        // Mesmo que falte os produtos, a categoria foi deletada
+                        callback.onSuccess(category)
+                    }
+            }
             .addOnFailureListener { e -> callback.onFailure(e.message ?: "Error deleting") }
             .addOnCompleteListener { callback.onComplete() }
     }
@@ -162,8 +225,10 @@ class CategoryDataSource : PostCategoryDataSource {
     override fun fetchCategories(
         callback: FetchCategoriesCallback
     ) {
-
-        val ref = categoriasRef()
+        val mode = SharedPreferencesManager.getWorkMode(context)
+        val group = runBlocking { groupDao.getGroup() }
+        val targetGroupId = if (mode == 1) group?.groupId else null
+        val ref = categoriasRef(targetGroupId)
 
         if (ref == null) {
 
@@ -220,8 +285,8 @@ class CategoryDataSource : PostCategoryDataSource {
 
     }
 
-    override fun addCategoriesSnapshotListener(callback: FetchCategoriesCallback): ListenerRegistration? {
-        val ref = categoriasRef()
+    override fun addCategoriesSnapshotListener(groupId: String?, callback: FetchCategoriesCallback): ListenerRegistration? {
+        val ref = categoriasRef(groupId)
         if (ref == null) {
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()

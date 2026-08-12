@@ -45,7 +45,7 @@ public class ExcelExportHelper {
             writer.write("Produto;Código de Barras;Categoria;Vencimento;Dias Restantes;Notas\n");
 
             for (PostProduct product : products) {
-                long daysLeft = com.rogger.bp.ui.base.Utils.calcDifferencInDays(product.getTimestamp());
+                long daysLeft = TimeFormatter.getDaysRemaining(product.getTimestamp());
                 String daysStr = daysLeft < 0 ? "Vencido" : String.valueOf(daysLeft);
 
                 String name = formatarCampoCsv(product.getName());

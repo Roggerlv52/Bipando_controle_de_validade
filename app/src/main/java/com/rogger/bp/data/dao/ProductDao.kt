@@ -24,6 +24,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE firestoreDocId = :uuid")
     fun getProductByUuidFlow(uuid: String): Flow<PostProduct?>
 
+    @Query("SELECT * FROM products WHERE barcode = :barcode LIMIT 1")
+    suspend fun getProductByBarcode(barcode: String): PostProduct?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: PostProduct)
 
@@ -42,6 +45,12 @@ interface ProductDao {
 
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     suspend fun removeProduct(key: String)
+
+    @Query("UPDATE products SET categoryName = :newName WHERE categoryId = :categoryId")
+    suspend fun updateCategoryNameInProducts(categoryId: String, newName: String)
+
+    @Query("UPDATE products SET categoryName = '', categoryId = '' WHERE categoryId = :categoryId")
+    suspend fun clearCategoryInProducts(categoryId: String)
 
     @Query("DELETE FROM products")
     suspend fun clearProducts()

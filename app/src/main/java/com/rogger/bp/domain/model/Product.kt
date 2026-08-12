@@ -9,5 +9,7 @@ data class Product(
     val imageUri: String = "",
     val timestamp: Long = 0,
     val note: String = "",
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
+    val deletedAt: Long? = null,
+    val groupId: String = ""
 )

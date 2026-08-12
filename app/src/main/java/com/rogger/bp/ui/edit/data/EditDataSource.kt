@@ -33,80 +33,99 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    private fun productsRef(): CollectionReference? {
+    private fun productsRef(groupId: String = ""): CollectionReference? {
         val uid = getUserId() ?: return null
-        return db.collection("users").document(uid).collection("products")
+        return if (groupId.isNotEmpty()) {
+            db.collection("groups").document(groupId).collection("products")
+        } else {
+            db.collection("users").document(uid).collection("products")
+        }
     }
 
     // ── 1. Buscar pelo documentId ─────────────────────────────────────────
 
     override fun fetchProductByDocId(docId: String, callback: EditCallback) {
-        val ref = productsRef()
-        if (ref == null) {
+        // Como o docId é único globalmente ou sabemos o contexto, tentamos buscar no usuário primeiro
+        // Mas o ideal seria passar o groupId. Por agora, vamos buscar em ambos ou usar o que temos.
+        // NOTE: Na edição, o ViewModel carrega o produto que já tem o groupId.
+        // Mas aqui fetchProductByDocId é chamado ANTES de ter o objeto produto completo.
+        
+        // Tentativa 1: Coleção de usuários
+        val userRef = productsRef("")
+        if (userRef == null) {
             callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }
 
-        ref.document(docId)
-            .get()
-            .addOnSuccessListener { doc ->
-                if (!doc.exists()) {
-                    callback.onFailure("Produto não encontrado")
-                    callback.onComplete()
-                    return@addOnSuccessListener
-                }
-
-                val data = doc.data ?: run {
-                    callback.onFailure("Documento inválido")
-                    callback.onComplete()
-                    return@addOnSuccessListener
-                }
-
-                try {
-                    val uidField = data["uid"] as? String ?: ""
-                    val uuid = if (uidField.isNotEmpty()) uidField else doc.id
-
-                    val produto = PostProduct(
-                        firestoreDocId = doc.id,
-                        id = (data["id"] as? Long)?.toInt() ?: 0,
-                        userId = data["userId"] as? String ?: "",
-                        uuid = uuid,
-                        name = data["name"] as? String ?: "",
-                        note = data["note"] as? String ?: "",
-                        barcode = data["barcode"] as? String ?: "",
-                        categoryId = data["categoryId"] as? String ?: "",
-                        categoryName = data["categoryName"] as? String ?: "",
-                        timestamp = data["timestamp"] as? Long ?: 0L,
-                        imageUri = data["imageUri"] as? String ?: "",
-                        deleted = data["deleted"] as? Boolean ?: false,
-                        deletedAt = data["deletedAt"] as? Long
-                    )
-
-                    Log.d(TAG, "Produto carregado: ${produto.name} (docId=$docId)")
-                    callback.onSuccess(produto)
-
-                } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao mapear produto: ${e.message}")
-                    callback.onFailure("Erro ao processar dados do produto")
-                }
+        userRef.document(docId).get().addOnSuccessListener { doc ->
+            if (doc.exists()) {
+                handleDocSuccess(doc, "", callback)
+            } else {
+                // Tentativa 2: Buscar em grupos (se o usuário tiver um grupo ativo)
+                // Isso é uma limitação se não passarmos o groupId.
+                // Mas geralmente o docId no Bipando contém o UUID que buscamos.
+                // Vamos tentar via collectionGroup se necessário, ou assumir que o docId é o UUID.
+                
+                db.collectionGroup("products").whereEqualTo("uuid", docId).get()
+                    .addOnSuccessListener { query ->
+                        if (!query.isEmpty) {
+                            val d = query.documents.first()
+                            val gId = d.reference.parent.parent?.id ?: ""
+                            handleDocSuccess(d, gId, callback)
+                        } else {
+                            callback.onFailure("Produto não encontrado")
+                            callback.onComplete()
+                        }
+                    }
             }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Erro ao buscar produto: ${e.message}")
-                callback.onFailure(e.message ?: "Erro ao buscar produto")
-            }
-            .addOnCompleteListener { callback.onComplete() }
+        }.addOnFailureListener { e ->
+            callback.onFailure(e.message ?: "Erro ao buscar")
+            callback.onComplete()
+        }
+    }
+
+    private fun handleDocSuccess(doc: com.google.firebase.firestore.DocumentSnapshot, groupId: String, callback: EditCallback) {
+        val data = doc.data ?: run {
+            callback.onFailure("Documento inválido")
+            return
+        }
+        try {
+            val uidField = data["uid"] as? String ?: ""
+            val uuid = if (uidField.isNotEmpty()) uidField else doc.id
+
+            val produto = PostProduct(
+                firestoreDocId = doc.id,
+                id = (data["id"] as? Long)?.toInt() ?: 0,
+                userId = data["userId"] as? String ?: "",
+                uuid = uuid,
+                name = data["name"] as? String ?: "",
+                note = data["note"] as? String ?: "",
+                barcode = data["barcode"] as? String ?: "",
+                categoryId = data["categoryId"] as? String ?: "",
+                categoryName = data["categoryName"] as? String ?: "",
+                timestamp = data["timestamp"] as? Long ?: 0L,
+                imageUri = data["imageUri"] as? String ?: "",
+                deleted = data["deleted"] as? Boolean ?: false,
+                deletedAt = data["deletedAt"] as? Long,
+                groupId = groupId
+            )
+            callback.onSuccess(produto)
+        } catch (e: Exception) {
+            callback.onFailure("Erro ao mapear produto")
+        }
     }
 
     // ── 2. Atualizar produto ──────────────────────────────────────────────
 
     override fun updateProduct(produto: PostProduct, callback: EditCallback) {
-        val ref = productsRef()
+        val ref = productsRef(produto.groupId)
         if (ref == null) {
             callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }
+        // ... rest of the code remains similar but using the new ref
 
         val imageUri = produto.imageUri
         val isLocalPath = imageUri.isNotEmpty() &&
@@ -247,14 +266,14 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
     // ── 3. Soft-delete ────────────────────────────────────────────────────
 
     override fun deleteProduct(produto: PostProduct, callback: EditCallback) {
-        val ref = productsRef()
+        val ref = productsRef(produto.groupId)
         if (ref == null) {
             callback.onFailure("Utilizador não autenticado")
             callback.onComplete()
             return
         }
 
-        ref.document(produto.uuid)
+        ref.document(produto.firestoreDocId)
             .update(
                 mapOf(
                     "deleted" to true,

@@ -87,9 +87,20 @@ public class SharedPreferencesManager {
 
     public static void clearUserInfo(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        int savedWorkMode = getWorkMode(context);
+        int savedTheme = getThemeNumber(context, "chave");
+        boolean savedBeep = getBeepState(context, "beep");
+        int savedDatePicker = getDatePickerType(context);
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear(); // remove tudo
         editor.apply();
+
+        // Restaura as preferências que devem persistir
+        setWorkMode(context, savedWorkMode);
+        updateThemeNumber(context, "chave", savedTheme);
+        sharedBeepState(context, "beep", savedBeep);
+        setDatePickerType(context, savedDatePicker);
     }
 
     public static void setDatePickerType(Context context, int type) {
@@ -104,4 +115,15 @@ public class SharedPreferencesManager {
         return sharedPre.getInt("date_picker_type", 0); // 0 = Calendário (padrão)
     }
 
+    public static void setWorkMode(Context context, int mode) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.putInt("work_mode", mode); // 0 = Individual, 1 = Grupo
+        editor.apply();
+    }
+
+    public static int getWorkMode(Context context) {
+        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPre.getInt("work_mode", 0);
+    }
 }

@@ -33,6 +33,7 @@ import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.edit.presentation.EditProductViewModel
 import com.rogger.bp.ui.componentes.BipandoButton
 import com.rogger.bp.ui.componentes.BipandoTextField
+import com.rogger.bp.ui.componentes.LoadingDialog
 import com.rogger.bp.util.ImagePickerBottomSheet
 import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.TimeFormatter
@@ -112,17 +113,13 @@ fun EditProductScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        showDeleteDialog = false
                         viewModel.deleteProduct()
-                        showDeleteDialog = true
                     },
                     enabled = !state.isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                    } else {
-                        Text("Excluir")
-                    }
+                    Text("Excluir")
                 }
             },
             dismissButton = {
@@ -130,6 +127,8 @@ fun EditProductScreen(
             }
         )
     }
+
+    //LoadingDialog(isLoading = state.isLoading)
 
     if (showDatePicker) {
         val pickerType = SharedPreferencesManager.getDatePickerType(context)

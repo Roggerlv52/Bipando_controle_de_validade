@@ -3,6 +3,9 @@ package com.rogger.bp.ui.add.presentation
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rogger.bp.data.model.PostImage
+import com.rogger.bp.ui.add.data.RegisterItemRepository
+import com.rogger.bp.ui.add.data.SaveImageCallback
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.domain.usecase.GetCategoriesUseCase
@@ -10,6 +13,12 @@ import com.rogger.bp.domain.usecase.SaveProductUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
+
+import com.rogger.bp.ui.category.data.CategoryRepository
+import com.rogger.bp.ui.category.data.FetchCategoriesCallback
+import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.ui.commun.SharedPreferencesManager
+import android.content.Context
 
 data class AddProductState(
     val name: String = "",
@@ -25,8 +34,11 @@ data class AddProductState(
 )
 
 class AddProductViewModel(
+    private val context: Context,
     private val saveProductUseCase: SaveProductUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val registerRepository: RegisterItemRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddProductState())
@@ -34,6 +46,16 @@ class AddProductViewModel(
 
     init {
         loadCategories()
+        syncCategories()
+    }
+
+    private fun syncCategories() {
+        val workMode = SharedPreferencesManager.getWorkMode(context)
+        categoryRepository.fetchAll(object : FetchCategoriesCallback {
+            override fun onSuccess(categories: List<PostCategory>) {}
+            override fun onFailure(message: String) {}
+            override fun onComplete() {}
+        }, workMode = workMode)
     }
 
     private fun loadCategories() {
@@ -45,7 +67,40 @@ class AddProductViewModel(
     }
 
     fun onNameChange(name: String) = _uiState.update { it.copy(name = name) }
-    fun onBarcodeChange(barcode: String) = _uiState.update { it.copy(barcode = barcode) }
+    
+    fun onBarcodeChange(barcode: String) {
+        _uiState.update { it.copy(barcode = barcode) }
+        if (barcode.isNotEmpty()) {
+            checkIfBarcodeExists(barcode)
+        }
+    }
+
+    private fun checkIfBarcodeExists(barcode: String) {
+        val imageToResolve = PostImage(barcode = barcode)
+        registerRepository.createImage(imageToResolve, object : SaveImageCallback {
+            override fun onSuccess(image: PostImage) {
+                // Não faz nada aqui, pois saveProductImage chama onAlreadyExists se encontrar
+            }
+
+            override fun onAlreadyExists(image: PostImage) {
+                _uiState.update { 
+                    it.copy(
+                        name = image.name,
+                        imageUri = if (image.uri.isNotEmpty()) Uri.parse(image.uri) else null
+                    )
+                }
+            }
+
+            override fun onFailure(message: String) {
+                // Silencioso
+            }
+
+            override fun onComplete() {
+                // Silencioso
+            }
+        })
+    }
+
     fun onCategoryChange(category: Category) = _uiState.update { it.copy(category = category) }
     fun onDateChange(date: Long) = _uiState.update { it.copy(expirationDate = date) }
     fun onNoteChange(note: String) = _uiState.update { it.copy(note = note) }
