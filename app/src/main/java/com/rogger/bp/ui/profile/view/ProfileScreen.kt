@@ -127,7 +127,8 @@ fun ProfileScreen(
                 }
             },
             currentType = state.soundType,
-            currentUri = state.soundUri
+            currentUri = state.soundUri,
+            currentName = state.soundName
         )
     }
 

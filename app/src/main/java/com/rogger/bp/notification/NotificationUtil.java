@@ -34,7 +34,7 @@ public class NotificationUtil {
         int type = NotificationPrefs.getSoundType(c);
         String uri = NotificationPrefs.getSoundUri(c);
         // O ID muda conforme a preferência de som para que o Android aplique a nova config (canais são imutáveis)
-        return "validade_channel_v2_" + type + "_" + uri.hashCode();
+        return "validade_channel_v3_" + type + "_" + uri.hashCode();
     }
 
     /**
@@ -54,13 +54,17 @@ public class NotificationUtil {
 
             // Remove canais antigos para não poluir as configurações do sistema
             for (NotificationChannel oldChannel : nm.getNotificationChannels()) {
-                if (oldChannel.getId().startsWith("validade_channel_v2_")) {
+                if (oldChannel.getId().startsWith("validade_channel_v2_") || oldChannel.getId().startsWith("validade_channel_v3_")) {
                     nm.deleteNotificationChannel(oldChannel.getId());
                 }
             }
 
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            if (soundType == 0) importance = NotificationManager.IMPORTANCE_LOW; // Mudo
+            if (soundType == 0) {
+                importance = NotificationManager.IMPORTANCE_LOW; // Mudo
+            } else if (soundType == 2 || soundType == 3) {
+                importance = NotificationManager.IMPORTANCE_HIGH; // Som e Vibração
+            }
             
             NotificationChannel channel = new NotificationChannel(
                     channelId,
@@ -72,6 +76,7 @@ public class NotificationUtil {
             // Configura vibração
             if (soundType == 1 || soundType == 2 || soundType == 3) {
                 channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{0, 250, 250, 250});
             } else {
                 channel.enableVibration(false);
             }
@@ -79,7 +84,7 @@ public class NotificationUtil {
             // Configura som
             if (soundType == 2 || soundType == 3) {
                 Uri soundUri;
-                if (soundType == 3 && !soundUriString.isEmpty()) {
+                if (!soundUriString.isEmpty()) {
                     soundUri = Uri.parse(soundUriString);
                 } else {
                     soundUri = Settings.System.DEFAULT_NOTIFICATION_URI;
@@ -131,6 +136,7 @@ public class NotificationUtil {
 
         createChannel(c);
         String channelId = getChannelId(c);
+        int soundType = NotificationPrefs.getSoundType(c);
         
         String title = produtos.size() == 1
                 ? c.getString(R.string.notification_title)
@@ -146,17 +152,16 @@ public class NotificationUtil {
                 .setContentText(body)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
                 .setColor(ContextCompat.getColor(c, R.color.bipando_color))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(soundType >= 2 ? NotificationCompat.PRIORITY_HIGH : NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .setContentIntent(getPendingIntent(c))
                 .setAutoCancel(true);
 
         // Som para versões antigas (< Oreo)
-        int soundType = NotificationPrefs.getSoundType(c);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             if (soundType == 2 || soundType == 3) {
                 String soundUriString = NotificationPrefs.getSoundUri(c);
-                Uri uri = (soundType == 3 && !soundUriString.isEmpty()) 
+                Uri uri = (!soundUriString.isEmpty()) 
                         ? Uri.parse(soundUriString) 
                         : Settings.System.DEFAULT_NOTIFICATION_URI;
                 builder.setSound(uri);
@@ -181,6 +186,7 @@ public class NotificationUtil {
 
         createChannel(c);
         String channelId = getChannelId(c);
+        int soundType = NotificationPrefs.getSoundType(c);
 
         String title = produtos.size() == 1
                 ? c.getString(R.string.notif_vencidos_title_single)
@@ -202,11 +208,10 @@ public class NotificationUtil {
                 .setAutoCancel(true);
 
         // Som para versões antigas (< Oreo)
-        int soundType = NotificationPrefs.getSoundType(c);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             if (soundType == 2 || soundType == 3) {
                 String soundUriString = NotificationPrefs.getSoundUri(c);
-                Uri uri = (soundType == 3 && !soundUriString.isEmpty()) 
+                Uri uri = (!soundUriString.isEmpty())
                         ? Uri.parse(soundUriString) 
                         : Settings.System.DEFAULT_NOTIFICATION_URI;
                 builder.setSound(uri);
@@ -227,6 +232,7 @@ public class NotificationUtil {
 
         createChannel(c);
         String channelId = getChannelId(c);
+        int soundType = NotificationPrefs.getSoundType(c);
 
         String title = "Novo Convite de Grupo";
         String body = senderName + " convidou você para o grupo " + groupName;
@@ -239,6 +245,20 @@ public class NotificationUtil {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(getPendingIntent(c));
+
+        // Som para versões antigas (< Oreo)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            if (soundType == 2 || soundType == 3) {
+                String soundUriString = NotificationPrefs.getSoundUri(c);
+                Uri uri = (!soundUriString.isEmpty()) 
+                        ? Uri.parse(soundUriString) 
+                        : Settings.System.DEFAULT_NOTIFICATION_URI;
+                builder.setSound(uri);
+            }
+            if (soundType == 1 || soundType == 2 || soundType == 3) {
+                builder.setDefaults(Notification.DEFAULT_VIBRATE);
+            }
+        }
 
         if (ActivityCompat.checkSelfPermission(c, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             return;

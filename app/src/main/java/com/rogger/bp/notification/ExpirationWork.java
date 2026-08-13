@@ -36,7 +36,8 @@ public class ExpirationWork extends Worker {
         }
 
 
-        // ── ✅ CORREÇÃO CRÍTICA: Carrega e filtra os produtos do Room offline ──
+        // ── ✅ CORREÇÃO: Carrega os produtos do Room cache ──
+        // O cache local já contém os produtos do modo atual (Individual ou Grupo)
         BpDatabase database = BpDatabase.Companion.getDatabase(getApplicationContext());
         List<PostProduct> todosProdutosCached = database.productDao().getAllCachedProducts();
 
@@ -44,17 +45,20 @@ public class ExpirationWork extends Worker {
 
         if (todosProdutosCached != null) {
             for (PostProduct p : todosProdutosCached) {
-                // Filtra apenas produtos do usuário ativo e que não estão na lixeira
-                p.getUserId();
-                if (p.getUserId().equals(userId) && !p.getDeleted()) {
+                // Notifica sobre qualquer produto no cache que não esteja na lixeira
+                // Removida a trava de p.getUserId() == userId para suportar produtos do grupo
+                if (!p.getDeleted()) {
                     produtos.add(p);
                 }
             }
         }
 
         if (produtos.isEmpty()) {
+            android.util.Log.d("ExpirationWork", "Nenhum produto para notificar.");
             return Result.success();
         }
+
+        android.util.Log.d("ExpirationWork", "Processando " + produtos.size() + " produtos.");
 
         // Zera horas do dia atual para comparação apenas por data
         Calendar calHoje = Calendar.getInstance();

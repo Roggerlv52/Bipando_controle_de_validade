@@ -33,12 +33,13 @@ fun NotificationSoundDialog(
     onDismiss: () -> Unit,
     onOptionSelected: (Int, String, String) -> Unit,
     currentType: Int,
-    currentUri: String
+    currentUri: String,
+    currentName: String = "Padrão"
 ) {
     val options = listOf(
         SoundOption(0, "Mudo", Icons.Default.VolumeMute),
         SoundOption(1, "Vibrar", Icons.Default.Vibration),
-        SoundOption(2, "Vibrar e Tocar (Padrão)", Icons.Default.NotificationsActive),
+        SoundOption(2, "Vibrar e Tocar", Icons.Default.NotificationsActive),
         SoundOption(3, "Escolher Som do Sistema", Icons.Default.MusicNote)
     )
 
@@ -56,7 +57,10 @@ fun NotificationSoundDialog(
                                     // Sinaliza que quer abrir a lista do sistema
                                     onOptionSelected(3, "", "")
                                 } else {
-                                    onOptionSelected(option.id, "", option.name)
+                                    // Se escolher "Vibrar e Tocar", mantém o som selecionado anteriormente
+                                    val uriToSave = if (option.id == 2) currentUri else ""
+                                    val nameToSave = if (option.id == 2) currentName else option.name
+                                    onOptionSelected(option.id, uriToSave, nameToSave)
                                     onDismiss()
                                 }
                             }
@@ -70,7 +74,16 @@ fun NotificationSoundDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Icon(option.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(option.name)
+                        Column {
+                            Text(option.name)
+                            if (option.id == 2 && currentUri.isNotEmpty()) {
+                                Text(
+                                    text = "Som atual: $currentName",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
                     }
                 }
             }

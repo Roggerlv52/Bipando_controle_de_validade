@@ -271,10 +271,30 @@ class ProfileViewModel(
 
     fun onSoundTypeChange(context: Context, type: Int, uri: String, name: String) {
         NotificationPrefs.saveSoundType(context, type)
+        
+        // Se for modo com som, e for fornecido um novo URI/Nome, salvamos.
+        // Caso contrário, mantemos o que já está no Prefs.
         if (type == 3 || type == 2) {
-            NotificationPrefs.saveSoundUri(context, uri, name)
+            if (uri.isNotEmpty()) {
+                NotificationPrefs.saveSoundUri(context, uri, name)
+            }
         }
-        _uiState.update { it.copy(soundType = type, soundName = name, soundUri = uri) }
+        
+        val currentUri = NotificationPrefs.getSoundUri(context)
+        val currentName = NotificationPrefs.getSoundName(context)
+
+        _uiState.update { 
+            it.copy(
+                soundType = type, 
+                soundName = when(type) {
+                    0 -> "Mudo"
+                    1 -> "Vibrar"
+                    2 -> if (currentUri.isEmpty()) "Padrão" else currentName
+                    else -> name.ifEmpty { currentName }
+                },
+                soundUri = currentUri
+            ) 
+        }
     }
 
     fun logout(context: Context) {
