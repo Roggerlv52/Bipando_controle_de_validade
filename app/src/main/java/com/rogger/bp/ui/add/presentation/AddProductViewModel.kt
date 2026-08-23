@@ -19,6 +19,7 @@ import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.content.Context
+import android.util.Log
 
 data class AddProductState(
     val name: String = "",
@@ -69,36 +70,58 @@ class AddProductViewModel(
     fun onNameChange(name: String) = _uiState.update { it.copy(name = name) }
     
     fun onBarcodeChange(barcode: String) {
-        _uiState.update { it.copy(barcode = barcode) }
-        if (barcode.isNotEmpty()) {
-            checkIfBarcodeExists(barcode)
+        val trimmedBarcode = barcode.trim()
+        _uiState.update { it.copy(barcode = trimmedBarcode) }
+        if (trimmedBarcode.isNotEmpty()) {
+            checkIfBarcodeExists(trimmedBarcode)
         }
     }
 
     private fun checkIfBarcodeExists(barcode: String) {
-        val imageToResolve = PostImage(barcode = barcode)
-        registerRepository.createImage(imageToResolve, object : SaveImageCallback {
-            override fun onSuccess(image: PostImage) {
-                // Não faz nada aqui, pois saveProductImage chama onAlreadyExists se encontrar
-            }
+        Log.d("Add",barcode)
+        viewModelScope.launch {
+            // 1. Tenta buscar no cache local primeiro
+            val localProduct = registerRepository.getLocalProductByBarcode(barcode)
+            
+            // Verifica se ainda estamos interessados neste barcode
+            if (_uiState.value.barcode != barcode) return@launch
 
-            override fun onAlreadyExists(image: PostImage) {
-                _uiState.update { 
-                    it.copy(
-                        name = image.name,
-                        imageUri = if (image.uri.isNotEmpty()) Uri.parse(image.uri) else null
+            if (localProduct != null) {
+                _uiState.update { state ->
+                    state.copy(
+                        name = if (state.name.isBlank()) localProduct.name else state.name,
+                        imageUri = if (state.imageUri == null && localProduct.imageUri.isNotEmpty()) Uri.parse(localProduct.imageUri) else state.imageUri,
+                        category = if (state.category == null) state.categories.find { it.id == localProduct.categoryId } else state.category
                     )
                 }
             }
 
-            override fun onFailure(message: String) {
-                // Silencioso
-            }
+            // 2. Busca no Firebase (Coleção global imageProdutos)
+            val imageToResolve = PostImage(barcode = barcode)
+            registerRepository.createImage(imageToResolve, object : SaveImageCallback {
+                override fun onSuccess(image: PostImage) {}
 
-            override fun onComplete() {
-                // Silencioso
-            }
-        })
+                override fun onAlreadyExists(image: PostImage) {
+                    _uiState.update { state ->
+                        // CRÍTICO: Verifica se o barcode no estado ainda é o mesmo que iniciou esta busca
+                        if (state.barcode != barcode) return@update state
+
+                        state.copy(
+                            // Preenche o nome se estiver vazio
+                            name = if (state.name.isBlank()) image.name else state.name,
+                            // Preenche a imagem se estiver vazia
+                            imageUri = if (state.imageUri == null && image.uri.isNotEmpty()) Uri.parse(image.uri) else state.imageUri
+                        )
+                    }
+                }
+
+                override fun onFailure(message: String) {
+                    android.util.Log.e("AddProductViewModel", "Erro ao resolver barcode $barcode remotamente: $message")
+                }
+
+                override fun onComplete() {}
+            })
+        }
     }
 
     fun onCategoryChange(category: Category) = _uiState.update { it.copy(category = category) }

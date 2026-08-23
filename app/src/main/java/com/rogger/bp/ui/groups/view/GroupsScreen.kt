@@ -496,7 +496,7 @@ fun GroupsScreen(
                     }
                 }
             } else {
-                // Estado vazio
+                // Estado vazio ou erro
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -504,7 +504,25 @@ fun GroupsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    if (state.invitations.isNotEmpty()) {
+                    if (state.error != null && state.groups.isEmpty()) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Ocorreu um erro ao carregar seus grupos.\n\n${state.error}",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(onClick = { viewModel.refreshGroups() }) {
+                            Text("Tentar Novamente")
+                        }
+                    } else if (state.invitations.isNotEmpty()) {
                         // ... similar list code
                     } else {
                         Icon(

@@ -142,7 +142,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="spinner_indicator">Indicator of an upcoming expiration date.</string>
     <string name="delete_account_button">"Delete the account"</string>
     <string name="title_promotion">Join Premium\nEnjoy unlimited features!</string>
-    <string name="sub_title_promotion">"🔥Thousands of users trust"</string>
+    <string name="sub_title_promotion">"🔥"</string>
     <string name="text_unlimited_promotion">Unlimited scanning and registration.</string>
     <string name="text_customized_notification">Customized notifications per product</string>
     <string name="text_unlimited_categories">Unlimited categories for your inventory.</string>

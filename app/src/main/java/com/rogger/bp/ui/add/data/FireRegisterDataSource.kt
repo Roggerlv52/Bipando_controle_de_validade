@@ -106,11 +106,12 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                 }
 
                 is ImageResult.NoImage -> {
+                    Log.d(TAG, "resolveImage retornou NoImage para ${image.barcode}")
                     if (image.uri.isNotEmpty()) {
                         // Há URI local — tenta criar a imagem global
                         uploadGlobalImageInternal(image, callback)
                     } else {
-                        Log.d(TAG, "Sem imagem e sem URI — aguardando upload do utilizador")
+                        Log.d(TAG, "Sem imagem remota e sem URI local para ${image.barcode} — reportando falha")
                         CoroutineScope(Dispatchers.Main).launch {
                             callback.onFailure("Nenhuma imagem associada")
                             callback.onComplete()
@@ -119,9 +120,10 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                 }
 
                 is ImageResult.Error -> {
-                    Log.e(TAG, "Erro ao verificar imagem: ${result.message}")
+                    Log.e(TAG, "resolveImage retornou Erro para ${image.barcode}: ${result.message}")
                     CoroutineScope(Dispatchers.Main).launch {
                         callback.onFailure(result.message)
+                        callback.onComplete()
                     }
                 }
             }

@@ -3,11 +3,11 @@ package com.rogger.bp.ui.scanner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +17,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
+import com.rogger.bp.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -28,6 +33,7 @@ import com.journeyapps.barcodescanner.DefaultDecoderFactory
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.journeyapps.barcodescanner.BarcodeView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +86,11 @@ fun ScannerScreen(
                     value = manualBarcode,
                     onValueChange = { manualBarcode = it },
                     label = { Text("Código de Barras") },
+                    supportingText = {
+                        if (manualBarcode.isNotEmpty() && manualBarcode.length < 4) {
+                            Text("Digite ao menos 4 dígitos", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -89,14 +100,15 @@ fun ScannerScreen(
                 )
             },
             confirmButton = {
+                val isValid = manualBarcode.trim().length >= 4
                 Button(
                     onClick = {
-                        if (manualBarcode.isNotBlank()) {
-                            onBarcodeScanned(manualBarcode)
+                        if (isValid) {
+                            onBarcodeScanned(manualBarcode.trim())
                             showManualEntryDialog = false
                         }
                     },
-                    enabled = manualBarcode.isNotBlank()
+                    enabled = isValid
                 ) {
                     Text("Confirmar")
                 }
@@ -112,14 +124,14 @@ fun ScannerScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Black
-    ) { padding ->
+    ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             if (hasCameraPermission) {
                 AndroidView(
                     factory = { ctx ->
-                        CompoundBarcodeView(ctx).apply {
+                        BarcodeView(ctx).apply {
                             val formats = listOf(BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.QR_CODE)
                             decoderFactory = DefaultDecoderFactory(formats)
                             decodeContinuous { result ->
@@ -128,64 +140,113 @@ fun ScannerScreen(
                                     onBarcodeScanned(it) 
                                 }
                             }
-                            barcodeView = this
+                            //barcodeView = this
                             resume()
                         }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Overlay escura sutil sobre toda a câmera para legibilidade das barras
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.2f))
-                )
-
-                // Barra Superior Sobreposta
-                TopAppBar(
-                    title = { Text("Escanear Produto", fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Black.copy(alpha = 0.4f),
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    ),
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-
-                // Barra Inferior Sobreposta
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .background(Color.Black.copy(alpha = 0.4f))
-                        .padding(horizontal = 24.dp, vertical = 20.dp)
-                        .navigationBarsPadding(),
-                    contentAlignment = Alignment.Center
+                // Overlay Customizado conforme imagem de referência
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Button(
-                        onClick = { showManualEntryDialog = true },
+                    val isLandscape = maxWidth > maxHeight
+                    val frameWidth = maxWidth * 0.85f
+                    val frameHeight = if (isLandscape) maxHeight * 0.5f else frameWidth * 0.75f
+
+                    // Barra Superior (Preta)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent.copy(alpha = 0.4f),
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                            .background(Color.Transparent.copy(alpha = 0.5f))
+                            .statusBarsPadding()
+                            .height(56.dp)
+                            .align(Alignment.TopCenter),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                        Spacer(modifier = Modifier.width(12.dp))
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Voltar",
+                                tint = Color.White
+                            )
+                        }
+                    }
+
+                    // Scanner Frame (Center)
+                    Box(
+                        modifier = Modifier
+                            .width(frameWidth)
+                            .height(frameHeight)
+                            .align(Alignment.Center)
+                    ) {
+                        // Cantos do Scanner
+                        val cornerSize = 40.dp
+                        Image(
+                            painter = painterResource(id = R.drawable.line_top_left),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.TopStart).size(cornerSize)
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.line_top_right),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.TopEnd).size(cornerSize)
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.line_down_left),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.BottomStart).size(cornerSize)
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.line_down_right),
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.BottomEnd).size(cornerSize)
+                        )
+
+                        // Nome do App (Bipando) - Estilo da imagem
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(bottom = 10.dp, end = 10.dp),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = "Bipando",
+                                color = Color.White,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Light,
+                                textAlign = TextAlign.End
+                            )
+                            Text(
+                                text = "COMPRA E VENDA",
+                                color = Color(0xFF76FF03), // Verde/Lima da imagem
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                    }
+
+                    // Barra Inferior (Preta) com "Digitar codigo de barras"
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .background(Color.Transparent.copy(alpha = 0.5f))
+                            .navigationBarsPadding()
+                            .clickable { showManualEntryDialog = true }
+                            .padding(vertical = 24.dp, horizontal = 24.dp),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
                         Text(
-                            text = "Digitar Código Manualmente",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            text = "Digitar codigo de barras",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal
                         )
                     }
                 }

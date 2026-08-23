@@ -160,7 +160,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="spinner_indicator">Indicador de vencimento proxímo</string>
     <string name="delete_account_button">"Excluir a conta"</string>
     <string name="title_promotion">Junte-se ao Premium\nAproveite recursos\nilimitados!</string>
-    <string name="sub_title_promotion">"🔥Milhares de usuários confiam "</string>
+    <string name="sub_title_promotion">"🔥"</string>
     <string name="text_unlimited_promotion">Digitalização e registro ilimitados.</string>
     <string name="text_customized_notification">Notificações customizadas por produto</string>
     <string name="text_unlimited_categories">Categorias ilimitadas para o seu estoque</string>

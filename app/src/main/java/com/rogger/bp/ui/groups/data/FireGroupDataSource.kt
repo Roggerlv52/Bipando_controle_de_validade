@@ -113,15 +113,11 @@ class FireGroupDataSource : GroupDataSource {
     }
 
     override suspend fun checkGroupNameExists(adminId: String, name: String): Boolean {
-        return try {
-            val query = db.collection("groups")
-                .whereEqualTo("adminId", adminId)
-                .whereEqualTo("name", name)
-                .get().await()
-            !query.isEmpty
-        } catch (e: Exception) {
-            false
-        }
+        val query = db.collection("groups")
+            .whereEqualTo("adminId", adminId)
+            .whereEqualTo("name", name)
+            .get().await()
+        return !query.isEmpty
     }
 
     override suspend fun findGroupByCode(shareCode: String): Result<PostGroup> {
@@ -275,7 +271,11 @@ class FireGroupDataSource : GroupDataSource {
     override suspend fun ensureUserGroupExists(userId: String, userName: String, photoUrl: String): Result<PostGroup> {
         return try {
             val existingGroupsResult = fetchUserGroups(userId)
-            val existingGroups = existingGroupsResult.getOrDefault(emptyList())
+            if (existingGroupsResult.isFailure) {
+                return Result.failure(existingGroupsResult.exceptionOrNull() ?: Exception("Falha ao buscar grupos existentes"))
+            }
+            
+            val existingGroups = existingGroupsResult.getOrThrow()
             
             val defaultGroup = existingGroups.find { it.adminId == userId && it.isDefault }
                 ?: existingGroups.find { it.adminId == userId }

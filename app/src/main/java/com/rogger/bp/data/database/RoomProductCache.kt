@@ -64,6 +64,10 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.updateProduct(product)
     }
 
+    suspend fun getProductByBarcode(barcode: String): PostProduct? {
+        return productDao.getProductByBarcode(barcode)
+    }
+
     suspend fun deleteProduct(product: PostProduct) {
         productDao.deleteProduct(product)
     }

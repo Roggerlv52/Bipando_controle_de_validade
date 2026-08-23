@@ -54,7 +54,14 @@ service cloud.firestore {
       }
     }
 
-    // 3. REGRAS PARA COLLECTION GROUP (CONSULTAS GLOBAIS)
+    // 3. Imagens Globais de Produtos
+    match /imageProdutos/{barcode} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false; // Imagens globais são imutáveis
+    }
+
+    // 4. REGRAS PARA COLLECTION GROUP (CONSULTAS GLOBAIS)
 
     match /{path=**}/invitations/{invitationId} {
       allow read: if isSignedIn() && (

@@ -123,19 +123,40 @@ class GroupsViewModel(
 
     private fun loadInitialData() {
         val user = authRepository.getCurrentUser()
-        val userId = user?.uuid ?: ""
+        if (user == null) {
+            _uiState.update { it.copy(isLoading = false) }
+            return
+        }
+
+        val userId = user.uuid
         _uiState.update { 
             it.copy(
-                userPhoto = user?.photoUri?.toString() ?: "",
-                userName = user?.name ?: "",
-                isLoading = true 
+                userPhoto = user.photoUri?.toString() ?: "",
+                userName = user.name ?: "",
+                isLoading = true,
+                error = null
             )
         }
         
         viewModelScope.launch {
-            groupRepository.syncUserGroup(userId)
+            // Garante que o grupo padrão existe (importante para novos dispositivos)
+            val ensureResult = groupRepository.ensureUserGroupExists(userId, user.name, user.photoUri?.toString() ?: "")
+            
+            if (ensureResult.isSuccess) {
+                val syncResult = groupRepository.syncUserGroup(userId)
+                if (syncResult.isFailure) {
+                    _uiState.update { it.copy(error = "Falha ao sincronizar grupos: ${syncResult.exceptionOrNull()?.message}") }
+                }
+            } else {
+                _uiState.update { it.copy(error = "Erro ao validar sua conta: ${ensureResult.exceptionOrNull()?.message}") }
+            }
+            
             _uiState.update { it.copy(isLoading = false) }
         }
+    }
+
+    fun refreshGroups() {
+        loadInitialData()
     }
 
     fun loadWorkMode(context: Context) {

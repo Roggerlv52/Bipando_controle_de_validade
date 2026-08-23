@@ -48,16 +48,16 @@ class GroupRepository(
         return result
     }
 
-    suspend fun syncUserGroup(userId: String) {
+    suspend fun syncUserGroup(userId: String): Result<Unit> {
         val result = dataSource.fetchUserGroups(userId)
-        result.onSuccess { groups ->
+        return result.onSuccess { groups ->
             if (groups.isNotEmpty()) {
                 groupDao.clearGroup()
                 groupDao.insertGroups(groups)
             } else {
                 groupDao.clearGroup()
             }
-        }
+        }.map { Unit }
     }
 
     suspend fun findGroupByCode(shareCode: String): Result<PostGroup> {
