@@ -34,6 +34,7 @@ class CategoryViewModel(
 
     private fun syncAndFetchCategories() {
         val workMode = SharedPreferencesManager.getWorkMode(context)
+        val groupId = if (workMode == 1) SharedPreferencesManager.getActiveGroupId(context) else ""
         
         // Só mostra loading se a lista estiver vazia E ainda não estiver sincronizando
         if (_uiState.value.categories.isEmpty() && !categoryRepository.isSyncing()) {
@@ -53,11 +54,11 @@ class CategoryViewModel(
             override fun onComplete() {
                 _uiState.update { it.copy(isLoading = false) }
             }
-        }, forceRefresh = true, workMode = workMode)
+        }, forceRefresh = true, workMode = workMode, groupId = groupId)
 
         // 2. Observa o Room para ter os dados atualizados (com contagens se necessário)
         viewModelScope.launch {
-            categoryRepository.getCachedCategoriesWithCountsFlow()
+            categoryRepository.getCachedCategoriesWithCountsFlow(groupId)
                 .map { list -> 
                     list.map { Category(id = it.firestoreId, name = it.name, itemCount = it.itemCount) }
                 }

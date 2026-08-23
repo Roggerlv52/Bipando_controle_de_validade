@@ -1,0 +1,72 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Funções auxiliares para economizar linhas e melhorar leitura roger
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return request.auth.uid == userId; }
+    function isGroupAdmin(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data.adminId == request.auth.uid;
+    }
+    function isGroupMember(groupId) {
+      return exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // 1. Coleção de Usuários
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+
+      match /products/{productId} { allow read, write: if isOwner(userId); }
+      match /category/{categoryId} { allow read, write: if isOwner(userId); }
+      match /productImages/{barcode} { allow read, write: if isOwner(userId); }
+    }
+
+    // 2. Grupos
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && isGroupAdmin(groupId);
+
+      match /members/{memberId} {
+        allow read: if isSignedIn();
+        // Permite escrever se for o admin do grupo ou o próprio usuário (para sair do grupo)
+        allow write: if isSignedIn() && (isGroupAdmin(groupId) || isOwner(memberId));
+      }
+
+      match /products/{productId} {
+        // Permite leitura e escrita se o usuário for membro ou o administrador
+        allow read, write: if isSignedIn() && (isGroupMember(groupId) || isGroupAdmin(groupId));
+      }
+
+      match /category/{categoryId} {
+        allow read, write: if isSignedIn() && (isGroupMember(groupId) || isGroupAdmin(groupId));
+      }
+
+      match /invitations/{invitationId} {
+        // Permite ler/escrever se for o alvo, o remetente ou o admin do grupo
+        allow read, write: if isSignedIn() && (
+          request.auth.uid == resource.data.targetUid ||
+          request.auth.uid == resource.data.senderId ||
+          isGroupAdmin(groupId)
+        );
+      }
+    }
+
+    // 3. REGRAS PARA COLLECTION GROUP (CONSULTAS GLOBAIS)
+
+    match /{path=**}/invitations/{invitationId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.targetUid ||
+        request.auth.uid == resource.data.senderId
+      );
+    }
+
+    match /{path=**}/members/{memberId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid
+      );
+    }
+  }
+}

@@ -290,10 +290,11 @@ fun BipandoNavGraph(navController: NavHostController) {
         composable(Routes.GROUPS) {
             val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
             val groupRepository = DependencyInjector.registerGroupRepository(context)
+            val productDao = database.productDao()
             val viewModel: GroupsViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return GroupsViewModel(authRepository, groupRepository) as T
+                        return GroupsViewModel(authRepository, groupRepository, productDao) as T
                     }
                 }
             )
@@ -317,10 +318,10 @@ fun BipandoNavGraph(navController: NavHostController) {
         composable(Routes.PROFILE) {
             val profileRepository = DependencyInjector.profileRepository()
             val productDao = database.productDao()
-            val groupRepository = DependencyInjector.registerGroupRepository(context)
             val homeRepository = DependencyInjector.registerHomeRepository(context)
             val categoryRepository = DependencyInjector.registerCategoryRepository(context)
             val authRepository = AuthRepositoryImpl(auth)
+            val groupRepository = DependencyInjector.registerGroupRepository(context)
 
             val viewModel: ProfileViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
@@ -328,10 +329,10 @@ fun BipandoNavGraph(navController: NavHostController) {
                         return ProfileViewModel(
                             profileRepository, 
                             productDao, 
-                            groupRepository,
                             homeRepository,
                             categoryRepository,
-                            authRepository
+                            authRepository,
+                            groupRepository
                         ) as T
                     }
                 }

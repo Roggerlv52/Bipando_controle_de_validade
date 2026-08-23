@@ -29,6 +29,11 @@ public class ExpirationWork extends Worker {
     @Override
     public Result doWork() {
 
+        if (!NotificationPrefs.getAlert(getApplicationContext())) {
+            NotificationScheduler.stop(getApplicationContext());
+            return Result.success();
+        }
+
         String userId = obterUserId();
 
         if (userId == null || userId.isEmpty()) {

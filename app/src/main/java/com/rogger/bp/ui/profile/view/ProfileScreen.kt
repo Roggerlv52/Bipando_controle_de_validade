@@ -36,14 +36,12 @@ import com.rogger.bp.ui.theme.BipandoThemeType
 import com.rogger.bp.util.ShareUtil
 import com.rogger.bp.util.SystemSoundPickerDialog
 import com.rogger.bp.util.NotificationSoundDialog
-import com.rogger.bp.util.CreateGroupDialog
 import android.net.Uri
 import android.content.Intent
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +67,6 @@ fun ProfileScreen(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showSoundDialog by remember { mutableStateOf(false) }
     var showSystemSoundPicker by remember { mutableStateOf(false) }
-    var showCreateGroupDialog by remember { mutableStateOf(false) }
-    var showRemoveGroupDialog by remember { mutableStateOf(false) }
 
     val clipboardManager = LocalClipboardManager.current
 
@@ -139,55 +135,6 @@ fun ProfileScreen(
             onSoundSelected = { uri, name ->
                 viewModel.onSoundTypeChange(context, 3, uri, name)
                 showSoundDialog = false
-            }
-        )
-    }
-
-    if (showCreateGroupDialog) {
-        CreateGroupDialog(
-            onDismiss = { showCreateGroupDialog = false },
-            onCreate = { name ->
-                viewModel.createGroup(name)
-                showCreateGroupDialog = false
-            },
-            isLoading = state.isLoading,
-            error = state.errorMessage
-        )
-    }
-
-    if (showRemoveGroupDialog) {
-        AlertDialog(
-            onDismissRequest = { showRemoveGroupDialog = false },
-            title = { Text("Remover Grupo") },
-            text = { Text("Tem certeza que deseja sair deste grupo ou remover sua configuração colaborativa? Você voltará para o modo individual.") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.leaveGroup()
-                        showRemoveGroupDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Remover")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRemoveGroupDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    if (state.syncSuccess) {
-        AlertDialog(
-            onDismissRequest = { viewModel.resetSyncFlag() },
-            title = { Text("Sincronização Concluída") },
-            text = { Text("Seus produtos e categorias foram copiados para o grupo com sucesso!") },
-            confirmButton = {
-                TextButton(onClick = { viewModel.resetSyncFlag() }) {
-                    Text("OK")
-                }
             }
         )
     }
@@ -293,88 +240,6 @@ fun ProfileScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-                        }
-                    }
-                }
-            }
-
-            if (!state.hasCustomGroupName) {
-                Button(
-                    onClick = { showCreateGroupDialog = true },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                ) {
-                    Icon(Icons.Default.GroupAdd, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Criar Grupo Colaborativo")
-                }
-            } else {
-                SettingsSection(title = "Meu Grupo") {
-                    ListItem(
-                        headlineContent = { Text(state.groupName, fontWeight = FontWeight.Bold) },
-                        supportingContent = { Text("Colaborativo") },
-                        leadingContent = { Icon(Icons.Default.Group, contentDescription = null) },
-                        trailingContent = { 
-                            IconButton(onClick = { showRemoveGroupDialog = true }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Sair do Grupo", tint = MaterialTheme.colorScheme.error)
-                            }
-                        }
-                    )
-                    
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    
-                    Text("Exibir produtos de:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                    
-                    var showSyncDialog by remember { mutableStateOf(false) }
-
-                    ThemeOption(
-                        title = "Meus Produtos (Individual)",
-                        selected = state.workMode == 0,
-                        onClick = { viewModel.onWorkModeChange(context, 0) }
-                    )
-                    ThemeOption(
-                        title = "Grupo (${state.groupName})",
-                        selected = state.workMode == 1,
-                        onClick = { 
-                            if (state.workMode != 1) {
-                                showSyncDialog = true
-                            }
-                        }
-                    )
-
-                    if (showSyncDialog) {
-                        AlertDialog(
-                            onDismissRequest = { 
-                                showSyncDialog = false
-                                viewModel.onWorkModeChange(context, 1)
-                            },
-                            title = { Text("Sincronizar Produtos?") },
-                            text = { Text("Deseja copiar seus produtos e categorias individuais para o grupo colaborativo agora? Isso permitirá que outros membros vejam seus itens atuais.") },
-                            confirmButton = {
-                                Button(onClick = {
-                                    viewModel.syncProductsToGroup()
-                                    viewModel.onWorkModeChange(context, 1)
-                                    showSyncDialog = false
-                                }) {
-                                    Text("Sincronizar e Ativar")
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = {
-                                    viewModel.onWorkModeChange(context, 1)
-                                    showSyncDialog = false
-                                }) {
-                                    Text("Apenas Ativar")
-                                }
-                            }
-                        )
-                    }
-                    
-                    if (state.syncSuccess) {
-                        LaunchedEffect(Unit) {
-                            delay(3000)
-                            viewModel.resetSyncFlag()
                         }
                     }
                 }

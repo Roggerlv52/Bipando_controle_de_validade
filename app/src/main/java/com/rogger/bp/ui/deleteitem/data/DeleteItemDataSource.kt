@@ -213,10 +213,9 @@ class DeleteItemDataSource(
 
     override fun fetchItemDeleted(callback: DeleteItemCallback) {
         val mode = SharedPreferencesManager.getWorkMode(context)
+        val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
         
-        val gId = if (mode == 1) {
-             runBlocking { groupDao.getGroup() }?.groupId ?: ""
-        } else ""
+        val gId = if (mode == 1) activeGroupId else ""
 
         val ref = productsRef(gId)
         if (ref == null) {

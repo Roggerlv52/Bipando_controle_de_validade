@@ -24,6 +24,7 @@ import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.profile.data.FetchProfileCallback
 import com.rogger.bp.ui.profile.data.ProfileRepository
 import com.rogger.bp.ui.groups.data.GroupRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -48,6 +49,7 @@ data class HomeState(
     val workMode: Int = 0
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val authRepository: AuthRepository,
@@ -68,41 +70,67 @@ class HomeViewModel(
     private val _categoryId = MutableStateFlow<String?>(null)
 
     init {
-        loadUserInfo()
         observeProductsPipeline()
         observeCategories()
         observeCounters()
         observeGroupChanges()
+        
+        // Inicia o listener de convites globalmente se houver usuário
+        val user = authRepository.getCurrentUser()
+        if (user != null) {
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(500)
+                startInvitationListener()
+            }
+        }
     }
 
     private fun observeGroupChanges() {
-        // ... (removed empty observeInvitations placeholder)
-        groupRepository.getLocalGroupFlow().onEach { group ->
-            val newGroupId = group?.groupId
-            val oldGroupId = _uiState.value.groupId
-            
-            if (newGroupId != oldGroupId) {
-                _uiState.update { it.copy(groupId = newGroupId) }
-                // Quando o grupo muda, forçamos o reinício do listener do Firestore
-                refreshProducts()
+        groupRepository.getLocalGroupsFlow().onEach { groups ->
+            val activeGroupId = _uiState.value.groupId
+            if (activeGroupId != null) {
+                val currentGroup = groups.find { it.groupId == activeGroupId }
+                if (currentGroup != null) {
+                    val displayName = if (currentGroup.name == "Home") "" else currentGroup.name
+                    _uiState.update { it.copy(currentGroupName = displayName) }
+                }
             }
         }.launchIn(viewModelScope)
     }
 
-    fun updateWorkMode(context: android.content.Context) {
+    fun updateWorkMode(context: Context) {
         viewModelScope.launch {
-            val group = groupRepository.getLocalGroupFlow().firstOrNull()
             val mode = SharedPreferencesManager.getWorkMode(context)
-            val displayName = if (mode == 1 && group != null && group.name != "Meu Grupo") group.name else ""
+            val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
             
-            _uiState.update { it.copy(currentGroupName = displayName, workMode = mode) }
-            refreshProducts()
+            val group = if (mode == 1 && !activeGroupId.isNullOrEmpty()) {
+                groupRepository.getGroupById(activeGroupId)
+            } else {
+                groupRepository.getLocalGroupFlow().firstOrNull()
+            }
+            
+            val displayName = if (mode == 1 && group != null && group.name != "Home") group.name else ""
+            val newGroupId = if (mode == 1) activeGroupId else ""
+            
+            val oldGroupId = _uiState.value.groupId
+            val oldMode = _uiState.value.workMode
+
+            if (newGroupId != oldGroupId || mode != oldMode) {
+                _uiState.update { it.copy(
+                    currentGroupName = displayName, 
+                    workMode = mode,
+                    groupId = newGroupId
+                ) }
+                refreshProducts()
+            } else {
+                _uiState.update { it.copy(currentGroupName = displayName) }
+            }
             
             categoryRepository.fetchAll(object : FetchCategoriesCallback {
                 override fun onSuccess(categories: List<PostCategory>) {}
                 override fun onFailure(message: String) {}
                 override fun onComplete() {}
-            }, forceRefresh = true, workMode = mode)
+            }, forceRefresh = true, workMode = mode, groupId = newGroupId)
         }
     }
 
@@ -115,17 +143,21 @@ class HomeViewModel(
     }
 
     fun fetchCategories() {
-        val workMode = _uiState.value.workMode
+        val state = _uiState.value
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {}
             override fun onFailure(message: String) {}
             override fun onComplete() {}
-        }, workMode = workMode)
+        }, workMode = state.workMode, groupId = state.groupId)
     }
 
     private fun observeProductsPipeline() {
+        val groupIdFlow = _uiState.map { it.groupId ?: "" }.distinctUntilChanged()
+        
         combine(
-            homeRepository.getCachedProductsFlow(),
+            groupIdFlow.flatMapLatest { groupId ->
+                homeRepository.getCachedProductsFlow(groupId)
+            },
             _searchQuery,
             _categoryId
         ) { products, query, categoryId ->
@@ -142,7 +174,6 @@ class HomeViewModel(
                 .map { it.toDomain() }
         }.onEach { productList ->
             _uiState.update { it.copy(products = productList) }
-            // Se já temos produtos no cache (ex: vieram do login), não precisamos mostrar o spinner de "primeira carga"
             if (productList.isNotEmpty()) {
                 _uiState.update { it.copy(isFirstLoad = false) }
             }
@@ -175,12 +206,14 @@ class HomeViewModel(
                 val uid = authRepository.getCurrentUser()?.uuid ?: ""
                 SharedPreferencesManager.saveUserInfo(context, uid, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
+                
+                startInvitationListener()
             }
             override fun onFailure(message: String) {}
             override fun onComplete() {}
         })
 
-        startInvitationListener(context)
+        startInvitationListener()
         
         _uiState.update { 
             it.copy(yellowWarningDays = NotificationPrefs.getDays(context)) 
@@ -194,7 +227,7 @@ class HomeViewModel(
 
         val user = authRepository.getCurrentUser()
         if (user == null) {
-            Log.d("HomeViewModel", "refreshProducts: skipping because user is null (probably logging out)")
+            Log.d("HomeViewModel", "refreshProducts: skipping because user is null")
             return
         }
 
@@ -204,7 +237,6 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true) }
         }
 
-        // Além dos produtos, força a atualização das categorias no modo correto
         fetchCategories()
 
         homeRepository.fetchAll(object : FetchProductsCallback {
@@ -217,47 +249,71 @@ class HomeViewModel(
             override fun onComplete() {
                 _uiState.update { it.copy(isLoading = false, isFirstLoad = false) }
             }
-        }, forceRefresh = true, workMode = currentState.workMode)
+        }, forceRefresh = true, workMode = currentState.workMode, groupId = currentState.groupId)
     }
 
     private var invitationJob: kotlinx.coroutines.Job? = null
     
-    private fun startInvitationListener(context: Context) {
+    private fun startInvitationListener() {
         if (invitationJob != null) return
         
         val user = authRepository.getCurrentUser() ?: return
-        invitationJob = groupRepository.getInvitationsFlow(user.uuid).onEach { invites ->
-            invites.forEach { invitation ->
-                com.rogger.bp.notification.NotificationUtil.showInvitation(
-                    context,
-                    invitation.senderName,
-                    invitation.groupName
-                )
+        Log.d("HomeViewModel", "Starting invitation listener for: ${user.uuid}")
+        
+        invitationJob = groupRepository.getInvitationsFlow(user.uuid)
+            .onEach { invites ->
+                invites.forEach { invitation ->
+                    if (!isLoggingOut) {
+                        Log.d("HomeViewModel", "Novo convite recebido de: ${invitation.senderName}")
+                    }
+                }
             }
-        }.launchIn(viewModelScope)
+            .catch { e -> 
+                if (!isLoggingOut) {
+                    Log.e("HomeViewModel", "Erro no listener de convites: ${e.message}")
+                    if (e.message?.contains("PERMISSION_DENIED") == true) {
+                        invitationJob?.cancel()
+                        invitationJob = null
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
-    private fun loadUserInfo() {
+    fun loadUserInfo(context: Context) {
         val user = authRepository.getCurrentUser()
-        user?.let {
+        user?.let { u ->
             _uiState.update { state ->
                 state.copy(
-                    userName = it.name,
-                    userEmail = it.email,
-                    userPhoto = it.photoUri?.toString() ?: ""
+                    userName = u.name,
+                    userEmail = u.email,
+                    userPhoto = u.photoUri?.toString() ?: ""
                 )
             }
-            // Sincronização prioritária do grupo para usuários membros
+            
             viewModelScope.launch {
-                groupRepository.syncUserGroup(it.uuid)
+                val result = groupRepository.handleUserLogin(u.uuid, u.name, u.photoUri?.toString() ?: "")
+                result.onSuccess { group ->
+                    val currentMode = SharedPreferencesManager.getWorkMode(context)
+                    if (group.isDefault && currentMode == 0) {
+                        SharedPreferencesManager.setWorkMode(context, 1)
+                        SharedPreferencesManager.setActiveGroupId(context, group.groupId)
+                        updateWorkMode(context)
+                    }
+                }
+                groupRepository.syncUserGroup(u.uuid)
             }
         }
     }
 
     private fun observeCounters() {
+        val groupIdFlow = _uiState.map { it.groupId ?: "" }.distinctUntilChanged()
+
         viewModelScope.launch {
             combine(
-                homeRepository.getCachedProductsFlow(),
+                groupIdFlow.flatMapLatest { groupId ->
+                    homeRepository.getCachedProductsFlow(groupId)
+                },
                 categoryRepository.getCachedCategoriesFlow()
             ) { products, categories ->
                 _uiState.update { state ->
@@ -273,10 +329,13 @@ class HomeViewModel(
 
     fun logout(context: Context, onLogout: () -> Unit) {
         isLoggingOut = true
+        com.rogger.bp.ui.groups.data.GroupRepository.setLoggingOut(true)
+        invitationJob?.cancel()
+        invitationJob = null
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             
-            // Google Sign Out
             try {
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestIdToken(context.getString(R.string.default_web_client_id))

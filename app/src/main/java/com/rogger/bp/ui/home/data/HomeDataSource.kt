@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.home.data
 
+import android.content.Context
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
@@ -8,101 +9,62 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.rogger.bp.data.dao.GroupDao
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import android.content.Context
 
-/*
- * Desenvolvido por Roger de Oliveira
- * Data: 13/05/2026
- * Hora: 22:30
- */
 class HomeDataSource(
     private val context: Context,
     private val groupDao: GroupDao
 ) : PostHomeDataSource {
 
     private val TAG = "HomeDataSource"
-
-    private val db   = FirebaseFirestore.getInstance()
+    private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
+    /**
+     * PROBLEMA 7 — Corrigido: Prioriza sempre o grupo, usando user apenas como fallback de leitura.
+     */
     private fun productsRef(groupId: String? = null): CollectionReference? {
         val uid = getUserId() ?: return null
-        
-        return if (!groupId.isNullOrEmpty()) {
-            // 🚀 Modo Colaborativo: Produtos ficam na coleção do grupo
-            db.collection("groups")
-                .document(groupId)
-                .collection("products")
+        val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
+        val targetGroupId = if (!groupId.isNullOrEmpty()) groupId else activeGroupId
+
+        return if (!targetGroupId.isNullOrEmpty()) {
+            db.collection("groups").document(targetGroupId).collection("products")
         } else {
-            // Modo Privado: Produtos ficam na coleção do usuário
-            db.collection("users")
-                .document(uid)
-                .collection("products")
-        }
-    }
-
-    private fun documentToPostProduct(doc: DocumentSnapshot, groupId: String? = null): PostProduct? {
-        val data = doc.data ?: return null
-        return try {
-            val uidField = data["uid"] as? String ?: ""
-            val uuid = if (uidField.isNotEmpty()) uidField else doc.id
-
-            PostProduct(
-                firestoreDocId = doc.id,
-                id         = (data["id"]         as? Long)?.toInt() ?: 0,
-                userId     = data["userId"]      as? String ?: "",
-                uuid       = uuid,
-                name       = data["name"]        as? String ?: return null,
-                note       = data["note"]        as? String ?: "",
-                barcode    = data["barcode"]     as? String ?: "",
-                categoryId = data["categoryId"] as? String ?: "",
-                categoryName = data["categoryName"] as? String ?: "",
-                timestamp  = data["timestamp"]   as? Long ?: 0L,
-                imageUri   = data["imageUri"]    as? String ?: "",
-                deleted    = data["deleted"]     as? Boolean ?: false,
-                deletedAt  = data["deletedAt"]   as? Long,
-                groupId    = groupId ?: (data["groupId"] as? String ?: "")
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao mapear produto: ${e.message}")
-            null
+            // Fallback temporário apenas para leitura durante migração
+            db.collection("users").document(uid).collection("products")
         }
     }
 
     override fun fetchProducts(callback: FetchProductsCallback) {
-        // Chamada única (sem listener) — geralmente usada em sync inicial
         CoroutineScope(Dispatchers.IO).launch {
-            val activeGroup = groupDao.getGroup()
-            val ref = productsRef(activeGroup?.groupId)
-            
+            val ref = productsRef()
             ref?.get()?.addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull { documentToPostProduct(it, activeGroup?.groupId) }
+                val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
                 callback.onSuccess(list)
             }?.addOnFailureListener { e ->
-                callback.onFailure(e.message ?: "Erro")
+                callback.onFailure(e.message ?: "Erro ao buscar produtos")
             }?.addOnCompleteListener { callback.onComplete() }
         }
     }
 
     override fun fetchProductsByCategory(categoryId: String, callback: FetchProductsCallback) {
         CoroutineScope(Dispatchers.IO).launch {
-            val activeGroup = groupDao.getGroup()
-            val ref = productsRef(activeGroup?.groupId)
-
+            val ref = productsRef()
             ref?.whereEqualTo("categoryId", categoryId)
                 ?.get()
                 ?.addOnSuccessListener { snapshot ->
-                    val list = snapshot.documents.mapNotNull { documentToPostProduct(it, activeGroup?.groupId) }
+                    val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
                     callback.onSuccess(list)
                 }
                 ?.addOnFailureListener { e ->
-                    callback.onFailure(e.message ?: "Erro")
+                    callback.onFailure(e.message ?: "Erro ao filtrar produtos")
                 }
                 ?.addOnCompleteListener { callback.onComplete() }
         }
@@ -112,53 +74,71 @@ class HomeDataSource(
         CoroutineScope(Dispatchers.IO).launch {
             val uid = getUserId() ?: return@launch
             
-            // 1. Verificar permissões se for produto de grupo
-            if (product.groupId.isNotEmpty() && product.groupId != uid) {
-                try {
-                    val memberDoc = db.collection("groups").document(product.groupId)
-                        .collection("members").document(uid).get().await()
-                    
-                    if (memberDoc.exists()) {
-                        val role = memberDoc.getString("role") ?: "Reader"
-                        if (role != "Admin" && role != "Editor") {
-                            callback.onFailure("Apenas Administradores ou Editores podem mover para lixeira.")
-                            return@launch
-                        }
-                    } else {
-                        // Se não encontrou o documento de membro e não é o Admin (checado acima), nega.
-                        callback.onFailure("Você não tem permissão para excluir produtos neste grupo.")
-                        return@launch
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao verificar permissão de exclusão: ${e.message}")
-                    callback.onFailure("Erro de conexão ao verificar permissões.")
+            if (product.groupId.isNotEmpty()) {
+                val hasPermission = checkUserPermission(uid, product.groupId)
+                if (!hasPermission) {
+                    callback.onFailure("Apenas Administradores ou Editores podem mover para lixeira.")
                     return@launch
                 }
             }
 
-            // 2. Executar o delete (Soft Delete) no local correto
             val ref = productsRef(product.groupId) ?: return@launch
-            
-            val updateData = mapOf(
-                "deleted" to true, 
-                "deletedAt" to System.currentTimeMillis()
-            )
+            val updateData = mapOf("deleted" to true, "deletedAt" to System.currentTimeMillis())
 
-            // Tenta deletar pelo ID do documento primeiro
             if (product.firestoreDocId.isNotEmpty()) {
-                ref.document(product.firestoreDocId)
-                    .update(updateData)
+                ref.document(product.firestoreDocId).update(updateData)
                     .addOnSuccessListener { 
                         cleanupProductImageIfNoMore(product)
                         callback.onSuccess(product) 
                     }
-                    .addOnFailureListener { e ->
-                        Log.w(TAG, "Falha ao deletar por DocId, tentando por UUID: ${e.message}")
-                        deleteByUuid(ref, product, updateData, callback)
-                    }
+                    .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
             } else {
                 deleteByUuid(ref, product, updateData, callback)
             }
+        }
+    }
+
+    override fun restoreProduct(product: PostProduct, callback: HomeCallback) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val uid = getUserId() ?: return@launch
+
+            if (product.groupId.isNotEmpty()) {
+                val hasPermission = checkUserPermission(uid, product.groupId)
+                if (!hasPermission) {
+                    callback.onFailure("Apenas Administradores ou Editores podem restaurar produtos.")
+                    return@launch
+                }
+            }
+
+            val ref = productsRef(product.groupId) ?: return@launch
+            val updateData = mapOf("deleted" to false, "deletedAt" to null)
+
+            if (product.firestoreDocId.isNotEmpty()) {
+                ref.document(product.firestoreDocId).update(updateData)
+                    .addOnSuccessListener { callback.onSuccess(product) }
+                    .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
+            } else {
+                deleteByUuid(ref, product, updateData, callback)
+            }
+        }
+    }
+
+    private suspend fun checkUserPermission(uid: String, groupId: String): Boolean {
+        val cachedRole = SharedPreferencesManager.getCachedRole(context, groupId)
+        if (cachedRole != null) {
+            return cachedRole == "Admin" || cachedRole == "Editor"
+        }
+
+        return try {
+            val memberDoc = db.collection("groups").document(groupId)
+                .collection("members").document(uid).get().await()
+            
+            val role = if (memberDoc.exists()) memberDoc.getString("role") ?: "Reader" else "Reader"
+            SharedPreferencesManager.setCachedRole(context, groupId, role)
+            role == "Admin" || role == "Editor"
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao verificar permissões: ${e.message}")
+            false
         }
     }
 
@@ -169,84 +149,39 @@ class HomeDataSource(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Verificar se existem outros produtos ATIVOS com este barcode
-                val activeProductsQuery = db.collection("users").document(uid).collection("products")
-                    .whereEqualTo("barcode", barcode)
+                val ref = productsRef(product.groupId) ?: return@launch
+                val activeProductsQuery = ref.whereEqualTo("barcode", barcode)
                     .whereEqualTo("deleted", false)
+                    .limit(1)
                     .get().await()
 
                 if (activeProductsQuery.isEmpty) {
-                    // Se não houver mais produtos ativos, removemos a associação de imagem personalizada
-                    // Isso limpa o "banco" conforme solicitado quando o produto é removido da lista principal
-                    db.collection("users").document(uid)
-                        .collection("productImages").document(barcode)
-                        .delete().await()
-                    Log.d(TAG, "Limpando metadados de imagem (Soft Delete) para barcode: $barcode")
+                    val imgRef = if (product.groupId.isNotEmpty()) {
+                        db.collection("groups").document(product.groupId).collection("productImages")
+                    } else {
+                        db.collection("users").document(uid).collection("productImages")
+                    }
+                    imgRef.document(barcode).delete().await()
+                    Log.d(TAG, "Limpando imagem para barcode: $barcode")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao limpar imagem em soft delete: ${e.message}")
+                Log.e(TAG, "Erro ao limpar imagem: ${e.message}")
             }
         }
     }
 
-    private fun deleteByUuid(
-        ref: CollectionReference, 
-        product: PostProduct, 
-        updateData: Map<String, Any?>, 
-        callback: HomeCallback
-    ) {
+    private fun deleteByUuid(ref: CollectionReference, product: PostProduct, updateData: Map<String, Any?>, callback: HomeCallback) {
         ref.whereEqualTo("uid", product.uuid).get()
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.isEmpty) {
-                    snapshot.documents.first().reference
-                        .update(updateData)
+                    snapshot.documents.first().reference.update(updateData)
                         .addOnSuccessListener { callback.onSuccess(product) }
-                        .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro ao atualizar") }
+                        .addOnFailureListener { callback.onFailure(it.message ?: "Erro ao atualizar") }
                 } else {
-                    callback.onFailure("Produto não encontrado no Firestore")
+                    callback.onFailure("Produto não encontrado")
                 }
             }
-            .addOnFailureListener { e -> callback.onFailure(e.message ?: "Erro na busca") }
-    }
-
-    override fun restoreProduct(product: PostProduct, callback: HomeCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val uid = getUserId() ?: return@launch
-
-            // 1. Verificar permissões se for produto de grupo
-            if (product.groupId.isNotEmpty() && product.groupId != uid) {
-                try {
-                    val memberDoc = db.collection("groups").document(product.groupId)
-                        .collection("members").document(uid).get().await()
-
-                    if (memberDoc.exists()) {
-                        val role = memberDoc.getString("role") ?: "Reader"
-                        if (role != "Admin" && role != "Editor") {
-                            callback.onFailure("Apenas Administradores ou Editores podem restaurar produtos.")
-                            return@launch
-                        }
-                    } else {
-                        callback.onFailure("Sem permissão para restaurar.")
-                        return@launch
-                    }
-                } catch (e: Exception) {
-                    callback.onFailure("Erro ao verificar permissões.")
-                    return@launch
-                }
-            }
-
-            val ref = productsRef(product.groupId) ?: return@launch
-            val updateData = mapOf("deleted" to false, "deletedAt" to null)
-
-            if (product.firestoreDocId.isNotEmpty()) {
-                ref.document(product.firestoreDocId)
-                    .update(updateData)
-                    .addOnSuccessListener { callback.onSuccess(product) }
-                    .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
-            } else {
-                deleteByUuid(ref, product, updateData, callback)
-            }
-        }
+            .addOnFailureListener { callback.onFailure(it.message ?: "Erro na busca") }
     }
 
     override fun addProductsSnapshotListener(groupId: String?, callback: FetchProductsCallback): ListenerRegistration? {
@@ -258,16 +193,38 @@ class HomeDataSource(
 
         return ref.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.e(TAG, "Erro no listener de produtos: ${error.message}")
                 callback.onFailure(error.message ?: "Erro no listener")
                 return@addSnapshotListener
             }
-
             if (snapshot != null) {
-                val list = snapshot.documents.mapNotNull { documentToPostProduct(it, groupId) }
-                Log.d(TAG, "Produtos atualizados via listener (Grupo=$groupId): ${list.size}")
+                val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
                 callback.onSuccess(list)
             }
+        }
+    }
+
+    private fun documentToPostProduct(doc: DocumentSnapshot): PostProduct? {
+        return try {
+            val data = doc.data ?: return null
+            val name = data["name"] as? String ?: return null
+            PostProduct(
+                firestoreDocId = doc.id,
+                id = (data["id"] as? Long)?.toInt() ?: 0,
+                userId = data["userId"] as? String ?: "",
+                uuid = data["uid"] as? String ?: doc.id,
+                name = name,
+                note = data["note"] as? String ?: "",
+                barcode = data["barcode"] as? String ?: "",
+                categoryId = data["categoryId"] as? String ?: "",
+                categoryName = data["categoryName"] as? String ?: "",
+                timestamp = data["timestamp"] as? Long ?: 0L,
+                imageUri = data["imageUri"] as? String ?: "",
+                deleted = data["deleted"] as? Boolean ?: false,
+                deletedAt = data["deletedAt"] as? Long,
+                groupId = data["groupId"] as? String ?: ""
+            )
+        } catch (e: Exception) {
+            null
         }
     }
 }

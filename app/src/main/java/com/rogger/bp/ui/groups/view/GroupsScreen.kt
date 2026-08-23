@@ -1,8 +1,21 @@
 package com.rogger.bp.ui.groups.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -11,13 +24,44 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,13 +69,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.data.Group
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.ui.componentes.BipandoTextField
+import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
+import com.rogger.bp.ui.groups.presentation.GroupMember
 import com.rogger.bp.ui.groups.presentation.GroupsViewModel
 import com.rogger.bp.util.InvitationDialog
 
@@ -44,21 +91,30 @@ fun GroupsScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+
     var newUserCode by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("Reader") }
     var groupNameInput by remember { mutableStateOf("") }
-    var groupCodeInput by remember { mutableStateOf("") }
-    var showAddUserDialog by remember { mutableStateOf(false) }
+
+    var groupToInvite by remember { mutableStateOf<PostGroup?>(null) }
     var showCreateGroupDialog by remember { mutableStateOf(false) }
-    var showEditGroupNameDialog by remember { mutableStateOf(false) }
-    var memberToManage by remember { mutableStateOf<com.rogger.bp.ui.groups.presentation.GroupMember?>(null) }
+    var groupToEdit by remember { mutableStateOf<PostGroup?>(null) }
+    var groupToLeave by remember { mutableStateOf<PostGroup?>(null) }
+
+    var memberToManage by remember { mutableStateOf<Pair<String, GroupMember>?>(null) }
+    var expandedGroupId by remember { mutableStateOf<String?>(null) }
+
+
+    LaunchedEffect(Unit) {
+        viewModel.loadWorkMode(context)
+    }
 
     // Dispara notificação local ao receber novos convites
     LaunchedEffect(state.invitations) {
         state.invitations.forEach { invitation ->
             com.rogger.bp.notification.NotificationUtil.showInvitation(
-                context, 
-                invitation.senderName, 
+                context,
+                invitation.senderName,
                 invitation.groupName
             )
         }
@@ -73,16 +129,16 @@ fun GroupsScreen(
         )
     }
 
-    if (showAddUserDialog) {
+    groupToInvite?.let { group ->
         AlertDialog(
-            onDismissRequest = { 
-                showAddUserDialog = false 
+            onDismissRequest = {
+                groupToInvite = null
                 viewModel.clearError()
             },
-            title = { Text("Convidar Membro") },
+            title = { Text("Convidar para ${group.name}") },
             text = {
                 Column {
-                    Text("O usuário convidado poderá colaborar na sua lista de produtos.")
+                    Text("O usuário convidado poderá colaborar na lista do grupo ${group.name}.")
                     Spacer(modifier = Modifier.height(16.dp))
                     BipandoTextField(
                         value = newUserCode,
@@ -93,16 +149,20 @@ fun GroupsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Permissão:", fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = selectedRole == "Editor", onClick = { selectedRole = "Editor" })
+                        RadioButton(
+                            selected = selectedRole == "Editor",
+                            onClick = { selectedRole = "Editor" })
                         Text("Editor")
                         Spacer(modifier = Modifier.width(16.dp))
-                        RadioButton(selected = selectedRole == "Reader", onClick = { selectedRole = "Reader" })
+                        RadioButton(
+                            selected = selectedRole == "Reader",
+                            onClick = { selectedRole = "Reader" })
                         Text("Leitor")
                     }
                     Text(
-                        text = if (selectedRole == "Editor") 
-                            "Pode adicionar, editar e remover permanentemente." 
-                            else "Pode adicionar e editar (exceto remoção permanente).",
+                        text = if (selectedRole == "Editor")
+                            "Pode adicionar, editar e remover permanentemente."
+                        else "Pode adicionar e editar (exceto remoção permanente).",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
@@ -119,22 +179,24 @@ fun GroupsScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { 
-                        viewModel.sendInvitation(newUserCode, selectedRole)
-                        // A verificação de fechar o dialog pode ser feita via LaunchedEffect observando o estado
+                    onClick = {
+                        viewModel.sendInvitation(group.groupId, newUserCode, selectedRole)
                     },
                     enabled = !state.isLoading
                 ) {
                     if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White
+                        )
                     } else {
                         Text("Convidar")
                     }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { 
-                    showAddUserDialog = false 
+                TextButton(onClick = {
+                    groupToInvite = null
                     viewModel.clearError()
                 }) {
                     Text("Cancelar")
@@ -143,10 +205,10 @@ fun GroupsScreen(
         )
     }
 
-    if (showEditGroupNameDialog) {
-        var newName by remember { mutableStateOf(state.groupName) }
+    groupToEdit?.let { group ->
+        var newName by remember { mutableStateOf(group.name) }
         AlertDialog(
-            onDismissRequest = { showEditGroupNameDialog = false },
+            onDismissRequest = { groupToEdit = null },
             title = { Text("Renomear Grupo") },
             text = {
                 BipandoTextField(
@@ -157,22 +219,46 @@ fun GroupsScreen(
                 )
             },
             confirmButton = {
-                Button(onClick = { 
-                    viewModel.renameGroup(newName)
-                    showEditGroupNameDialog = false 
+                Button(onClick = {
+                    viewModel.renameGroup(group.groupId, newName)
+                    groupToEdit = null
                 }) {
                     Text("Salvar")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showEditGroupNameDialog = false }) {
+                TextButton(onClick = { groupToEdit = null }) {
                     Text("Cancelar")
                 }
             }
         )
     }
 
-    memberToManage?.let { member ->
+    groupToLeave?.let { group ->
+        AlertDialog(
+            onDismissRequest = { groupToLeave = null },
+            title = { Text("Sair do Grupo") },
+            text = { Text("Tem certeza que deseja sair do grupo \"${group.name}\"?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.leaveGroup(context, group.groupId)
+                        groupToLeave = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Sair")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { groupToLeave = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    memberToManage?.let { (groupId, member) ->
         AlertDialog(
             onDismissRequest = { memberToManage = null },
             title = { Text("Gerenciar Membro") },
@@ -180,25 +266,29 @@ fun GroupsScreen(
                 Column {
                     Text("Membro: ${member.name}", fontWeight = FontWeight.Bold)
                     Text("Papel atual: ${if (member.role == "Admin") "Administrador" else if (member.role == "Editor") "Editor" else "Leitor"}")
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     if (member.role != "Admin") {
                         Button(
-                            onClick = { 
-                                viewModel.updateMemberRole(member.id, if (member.role == "Editor") "Reader" else "Editor")
+                            onClick = {
+                                viewModel.updateMemberRole(
+                                    groupId,
+                                    member.id,
+                                    if (member.role == "Editor") "Reader" else "Editor"
+                                )
                                 memberToManage = null
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Tornar ${if (member.role == "Editor") "Leitor" else "Editor"}")
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Button(
-                            onClick = { 
-                                viewModel.removeMember(member.id)
+                            onClick = {
+                                viewModel.removeMember(groupId, member.id)
                                 memberToManage = null
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -220,10 +310,10 @@ fun GroupsScreen(
         )
     }
 
-    // Fecha o dialog se o convite for enviado com sucesso
+    // Fecha o dialog de convite se for enviado com sucesso
     LaunchedEffect(state.isLoading) {
         if (!state.isLoading && state.error == null && newUserCode.isNotEmpty()) {
-            showAddUserDialog = false
+            groupToInvite = null
             newUserCode = ""
         }
     }
@@ -231,42 +321,18 @@ fun GroupsScreen(
     if (showCreateGroupDialog) {
         AlertDialog(
             onDismissRequest = { showCreateGroupDialog = false },
-            title = { Text("Criar ou Entrar em um Grupo") },
+            title = { Text("Criar Novo Grupo") },
             text = {
                 Column {
-                    Text("Escolha uma opção para começar a colaborar.")
+                    Text("Dê um nome ao seu grupo para começar a colaborar com outros usuários.")
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     BipandoTextField(
                         value = groupNameInput,
                         onValueChange = { groupNameInput = it },
-                        label = "Nome do novo grupo",
-                        leadingIcon = Icons.Default.Add
+                        label = "Nome do Grupo",
+                        leadingIcon = Icons.Default.Groups
                     )
-                    Button(
-                        onClick = { viewModel.createGroup(context, groupNameInput) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    ) {
-                        Text("Criar Novo Grupo")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    BipandoTextField(
-                        value = groupCodeInput,
-                        onValueChange = { groupCodeInput = it },
-                        label = "Código de convite",
-                        leadingIcon = Icons.Default.Check
-                    )
-                    Button(
-                        onClick = { viewModel.joinGroup(context, groupCodeInput) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                    ) {
-                        Text("Entrar em Grupo Existente")
-                    }
 
                     if (state.error != null) {
                         Text(
@@ -278,7 +344,21 @@ fun GroupsScreen(
                     }
                 }
             },
-            confirmButton = {},
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.createGroup(context, groupNameInput) },
+                    enabled = groupNameInput.isNotBlank() && !state.isLoading
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Criar")
+                    }
+                }
+            },
             dismissButton = {
                 TextButton(onClick = { showCreateGroupDialog = false }) {
                     Text("Cancelar")
@@ -287,9 +367,10 @@ fun GroupsScreen(
         )
     }
 
-    LaunchedEffect(state.hasGroup) {
-        if (state.hasGroup) {
+    LaunchedEffect(state.groups) {
+        if (state.groups.any { it.name == groupNameInput }) {
             showCreateGroupDialog = false
+            groupNameInput = ""
         }
     }
 
@@ -297,17 +378,15 @@ fun GroupsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Grupo de Usuários", fontWeight = FontWeight.Bold) },
+                title = { Text("Grupos de Usuários", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
                 actions = {
-                    if (state.hasGroup) {
-                        IconButton(onClick = { showAddUserDialog = true }) {
-                            Icon(Icons.Default.GroupAdd, contentDescription = "Adicionar Usuário")
-                        }
+                    IconButton(onClick = { showCreateGroupDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = "Novo Grupo")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -325,162 +404,284 @@ fun GroupsScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (state.isLoading && !state.hasGroup) {
-                // Carregamento inicial: centraliza um loader
+            if (state.isLoading && state.groups.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (state.hasGroup) {
-                //--------------------------------------------------------------
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(0.dp), // Borda reta para encostar nas laterais
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+            } else if (state.groups.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp).fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = state.groupName,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f)
+                    items(state.groups, key = { it.groupId }) { group ->
+                        val members = state.membersMap[group.groupId] ?: emptyList()
+                        val canSwipe = !group.isDefault
+
+
+                        if (!canSwipe) {
+                            GroupItem(
+                                groupName = group.name,
+                                isDefault = group.isDefault,
+                                participantCount = members.size,
+                                activeItemsCount = state.activeItemsCountMap[group.groupId] ?: 0,
+                                members = members,
+                                isExpanded = expandedGroupId == group.groupId,
+                                isSelected = state.workMode == 1 && state.groupId == group.groupId,
+                                onExpandClick = {
+                                    expandedGroupId =
+                                        if (expandedGroupId == group.groupId) null else group.groupId
+                                },
+                                onMemberClick = { member ->
+                                    if (state.userRole == "Admin") {
+                                        memberToManage = group.groupId to member
+                                    }
+                                },
+                                onSelectGroup = {
+                                    viewModel.onWorkModeChange(context, 1, group.groupId)
+                                },
+                                onInviteClick = { groupToInvite = group }
                             )
-                            if (state.userRole == "Admin") {
-                                IconButton(onClick = { showEditGroupNameDialog = true }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Renomear", tint = MaterialTheme.colorScheme.primary)
-                                }
+                        } else {
+
+
+                            SwipeToDeleteContainer(
+                                item = group,
+                                onDelete = { if (canSwipe) groupToLeave = it },
+                                onEdit = { if (canSwipe) groupToEdit = it }
+                            ) {
+                                GroupItem(
+                                    groupName = group.name,
+                                    isDefault = group.isDefault,
+                                    participantCount = members.size,
+                                    activeItemsCount = state.activeItemsCountMap[group.groupId]
+                                        ?: 0,
+                                    members = members,
+                                    isExpanded = expandedGroupId == group.groupId,
+                                    isSelected = state.workMode == 1 && state.groupId == group.groupId,
+                                    onExpandClick = {
+                                        expandedGroupId =
+                                            if (expandedGroupId == group.groupId) null else group.groupId
+                                    },
+                                    onMemberClick = { member ->
+                                        if (state.userRole == "Admin") {
+                                            memberToManage = group.groupId to member
+                                        }
+                                    },
+                                    onSelectGroup = {
+                                        viewModel.onWorkModeChange(context, 1, group.groupId)
+                                    },
+                                    onInviteClick = { groupToInvite = group }
+                                )
                             }
                         }
-                        Text(
-                            text = "Seu código de convite: ${state.groupCode}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
-                            modifier = Modifier.clickable {
-                                clipboardManager.setText(AnnotatedString(state.groupCode))
-                            }
-                        )
                     }
-                }
-
-                // Conteúdo abaixo do card com a margem original de 24.dp
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     if (state.invitations.isNotEmpty()) {
-                        Text(
-                            text = "Convites Pendentes",
-                            modifier = Modifier.fillMaxWidth(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        state.invitations.forEach { invitation ->
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Convites Pendentes",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        items(state.invitations) { invitation ->
                             InvitationItem(
                                 invitation = invitation,
                                 onAccept = { viewModel.respondInvitation(invitation, true) },
                                 onDecline = { viewModel.respondInvitation(invitation, false) }
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
-
-                    Text(
-                        text = "Membros do Grupo",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (state.members.isEmpty()) {
-                            item {
-                                Text(
-                                    "Nenhum membro adicionado além de você.",
-                                    color = Color.Gray,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth().padding(top = 32.dp)
-                                )
-                            }
-                        }
-                        items(state.members) { member ->
-                            MemberItem(
-                                member = member,
-                                onClick = {
-                                    if (state.userRole == "Admin") {
-                                        memberToManage = member
-                                    }
-                                }
                             )
                         }
                     }
                 }
             } else {
-                // Estado vazio: sem grupo - mantendo padding de 24.dp
+                // Estado vazio
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     if (state.invitations.isNotEmpty()) {
-                        Text(
-                            text = "Convites Pendentes",
-                            modifier = Modifier.fillMaxWidth(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                        // ... similar list code
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Group,
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        state.invitations.forEach { invitation ->
-                            InvitationItem(
-                                invitation = invitation,
-                                onAccept = { viewModel.respondInvitation(invitation, true) },
-                                onDecline = { viewModel.respondInvitation(invitation, false) }
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = Color.LightGray
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.",
-                                    textAlign = TextAlign.Center,
-                                    color = Color.Gray,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(horizontal = 32.dp)
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Button(onClick = { showCreateGroupDialog = true }) {
-                                    Text("Começar Agora")
-                                }
-                            }
+                        Text(
+                            text = "Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.",
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(onClick = { showCreateGroupDialog = true }) {
+                            Text("Começar Agora")
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GroupItem(
+    groupName: String,
+    isDefault: Boolean = false,
+    participantCount: Int,
+    activeItemsCount: Int,
+    members: List<GroupMember>,
+    isExpanded: Boolean,
+    isSelected: Boolean,
+    onExpandClick: () -> Unit,
+    onMemberClick: (GroupMember) -> Unit,
+    onSelectGroup: () -> Unit,
+    onInviteClick: () -> Unit
+) {
+    val borderColor = if (isSelected) Color(0xFF5CB82E) else Color.Transparent
+    val backgroundColor = MaterialTheme.colorScheme.surface
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        border = if (isSelected) BorderStroke(2.dp, borderColor) else BorderStroke(
+            1.dp,
+            Color.LightGray.copy(alpha = 0.5f)
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 1.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Groups,
+                    contentDescription = null,
+                    tint = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = groupName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (isDefault) {
+                            Text(
+                                text = " (Padrão)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+                    Row {
+                        Text(
+                            text = "$participantCount participantes • $activeItemsCount itens ativos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                if (isSelected) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = "Selecionado",
+                        tint = Color(0xFF5CB82E),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(end = 8.dp)
+                    )
+                }
+
+                IconButton(onClick = onExpandClick) {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (isExpanded) "Recolher" else "Expandir"
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = isExpanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onSelectGroup,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.secondary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                null
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (isSelected) "Ativo" else "Trabalhar")
+                        }
+
+                        Button(
+                            onClick = onInviteClick,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.PersonAdd, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Convidar")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Membros do Grupo",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    members.forEach { member ->
+                        MemberItem(
+                            member = member,
+                            onClick = { onMemberClick(member) }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -494,27 +695,49 @@ fun InvitationItem(
     onDecline: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                alpha = 0.3f
+            )
+        )
     ) {
         ListItem(
-            headlineContent = { Text("${invitation.senderName} convidou você", fontWeight = FontWeight.Bold) },
+            headlineContent = {
+                Text(
+                    "${invitation.senderName} convidou você",
+                    fontWeight = FontWeight.Bold
+                )
+            },
             supportingContent = { Text("Grupo: ${invitation.groupName}") },
             leadingContent = {
                 AsyncImage(
                     model = invitation.senderPhoto,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.Gray),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.Gray),
                     contentScale = ContentScale.Crop
                 )
             },
             trailingContent = {
                 Row {
                     IconButton(onClick = onAccept) {
-                        Icon(Icons.Default.Check, contentDescription = "Aceitar", tint = Color(0xFF4CAF50))
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Aceitar",
+                            tint = Color(0xFF4CAF50)
+                        )
                     }
-                    IconButton(onClick = onDecline) {
-                        Icon(Icons.Default.Close, contentDescription = "Recusar", tint = MaterialTheme.colorScheme.error)
+                    IconButton(onClick = (onDecline)) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Recusar",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             },
@@ -525,7 +748,7 @@ fun InvitationItem(
 
 @Composable
 fun MemberItem(
-    member: com.rogger.bp.ui.groups.presentation.GroupMember,
+    member: GroupMember,
     onClick: () -> Unit
 ) {
     ListItem(
@@ -537,7 +760,7 @@ fun MemberItem(
                 model = member.photoUrl,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(Color.Gray),
                 contentScale = ContentScale.Crop
@@ -546,11 +769,12 @@ fun MemberItem(
         trailingContent = {
             AssistChip(
                 onClick = onClick,
-                label = { Text(member.role) },
+                label = { Text(member.role, fontSize = 10.sp) },
                 colors = AssistChipDefaults.assistChipColors(
                     labelColor = if (member.role == "Admin") MaterialTheme.colorScheme.primary else Color.Gray
                 )
             )
-        }
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
     )
 }

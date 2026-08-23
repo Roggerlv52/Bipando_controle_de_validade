@@ -13,7 +13,8 @@ data class PostGroup(
     var name: String = "",
     var adminId: String = "",
     var shareCode: String = "",
-    var createdAt: Long = 0L
+    var createdAt: Long = 0L,
+    var isDefault: Boolean = false
 ) : Parcelable
 
 @Parcelize

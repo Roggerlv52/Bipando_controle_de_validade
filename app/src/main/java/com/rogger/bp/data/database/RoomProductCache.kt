@@ -48,12 +48,12 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.putAllProducts(categories)
     }
 
-    fun getAllProductsFlow(): Flow<List<PostProduct>> {
-        return productDao.getAllProducts()
+    fun getAllProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getAllProducts(groupId)
     }
 
-    fun getProductsByCategoryFlow(categoryId: String): Flow<List<PostProduct>> {
-        return productDao.getProductsByCategory(categoryId)
+    fun getProductsByCategoryFlow(categoryId: String, groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getProductsByCategory(categoryId, groupId)
     }
 
     suspend fun insertProduct(product: PostProduct) {

@@ -39,6 +39,9 @@ class LoginViewModel(
     fun loginWithGoogle(context: Context, idToken: String) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         val workMode = SharedPreferencesManager.getWorkMode(context)
+        
+        // Reset logging out flag
+        com.rogger.bp.ui.groups.data.GroupRepository.setLoggingOut(false)
 
         viewModelScope.launch {
             loginUseCase.loginWithGoogle(idToken).collect { result ->
@@ -53,20 +56,23 @@ class LoginViewModel(
                     )
                     
                     // Sincroniza dados ANTES de navegar
-                    groupRepository.syncUserGroup(user.uuid)
+                    viewModelScope.launch {
+                        groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
+                        groupRepository.syncUserGroup(user.uuid)
 
-                    val productsSynced = syncProducts(workMode)
-                    val categoriesSynced = syncCategories(workMode)
-                    
-                    // Para economizar recursos, paramos os listeners da tela de login
-                    homeRepository.stopListeningForProducts()
-                    categoryRepository.stopListeningForCategories()
-                    
-                    if (productsSynced && categoriesSynced) {
-                        _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
-                    } else {
-                        // Mesmo que falhe a sync total, permitimos entrar, mas avisamos
-                        _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
+                        val productsSynced = syncProducts(workMode)
+                        val categoriesSynced = syncCategories(workMode)
+                        
+                        // Para economizar recursos, paramos os listeners da tela de login
+                        homeRepository.stopListeningForProducts()
+                        categoryRepository.stopListeningForCategories()
+                        
+                        if (productsSynced && categoriesSynced) {
+                            _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
+                        } else {
+                            // Mesmo que falhe a sync total, permitimos entrar, mas avisamos
+                            _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
+                        }
                     }
                 }.onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }

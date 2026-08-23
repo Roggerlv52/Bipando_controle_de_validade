@@ -27,19 +27,11 @@ class CategoryRepository(
 
     fun isSyncing(): Boolean = categoryListenerRegistration != null
 
-    fun fetchAll(callback: FetchCategoriesCallback, forceRefresh: Boolean = false, workMode: Int = 0) {
-        repositoryScope.launch {
-            // Se for modo grupo, tentamos obter o grupo. Se não existir no DB local ainda, 
-            // aguardamos um breve momento ou tentamos novamente, pois o syncUserGroup pode estar ocorrendo.
-            var activeGroup = groupDao.getGroup()
-            
-            // Pequeno retry-loop para garantir que membros peguem o groupId recém-sincronizado
-            if (workMode == 1 && activeGroup == null) {
-                kotlinx.coroutines.delay(500)
-                activeGroup = groupDao.getGroup()
-            }
+    private fun getEffectiveGroupId(): String = if (currentWorkMode == 1) currentTargetGroupId ?: "" else ""
 
-            val targetGroupId = if (workMode == 1) activeGroup?.groupId else null
+    fun fetchAll(callback: FetchCategoriesCallback, forceRefresh: Boolean = false, workMode: Int = 0, groupId: String? = null) {
+        repositoryScope.launch {
+            val targetGroupId = if (workMode == 1) groupId else null
 
             // Se o modo é GRUPO mas não temos groupId ainda, não inicia fetch individual
             if (workMode == 1 && targetGroupId == null) {
@@ -104,7 +96,7 @@ class CategoryRepository(
         repositoryScope.launch {
             localCache.updateCategory(category)
             // ✅ Sincroniza o nome da categoria nos produtos vinculados no Room
-            productDao.updateCategoryNameInProducts(category.firestoreId, category.name)
+            productDao.updateCategoryNameInProducts(category.firestoreId, category.name, getEffectiveGroupId())
         }
 
         // 2. Envia para o Firestore em segundo plano
@@ -116,7 +108,7 @@ class CategoryRepository(
         repositoryScope.launch {
             localCache.remove(category.firestoreId)
             // ✅ Limpa a referência da categoria nos produtos vinculados no Room
-            productDao.clearCategoryInProducts(category.firestoreId)
+            productDao.clearCategoryInProducts(category.firestoreId, getEffectiveGroupId())
         }
 
         // 2. Remove do Firestore
@@ -147,8 +139,8 @@ class CategoryRepository(
         return localCache.getAllCategoriesFlow()
     }
 
-    fun getCachedCategoriesWithCountsFlow(): Flow<List<PostCategory>> {
-        return localCache.getAllCategoriesFlow().combine(productDao.getAllProducts()) { categories, products ->
+    fun getCachedCategoriesWithCountsFlow(groupId: String): Flow<List<PostCategory>> {
+        return localCache.getAllCategoriesFlow().combine(productDao.getAllProducts(groupId)) { categories, products ->
             // Agrupa os produtos ativos por id de categoria e gera um mapa de contagem rápido
             val countsMap = products.groupingBy { it.categoryId }.eachCount()
 

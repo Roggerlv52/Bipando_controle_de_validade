@@ -12,6 +12,7 @@ import com.google.firebase.firestore.SetOptions
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.image.repository.ImageResolutionRepository
 import com.rogger.bp.ui.commun.NetworkUtils
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import kotlinx.coroutines.Dispatchers
 import android.content.Context
 import kotlinx.coroutines.flow.Flow
@@ -26,14 +27,19 @@ class ProductRepositoryImpl(
 
     private val groupDao = database.groupDao()
 
+    private fun getCurrentGroupId(): String {
+        val workMode = SharedPreferencesManager.getWorkMode(context)
+        return if (workMode == 1) SharedPreferencesManager.getActiveGroupId(context) else ""
+    }
+
     override fun getProducts(): Flow<List<Product>> {
-        return database.productDao().getAllProducts().map { list ->
+        return database.productDao().getAllProducts(getCurrentGroupId()).map { list ->
             list.map { it.toDomain() }
         }
     }
 
     override fun getDeletedProducts(): Flow<List<Product>> {
-        return database.productDao().getDeletedProductsFlow().map { list ->
+        return database.productDao().getDeletedProductsFlow(getCurrentGroupId()).map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -47,13 +53,13 @@ class ProductRepositoryImpl(
     }
 
     override fun getProductsByCategory(categoryId: String): Flow<List<Product>> {
-        return database.productDao().getProductsByCategory(categoryId).map { list ->
+        return database.productDao().getProductsByCategory(categoryId, getCurrentGroupId()).map { list ->
             list.map { it.toDomain() }
         }
     }
 
     override fun searchProducts(query: String): Flow<List<Product>> {
-        return database.productDao().searchAllFields(query).map { list ->
+        return database.productDao().searchAllFields(query, getCurrentGroupId()).map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -112,8 +118,8 @@ class ProductRepositoryImpl(
         }
 
         val workMode = com.rogger.bp.ui.commun.SharedPreferencesManager.getWorkMode(context)
-        val group = groupDao.getGroup()
-        val groupId = if (workMode == 1) (group?.groupId ?: "") else ""
+        val activeGroupId = com.rogger.bp.ui.commun.SharedPreferencesManager.getActiveGroupId(context)
+        val groupId = if (workMode == 1) activeGroupId else ""
 
         val original = database.productDao().getProductByDocId(product.uuid)
         val postProduct = if (original != null) {
@@ -170,9 +176,9 @@ class ProductRepositoryImpl(
             
             // Determina se deve usar groupId baseado no parâmetro do produto ou no modo atual
             val workMode = com.rogger.bp.ui.commun.SharedPreferencesManager.getWorkMode(context)
-            val group = groupDao.getGroup()
+            val activeGroupId = com.rogger.bp.ui.commun.SharedPreferencesManager.getActiveGroupId(context)
             val effectiveGroupId = if (product.groupId.isNotEmpty()) product.groupId 
-                                   else if (workMode == 1) (group?.groupId ?: "") 
+                                   else if (workMode == 1) activeGroupId
                                    else ""
 
             val updates = hashMapOf(
@@ -240,7 +246,7 @@ class ProductRepositoryImpl(
     }
 
     override suspend fun getTotalProductsCount(): Flow<Int> {
-        return database.productDao().getTotalProductsCountLiveData().asFlow()
+        return database.productDao().getTotalProductsCountLiveData(getCurrentGroupId()).asFlow()
     }
 }
 

@@ -176,6 +176,7 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.loadUserInfo(context)
         viewModel.syncAndFetchProducts(context)
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)

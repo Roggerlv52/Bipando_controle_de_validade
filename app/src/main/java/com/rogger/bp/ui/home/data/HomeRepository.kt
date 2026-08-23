@@ -31,17 +31,9 @@ class HomeRepository(
 
     fun isSyncing(): Boolean = productsListenerRegistration != null
 
-    fun fetchAll(callback: FetchProductsCallback, forceRefresh: Boolean = false, workMode: Int = 0) {
+    fun fetchAll(callback: FetchProductsCallback, forceRefresh: Boolean = false, workMode: Int = 0, groupId: String? = null) {
         repositoryScope.launch {
-            var activeGroup = groupDao.getGroup()
-            
-            // Se for modo grupo, aguarda um pouco pelo groupId se estiver nulo (sincronização em curso)
-            if (workMode == 1 && activeGroup == null) {
-                kotlinx.coroutines.delay(500)
-                activeGroup = groupDao.getGroup()
-            }
-
-            val targetGroupId = if (workMode == 1) activeGroup?.groupId else null
+            val targetGroupId = if (workMode == 1) groupId else null
             
             // Se o modo é GRUPO mas não temos groupId ainda, não inicia fetch individual
             if (workMode == 1 && targetGroupId == null) {
@@ -63,7 +55,7 @@ class HomeRepository(
                 currentWorkMode = workMode
 
                 // 1. Mostrar dados do cache local imediatamente
-                localCache.getAllProductsFlow().firstOrNull()?.let { cached ->
+                localCache.getAllProductsFlow(targetGroupId ?: "").firstOrNull()?.let { cached ->
                     if (cached.isNotEmpty()) callback.onSuccess(cached)
                 }
 
@@ -155,11 +147,11 @@ class HomeRepository(
         localCache.deleteProduct(product)
     }
 
-    fun getCachedProductsFlow(): Flow<List<PostProduct>> {
-        return localCache.getAllProductsFlow()
+    fun getCachedProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
+        return localCache.getAllProductsFlow(groupId)
     }
 
-    fun getCachedProductsByCategoryFlow(i: String): Flow<List<PostProduct>> {
-        return localCache.getProductsByCategoryFlow(i)
+    fun getCachedProductsByCategoryFlow(i: String, groupId: String = ""): Flow<List<PostProduct>> {
+        return localCache.getProductsByCategoryFlow(i, groupId)
     }
 }

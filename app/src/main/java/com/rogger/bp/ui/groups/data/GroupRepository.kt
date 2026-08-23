@@ -5,17 +5,32 @@ import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.data.model.PostMember
 import com.rogger.bp.data.model.PostInvitation
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class GroupRepository(
     private val dataSource: GroupDataSource,
     private val groupDao: GroupDao
 ) {
-    fun getLocalGroupFlow(): Flow<PostGroup?> = groupDao.getGroupFlow()
+    companion object {
+        @Volatile
+        private var isSystemLoggingOut = false
+        
+        fun setLoggingOut(value: Boolean) {
+            isSystemLoggingOut = value
+        }
+        
+        fun isLoggingOut(): Boolean = isSystemLoggingOut
+    }
+
+    fun getLocalGroupsFlow(): Flow<List<PostGroup>> = groupDao.getGroupsFlow()
+
+    fun getLocalGroupFlow(): Flow<PostGroup?> = getLocalGroupsFlow().map { it.firstOrNull() }
+
+    suspend fun getGroupById(groupId: String): PostGroup? = groupDao.getGroupById(groupId)
 
     suspend fun createGroup(group: PostGroup, adminMember: PostMember): Result<Unit> {
         val result = dataSource.createGroup(group, adminMember)
         if (result.isSuccess) {
-            groupDao.clearGroup()
             groupDao.insertGroup(group)
         }
         return result
@@ -28,24 +43,18 @@ class GroupRepository(
     suspend fun joinGroup(shareCode: String, member: PostMember): Result<PostGroup> {
         val result = dataSource.joinGroup(shareCode, member)
         result.onSuccess { group ->
-            groupDao.clearGroup()
             groupDao.insertGroup(group)
         }
         return result
     }
 
     suspend fun syncUserGroup(userId: String) {
-        val result = dataSource.fetchUserGroup(userId)
-        result.onSuccess { group ->
-            val currentGroup = groupDao.getGroup()
-            if (group != null) {
-                // Só atualiza se for um grupo diferente ou se houve mudança real
-                if (currentGroup?.groupId != group.groupId || currentGroup.name != group.name || currentGroup.shareCode != group.shareCode) {
-                    groupDao.clearGroup()
-                    groupDao.insertGroup(group)
-                }
-            } else if (currentGroup != null) {
-                // Se o usuário não pertence mais a nenhum grupo, limpa o cache
+        val result = dataSource.fetchUserGroups(userId)
+        result.onSuccess { groups ->
+            if (groups.isNotEmpty()) {
+                groupDao.clearGroup()
+                groupDao.insertGroups(groups)
+            } else {
                 groupDao.clearGroup()
             }
         }
@@ -71,7 +80,6 @@ class GroupRepository(
         val result = dataSource.respondInvitation(invitation, accept)
         result.onSuccess { group ->
             if (group != null) {
-                groupDao.clearGroup()
                 groupDao.insertGroup(group)
             }
         }
@@ -93,13 +101,17 @@ class GroupRepository(
     suspend fun leaveGroup(userId: String, groupId: String): Result<Unit> {
         val result = dataSource.leaveGroup(userId, groupId)
         if (result.isSuccess) {
-            groupDao.clearGroup()
+            groupDao.deleteGroup(groupId)
         }
         return result
     }
 
     suspend fun clearLocalCache() {
         groupDao.clearGroup()
+    }
+
+    suspend fun handleUserLogin(userId: String, userName: String, photoUrl: String): Result<PostGroup> {
+        return dataSource.handleUserLogin(userId, userName, photoUrl)
     }
 
     suspend fun syncUserToGroup(userId: String, groupId: String): Result<Unit> {
@@ -125,7 +137,7 @@ class GroupRepository(
     suspend fun renameGroup(groupId: String, newName: String): Result<Unit> {
         val result = dataSource.renameGroup(groupId, newName)
         if (result.isSuccess) {
-            val currentGroup = groupDao.getGroup()
+            val currentGroup = groupDao.getGroupById(groupId)
             if (currentGroup != null) {
                 groupDao.insertGroup(currentGroup.copy(name = newName))
             }

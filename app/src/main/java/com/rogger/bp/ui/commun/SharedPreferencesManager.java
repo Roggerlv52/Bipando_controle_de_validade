@@ -126,4 +126,43 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPre.getInt("work_mode", 0);
     }
+
+    public static void setActiveGroupId(Context context, String groupId) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.putString("active_group_id", groupId);
+        editor.apply();
+    }
+
+    public static String getActiveGroupId(Context context) {
+        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPre.getString("active_group_id", "");
+    }
+
+    public static void setCachedRole(Context context, String groupId, String role) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.putString("cached_role_" + groupId, role);
+        editor.putLong("cached_role_time_" + groupId, System.currentTimeMillis());
+        editor.apply();
+    }
+
+    public static String getCachedRole(Context context, String groupId) {
+        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        long timestamp = sharedPre.getLong("cached_role_time_" + groupId, 0);
+        long now = System.currentTimeMillis();
+        // TTL de 5 minutos (5 * 60 * 1000 = 300000 ms)
+        if (now - timestamp < 300000) {
+            return sharedPre.getString("cached_role_" + groupId, null);
+        }
+        return null;
+    }
+
+    public static void clearCachedRole(Context context, String groupId) {
+        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedp.edit();
+        editor.remove("cached_role_" + groupId);
+        editor.remove("cached_role_time_" + groupId);
+        editor.apply();
+    }
 }

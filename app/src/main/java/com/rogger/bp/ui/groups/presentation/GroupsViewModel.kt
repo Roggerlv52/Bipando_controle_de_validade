@@ -12,6 +12,9 @@ import com.rogger.bp.ui.groups.data.GroupRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
+import com.rogger.bp.data.dao.ProductDao
+import androidx.lifecycle.asFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 data class GroupMember(
     val id: String = "",
@@ -22,23 +25,29 @@ data class GroupMember(
 
 data class GroupsState(
     val hasGroup: Boolean = false,
+    val groups: List<PostGroup> = emptyList(),
     val groupId: String = "",
     val groupName: String = "",
     val groupCode: String = "",
-    val members: List<GroupMember> = emptyList(),
+    val membersMap: Map<String, List<GroupMember>> = emptyMap(),
     val invitations: List<PostInvitation> = emptyList(),
+    val activeItemsCount: Int = 0,
+    val activeItemsCountMap: Map<String, Int> = emptyMap(),
     val isLoading: Boolean = false,
     val userPhoto: String = "",
     val userName: String = "",
     val userRole: String = "Admin",
+    val workMode: Int = 0, // 0 = Individual, 1 = Grupo
     val showCreateDialog: Boolean = false,
     val showJoinDialog: Boolean = false,
     val error: String? = null
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class GroupsViewModel(
     private val authRepository: AuthRepository,
-    private val groupRepository: GroupRepository
+    private val groupRepository: GroupRepository,
+    private val productDao: ProductDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GroupsState())
@@ -46,24 +55,41 @@ class GroupsViewModel(
 
     init {
         loadInitialData()
-        observeGroup()
+        observeGroups()
         observeInvitations()
     }
 
-    private fun observeGroup() {
-        val currentUser = authRepository.getCurrentUser()
-        groupRepository.getLocalGroupFlow().onEach { group ->
-            if (group != null) {
-                val isCollaborative = group.adminId != currentUser?.uuid || (group.name != "Meu Grupo" && group.name.isNotEmpty())
-                _uiState.update { 
-                    it.copy(
-                        hasGroup = isCollaborative,
-                        groupId = group.groupId,
-                        groupName = group.name,
-                        groupCode = group.shareCode
-                    )
+    private val countJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
+    private fun observeCountForGroup(groupId: String) {
+        if (countJobs.containsKey(groupId)) return
+        
+        countJobs[groupId] = productDao.getActiveProductsCountLiveData(groupId).asFlow()
+            .onEach { count ->
+                _uiState.update { state ->
+                    val newMap = state.activeItemsCountMap.toMutableMap()
+                    newMap[groupId] = count ?: 0
+                    state.copy(activeItemsCountMap = newMap)
                 }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun observeGroups() {
+        groupRepository.getLocalGroupsFlow().onEach { groups ->
+            val isCollaborative = groups.any {
+                it.name != "Home"
+            }
+            _uiState.update { 
+                it.copy(
+                    hasGroup = isCollaborative,
+                    groups = groups
+                )
+            }
+            // Fetch members and count for each group
+            groups.forEach { group ->
                 fetchMembers(group.groupId)
+                observeCountForGroup(group.groupId)
             }
         }.launchIn(viewModelScope)
     }
@@ -82,11 +108,13 @@ class GroupsViewModel(
             result.onSuccess { members ->
                 val myRole = members.find { it.userId == currentUser?.uuid }?.role ?: "Admin"
                 _uiState.update { state ->
+                    val newMap = state.membersMap.toMutableMap()
+                    newMap[groupId] = members.map { 
+                        GroupMember(it.userId, it.name, it.photoUrl, it.role)
+                    }
                     state.copy(
                         userRole = myRole,
-                        members = members.map { 
-                            GroupMember(it.userId, it.name, it.photoUrl, it.role)
-                        }
+                        membersMap = newMap
                     )
                 }
             }
@@ -105,14 +133,26 @@ class GroupsViewModel(
         }
         
         viewModelScope.launch {
-            // Apenas sincroniza o que já existe. Não cria grupo novo aqui.
             groupRepository.syncUserGroup(userId)
             _uiState.update { it.copy(isLoading = false) }
         }
     }
 
+    fun loadWorkMode(context: Context) {
+        val mode = SharedPreferencesManager.getWorkMode(context)
+        val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
+        _uiState.update { it.copy(workMode = mode, groupId = activeGroupId) }
+    }
+
+    fun onWorkModeChange(context: Context, mode: Int, groupId: String = "") {
+        SharedPreferencesManager.setWorkMode(context, mode)
+        if (groupId.isNotEmpty()) {
+            SharedPreferencesManager.setActiveGroupId(context, groupId)
+        }
+        _uiState.update { it.copy(workMode = mode, groupId = if (groupId.isNotEmpty()) groupId else it.groupId) }
+    }
+
     fun createGroup(context: Context, name: String) {
-        android.util.Log.d("GroupsViewModel", "createGroup called with name: $name")
         if (name.isBlank()) {
             _uiState.update { it.copy(error = "O nome do grupo não pode estar vazio") }
             return
@@ -148,8 +188,17 @@ class GroupsViewModel(
         viewModelScope.launch {
             val result = groupRepository.createGroup(newGroup, adminMember)
             if (result.isSuccess) {
-                SharedPreferencesManager.setWorkMode(context, 1) // Ativa modo colaborativo
-                _uiState.update { it.copy(showCreateDialog = false, hasGroup = true) }
+                // Tenta sincronizar dados do usuário para o novo grupo criado
+                val syncResult = groupRepository.syncUserToGroup(user.uuid, groupId)
+                if (syncResult.isSuccess) {
+                    android.util.Log.d("GroupsViewModel", "Data sync to new group successful.")
+                } else {
+                    android.util.Log.e("GroupsViewModel", "Data sync failed: ${syncResult.exceptionOrNull()?.message}")
+                }
+
+                SharedPreferencesManager.setWorkMode(context, 1)
+                SharedPreferencesManager.setActiveGroupId(context, groupId)
+                _uiState.update { it.copy(showCreateDialog = false, hasGroup = true, workMode = 1, groupId = groupId) }
             } else {
                 _uiState.update { it.copy(error = result.exceptionOrNull()?.message) }
             }
@@ -173,9 +222,10 @@ class GroupsViewModel(
 
         viewModelScope.launch {
             val result = groupRepository.joinGroup(code, member)
-            result.onSuccess {
-                SharedPreferencesManager.setWorkMode(context, 1) // Ativa modo colaborativo
-                _uiState.update { it.copy(showJoinDialog = false, hasGroup = true) }
+            result.onSuccess { group ->
+                SharedPreferencesManager.setWorkMode(context, 1)
+                SharedPreferencesManager.setActiveGroupId(context, group.groupId)
+                _uiState.update { it.copy(showJoinDialog = false, hasGroup = true, workMode = 1, groupId = group.groupId) }
             }
             result.onFailure { e ->
                 _uiState.update { it.copy(error = e.message) }
@@ -184,15 +234,15 @@ class GroupsViewModel(
         }
     }
 
-    fun sendInvitation(targetCode: String, role: String) {
+    fun sendInvitation(groupId: String, targetCode: String, role: String) {
         if (targetCode.isBlank()) return
         val user = authRepository.getCurrentUser() ?: return
         val currentState = _uiState.value
+        val group = currentState.groups.find { it.groupId == groupId } ?: return
         
         _uiState.update { it.copy(isLoading = true) }
         
         viewModelScope.launch {
-            // Busca o UID do usuário alvo através do código de convite (shareCode) dele
             val result = groupRepository.findGroupByCode(targetCode.uppercase())
             
             result.onSuccess { targetGroup ->
@@ -200,9 +250,9 @@ class GroupsViewModel(
                     senderId = user.uuid,
                     senderName = user.name,
                     senderPhoto = user.photoUri?.toString() ?: "",
-                    groupId = currentState.groupId,
-                    groupName = currentState.groupName,
-                    targetUid = targetGroup.adminId, // O adminId do grupo alvo é o UID do usuário
+                    groupId = group.groupId,
+                    groupName = group.name,
+                    targetUid = targetGroup.adminId,
                     role = role,
                     status = "pending",
                     createdAt = System.currentTimeMillis()
@@ -223,99 +273,52 @@ class GroupsViewModel(
         }
     }
 
-    fun cancelInvitation(invitation: PostInvitation) {
-        viewModelScope.launch {
-            groupRepository.cancelInvitation(invitation)
-        }
-    }
-
-    fun toggleCreateDialog(show: Boolean) {
-        _uiState.update { it.copy(showCreateDialog = show) }
-    }
-
-    fun inviteUserByEmail(email: String, role: String) {
-        if (email.isBlank()) return
-        
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        
-        viewModelScope.launch {
-            // 1. Buscar usuário pelo e-mail
-            val result = groupRepository.findUserByEmail(email)
-            
-            result.onSuccess { member ->
-                if (member != null) {
-                    // 2. Adicionar ao grupo atual
-                    val group = groupRepository.getLocalGroupFlow().first()
-                    if (group != null) {
-                        val newMember = member.copy(role = role)
-                        val addResult = groupRepository.addMemberToGroup(group.groupId, newMember)
-                        
-                        addResult.onSuccess {
-                            fetchMembers(group.groupId) // Atualiza lista
-                            _uiState.update { it.copy(error = null) }
-                        }.onFailure { e ->
-                            _uiState.update { it.copy(error = e.message) }
-                        }
-                    } else {
-                        _uiState.update { it.copy(error = "Crie um grupo primeiro.") }
-                    }
-                } else {
-                    _uiState.update { it.copy(error = "Nenhum usuário encontrado com este e-mail.") }
-                }
-                _uiState.update { it.copy(isLoading = false) }
-            }.onFailure { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-        }
-    }
-
-    fun updateMemberRole(memberId: String, newRole: String) {
-        val currentState = _uiState.value
-        if (currentState.userRole != "Admin") return
-
+    fun updateMemberRole(groupId: String, memberId: String, newRole: String) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val group = groupRepository.getLocalGroupFlow().first()
-            if (group != null) {
-                val result = groupRepository.updateMemberRole(group.groupId, memberId, newRole)
-                result.onSuccess {
-                    fetchMembers(group.groupId)
-                }
+            val result = groupRepository.updateMemberRole(groupId, memberId, newRole)
+            result.onSuccess {
+                fetchMembers(groupId)
             }
             _uiState.update { it.copy(isLoading = false) }
         }
     }
 
-    fun removeMember(memberId: String) {
-        val currentState = _uiState.value
-        if (currentState.userRole != "Admin") return
-
+    fun removeMember(groupId: String, memberId: String) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val group = groupRepository.getLocalGroupFlow().first()
-            if (group != null) {
-                val result = groupRepository.removeMember(group.groupId, memberId)
-                result.onSuccess {
-                    fetchMembers(group.groupId)
-                }
+            val result = groupRepository.removeMember(groupId, memberId)
+            result.onSuccess {
+                fetchMembers(groupId)
             }
             _uiState.update { it.copy(isLoading = false) }
         }
     }
 
-    fun renameGroup(newName: String) {
-        val currentState = _uiState.value
-        if (currentState.userRole != "Admin") return
+    fun renameGroup(groupId: String, newName: String) {
         if (newName.isBlank()) return
 
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val group = groupRepository.getLocalGroupFlow().first()
-            if (group != null) {
-                val result = groupRepository.renameGroup(group.groupId, newName)
-                result.onSuccess {
-                    // Local Group is updated via flow
+            val result = groupRepository.renameGroup(groupId, newName)
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun leaveGroup(context: Context, groupId: String) {
+        val user = authRepository.getCurrentUser() ?: return
+        
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            val result = groupRepository.leaveGroup(user.uuid, groupId)
+            if (result.isSuccess) {
+                // If there are no more groups, reset work mode
+                val remainingGroups = _uiState.value.groups.filter { it.groupId != groupId }
+                if (remainingGroups.isEmpty() || remainingGroups.all { it.name == "Home" }) {
+                    SharedPreferencesManager.setWorkMode(context, 0)
                 }
+            } else {
+                _uiState.update { it.copy(error = result.exceptionOrNull()?.message) }
             }
             _uiState.update { it.copy(isLoading = false) }
         }

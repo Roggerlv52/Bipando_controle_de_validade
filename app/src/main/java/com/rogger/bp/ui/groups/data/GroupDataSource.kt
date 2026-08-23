@@ -9,7 +9,7 @@ interface GroupDataSource {
     suspend fun createGroup(group: PostGroup, adminMember: PostMember): Result<Unit>
     suspend fun joinGroup(shareCode: String, member: PostMember): Result<PostGroup>
     suspend fun fetchMembers(groupId: String): Result<List<PostMember>>
-    suspend fun fetchUserGroup(userId: String): Result<PostGroup?>
+    suspend fun fetchUserGroups(userId: String): Result<List<PostGroup>>
     suspend fun findGroupByCode(shareCode: String): Result<PostGroup>
     
     // Invitation methods
@@ -26,4 +26,8 @@ interface GroupDataSource {
     suspend fun updateMemberRole(groupId: String, userId: String, newRole: String): Result<Unit>
     suspend fun removeMember(groupId: String, userId: String): Result<Unit>
     suspend fun renameGroup(groupId: String, newName: String): Result<Unit>
+    suspend fun checkGroupNameExists(adminId: String, name: String): Boolean
+    
+    // Novas funcionalidades de migração
+    suspend fun handleUserLogin(userId: String, userName: String, photoUrl: String): Result<PostGroup>
 }
