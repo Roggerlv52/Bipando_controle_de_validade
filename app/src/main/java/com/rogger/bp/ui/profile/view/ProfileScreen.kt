@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -74,23 +75,23 @@ fun ProfileScreen(
     if (showDeleteAccountDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAccountDialog = false },
-            title = { Text("Excluir Conta permanentemente") },
+            title = { Text(stringResource(R.string.profile_delete_account_title)) },
             text = {
                 Column {
                     Text(
-                        text = "ATENÇÃO: Esta ação é irreversível.",
+                        text = stringResource(R.string.profile_delete_warning_header),
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Ao excluir sua conta, todos os seus dados serão apagados definitivamente do nosso sistema:")
+                    Text(stringResource(R.string.profile_delete_warning_body))
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("• Todos os seus produtos e categorias.")
-                    Text("• Todas as imagens de produtos enviadas por você.")
-                    Text("• Seu perfil e configurações de grupo.")
-                    Text("• Status de assinatura Premium.")
+                    Text(stringResource(R.string.profile_delete_item_1))
+                    Text(stringResource(R.string.profile_delete_item_2))
+                    Text(stringResource(R.string.profile_delete_item_3))
+                    Text(stringResource(R.string.profile_delete_item_4))
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Deseja realmente prosseguir com a exclusão total dos seus dados?")
+                    Text(stringResource(R.string.profile_delete_final_question))
                 }
             },
             confirmButton = {
@@ -101,12 +102,12 @@ fun ProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Excluir Tudo")
+                    Text(stringResource(R.string.profile_delete_all_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAccountDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
@@ -152,10 +153,10 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configurações", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -182,7 +183,7 @@ fun ProfileScreen(
             ) {
                 AsyncImage(
                     model = state.userPhotoUrl.ifEmpty { R.drawable.ic_person_24 },
-                    contentDescription = "Foto de perfil",
+                    contentDescription = stringResource(R.string.cd_profile_photo),
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
@@ -221,10 +222,10 @@ fun ProfileScreen(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Seu Código: $personalCode",
+                                text = stringResource(R.string.profile_user_code, personalCode),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -235,7 +236,7 @@ fun ProfileScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Share,
-                                    contentDescription = "Compartilhar Código",
+                                    contentDescription = stringResource(R.string.cd_share_code),
                                     modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -247,33 +248,33 @@ fun ProfileScreen(
 
             PremiumStatusSection(state = state, onPaymentClick = onPaymentClick)
 
-            SettingsSection(title = "Preferências") {
+            SettingsSection(title = stringResource(R.string.profile_preferences)) {
                 Text(
-                    text = "Tipo de Seletor de Data",
+                    text = stringResource(R.string.profile_date_picker_type),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 ThemeOption(
-                    title = "Calendário (Padrão)",
+                    title = stringResource(R.string.profile_date_picker_calendar),
                     selected = state.datePickerType == 0,
                     onClick = { viewModel.onDatePickerTypeChange(context, 0) }
                 )
                 ThemeOption(
-                    title = "Spinner (Rolagem)",
+                    title = stringResource(R.string.profile_date_picker_spinner),
                     selected = state.datePickerType == 1,
                     onClick = { viewModel.onDatePickerTypeChange(context, 1) }
                 )
             }
 
-            SettingsSection(title = "Aparência") {
+            SettingsSection(title = stringResource(R.string.profile_appearance)) {
                 ThemeOption(
-                    title = "Tema Clássico",
+                    title = stringResource(R.string.profile_theme_classic),
                     selected = state.themeType == BipandoThemeType.CLASSIC,
                     onClick = { viewModel.onThemeChange(context, BipandoThemeType.CLASSIC) }
                 )
                 ThemeOption(
-                    title = "Tema Verde",
+                    title = stringResource(R.string.profile_theme_green),
                     selected = state.themeType == BipandoThemeType.GREEN,
                     isPremiumOnly = true,
                     isUserPremium = state.isPremium,
@@ -286,7 +287,7 @@ fun ProfileScreen(
                     }
                 )
                 ThemeOption(
-                    title = "Tema Vermelho",
+                    title = stringResource(R.string.profile_theme_red),
                     selected = state.themeType == BipandoThemeType.RED,
                     isPremiumOnly = true,
                     isUserPremium = state.isPremium,
@@ -299,15 +300,15 @@ fun ProfileScreen(
                     }
                 )
                 ThemeOption(
-                    title = "Tema Noturno",
+                    title = stringResource(R.string.profile_theme_dark),
                     selected = state.themeType == BipandoThemeType.DARK,
                     onClick = { viewModel.onThemeChange(context, BipandoThemeType.DARK) }
                 )
             }
 
-            SettingsSection(title = "Notificações") {
+            SettingsSection(title = stringResource(R.string.profile_notifications)) {
                 SwitchSetting(
-                    title = "Ativar Notificações",
+                    title = stringResource(R.string.profile_enable_notifications),
                     icon = Icons.Default.Notifications,
                     checked = state.isNotificationEnabled,
                     onCheckedChange = { enabled ->
@@ -328,7 +329,7 @@ fun ProfileScreen(
                 if (state.isNotificationEnabled) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Aviso de vencimento: ${state.notificationDays} dias antes",
+                        text = stringResource(R.string.profile_expiry_warning_label, state.notificationDays),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -340,7 +341,7 @@ fun ProfileScreen(
                     )
                     
                     ListItem(
-                        headlineContent = { Text("Horário da Notificação") },
+                        headlineContent = { Text(stringResource(R.string.profile_notification_time)) },
                         trailingContent = { Text(state.notificationTime, fontWeight = FontWeight.Bold) },
                         modifier = Modifier.clickable {
                             val hour = NotificationPrefs.getHour(context)
@@ -352,7 +353,7 @@ fun ProfileScreen(
                     )
 
                     ListItem(
-                        headlineContent = { Text("Som da Notificação") },
+                        headlineContent = { Text(stringResource(R.string.profile_notification_sound)) },
                         supportingContent = { Text(state.soundName) },
                         leadingContent = { Icon(Icons.Default.MusicNote, contentDescription = null) },
                         trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
@@ -361,19 +362,19 @@ fun ProfileScreen(
                 }
             }
 
-            SettingsSection(title = "Sons") {
+            SettingsSection(title = stringResource(R.string.profile_sounds)) {
                 SwitchSetting(
-                    title = "Ativar Bip",
+                    title = stringResource(R.string.profile_enable_beep),
                     icon = Icons.Default.VolumeUp,
                     checked = state.isBeepEnabled,
                     onCheckedChange = { viewModel.onBeepToggle(context, it) }
                 )
             }
 
-            SettingsSection(title = "Gerenciamento") {
+            SettingsSection(title = stringResource(R.string.profile_management)) {
                 ListItem(
-                    headlineContent = { Text("Lixeira") },
-                    supportingContent = { Text("Ver itens removidos") },
+                    headlineContent = { Text(stringResource(R.string.profile_trash)) },
+                    supportingContent = { Text(stringResource(R.string.profile_view_deleted)) },
                     leadingContent = { Icon(Icons.Default.Delete, contentDescription = null) },
                     trailingContent = { 
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -403,13 +404,13 @@ fun ProfileScreen(
             ) {
                 Icon(Icons.Default.DeleteForever, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Excluir Conta")
+                Text(stringResource(R.string.profile_delete_account_button))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Política de Privacidade",
+                text = stringResource(R.string.profile_privacy_policy),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
@@ -455,7 +456,7 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
 
 @Composable
 fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
-    SettingsSection(title = "Uso do Plano") {
+    SettingsSection(title = stringResource(R.string.profile_plan_usage)) {
         if (state.isPremium) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -467,13 +468,13 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Assinante Premium",
+                        text = stringResource(R.string.profile_premium_subscriber),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color(0xFF4CAF50),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Você possui cadastro ilimitado",
+                        text = stringResource(R.string.profile_unlimited_registration),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -487,7 +488,7 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Produtos Cadastrados",
+                        text = stringResource(R.string.profile_registered_products),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -514,8 +515,8 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                 if (state.totalProductsCount >= 90) {
                     Text(
                         text = if (state.totalProductsCount >= 100) 
-                            "Limite atingido! Torne-se Premium para continuar." 
-                            else "Você está atingindo o limite gratuito.",
+                            stringResource(R.string.profile_limit_reached_msg) 
+                            else stringResource(R.string.profile_approaching_limit_msg),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Red,
                         modifier = Modifier.padding(top = 8.dp)
@@ -535,7 +536,7 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                 ) {
                     Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Remover Limites")
+                    Text(stringResource(R.string.profile_remove_limits))
                 }
             }
         }

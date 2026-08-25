@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Edit
 @Composable
 fun <T> SwipeToDeleteContainer(
     item: T,
-    onDelete: (T) -> Unit,
+    onDelete: ((T) -> Unit)? = null,
     onEdit: ((T) -> Unit)? = null,
     animationDuration: Int = 500,
     content: @Composable (T) -> Unit
@@ -27,7 +27,9 @@ fun <T> SwipeToDeleteContainer(
         confirmValueChange = { value ->
             when (value) {
                 SwipeToDismissBoxValue.EndToStart -> {
-                    onDelete(item)
+                    if (onDelete != null) {
+                        onDelete(item)
+                    }
                     false // Retorna false para que o item não suma imediatamente, permitindo a confirmação externa
                 }
                 SwipeToDismissBoxValue.StartToEnd -> {
@@ -45,8 +47,8 @@ fun <T> SwipeToDeleteContainer(
         state = dismissState,
         backgroundContent = {
             val color = when (dismissState.dismissDirection) {
-                SwipeToDismissBoxValue.EndToStart -> Color(0xFFD32F2F) // Vermelho para deletar
-                SwipeToDismissBoxValue.StartToEnd -> Color(0xFF1976D2) // Azul para editar
+                SwipeToDismissBoxValue.EndToStart -> if (onDelete != null) Color(0xFFD32F2F) else Color.Transparent
+                SwipeToDismissBoxValue.StartToEnd -> if (onEdit != null) Color(0xFF1976D2) else Color.Transparent
                 else -> Color.Transparent
             }
 
@@ -57,8 +59,8 @@ fun <T> SwipeToDeleteContainer(
             }
 
             val icon = when (dismissState.dismissDirection) {
-                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                SwipeToDismissBoxValue.EndToStart -> if (onDelete != null) Icons.Default.Delete else null
+                SwipeToDismissBoxValue.StartToEnd -> if (onEdit != null) Icons.Default.Edit else null
                 else -> null
             }
 
@@ -79,6 +81,7 @@ fun <T> SwipeToDeleteContainer(
                 }
             }
         },
+        enableDismissFromEndToStart = onDelete != null,
         enableDismissFromStartToEnd = onEdit != null,
         content = { content(item) }
     )

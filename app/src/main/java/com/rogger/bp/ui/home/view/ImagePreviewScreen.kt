@@ -85,10 +85,13 @@ fun ImagePreviewScreen(
                 val barcodeBitmap = remember(barcode) {
                     try {
                         val barcodeEncoder = BarcodeEncoder()
-                        val format = if (barcode.length == 13 && barcode.all { it.isDigit() })
-                            BarcodeFormat.EAN_13 else BarcodeFormat.CODE_128
+                        val format = if (barcode.length == 13 && barcode.all { it.isDigit() }) {
+                            BarcodeFormat.EAN_13
+                        } else {
+                            BarcodeFormat.CODE_128
+                        }
                         barcodeEncoder.encodeBitmap(barcode, format, 1000, 500)
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }

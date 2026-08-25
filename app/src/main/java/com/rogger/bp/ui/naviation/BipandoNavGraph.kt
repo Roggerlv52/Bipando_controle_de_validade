@@ -110,6 +110,7 @@ fun BipandoNavGraph(navController: NavHostController) {
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return HomeViewModel(
+                            context,
                             homeRepository, 
                             authRepository, 
                             categoryRepository, 
@@ -276,9 +277,7 @@ fun BipandoNavGraph(navController: NavHostController) {
                     initialCategoryId = categoryId,
                     onBackClick = { navController.popBackStack() },
                     onSaveSuccess = {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) { inclusive = true }
-                        }
+                        navController.popBackStack()
                     },
                     onBarcodeClick = { code ->
                         navController.navigate("image_preview?barcode=$code")
@@ -459,9 +458,7 @@ fun BipandoNavGraph(navController: NavHostController) {
                     productUuid = uuid,
                     onBackClick = { navController.popBackStack() },
                     onDeleteSuccess = {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) { inclusive = true }
-                        }
+                        navController.popBackStack()
                     },
                     onBarcodeClick = { barcode ->
                         navController.navigate("image_preview?barcode=$barcode")

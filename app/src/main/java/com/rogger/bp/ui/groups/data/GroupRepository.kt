@@ -7,9 +7,12 @@ import com.rogger.bp.data.model.PostInvitation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+import com.rogger.bp.data.dao.ProductDao
+
 class GroupRepository(
     private val dataSource: GroupDataSource,
-    private val groupDao: GroupDao
+    private val groupDao: GroupDao,
+    private val productDao: ProductDao
 ) {
     companion object {
         @Volatile
@@ -76,14 +79,14 @@ class GroupRepository(
         return dataSource.getGroupInvitationsFlow(groupId)
     }
 
-    suspend fun respondInvitation(invitation: PostInvitation, accept: Boolean): Result<Unit> {
+    suspend fun respondInvitation(invitation: PostInvitation, accept: Boolean): Result<PostGroup?> {
         val result = dataSource.respondInvitation(invitation, accept)
         result.onSuccess { group ->
             if (group != null) {
                 groupDao.insertGroup(group)
             }
         }
-        return if (result.isSuccess) Result.success(Unit) else Result.failure(result.exceptionOrNull()!!)
+        return result
     }
 
     suspend fun cancelInvitation(invitation: PostInvitation): Result<Unit> {
@@ -94,6 +97,14 @@ class GroupRepository(
         val result = dataSource.ensureUserGroupExists(userId, userName, photoUrl)
         result.onSuccess { group ->
             groupDao.insertGroup(group)
+            if (group.isDefault) {
+                // 1. Associa itens locais sem grupo ao grupo padrão no Room
+                productDao.updateIndividualProductsGroupId(group.groupId)
+                
+                // 2. Garante que os dados do usuário estejam no Firestore do Grupo
+                // Isso resolve o problema de produtos que existem na conta mas não no grupo compartilhado
+                syncUserToGroup(userId, group.groupId)
+            }
         }
         return result
     }
@@ -111,7 +122,15 @@ class GroupRepository(
     }
 
     suspend fun handleUserLogin(userId: String, userName: String, photoUrl: String): Result<PostGroup> {
-        return dataSource.handleUserLogin(userId, userName, photoUrl)
+        val result = dataSource.handleUserLogin(userId, userName, photoUrl)
+        result.onSuccess { group ->
+            groupDao.insertGroup(group)
+            if (group.isDefault) {
+                productDao.updateIndividualProductsGroupId(group.groupId)
+                syncUserToGroup(userId, group.groupId)
+            }
+        }
+        return result
     }
 
     suspend fun syncUserToGroup(userId: String, groupId: String): Result<Unit> {

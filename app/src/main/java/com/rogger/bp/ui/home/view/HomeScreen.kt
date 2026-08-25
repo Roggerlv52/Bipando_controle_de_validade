@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
@@ -114,6 +113,13 @@ import com.rogger.bp.ui.home.presentation.HomeViewModel
 import com.rogger.bp.ui.naviation.Routes
 import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.ui.componentes.LoadingDialog
+import com.rogger.bp.ui.home.view.componentes.DrawerHeader
+import com.rogger.bp.ui.home.view.componentes.DrawerItem
+import com.rogger.bp.ui.home.view.componentes.EmptyState
+import com.rogger.bp.ui.home.view.componentes.HomeTopAppBar
+import com.rogger.bp.ui.home.view.componentes.ProductGroupHeader
+import com.rogger.bp.ui.home.view.componentes.ProductItem
+import com.rogger.bp.ui.home.view.componentes.SearchTopAppBar
 import com.rogger.bp.util.CategorySelectionDialog
 import com.rogger.bp.util.DeleteConfirmationDialog
 import com.rogger.bp.util.ShareUtil
@@ -176,8 +182,10 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
+        // Carrega as informações do usuário. O sync de produtos ocorrerá após carregar o perfil ou no init.
         viewModel.loadUserInfo(context)
         viewModel.syncAndFetchProducts(context)
+        
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)
         }
@@ -200,7 +208,7 @@ fun HomeScreen(
                 DrawerHeader(state = state)
                 Spacer(modifier = Modifier.height(8.dp))
                 DrawerItem(
-                    label = "Home",
+                    label = stringResource(R.string.menu_home),
                     icon = Icons.Default.Home,
                     count = state.activeCount,
                     onClick = {
@@ -215,7 +223,7 @@ fun HomeScreen(
                     }
                 )
                 DrawerItem(
-                    label = "Categorias",
+                    label = stringResource(R.string.category),
                     icon = Icons.Default.Category,
                     count = state.categoryCount,
                     onClick = {
@@ -224,7 +232,7 @@ fun HomeScreen(
                     }
                 )
                 DrawerItem(
-                    label = "Perfil",
+                    label = stringResource(R.string.menu_profile),
                     icon = Icons.Default.Person,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -232,7 +240,7 @@ fun HomeScreen(
                     }
                 )
                 DrawerItem(
-                    label = "Premium",
+                    label = stringResource(R.string.menu_premium),
                     icon = Icons.Default.Star,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -240,7 +248,7 @@ fun HomeScreen(
                     }
                 )
                 DrawerItem(
-                    label = "Grupos",
+                    label = stringResource(R.string.menu_groups),
                     icon = Icons.Default.Group,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -249,7 +257,7 @@ fun HomeScreen(
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 DrawerItem(
-                    label = "Compartilhar App",
+                    label = stringResource(R.string.menu_share_app),
                     icon = Icons.Default.Share,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -257,7 +265,7 @@ fun HomeScreen(
                     }
                 )
                 DrawerItem(
-                    label = "Suporte",
+                    label = stringResource(R.string.menu_support),
                     icon = Icons.Default.Email,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -270,6 +278,7 @@ fun HomeScreen(
         HomeScreenContent(
             state = state,
             categories = categories,
+            userRole = state.userRole,
             onProductClick = onProductClick,
             onImageClick = onImageClick,
             onScannerNavigate = onScannerNavigate,
@@ -287,7 +296,7 @@ fun HomeScreen(
             onExportExcel = { viewModel.exportExcel(context) }
         )
 
-        LoadingDialog(isLoading = state.isLoading)
+
 
         if (showVoiceSearchDialog) {
             VoiceSearchDialog(
@@ -300,88 +309,13 @@ fun HomeScreen(
     }
 }
 
-@Composable
-fun DrawerHeader(state: HomeState) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .statusBarsPadding()
-            .height(180.dp)
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .size(64.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(state.userPhoto.ifEmpty { R.drawable.ic_person_24 })
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = state.userName,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-            Text(
-                text = state.userEmail,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                fontSize = 14.sp
-            )
-        }
-    }
-}
-
-@Composable
-fun DrawerItem(
-    label: String,
-    icon: ImageVector,
-    count: Int = 0,
-    onClick: () -> Unit
-) {
-    NavigationDrawerItem(
-        label = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = label)
-                if (count > 0) {
-                    Badge(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
-                        Text(text = if (count > 99) "99+" else count.toString())
-                    }
-                }
-            }
-        },
-        selected = false,
-        onClick = onClick,
-        icon = { Icon(icon, contentDescription = null) },
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-    )
-}
-
 private fun abrirSuporteEmail(context: android.content.Context) {
     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
         data = Uri.parse("mailto:bipandosuporte@gmail.com")
-        putExtra(Intent.EXTRA_SUBJECT, "Suporte Bipando - Sugestões/Dúvidas")
+        putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.support_email_subject))
     }
     try {
-        context.startActivity(Intent.createChooser(emailIntent, "Enviar e-mail de suporte"))
+        context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.support_email_chooser)))
     } catch (_: Exception) {
         // Tratar caso não tenha app de email
     }
@@ -392,6 +326,7 @@ private fun abrirSuporteEmail(context: android.content.Context) {
 fun HomeScreenContent(
     state: HomeState,
     categories: List<PostCategory>,
+    userRole: String = "Admin",
     onProductClick: (Product) -> Unit,
     onImageClick: (String) -> Unit,
     onScannerNavigate: (String, String) -> Unit,
@@ -406,6 +341,7 @@ fun HomeScreenContent(
     onExportPdf: () -> Unit,
     onExportExcel: () -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showCategoryDialog by remember { mutableStateOf(false) }
     var deleteDialogProducts by remember { mutableStateOf<Pair<List<Product>, String>?>(null) }
@@ -484,7 +420,7 @@ fun HomeScreenContent(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar Produto")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_product))
             }
         }
     ) { padding ->
@@ -494,9 +430,13 @@ fun HomeScreenContent(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (state.isFirstLoad || (state.isLoading && state.products.isEmpty())) {
-                // Espaço reservado para o LoadingDialog global
+            // Se estiver carregando pela primeira vez, mostramos apenas o loader centralizado
+            if (state.isLoading && state.products.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else if (isListVisuallyEmpty) {
+                // Estado vazio real (após o carregamento terminar e não houver itens)
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
                     onAddClick = { showCategoryDialog = true }
@@ -520,10 +460,15 @@ fun HomeScreenContent(
                         item {
                             ProductGroupHeader(
                                 daysRemaining = days,
-                                isGroupRemoving,
+                                isGroupRemoving = isGroupRemoving,
                                 yellowWarningLimit = state.yellowWarningDays,
+                                userRole = userRole,
                                 onRemoveGroup = { statusText ->
-                                    deleteDialogProducts = items.map { it.first } to statusText
+                                    if (userRole.equals("Reader", ignoreCase = true)) {
+                                        android.widget.Toast.makeText(context, "Apenas Administradores ou Editores podem remover itens.", android.widget.Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        deleteDialogProducts = items.map { it.first } to statusText
+                                    }
                                 }
                             )
                         }
@@ -554,471 +499,3 @@ fun HomeScreenContent(
     }
 }
 
-@Composable
-fun ProductGroupHeader(
-    daysRemaining: Long,
-    isGroupRemoving : Boolean,
-    yellowWarningLimit: Int,
-    onRemoveGroup: (String) -> Unit
-) {
-    val isDark =
-        MaterialTheme.colorScheme.surface.run { (red * 0.299 + green * 0.587 + blue * 0.114) < 0.5 }
-
-    val (backgroundColor, dotColor, textColor, statusText) = remember(
-        daysRemaining,
-        yellowWarningLimit,
-        isDark
-    ) {
-        val bg: Color
-        val dot: Color
-        val txt: Color
-        val label: String
-
-        when {
-            daysRemaining < 1 -> {
-                // 🔴 Caso A: Vencido / Expired
-                bg = if (isDark) Color(0xFF450A0A) else Color(0xFFFDF2F2)
-                dot = Color(0xFFEF4444)
-                txt = if (isDark) Color(0xFFFECACA) else Color(0xFF991B1B)
-                label = if (daysRemaining == 0L) "Hoje" else "Vencido"
-            }
-
-            daysRemaining <= yellowWarningLimit -> {
-                // 🟠 Caso B: Próximo do vencimento (Laranja/Amarelo)
-                bg = if (isDark) Color(0xFF451A03) else Color(0xFFFFFBEB)
-                dot = Color(0xFFF59E0B)
-                txt = if (isDark) Color(0xFFFED7AA) else Color(0xFF92400E)
-                label = if (daysRemaining == 1L) "Amanhã" else "$daysRemaining dias restantes"
-            }
-
-            else -> {
-                // 🟢 Caso C: Seguro (Verde)
-                bg = if (isDark) Color(0xFF064E3B) else Color(0xFFF0FDF4)
-                dot = Color(0xFF10B981)
-                txt = if (isDark) Color(0xFFD1FAE5) else Color(0xFF065F46)
-                label = "$daysRemaining dias restantes"
-            }
-        }
-        listOf(bg, dot, txt, label)
-    }
-    AnimatedVisibility(
-        visible = !isGroupRemoving,
-        exit = shrinkVertically(
-            animationSpec = tween(600),
-            shrinkTowards = Alignment.Top,
-        ) + fadeOut()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(backgroundColor as Color)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(dotColor as Color)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = statusText as String,
-                    color = textColor as Color,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-
-            IconButton(
-                onClick = { onRemoveGroup(statusText as String) },
-                modifier = Modifier.size(20.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remover Grupo",
-                    tint = (textColor as Color).copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeTopAppBar(
-    title: String,
-    onSearchClick: () -> Unit,
-    onMenuClick: () -> Unit,
-    onLogout: () -> Unit,
-    onExportPdf: () -> Unit,
-    onExportExcel: () -> Unit
-) {
-    var showMenu by remember { mutableStateOf(false) }
-
-    TopAppBar(
-        title = {
-            Text(
-                text = title, 
-                fontWeight = FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu")
-            }
-        },
-        actions = {
-            IconButton(onClick = onSearchClick) {
-                Icon(Icons.Default.Search, contentDescription = "Pesquisar")
-            }
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Mais opções")
-                }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Exportar PDF") },
-                        onClick = {
-                            showMenu = false
-                            onExportPdf()
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.PictureAsPdf,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Exportar Excel") },
-                        onClick = {
-                            showMenu = false
-                            onExportExcel()
-                        },
-                        leadingIcon = { Icon(Icons.Default.TableChart, contentDescription = null) }
-                    )
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("Sair") },
-                        onClick = {
-                            showMenu = false
-                            onLogout()
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-        )
-
-
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchTopAppBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onBarcodeClick: () -> Unit,
-    onVoiceSearchClick: () -> Unit,
-    onCloseClick: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            TextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        "Pesquisar produtos...",
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                    )
-                },
-                singleLine = true,
-                trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onVoiceSearchClick) {
-                            Icon(
-                                imageVector = Icons.Default.Mic,
-                                contentDescription = "Pesquisa por Voz",
-                                modifier = Modifier.size(25.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                        IconButton(onClick = onBarcodeClick) {
-                            AsyncImage(
-                                model = drawable.ic_barcode_scanner_24,
-                                contentDescription = null,
-                                modifier = Modifier.size(25.dp)
-                            )
-                        }
-                    }
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    cursorColor = MaterialTheme.colorScheme.onPrimary,
-                    focusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onCloseClick) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Fechar Pesquisa",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        )
-    )
-}
-
-@Composable
-fun EmptyState(isSearch: Boolean, onAddClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            painter = painterResource(id = if (isSearch) R.drawable.ic_search_24 else R.drawable.lista_vazia),
-            contentDescription = null,
-            modifier = Modifier.size(200.dp)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = if (isSearch) "Nenhum produto encontrado para sua busca." else stringResource(id = R.string.txt_empty_list),
-            textAlign = TextAlign.Center,
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        if (!isSearch) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(
-                onClick = onAddClick,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Adicionar Meu Primeiro Produto")
-            }
-        }
-    }
-}
-
-@Composable
-fun ProductItem(
-    product: Product,
-    isItemVisible: Boolean,
-    showDivider: Boolean,
-    onClick: () -> Unit,
-    onImageClick: () -> Unit
-) {
-    val formattedDate = remember(product.timestamp) {
-        TimeFormatter.formatTimestamp(product.timestamp)
-    }
-
-    val context = LocalContext.current
-    val imageRequest = remember(product.imageUri) {
-        ImageRequest.Builder(context)
-            .data(product.imageUri.ifEmpty { R.drawable.ic_shopping })
-            .size(200, 200) // Tamanho otimizado para thumbnail
-            .precision(Precision.INEXACT) // Maior performance no cache
-            .crossfade(false) // Sem animação para scroll ultra-suave
-            .build()
-    }
-
-    // Só aplica AnimatedVisibility se o item estiver em processo de remoção
-    // Isso reduz a profundidade da árvore de UI durante o scroll normal
-    if (isItemVisible) {
-        ProductItemContent(product, formattedDate, imageRequest, showDivider, onClick, onImageClick)
-    } else {
-        AnimatedVisibility(
-            visible = false,
-            exit = shrinkVertically(
-                animationSpec = tween(500),
-                shrinkTowards = Alignment.Top
-            ) + fadeOut()
-        ) {
-            ProductItemContent(product, formattedDate, imageRequest, showDivider, onClick, onImageClick)
-        }
-    }
-}
-
-@Composable
-private fun ProductItemContent(
-    product: Product,
-    formattedDate: String,
-    imageRequest: ImageRequest,
-    showDivider: Boolean,
-    onClick: () -> Unit,
-    onImageClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top
-        ) {
-            AsyncImage(
-                model = imageRequest,
-                contentDescription = product.name,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .then(
-                        if (product.imageUri.isNotEmpty()) {
-                            Modifier.clickable { onImageClick() }
-                        } else {
-                            Modifier
-                        }
-                    ),
-                contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.ic_shopping),
-                placeholder = painterResource(R.drawable.ic_shopping)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = formattedDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = product.barcode,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    letterSpacing = 1.sp
-                )
-
-                Text(
-                    text = product.categoryName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-
-        if (showDivider) {
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    BipandoTheme {
-        HomeScreenContent(
-            state = HomeState(
-                products = listOf(
-                    Product(
-                        name = "Tirolez Mussarela U lactose 150g",
-                        categoryName = "Queijos",
-                        barcode = "7896030520198",
-                        timestamp = System.currentTimeMillis() - 86400000
-                    ),
-                    Product(
-                        name = "Verde Campo Lacfree Cottage",
-                        categoryName = "Queijos",
-                        barcode = "7898205920239",
-                        timestamp = System.currentTimeMillis() + 86400000 * 13
-                    ),
-                    Product(
-                        name = "Mussarela Búfala Bom Destino 550g",
-                        categoryName = "Queijos",
-                        barcode = "7898130990468",
-                        timestamp = System.currentTimeMillis() + 86400000 * 15
-                    ),
-                    Product(
-                        name = "Seara Bacon Double Smoked 180g",
-                        categoryName = "Embutidos",
-                        barcode = "7894904097296",
-                        timestamp = System.currentTimeMillis() + 86400000 * 15
-                    )
-                ),
-                isLoading = false
-            ),
-            categories = emptyList(),
-            onProductClick = {},
-            onImageClick = {},
-            onScannerNavigate = { _, _ -> },
-            onCategoryClick = {},
-            onMenuClick = {},
-            onSearchQueryChange = {},
-            onToggleSearch = {},
-            onScannerSearch = {},
-            onVoiceSearchClick = {},
-            onDeleteProducts = {},
-            onLogout = {},
-            onExportPdf = {},
-            onExportExcel = {}
-        )
-    }
-}

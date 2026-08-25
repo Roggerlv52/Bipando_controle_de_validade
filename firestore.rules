@@ -3,24 +3,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Funções auxiliares para economizar linhas e melhorar leitura roger
+    // Funções auxiliares
     function isSignedIn() { return request.auth != null; }
-    function isOwner(userId) { return request.auth.uid == userId; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
     function isGroupAdmin(groupId) {
       return get(/databases/$(database)/documents/groups/$(groupId)).data.adminId == request.auth.uid;
     }
+
     function isGroupMember(groupId) {
       return exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
     }
 
-    // 1. Coleção de Usuários
+    // 1. Usuários
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
-
-      match /products/{productId} { allow read, write: if isOwner(userId); }
-      match /category/{categoryId} { allow read, write: if isOwner(userId); }
-      match /productImages/{barcode} { allow read, write: if isOwner(userId); }
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // 2. Grupos
@@ -31,49 +32,60 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if isSignedIn();
-        // Permite escrever se for o admin do grupo ou o próprio usuário (para sair do grupo)
         allow write: if isSignedIn() && (isGroupAdmin(groupId) || isOwner(memberId));
       }
 
       match /products/{productId} {
-        // Permite leitura e escrita se o usuário for membro ou o administrador
-        allow read, write: if isSignedIn() && (isGroupMember(groupId) || isGroupAdmin(groupId));
+        allow read, write: if isSignedIn() && (isGroupAdmin(groupId) || isGroupMember(groupId));
       }
 
       match /category/{categoryId} {
-        allow read, write: if isSignedIn() && (isGroupMember(groupId) || isGroupAdmin(groupId));
+        allow read, write: if isSignedIn() && (isGroupAdmin(groupId) || isGroupMember(groupId));
       }
 
       match /invitations/{invitationId} {
-        // Permite ler/escrever se for o alvo, o remetente ou o admin do grupo
-        allow read, write: if isSignedIn() && (
-          request.auth.uid == resource.data.targetUid ||
-          request.auth.uid == resource.data.senderId ||
+        // Permite ler se for o alvo, remetente ou admin do grupo
+        allow read: if isSignedIn() && (
+          resource.data.targetUid == request.auth.uid ||
+          resource.data.senderId == request.auth.uid ||
+          isGroupAdmin(groupId)
+        );
+
+        // Permite criar se estiver logado.
+        // O app garante que o remetente seja o usuário atual.
+        allow create: if isSignedIn();
+
+        // Permite atualizar se for o alvo ou o admin
+        allow update: if isSignedIn() && (
+          resource.data.targetUid == request.auth.uid ||
+          isGroupAdmin(groupId)
+        );
+
+        allow delete: if isSignedIn() && (
+          resource.data.senderId == request.auth.uid ||
           isGroupAdmin(groupId)
         );
       }
     }
 
-    // 3. Imagens Globais de Produtos
+    // 3. Imagens Globais
     match /imageProdutos/{barcode} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
-      allow update, delete: if false; // Imagens globais são imutáveis
+      allow update, delete: if false;
     }
 
-    // 4. REGRAS PARA COLLECTION GROUP (CONSULTAS GLOBAIS)
+    // 4. COLLECTION GROUP QUERIES
 
     match /{path=**}/invitations/{invitationId} {
       allow read: if isSignedIn() && (
-        request.auth.uid == resource.data.targetUid ||
-        request.auth.uid == resource.data.senderId
+        resource.data.targetUid == request.auth.uid ||
+        resource.data.senderId == request.auth.uid
       );
     }
 
     match /{path=**}/members/{memberId} {
-      allow read: if isSignedIn() && (
-        resource.data.userId == request.auth.uid
-      );
+      allow read: if isSignedIn();
     }
   }
 }

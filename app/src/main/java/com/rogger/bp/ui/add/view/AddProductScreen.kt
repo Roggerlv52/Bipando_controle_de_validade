@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -137,10 +138,10 @@ fun AddProductScreen(
                     TextButton(onClick = {
                         datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
                         showDatePicker = false
-                    }) { Text("Confirmar") }
+                    }) { Text(stringResource(R.string.scanner_confirm)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_button_cancel)) }
                 }
             ) {
                 DatePicker(state = datePickerState)
@@ -151,10 +152,10 @@ fun AddProductScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Novo Produto", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.add_product_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -194,7 +195,7 @@ fun AddProductScreen(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.AddAPhoto, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(40.dp))
-                        Text("Adicionar Foto", color = Color.Gray, fontSize = 12.sp)
+                        Text(stringResource(R.string.add_photo), color = Color.Gray, fontSize = 12.sp)
                     }
                 }
             }
@@ -231,7 +232,7 @@ fun AddProductScreen(
             BipandoTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChange,
-                label = "Nome do Produto",
+                label = stringResource(R.string.edit_hint_name),
                 leadingIcon = Icons.Default.ShoppingBasket
             )
 
@@ -250,7 +251,7 @@ fun AddProductScreen(
                     Icon(Icons.Default.Category, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = state.category?.name ?: "Selecionar Categoria",
+                        text = state.category?.name ?: stringResource(R.string.select_category_hint),
                         modifier = Modifier.weight(1f),
                         color = if (state.category == null) Color.Gray else Color.Unspecified
                     )
@@ -273,7 +274,7 @@ fun AddProductScreen(
                     Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("Data de Vencimento", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(stringResource(R.string.expiration_date_label), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(
                             text = TimeFormatter.formatTimestamp(state.expirationDate),
                             style = MaterialTheme.typography.bodyLarge
@@ -287,14 +288,14 @@ fun AddProductScreen(
             BipandoTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChange,
-                label = "Notas (Opcional)",
+                label = stringResource(R.string.notes_optional_hint),
                 leadingIcon = Icons.Default.Notes
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             BipandoButton(
-                text = "Salvar Produto",
+                text = stringResource(R.string.save_product_button),
                 onClick = viewModel::saveProduct,
                 isLoading = state.isLoading
             )
@@ -316,7 +317,7 @@ fun AddProductScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Selecione uma Categoria", style = MaterialTheme.typography.titleLarge,
+                Text(stringResource(R.string.select_category_title), style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(state.categories) { category ->

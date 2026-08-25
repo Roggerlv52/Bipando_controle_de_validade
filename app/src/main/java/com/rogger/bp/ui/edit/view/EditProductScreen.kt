@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,8 +109,8 @@ fun EditProductScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Excluir Produto") },
-            text = { Text("Deseja realmente excluir \"${state.name}\"?") },
+            title = { Text(stringResource(R.string.delete_product_title)) },
+            text = { Text(stringResource(R.string.delete_product_confirm_msg, state.name)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -119,11 +120,11 @@ fun EditProductScreen(
                     enabled = !state.isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Excluir")
+                    Text(stringResource(R.string.excluir))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }, enabled = !state.isLoading) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !state.isLoading) { Text(stringResource(R.string.dialog_button_cancel)) }
             }
         )
     }
@@ -163,10 +164,10 @@ fun EditProductScreen(
                     TextButton(onClick = {
                         datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
                         showDatePicker = false
-                    }) { Text("Confirmar") }
+                    }) { Text(stringResource(R.string.scanner_confirm)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_button_cancel)) }
                 }
             ) {
                 DatePicker(state = datePickerState)
@@ -178,17 +179,17 @@ fun EditProductScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Editar Produto", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.edit_product_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Delete, 
-                            contentDescription = "Excluir", 
+                            contentDescription = stringResource(R.string.excluir), 
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -266,7 +267,7 @@ fun EditProductScreen(
                 BipandoTextField(
                     value = state.name,
                     onValueChange = viewModel::onNameChange,
-                    label = "Nome do Produto",
+                    label = stringResource(R.string.edit_hint_name),
                     leadingIcon = Icons.Default.ShoppingBasket
                 )
 
@@ -284,7 +285,7 @@ fun EditProductScreen(
                         Icon(Icons.Default.Category, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = state.category?.name ?: "Selecionar Categoria",
+                            text = state.category?.name ?: stringResource(R.string.select_category_hint),
                             modifier = Modifier.weight(1f)
                         )
                         Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -305,7 +306,7 @@ fun EditProductScreen(
                         Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Data de Vencimento", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            Text(stringResource(R.string.expiration_date_label), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             Text(
                                 text = TimeFormatter.formatTimestamp(state.expirationDate),
                                 style = MaterialTheme.typography.bodyLarge
@@ -319,14 +320,14 @@ fun EditProductScreen(
                 BipandoTextField(
                     value = state.note,
                     onValueChange = viewModel::onNoteChange,
-                    label = "Notas",
+                    label = stringResource(R.string.notes_hint),
                     leadingIcon = Icons.AutoMirrored.Filled.Notes
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 BipandoButton(
-                    text = "Salvar Alterações",
+                    text = stringResource(R.string.save_changes_button),
                     onClick = viewModel::saveProduct,
                     isLoading = state.isLoading
                 )
@@ -337,7 +338,7 @@ fun EditProductScreen(
     if (showCategoryPicker) {
         ModalBottomSheet(onDismissRequest = { showCategoryPicker = false }) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("Selecione uma Categoria", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(R.string.select_category_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(state.categories) { category ->
                         ListItem(

@@ -69,11 +69,7 @@ class ProfileViewModel(
     }
 
     private fun observeProductCount() {
-        uiState.map { it.groupId }
-            .distinctUntilChanged()
-            .flatMapLatest { groupId ->
-                productDao.getTotalProductsCountLiveData(groupId).asFlow()
-            }
+        productDao.getGlobalTotalProductsCountLiveData().asFlow()
             .onEach { count ->
                 _uiState.update { it.copy(totalProductsCount = count ?: 0) }
             }

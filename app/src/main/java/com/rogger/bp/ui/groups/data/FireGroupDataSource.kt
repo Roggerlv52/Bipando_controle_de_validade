@@ -75,6 +75,8 @@ class FireGroupDataSource : GroupDataSource {
     override suspend fun fetchUserGroups(userId: String): Result<List<PostGroup>> {
         return try {
             coroutineScope {
+                Log.d(TAG, "fetchUserGroups started for: $userId (Current auth: ${FirebaseAuth.getInstance().currentUser?.uid})")
+                
                 // 1. Busca onde o usuário é o admin
                 val adminQueryTask = async {
                     db.collection("groups").whereEqualTo("adminId", userId).get().await()
@@ -85,24 +87,42 @@ class FireGroupDataSource : GroupDataSource {
                     db.collectionGroup("members").whereEqualTo("userId", userId).get().await()
                 }
 
-                val adminSnapshot = adminQueryTask.await()
-                val memberSnapshot = memberQueryTask.await()
+                val adminSnapshot = try { 
+                    adminQueryTask.await() 
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in adminQueryTask: ${e.message}")
+                    throw e
+                }
+                
+                val memberSnapshot = try { 
+                    memberQueryTask.await() 
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in memberQueryTask: ${e.message}")
+                    throw e
+                }
 
                 val groups = adminSnapshot.toObjects(PostGroup::class.java).toMutableList()
+                Log.d(TAG, "Found ${groups.size} groups as admin")
 
                 // Busca os documentos de grupo para as participações como membro em paralelo
                 val memberGroups = memberSnapshot.documents.map { doc ->
                     async {
-                        val groupDocRef = doc.reference.parent.parent
-                        if (groupDocRef != null) {
-                            val groupDoc = groupDocRef.get().await()
-                            val group = groupDoc.toObject(PostGroup::class.java)
-                            // Adiciona se não for admin (para não duplicar) e for válido
-                            if (group != null && group.adminId != userId) group else null
-                        } else null
+                        try {
+                            val groupDocRef = doc.reference.parent.parent
+                            if (groupDocRef != null) {
+                                val groupDoc = groupDocRef.get().await()
+                                val group = groupDoc.toObject(PostGroup::class.java)
+                                // Adiciona se não for admin (para não duplicar) e for válido
+                                if (group != null && group.adminId != userId) group else null
+                            } else null
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error fetching group doc from member ref: ${e.message}")
+                            null
+                        }
                     }
                 }.awaitAll().filterNotNull()
 
+                Log.d(TAG, "Found ${memberGroups.size} groups as member")
                 groups.addAll(memberGroups)
                 Result.success(groups.distinctBy { it.groupId })
             }
@@ -126,7 +146,8 @@ class FireGroupDataSource : GroupDataSource {
             val groupQuery = db.collection("groups").whereEqualTo("shareCode", code).get().await()
             
             if (!groupQuery.isEmpty) {
-                Result.success(groupQuery.documents.first().toObject(PostGroup::class.java)!!)
+                val group = groupQuery.documents.first().toObject(PostGroup::class.java)!!
+                Result.success(group)
             } else {
                 val userQuery = db.collection("users").whereEqualTo("shareCode", code).get().await()
                 if (userQuery.isEmpty) {
@@ -135,10 +156,15 @@ class FireGroupDataSource : GroupDataSource {
                     val userDoc = userQuery.documents.first()
                     val targetUid = userDoc.id
                     val name = userDoc.getString("name") ?: "Grupo"
-                    val photoUrl = userDoc.getString("photoUrl") ?: ""
                     
-                    // PROBLEMA 4 — Corrigido: Busca ou cria um grupo real vinculado a esse usuário
-                    ensureUserGroupExists(targetUid, name, photoUrl)
+                    Log.d(TAG, "User found by code, but no group document yet. Returning placeholder for targetUid: $targetUid")
+                    // Retorna um placeholder com o adminId correto para que o convite possa ser enviado.
+                    // O usuário alvo criará seu próprio grupo "Home" ao fazer login.
+                    Result.success(PostGroup(
+                        groupId = "placeholder",
+                        adminId = targetUid,
+                        name = name
+                    ))
                 }
             }
         } catch (e: Exception) {
@@ -155,11 +181,15 @@ class FireGroupDataSource : GroupDataSource {
             val id = db.collection("groups").document(groupId).collection("invitations").document().id
             val inv = invitation.copy(id = id, createdAt = System.currentTimeMillis())
             
+            Log.d(TAG, "Sending invitation: id=$id, group=$groupId, sender=${inv.senderId}, target=${inv.targetUid}")
+            
             db.collection("groups").document(groupId)
                 .collection("invitations").document(id).set(inv).await()
                 
+            Log.d(TAG, "Invitation sent successfully to Firestore")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error sending invitation: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -171,25 +201,30 @@ class FireGroupDataSource : GroupDataSource {
      * Campos: targetUid (Ascending), status (Ascending)
      */
     override fun getInvitationsFlow(userId: String): Flow<List<PostInvitation>> = callbackFlow {
+        Log.d(TAG, "getInvitationsFlow started for userId: $userId")
         val registration = db.collectionGroup("invitations")
             .whereEqualTo("targetUid", userId)
             .whereEqualTo("status", "pending")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    // Ignora erro de permissão se for durante logout ou deleção de conta
                     val isLoggingOut = GroupRepository.isLoggingOut()
-                    if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED || isLoggingOut) {
-                        Log.d(TAG, "Listener de convites interrompido ou sem permissão (isLoggingOut=$isLoggingOut).")
+                    if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        Log.e(TAG, "PERMISSION_DENIED in getInvitationsFlow. Check firestore.rules and indexes. (isLoggingOut=$isLoggingOut)")
                     } else {
-                        Log.e(TAG, "Erro no listener de convites: ${error.message}")
+                        Log.e(TAG, "Error in getInvitationsFlow listener: ${error.message}", error)
                     }
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    trySend(snapshot.toObjects(PostInvitation::class.java))
+                    val invites = snapshot.toObjects(PostInvitation::class.java)
+                    Log.d(TAG, "getInvitationsFlow: received ${invites.size} invitations")
+                    trySend(invites)
                 }
             }
-        awaitClose { registration.remove() }
+        awaitClose { 
+            Log.d(TAG, "getInvitationsFlow: closing listener")
+            registration.remove() 
+        }
     }
 
     override fun getGroupInvitationsFlow(groupId: String): Flow<List<PostInvitation>> = callbackFlow {
@@ -355,13 +390,6 @@ class FireGroupDataSource : GroupDataSource {
     override suspend fun syncUserProductsToGroup(userId: String, groupId: String): Result<Unit> {
         return try {
             Log.d(TAG, "Starting syncUserProductsToGroup. User: $userId, Group: $groupId")
-            
-            // Verifica se o grupo já tem produtos
-            val existingProducts = db.collection("groups").document(groupId).collection("products").limit(1).get().await()
-            if (!existingProducts.isEmpty) {
-                Log.d(TAG, "Sync skipped: Group already has products (Found ${existingProducts.size()}).")
-                return Result.success(Unit)
-            }
             
             val userProducts = db.collection("users").document(userId).collection("products").get().await()
             val userCategories = db.collection("users").document(userId).collection("category").get().await()

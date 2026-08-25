@@ -43,6 +43,9 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products WHERE groupId = :groupId")
     fun getTotalProductsCountLiveData(groupId: String): androidx.lifecycle.LiveData<Int>
 
+    @Query("SELECT COUNT(*) FROM products")
+    fun getGlobalTotalProductsCountLiveData(): androidx.lifecycle.LiveData<Int>
+
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     suspend fun removeProduct(key: String)
 
@@ -57,6 +60,9 @@ interface ProductDao {
 
     @Query("DELETE FROM products WHERE groupId = :groupId")
     suspend fun clearProductsByGroup(groupId: String)
+
+    @Query("UPDATE products SET groupId = :newGroupId WHERE groupId = '' OR groupId IS NULL")
+    suspend fun updateIndividualProductsGroupId(newGroupId: String)
 
     // 👉 Consulta reativa de produtos ativos (Home)
     @Query("SELECT COUNT(*) FROM products WHERE deleted = 0 AND groupId = :groupId")
@@ -107,6 +113,12 @@ interface ProductDao {
     @Transaction
     suspend fun replaceAllProducts(products: List<PostProduct>) {
         clearAllProducts()
+        insertAllProducts(products)
+    }
+
+    @Transaction
+    suspend fun replaceAllProductsByGroup(groupId: String, products: List<PostProduct>) {
+        clearProductsByGroup(groupId)
         insertAllProducts(products)
     }
 }

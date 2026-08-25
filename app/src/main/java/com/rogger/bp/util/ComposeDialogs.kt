@@ -41,7 +41,7 @@ fun CategorySelectionDialog(
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (categories.isEmpty()) {
                     Text(
-                        text = "Nenhuma categoria encontrada.",
+                        text = stringResource(R.string.dialog_no_category_found),
                         modifier = Modifier.padding(vertical = 16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -78,7 +78,7 @@ fun CategorySelectionDialog(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Criar Nova Categoria")
+                    Text(stringResource(R.string.dialog_create_new_category))
                 }
             }
         },
@@ -138,7 +138,7 @@ fun DeleteConfirmationDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePickerBottomSheet(
-    title: String = "Selecionar Imagem",
+    title: String = stringResource(R.string.dialog_select_image_title),
     onDismiss: () -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit
@@ -182,13 +182,13 @@ fun ImagePickerBottomSheet(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Default.CameraAlt,
-                                contentDescription = "Câmera",
+                                contentDescription = stringResource(R.string.dialog_camera),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Câmera", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.dialog_camera), style = MaterialTheme.typography.bodyMedium)
                 }
 
                 Column(
@@ -208,13 +208,13 @@ fun ImagePickerBottomSheet(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Default.PhotoLibrary,
-                                contentDescription = "Galeria",
+                                contentDescription = stringResource(R.string.dialog_gallery),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Galeria", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.dialog_gallery), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

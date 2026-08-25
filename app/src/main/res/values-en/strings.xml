@@ -199,4 +199,106 @@ lost and when you create your account again using the same email, you will need 
     <string name="days_remaining">Days left</string>
     <string name="share_pdf_report">Share PDF Report:</string>
 
+    <string name="menu_profile">Profile</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_groups">Groups</string>
+    <string name="menu_share_app">Share App</string>
+    <string name="menu_support">Support</string>
+    <string name="support_email_subject">Bipando Support - Suggestions/Questions</string>
+    <string name="support_email_chooser">Send support email</string>
+    <string name="cd_remove_group">Remove Group</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_more_options">More options</string>
+    <string name="menu_export_pdf">Export PDF</string>
+    <string name="menu_export_excel">Export Excel</string>
+    <string name="search_products_placeholder">Search products...</string>
+    <string name="cd_voice_search">Voice Search</string>
+    <string name="cd_close_search">Close Search</string>
+    <string name="search_no_results">No products found for your search.</string>
+    <string name="add_first_product">Add My First Product</string>
+    <string name="status_today">Today</string>
+
+    <string name="login_network_error">Connection failed. Please check your internet and try again.</string>
+    <string name="login_welcome">Welcome to Bipando</string>
+    <string name="login_continue">Sign in to continue</string>
+    <string name="cd_logo_bipando">Bipando Logo</string>
+
+    <string name="scanner_manual_title">Enter Code Manually</string>
+    <string name="scanner_manual_hint">Barcode</string>
+    <string name="scanner_manual_error">Enter at least 4 digits</string>
+    <string name="scanner_confirm">Confirm</string>
+    <string name="scanner_bipando">Bipando</string>
+    <string name="scanner_subtitle">BUY AND SELL</string>
+    <string name="scanner_permission_needed">Camera permission is required to scan.</string>
+    <string name="scanner_grant_permission">Grant Permission</string>
+    <string name="cd_back">Back</string>
+
+    <string name="add_product_title">New Product</string>
+    <string name="edit_product_title">Edit Product</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="select_category_hint">Select Category</string>
+    <string name="expiration_date_label">Expiration Date</string>
+    <string name="notes_optional_hint">Notes (Optional)</string>
+    <string name="notes_hint">Notes</string>
+    <string name="save_product_button">Save Product</string>
+    <string name="save_changes_button">Save Changes</string>
+    <string name="select_category_title">Select a Category</string>
+    <string name="cd_add_photo">Add Photo</string>
+
+    <string name="delete_product_title">Delete Product</string>
+    <string name="delete_product_confirm_msg">Do you really want to delete \"%1$s\"?</string>
+
+    <string name="cd_close">Close</string>
+    <string name="status_active_caps">ACTIVE</string>
+
+    <string name="profile_delete_account_title">Delete account permanently</string>
+    <string name="profile_delete_warning_header">WARNING: This action is irreversible.</string>
+    <string name="profile_delete_warning_body">By deleting your account, all your data will be permanently deleted from our system:</string>
+    <string name="profile_delete_item_1">• All your products and categories.</string>
+    <string name="profile_delete_item_2">• All product images uploaded by you.</string>
+    <string name="profile_delete_item_3">• Your profile and group settings.</string>
+    <string name="profile_delete_item_4">• Premium subscription status.</string>
+    <string name="profile_delete_final_question">Do you really want to proceed with the total deletion of your data?</string>
+    <string name="profile_delete_all_button">Delete Everything</string>
+    <string name="profile_title">Settings</string>
+    <string name="cd_profile_photo">Profile picture</string>
+    <string name="profile_user_code">Your Code: %1$s</string>
+    <string name="cd_share_code">Share Code</string>
+    <string name="profile_preferences">Preferences</string>
+    <string name="profile_date_picker_type">Date Picker Type</string>
+    <string name="profile_date_picker_calendar">Calendar (Default)</string>
+    <string name="profile_date_picker_spinner">Spinner (Scroll)</string>
+    <string name="profile_appearance">Appearance</string>
+    <string name="profile_theme_classic">Classic Theme</string>
+    <string name="profile_theme_green">Green Theme</string>
+    <string name="profile_theme_red">Red Theme</string>
+    <string name="profile_theme_dark">Dark Theme</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_enable_notifications">Enable Notifications</string>
+    <string name="profile_expiry_warning_label">Expiration warning: %1$d days before</string>
+    <string name="profile_notification_time">Notification Time</string>
+    <string name="profile_notification_sound">Notification Sound</string>
+    <string name="profile_sounds">Sounds</string>
+    <string name="profile_enable_beep">Enable Beep</string>
+    <string name="profile_management">Management</string>
+    <string name="profile_trash">Trash</string>
+    <string name="profile_view_deleted">View deleted items</string>
+    <string name="profile_delete_account_button">Delete Account</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_plan_usage">Plan Usage</string>
+    <string name="profile_premium_subscriber">Premium Subscriber</string>
+    <string name="profile_unlimited_registration">You have unlimited registration</string>
+    <string name="profile_registered_products">Registered Products</string>
+    <string name="profile_limit_reached_msg">Limit reached! Become Premium to continue.</string>
+    <string name="profile_approaching_limit_msg">You are reaching the free limit.</string>
+    <string name="profile_remove_limits">Remove Limits</string>
+    <string name="cd_copy">Copy</string>
+
+    <string name="dialog_no_category_found">No category found.</string>
+    <string name="dialog_create_new_category">Create New Category</string>
+    <string name="dialog_select_image_title">Select Image</string>
+    <string name="dialog_camera">Camera</string>
+    <string name="dialog_gallery">Gallery</string>
+
 </resources>

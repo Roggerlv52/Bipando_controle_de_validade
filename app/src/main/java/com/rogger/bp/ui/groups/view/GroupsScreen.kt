@@ -49,8 +49,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -80,6 +82,8 @@ import com.rogger.bp.ui.componentes.BipandoTextField
 import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
 import com.rogger.bp.ui.groups.presentation.GroupMember
 import com.rogger.bp.ui.groups.presentation.GroupsViewModel
+import com.rogger.bp.ui.groups.view.componentes.GroupItem
+import com.rogger.bp.ui.groups.view.componentes.InvitationItem
 import com.rogger.bp.util.InvitationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,8 +128,8 @@ fun GroupsScreen(
     state.invitations.firstOrNull()?.let { invitation ->
         InvitationDialog(
             invitation = invitation,
-            onAccept = { viewModel.respondInvitation(invitation, true) },
-            onDecline = { viewModel.respondInvitation(invitation, false) }
+            onAccept = { viewModel.respondInvitation(context, invitation, true) },
+            onDecline = { viewModel.respondInvitation(context, invitation, false) }
         )
     }
 
@@ -398,34 +402,44 @@ fun GroupsScreen(
             )
         }
     ) { padding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = state.isLoading,
+            onRefresh = { viewModel.refreshGroups() },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(padding)
         ) {
-            if (state.isLoading && state.groups.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (state.groups.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.groups, key = { it.groupId }) { group ->
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (state.isLoading && state.groups.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (state.groups.isNotEmpty() || state.invitations.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(state.groups, key = { it.groupId }) { group ->
                         val members = state.membersMap[group.groupId] ?: emptyList()
-                        val canSwipe = !group.isDefault
+                        val admin = members.find { it.role == "Admin" }?.name ?: ""
 
-
-                        if (!canSwipe) {
+                        SwipeToDeleteContainer(
+                            item = group,
+                            onDelete = if (!group.isDefault) { { groupToLeave = it } } else null,
+                            onEdit = { groupToEdit = it }
+                        ) {
                             GroupItem(
                                 groupName = group.name,
                                 isDefault = group.isDefault,
                                 participantCount = members.size,
-                                activeItemsCount = state.activeItemsCountMap[group.groupId] ?: 0,
+                                activeItemsCount = state.activeItemsCountMap[group.groupId]
+                                    ?: 0,
                                 members = members,
+                                adminName = admin,
                                 isExpanded = expandedGroupId == group.groupId,
                                 isSelected = state.workMode == 1 && state.groupId == group.groupId,
                                 onExpandClick = {
@@ -442,38 +456,6 @@ fun GroupsScreen(
                                 },
                                 onInviteClick = { groupToInvite = group }
                             )
-                        } else {
-
-
-                            SwipeToDeleteContainer(
-                                item = group,
-                                onDelete = { if (canSwipe) groupToLeave = it },
-                                onEdit = { if (canSwipe) groupToEdit = it }
-                            ) {
-                                GroupItem(
-                                    groupName = group.name,
-                                    isDefault = group.isDefault,
-                                    participantCount = members.size,
-                                    activeItemsCount = state.activeItemsCountMap[group.groupId]
-                                        ?: 0,
-                                    members = members,
-                                    isExpanded = expandedGroupId == group.groupId,
-                                    isSelected = state.workMode == 1 && state.groupId == group.groupId,
-                                    onExpandClick = {
-                                        expandedGroupId =
-                                            if (expandedGroupId == group.groupId) null else group.groupId
-                                    },
-                                    onMemberClick = { member ->
-                                        if (state.userRole == "Admin") {
-                                            memberToManage = group.groupId to member
-                                        }
-                                    },
-                                    onSelectGroup = {
-                                        viewModel.onWorkModeChange(context, 1, group.groupId)
-                                    },
-                                    onInviteClick = { groupToInvite = group }
-                                )
-                            }
                         }
                     }
                     if (state.invitations.isNotEmpty()) {
@@ -489,310 +471,62 @@ fun GroupsScreen(
                         items(state.invitations) { invitation ->
                             InvitationItem(
                                 invitation = invitation,
-                                onAccept = { viewModel.respondInvitation(invitation, true) },
-                                onDecline = { viewModel.respondInvitation(invitation, false) }
+                                onAccept = { viewModel.respondInvitation(context, invitation, true) },
+                                onDecline = { viewModel.respondInvitation(context, invitation, false) }
                             )
                         }
                     }
                 }
             } else {
-                // Estado vazio ou erro
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    if (state.error != null && state.groups.isEmpty()) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(80.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Ocorreu um erro ao carregar seus grupos.\n\n${state.error}",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(onClick = { viewModel.refreshGroups() }) {
-                            Text("Tentar Novamente")
-                        }
-                    } else if (state.invitations.isNotEmpty()) {
-                        // ... similar list code
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Group,
-                            contentDescription = null,
-                            modifier = Modifier.size(80.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.",
-                            textAlign = TextAlign.Center,
-                            color = Color.Gray,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(onClick = { showCreateGroupDialog = true }) {
-                            Text("Começar Agora")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun GroupItem(
-    groupName: String,
-    isDefault: Boolean = false,
-    participantCount: Int,
-    activeItemsCount: Int,
-    members: List<GroupMember>,
-    isExpanded: Boolean,
-    isSelected: Boolean,
-    onExpandClick: () -> Unit,
-    onMemberClick: (GroupMember) -> Unit,
-    onSelectGroup: () -> Unit,
-    onInviteClick: () -> Unit
-) {
-    val borderColor = if (isSelected) Color(0xFF5CB82E) else Color.Transparent
-    val backgroundColor = MaterialTheme.colorScheme.surface
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        border = if (isSelected) BorderStroke(2.dp, borderColor) else BorderStroke(
-            1.dp,
-            Color.LightGray.copy(alpha = 0.5f)
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 1.dp)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Groups,
-                    contentDescription = null,
-                    tint = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = groupName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (isDefault) {
-                            Text(
-                                text = " (Padrão)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
-                        }
-                    }
-                    Row {
-                        Text(
-                            text = "$participantCount participantes • $activeItemsCount itens ativos",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                if (isSelected) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = "Selecionado",
-                        tint = Color(0xFF5CB82E),
+                    // Estado vazio ou erro
+                    Column(
                         modifier = Modifier
-                            .size(24.dp)
-                            .padding(end = 8.dp)
-                    )
-                }
-
-                IconButton(onClick = onExpandClick) {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Recolher" else "Expandir"
-                    )
-                }
-            }
-
-            AnimatedVisibility(visible = isExpanded) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Button(
-                            onClick = onSelectGroup,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.secondary,
-                                contentColor = Color.White
-                            )
-                        ) {
+                        if (state.error != null && state.groups.isEmpty()) {
                             Icon(
-                                if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                null
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null,
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(if (isSelected) "Ativo" else "Trabalhar")
-                        }
-
-                        Button(
-                            onClick = onInviteClick,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Ocorreu um erro ao carregar seus grupos.\n\n${state.error}",
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyLarge
                             )
-                        ) {
-                            Icon(Icons.Default.PersonAdd, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Convidar")
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(onClick = { viewModel.refreshGroups() }) {
+                                Text("Tentar Novamente")
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Group,
+                                contentDescription = null,
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.",
+                                textAlign = TextAlign.Center,
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(horizontal = 32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(onClick = { showCreateGroupDialog = true }) {
+                                Text("Começar Agora")
+                            }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Membros do Grupo",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    members.forEach { member ->
-                        MemberItem(
-                            member = member,
-                            onClick = { onMemberClick(member) }
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
     }
-}
-
-@Composable
-fun InvitationItem(
-    invitation: com.rogger.bp.data.model.PostInvitation,
-    onAccept: () -> Unit,
-    onDecline: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                alpha = 0.3f
-            )
-        )
-    ) {
-        ListItem(
-            headlineContent = {
-                Text(
-                    "${invitation.senderName} convidou você",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            supportingContent = { Text("Grupo: ${invitation.groupName}") },
-            leadingContent = {
-                AsyncImage(
-                    model = invitation.senderPhoto,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray),
-                    contentScale = ContentScale.Crop
-                )
-            },
-            trailingContent = {
-                Row {
-                    IconButton(onClick = onAccept) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = "Aceitar",
-                            tint = Color(0xFF4CAF50)
-                        )
-                    }
-                    IconButton(onClick = (onDecline)) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Recusar",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-        )
-    }
-}
-
-@Composable
-fun MemberItem(
-    member: GroupMember,
-    onClick: () -> Unit
-) {
-    ListItem(
-        headlineContent = { Text(member.name, fontWeight = FontWeight.Bold) },
-        supportingContent = { Text(if (member.role == "Admin") "Administrador" else if (member.role == "Editor") "Editor" else "Leitor") },
-        modifier = Modifier.clickable(onClick = onClick),
-        leadingContent = {
-            AsyncImage(
-                model = member.photoUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray),
-                contentScale = ContentScale.Crop
-            )
-        },
-        trailingContent = {
-            AssistChip(
-                onClick = onClick,
-                label = { Text(member.role, fontSize = 10.sp) },
-                colors = AssistChipDefaults.assistChipColors(
-                    labelColor = if (member.role == "Admin") MaterialTheme.colorScheme.primary else Color.Gray
-                )
-            )
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    )
 }

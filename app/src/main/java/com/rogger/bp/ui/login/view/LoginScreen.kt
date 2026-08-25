@@ -69,7 +69,7 @@ fun LoginScreen(
                 val errorMsg = if (msg.contains("network", ignoreCase = true) || 
                     msg.contains("conexão", ignoreCase = true) || 
                     msg.contains("unavailable", ignoreCase = true)) {
-                    "Falha na conexão. Por favor, verifique sua internet e tente novamente."
+                    context.getString(R.string.login_network_error)
                 } else {
                     msg
                 }
@@ -165,7 +165,7 @@ fun LoginScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.bipando_smoll),
-                            contentDescription = "Logo Bipando",
+                            contentDescription = stringResource(R.string.cd_logo_bipando),
                             modifier = Modifier.size(280.dp)
                         )
 
@@ -185,7 +185,7 @@ fun LoginScreen(
 
                     // Mensagens de Boas-vindas
                     Text(
-                        text = "Bem-vindo ao Bipando",
+                        text = stringResource(R.string.login_welcome),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -195,7 +195,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Faça login para continuar",
+                        text = stringResource(R.string.login_continue),
                         fontSize = 16.sp,
                         color = Color.White.copy(alpha = 0.85f),
                         textAlign = TextAlign.Center

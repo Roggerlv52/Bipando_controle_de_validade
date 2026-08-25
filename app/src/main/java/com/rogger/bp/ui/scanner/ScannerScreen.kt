@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.painterResource
@@ -80,15 +81,15 @@ fun ScannerScreen(
         var manualBarcode by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showManualEntryDialog = false },
-            title = { Text("Digitar Código Manualmente") },
+            title = { Text(stringResource(R.string.scanner_manual_title)) },
             text = {
                 OutlinedTextField(
                     value = manualBarcode,
                     onValueChange = { manualBarcode = it },
-                    label = { Text("Código de Barras") },
+                    label = { Text(stringResource(R.string.scanner_manual_hint)) },
                     supportingText = {
                         if (manualBarcode.isNotEmpty() && manualBarcode.length < 4) {
-                            Text("Digite ao menos 4 dígitos", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.scanner_manual_error), color = MaterialTheme.colorScheme.error)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -110,12 +111,12 @@ fun ScannerScreen(
                     },
                     enabled = isValid
                 ) {
-                    Text("Confirmar")
+                    Text(stringResource(R.string.scanner_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showManualEntryDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
@@ -132,7 +133,11 @@ fun ScannerScreen(
                 AndroidView(
                     factory = { ctx ->
                         BarcodeView(ctx).apply {
-                            val formats = listOf(BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.QR_CODE)
+                            val formats =
+                                listOf(BarcodeFormat.EAN_13,
+                                BarcodeFormat.EAN_8,
+                                BarcodeFormat.CODE_128,
+                                BarcodeFormat.QR_CODE)
                             decoderFactory = DefaultDecoderFactory(formats)
                             decodeContinuous { result ->
                                 result.text?.let { 
@@ -171,7 +176,7 @@ fun ScannerScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Voltar",
+                                contentDescription = stringResource(R.string.cd_back),
                                 tint = Color.White
                             )
                         }
@@ -215,14 +220,14 @@ fun ScannerScreen(
                             horizontalAlignment = Alignment.End
                         ) {
                             Text(
-                                text = "Bipando",
+                                text = stringResource(R.string.scanner_bipando),
                                 color = Color.White,
                                 fontSize = 26.sp,
                                 fontWeight = FontWeight.Light,
                                 textAlign = TextAlign.End
                             )
                             Text(
-                                text = "COMPRA E VENDA",
+                                text = stringResource(R.string.scanner_subtitle),
                                 color = Color(0xFF76FF03), // Verde/Lima da imagem
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
@@ -243,7 +248,7 @@ fun ScannerScreen(
                         contentAlignment = Alignment.CenterEnd
                     ) {
                         Text(
-                            text = "Digitar codigo de barras",
+                            text = stringResource(R.string.digitaliz_c_digo_de_barras),
                             color = Color.White.copy(alpha = 0.9f),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Normal
@@ -274,13 +279,13 @@ fun ScannerScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "Permissão da câmera é necessária para escanear.",
+                        stringResource(R.string.scanner_permission_needed),
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
-                        Text("Conceder Permissão")
+                        Text(stringResource(R.string.scanner_grant_permission))
                     }
                 }
             }

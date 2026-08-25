@@ -77,17 +77,28 @@ class GroupsViewModel(
 
     private fun observeGroups() {
         groupRepository.getLocalGroupsFlow().onEach { groups ->
-            val isCollaborative = groups.any {
-                it.name != "Home"
+            val currentUser = authRepository.getCurrentUser()
+            // Ordenar: 
+            // 1. isDefault (true primeiro)
+            // 2. adminId == currentUser.uuid (meu grupo padrão primeiro)
+            // 3. name
+            val sortedGroups = groups.sortedWith(
+                compareByDescending<PostGroup> { it.isDefault }
+                    .thenByDescending { it.adminId == currentUser?.uuid }
+                    .thenBy { it.name }
+            )
+            
+            val isCollaborative = sortedGroups.any {
+                it.name != "Home" && !it.isDefault
             }
             _uiState.update { 
                 it.copy(
                     hasGroup = isCollaborative,
-                    groups = groups
+                    groups = sortedGroups
                 )
             }
             // Fetch members and count for each group
-            groups.forEach { group ->
+            sortedGroups.forEach { group ->
                 fetchMembers(group.groupId)
                 observeCountForGroup(group.groupId)
             }
@@ -97,6 +108,7 @@ class GroupsViewModel(
     private fun observeInvitations() {
         val user = authRepository.getCurrentUser() ?: return
         groupRepository.getInvitationsFlow(user.uuid).onEach { invites ->
+            android.util.Log.d("GroupsViewModel", "Received ${invites.size} invitations for user ${user.uuid}")
             _uiState.update { it.copy(invitations = invites) }
         }.launchIn(viewModelScope)
     }
@@ -143,6 +155,8 @@ class GroupsViewModel(
             val ensureResult = groupRepository.ensureUserGroupExists(userId, user.name, user.photoUri?.toString() ?: "")
             
             if (ensureResult.isSuccess) {
+                // A migração local "" -> homeGroupId agora é feita internamente pelo Repositório
+
                 val syncResult = groupRepository.syncUserGroup(userId)
                 if (syncResult.isFailure) {
                     _uiState.update { it.copy(error = "Falha ao sincronizar grupos: ${syncResult.exceptionOrNull()?.message}") }
@@ -278,8 +292,17 @@ class GroupsViewModel(
                     status = "pending",
                     createdAt = System.currentTimeMillis()
                 )
-                groupRepository.sendInvitation(invitation)
-                _uiState.update { it.copy(isLoading = false, error = null) }
+                
+                viewModelScope.launch {
+                    val sendResult = groupRepository.sendInvitation(invitation)
+                    if (sendResult.isSuccess) {
+                        _uiState.update { it.copy(isLoading = false, error = null) }
+                        // Mostra uma mensagem de sucesso opcional se desejar
+                    } else {
+                        val errorMsg = sendResult.exceptionOrNull()?.message ?: "Erro desconhecido ao enviar convite"
+                        _uiState.update { it.copy(isLoading = false, error = "Falha ao enviar: $errorMsg") }
+                    }
+                }
             }
             
             result.onFailure {
@@ -288,9 +311,18 @@ class GroupsViewModel(
         }
     }
 
-    fun respondInvitation(invitation: PostInvitation, accept: Boolean) {
+    fun respondInvitation(context: Context, invitation: PostInvitation, accept: Boolean) {
         viewModelScope.launch {
-            groupRepository.respondInvitation(invitation, accept)
+            _uiState.update { it.copy(isLoading = true) }
+            val result = groupRepository.respondInvitation(invitation, accept)
+            result.onSuccess { joinedGroup ->
+                if (accept && joinedGroup != null) {
+                    // Ao aceitar, entra automaticamente no modo de grupo para o grupo novo
+                    onWorkModeChange(context, 1, joinedGroup.groupId)
+                }
+                loadInitialData()
+            }
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

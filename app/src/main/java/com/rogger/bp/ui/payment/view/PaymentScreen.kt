@@ -68,7 +68,7 @@ fun PaymentScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
                         IconButton(onClick = onBackClick) {
-                            Icon(Icons.Default.Close, contentDescription = "Fechar", tint = Color.White)
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = Color.White)
                         }
                     }
 

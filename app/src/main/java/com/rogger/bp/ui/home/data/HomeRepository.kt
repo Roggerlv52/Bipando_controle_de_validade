@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.home.data
 
 import com.google.firebase.firestore.ListenerRegistration
-import com.rogger.bp.data.dao.GroupDao
 import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.model.PostProduct
 import kotlinx.coroutines.CoroutineScope
@@ -18,8 +17,7 @@ import kotlinx.coroutines.launch
  */
 class HomeRepository(
     private val remoteDataSource: PostHomeDataSource,
-    private val localCache: RoomProductCache,
-    private val groupDao: GroupDao
+    private val localCache: RoomProductCache
 ) {
 
     private var productsListenerRegistration: ListenerRegistration? = null
@@ -66,7 +64,7 @@ class HomeRepository(
                     object : FetchProductsCallback {
                         override fun onSuccess(products: List<PostProduct>) {
                             repositoryScope.launch {
-                                localCache.replaceAllProducts(products)
+                                localCache.replaceAllProductsByGroup(targetGroupId ?: "", products)
                                 callback.onComplete()
                             }
                         }
@@ -104,27 +102,6 @@ class HomeRepository(
         })
     }
 
-    fun restore(product: PostProduct, callback: HomeCallback) {
-        remoteDataSource.restoreProduct(product, object : HomeCallback {
-            override fun onSuccess(p: PostProduct) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    // Marca deleted=false no Room para restaurar na lista imediatamente
-                    val restoredProduct = p.copy(deleted = false, deletedAt = null)
-                    localCache.updateProduct(restoredProduct)
-                }
-                callback.onSuccess(p)
-            }
-
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
-
-            override fun onComplete() {
-                callback.onComplete()
-            }
-        })
-    }
-
     fun stopListeningForProducts() {
         productsListenerRegistration?.remove()
         productsListenerRegistration = null
@@ -135,23 +112,7 @@ class HomeRepository(
         localCache.clear()
     }
 
-    suspend fun insertProductIntoCache(product: PostProduct) {
-        localCache.insertProduct(product)
-    }
-
-    suspend fun updateProductInCache(product: PostProduct) {
-        localCache.updateProduct(product)
-    }
-
-    suspend fun deleteProductFromCache(product: PostProduct) {
-        localCache.deleteProduct(product)
-    }
-
     fun getCachedProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
         return localCache.getAllProductsFlow(groupId)
-    }
-
-    fun getCachedProductsByCategoryFlow(i: String, groupId: String = ""): Flow<List<PostProduct>> {
-        return localCache.getProductsByCategoryFlow(i, groupId)
     }
 }
