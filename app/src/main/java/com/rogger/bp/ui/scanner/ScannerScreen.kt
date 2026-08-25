@@ -132,7 +132,11 @@ fun ScannerScreen(
                 AndroidView(
                     factory = { ctx ->
                         BarcodeView(ctx).apply {
-                            val formats = listOf(BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.QR_CODE)
+                            val formats =
+                                listOf(BarcodeFormat.EAN_13,
+                                BarcodeFormat.EAN_8,
+                                BarcodeFormat.CODE_128,
+                                BarcodeFormat.QR_CODE)
                             decoderFactory = DefaultDecoderFactory(formats)
                             decodeContinuous { result ->
                                 result.text?.let { 

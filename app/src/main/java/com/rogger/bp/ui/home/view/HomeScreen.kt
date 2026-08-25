@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
@@ -176,8 +175,10 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
+        // Carrega as informações e inicia a sincronização uma única vez
         viewModel.loadUserInfo(context)
         viewModel.syncAndFetchProducts(context)
+        
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)
         }
@@ -287,7 +288,7 @@ fun HomeScreen(
             onExportExcel = { viewModel.exportExcel(context) }
         )
 
-        LoadingDialog(isLoading = state.isLoading)
+
 
         if (showVoiceSearchDialog) {
             VoiceSearchDialog(
@@ -494,9 +495,13 @@ fun HomeScreenContent(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (state.isFirstLoad || (state.isLoading && state.products.isEmpty())) {
-                // Espaço reservado para o LoadingDialog global
+            // Se estiver carregando pela primeira vez, mostramos apenas o loader centralizado
+            if (state.isLoading && state.products.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else if (isListVisuallyEmpty) {
+                // Estado vazio real (após o carregamento terminar e não houver itens)
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
                     onAddClick = { showCategoryDialog = true }

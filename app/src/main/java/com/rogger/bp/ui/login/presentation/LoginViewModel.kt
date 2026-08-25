@@ -57,22 +57,29 @@ class LoginViewModel(
                     
                     // Sincroniza dados ANTES de navegar
                     viewModelScope.launch {
-                        groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
+                        val groupResult = groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
                         groupRepository.syncUserGroup(user.uuid)
 
-                        val productsSynced = syncProducts(workMode)
-                        val categoriesSynced = syncCategories(workMode)
+                        var targetGroupId: String? = null
+                        var effectiveWorkMode = workMode
+
+                        groupResult.onSuccess { group ->
+                            if (group.isDefault) {
+                                SharedPreferencesManager.setWorkMode(context, 1)
+                                SharedPreferencesManager.setActiveGroupId(context, group.groupId)
+                                targetGroupId = group.groupId
+                                effectiveWorkMode = 1
+                            }
+                        }
+
+                        val productsSynced = syncProducts(effectiveWorkMode, targetGroupId)
+                        val categoriesSynced = syncCategories(effectiveWorkMode, targetGroupId)
                         
                         // Para economizar recursos, paramos os listeners da tela de login
                         homeRepository.stopListeningForProducts()
                         categoryRepository.stopListeningForCategories()
                         
-                        if (productsSynced && categoriesSynced) {
-                            _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
-                        } else {
-                            // Mesmo que falhe a sync total, permitimos entrar, mas avisamos
-                            _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
-                        }
+                        _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
                     }
                 }.onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
@@ -81,7 +88,7 @@ class LoginViewModel(
         }
     }
 
-    private suspend fun syncProducts(workMode: Int): Boolean = suspendCancellableCoroutine { continuation ->
+    private suspend fun syncProducts(workMode: Int, groupId: String?): Boolean = suspendCancellableCoroutine { continuation ->
         homeRepository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
                 // O primeiro sucesso do listener já é suficiente para popular o Room
@@ -92,10 +99,10 @@ class LoginViewModel(
             override fun onComplete() {
                 if (continuation.isActive) continuation.resume(true)
             }
-        }, forceRefresh = true, workMode = workMode)
+        }, forceRefresh = true, workMode = workMode, groupId = groupId)
     }
 
-    private suspend fun syncCategories(workMode: Int): Boolean = suspendCancellableCoroutine { continuation ->
+    private suspend fun syncCategories(workMode: Int, groupId: String?): Boolean = suspendCancellableCoroutine { continuation ->
         categoryRepository.fetchAll(object : FetchCategoriesCallback {
             override fun onSuccess(categories: List<PostCategory>) {}
             override fun onFailure(message: String) {
@@ -104,6 +111,6 @@ class LoginViewModel(
             override fun onComplete() {
                 if (continuation.isActive) continuation.resume(true)
             }
-        }, forceRefresh = true, workMode = workMode)
+        }, forceRefresh = true, workMode = workMode, groupId = groupId)
     }
 }

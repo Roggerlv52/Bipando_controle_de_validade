@@ -49,8 +49,8 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        val homeDataSource = HomeDataSource(context, database.groupDao())
-        return HomeRepository(homeDataSource, roomProductCache, database.groupDao())
+        val homeDataSource = HomeDataSource(context)
+        return HomeRepository(homeDataSource, roomProductCache)
     }
 
     fun registerEditRepository(context: Context): EditRepository {
@@ -80,7 +80,7 @@ object DependencyInjector {
 
     fun registerGroupRepository(context: Context): GroupRepository {
         val database = BpDatabase.getDatabase(context)
-        return GroupRepository(FireGroupDataSource(), database.groupDao())
+        return GroupRepository(FireGroupDataSource(), database.groupDao(), database.productDao())
     }
 
     // ── Novos repositórios de imagem ──────────────────────────────────────

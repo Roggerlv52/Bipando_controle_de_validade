@@ -40,6 +40,10 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.replaceAllProducts(products)
     }
 
+    suspend fun replaceAllProductsByGroup(groupId: String, products: List<PostProduct>) {
+        productDao.replaceAllProductsByGroup(groupId, products)
+    }
+
     override suspend fun clear() {
         productDao.clearAllProducts()
     }

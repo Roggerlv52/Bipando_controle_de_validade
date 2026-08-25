@@ -7,9 +7,12 @@ import com.rogger.bp.data.model.PostInvitation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+import com.rogger.bp.data.dao.ProductDao
+
 class GroupRepository(
     private val dataSource: GroupDataSource,
-    private val groupDao: GroupDao
+    private val groupDao: GroupDao,
+    private val productDao: ProductDao
 ) {
     companion object {
         @Volatile
@@ -94,6 +97,10 @@ class GroupRepository(
         val result = dataSource.ensureUserGroupExists(userId, userName, photoUrl)
         result.onSuccess { group ->
             groupDao.insertGroup(group)
+            if (group.isDefault) {
+                // Sincroniza localmente: associa itens sem grupo ao grupo padrão
+                productDao.updateIndividualProductsGroupId(group.groupId)
+            }
         }
         return result
     }
@@ -111,7 +118,14 @@ class GroupRepository(
     }
 
     suspend fun handleUserLogin(userId: String, userName: String, photoUrl: String): Result<PostGroup> {
-        return dataSource.handleUserLogin(userId, userName, photoUrl)
+        val result = dataSource.handleUserLogin(userId, userName, photoUrl)
+        result.onSuccess { group ->
+            groupDao.insertGroup(group)
+            if (group.isDefault) {
+                productDao.updateIndividualProductsGroupId(group.groupId)
+            }
+        }
+        return result
     }
 
     suspend fun syncUserToGroup(userId: String, groupId: String): Result<Unit> {

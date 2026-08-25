@@ -7,7 +7,6 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.rogger.bp.data.dao.GroupDao
 import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import kotlinx.coroutines.CoroutineScope
@@ -16,8 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class HomeDataSource(
-    private val context: Context,
-    private val groupDao: GroupDao
+    private val context: Context
 ) : PostHomeDataSource {
 
     private val TAG = "HomeDataSource"
@@ -42,34 +40,6 @@ class HomeDataSource(
         }
     }
 
-    override fun fetchProducts(callback: FetchProductsCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val ref = productsRef()
-            ref?.get()?.addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
-                callback.onSuccess(list)
-            }?.addOnFailureListener { e ->
-                callback.onFailure(e.message ?: "Erro ao buscar produtos")
-            }?.addOnCompleteListener { callback.onComplete() }
-        }
-    }
-
-    override fun fetchProductsByCategory(categoryId: String, callback: FetchProductsCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val ref = productsRef()
-            ref?.whereEqualTo("categoryId", categoryId)
-                ?.get()
-                ?.addOnSuccessListener { snapshot ->
-                    val list = snapshot.documents.mapNotNull { documentToPostProduct(it) }
-                    callback.onSuccess(list)
-                }
-                ?.addOnFailureListener { e ->
-                    callback.onFailure(e.message ?: "Erro ao filtrar produtos")
-                }
-                ?.addOnCompleteListener { callback.onComplete() }
-        }
-    }
-
     override fun deleteProduct(product: PostProduct, callback: HomeCallback) {
         CoroutineScope(Dispatchers.IO).launch {
             val uid = getUserId() ?: return@launch
@@ -91,31 +61,6 @@ class HomeDataSource(
                         cleanupProductImageIfNoMore(product)
                         callback.onSuccess(product) 
                     }
-                    .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
-            } else {
-                deleteByUuid(ref, product, updateData, callback)
-            }
-        }
-    }
-
-    override fun restoreProduct(product: PostProduct, callback: HomeCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val uid = getUserId() ?: return@launch
-
-            if (product.groupId.isNotEmpty()) {
-                val hasPermission = checkUserPermission(uid, product.groupId)
-                if (!hasPermission) {
-                    callback.onFailure("Apenas Administradores ou Editores podem restaurar produtos.")
-                    return@launch
-                }
-            }
-
-            val ref = productsRef(product.groupId) ?: return@launch
-            val updateData = mapOf("deleted" to false, "deletedAt" to null)
-
-            if (product.firestoreDocId.isNotEmpty()) {
-                ref.document(product.firestoreDocId).update(updateData)
-                    .addOnSuccessListener { callback.onSuccess(product) }
                     .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
             } else {
                 deleteByUuid(ref, product, updateData, callback)

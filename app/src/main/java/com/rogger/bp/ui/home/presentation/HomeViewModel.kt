@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 
 data class HomeState(
     val products: List<Product> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isFirstLoad: Boolean = true,
     val errorMessage: String? = null,
     val categoryFilterName: String? = null,
@@ -51,6 +51,7 @@ data class HomeState(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
+    private val context: Context,
     private val homeRepository: HomeRepository,
     private val authRepository: AuthRepository,
     private val categoryRepository: CategoryRepository,
@@ -70,6 +71,12 @@ class HomeViewModel(
     private val _categoryId = MutableStateFlow<String?>(null)
 
     init {
+        // Carrega estado inicial de sincronização síncronamente no init para evitar flicker de troca de canal de Flow
+        val initialWorkMode = SharedPreferencesManager.getWorkMode(context)
+        val initialGroupId = if (initialWorkMode == 1) SharedPreferencesManager.getActiveGroupId(context) else ""
+        
+        _uiState.update { it.copy(workMode = initialWorkMode, groupId = initialGroupId) }
+
         observeProductsPipeline()
         observeCategories()
         observeCounters()
@@ -173,10 +180,12 @@ class HomeViewModel(
                 }
                 .map { it.toDomain() }
         }.onEach { productList ->
-            _uiState.update { it.copy(products = productList) }
-            if (productList.isNotEmpty()) {
-                _uiState.update { it.copy(isFirstLoad = false) }
-            }
+            _uiState.update { it.copy(
+                products = productList,
+                // Se encontramos itens (cache local), podemos esconder o loader principal
+                isLoading = if (productList.isNotEmpty()) false else it.isLoading,
+                isFirstLoad = if (productList.isNotEmpty()) false else it.isFirstLoad
+            ) }
         }.launchIn(viewModelScope)
     }
 
@@ -225,15 +234,19 @@ class HomeViewModel(
     private fun refreshProducts() {
         if (isLoggingOut) return
 
-        val user = authRepository.getCurrentUser()
-        if (user == null) {
-            Log.d("HomeViewModel", "refreshProducts: skipping because user is null")
+        if (homeRepository.isSyncing()) {
+            Log.d("HomeViewModel", "refreshProducts: sync already active, skipping full refresh")
             return
         }
 
+        val user = authRepository.getCurrentUser()
+        if (user == null) return
+
         val currentState = _uiState.value
         
-        if (currentState.products.isEmpty() && !homeRepository.isSyncing()) {
+        // Ativa o loading apenas se for o carregamento inicial.
+        // Se já houver produtos, sincronizamos em silêncio.
+        if (currentState.isFirstLoad) {
             _uiState.update { it.copy(isLoading = true) }
         }
 
@@ -241,13 +254,15 @@ class HomeViewModel(
 
         homeRepository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
-                _uiState.update { it.copy(isFirstLoad = false) }
+                // Ao receber dados, encerramos o estado de "primeira carga"
+                _uiState.update { it.copy(isFirstLoad = true, isLoading = true) }
             }
             override fun onFailure(message: String) {
                 _uiState.update { it.copy(isLoading = false, isFirstLoad = false, errorMessage = message) }
             }
             override fun onComplete() {
-                _uiState.update { it.copy(isLoading = false, isFirstLoad = false) }
+                //Sempre false para mostra lista vazia se realmente não existir dados
+               _uiState.update { it.copy(isLoading = false, isFirstLoad = false) }
             }
         }, forceRefresh = true, workMode = currentState.workMode, groupId = currentState.groupId)
     }
@@ -329,7 +344,7 @@ class HomeViewModel(
 
     fun logout(context: Context, onLogout: () -> Unit) {
         isLoggingOut = true
-        com.rogger.bp.ui.groups.data.GroupRepository.setLoggingOut(true)
+        GroupRepository.setLoggingOut(true)
         invitationJob?.cancel()
         invitationJob = null
 

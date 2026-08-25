@@ -77,17 +77,20 @@ class GroupsViewModel(
 
     private fun observeGroups() {
         groupRepository.getLocalGroupsFlow().onEach { groups ->
-            val isCollaborative = groups.any {
+            // Ordenar: Grupo Padrão (Home) sempre primeiro
+            val sortedGroups = groups.sortedByDescending { it.isDefault }
+            
+            val isCollaborative = sortedGroups.any {
                 it.name != "Home"
             }
             _uiState.update { 
                 it.copy(
                     hasGroup = isCollaborative,
-                    groups = groups
+                    groups = sortedGroups
                 )
             }
             // Fetch members and count for each group
-            groups.forEach { group ->
+            sortedGroups.forEach { group ->
                 fetchMembers(group.groupId)
                 observeCountForGroup(group.groupId)
             }
@@ -143,6 +146,8 @@ class GroupsViewModel(
             val ensureResult = groupRepository.ensureUserGroupExists(userId, user.name, user.photoUri?.toString() ?: "")
             
             if (ensureResult.isSuccess) {
+                // A migração local "" -> homeGroupId agora é feita internamente pelo Repositório
+
                 val syncResult = groupRepository.syncUserGroup(userId)
                 if (syncResult.isFailure) {
                     _uiState.update { it.copy(error = "Falha ao sincronizar grupos: ${syncResult.exceptionOrNull()?.message}") }
