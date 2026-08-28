@@ -89,7 +89,7 @@ class GroupsViewModel(
             )
             
             val isCollaborative = sortedGroups.any {
-                it.name != "Home" && !it.isDefault
+                !it.isDefault
             }
             _uiState.update { 
                 it.copy(
@@ -367,7 +367,7 @@ class GroupsViewModel(
             if (result.isSuccess) {
                 // If there are no more groups, reset work mode
                 val remainingGroups = _uiState.value.groups.filter { it.groupId != groupId }
-                if (remainingGroups.isEmpty() || remainingGroups.all { it.name == "Home" }) {
+                if (remainingGroups.isEmpty() || remainingGroups.all { it.isDefault }) {
                     SharedPreferencesManager.setWorkMode(context, 0)
                 }
             } else {

@@ -1,40 +1,67 @@
 package com.rogger.bp.ui.scanner
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.res.painterResource
-import com.rogger.bp.R
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.journeyapps.barcodescanner.CompoundBarcodeView
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.zxing.BarcodeFormat
-import com.journeyapps.barcodescanner.DefaultDecoderFactory
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
 import com.journeyapps.barcodescanner.BarcodeView
+import com.journeyapps.barcodescanner.DefaultDecoderFactory
+import com.rogger.bp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +78,7 @@ fun ScannerScreen(
     }
 
     var showManualEntryDialog by remember { mutableStateOf(false) }
-    var barcodeView by remember { mutableStateOf<CompoundBarcodeView?>(null) }
+    var barcodeView by remember { mutableStateOf<BarcodeView?>(null) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -142,10 +169,10 @@ fun ScannerScreen(
                             decodeContinuous { result ->
                                 result.text?.let { 
                                     pause()
-                                    onBarcodeScanned(it) 
+                                    onBarcodeScanned(it)
                                 }
                             }
-                            //barcodeView = this
+                            barcodeView = this
                             resume()
                         }
                     },
@@ -190,7 +217,7 @@ fun ScannerScreen(
                             .align(Alignment.Center)
                     ) {
                         // Cantos do Scanner
-                        val cornerSize = 40.dp
+                        val cornerSize = 30.dp
                         Image(
                             painter = painterResource(id = R.drawable.line_top_left),
                             contentDescription = null,
@@ -216,22 +243,13 @@ fun ScannerScreen(
                         Column(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(bottom = 10.dp, end = 10.dp),
+                                .padding(top = 225.dp,end = 25.dp),
                             horizontalAlignment = Alignment.End
                         ) {
-                            Text(
-                                text = stringResource(R.string.scanner_bipando),
-                                color = Color.White,
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.Light,
-                                textAlign = TextAlign.End
-                            )
-                            Text(
-                                text = stringResource(R.string.scanner_subtitle),
-                                color = Color(0xFF76FF03), // Verde/Lima da imagem
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                            Image(
+                                painter = painterResource(id = R.drawable.bp_title),
+                                contentDescription = stringResource(R.string.cd_logo_bipando),
+                                modifier = Modifier.size(80.dp)
                             )
                         }
                     }
@@ -240,19 +258,32 @@ fun ScannerScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
+                            .align(Alignment.BottomEnd)
                             .background(Color.Transparent.copy(alpha = 0.5f))
                             .navigationBarsPadding()
-                            .clickable { showManualEntryDialog = true }
-                            .padding(vertical = 24.dp, horizontal = 24.dp),
-                        contentAlignment = Alignment.CenterEnd
+                            .padding(top = 16.dp,bottom = 5.dp, end = 16.dp),  // margem fixa bottom-end
+                        contentAlignment = Alignment.BottomEnd
                     ) {
-                        Text(
-                            text = stringResource(R.string.digitaliz_c_digo_de_barras),
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Normal
-                        )
+                        Surface(
+                            modifier = Modifier
+                                .clickable { showManualEntryDialog = true }
+                                .wrapContentSize(),                  // garante que não colapse
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.Black.copy(alpha = 0.3f), // cor como parâmetro correto
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                            )
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                text = stringResource(R.string.digitaliz_c_digo_de_barras),
+                                color = Color.Red.copy(alpha = 0.6f),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal,
+                                maxLines = 1                         // evita quebra de linha em landscape
+                            )
+                        }
                     }
                 }
 

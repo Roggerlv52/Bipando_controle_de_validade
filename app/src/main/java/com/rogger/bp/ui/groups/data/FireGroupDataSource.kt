@@ -159,7 +159,7 @@ class FireGroupDataSource : GroupDataSource {
                     
                     Log.d(TAG, "User found by code, but no group document yet. Returning placeholder for targetUid: $targetUid")
                     // Retorna um placeholder com o adminId correto para que o convite possa ser enviado.
-                    // O usuário alvo criará seu próprio grupo "Home" ao fazer login.
+                    // O usuário alvo criará seu próprio grupo (com seu nome) ao fazer login.
                     Result.success(PostGroup(
                         groupId = "placeholder",
                         adminId = targetUid,
@@ -312,10 +312,16 @@ class FireGroupDataSource : GroupDataSource {
             
             val existingGroups = existingGroupsResult.getOrThrow()
             
-            val defaultGroup = existingGroups.find { it.adminId == userId && it.isDefault }
+            var defaultGroup = existingGroups.find { it.adminId == userId && it.isDefault }
                 ?: existingGroups.find { it.adminId == userId }
             
             if (defaultGroup != null) {
+                // Se o nome ainda for "Home", atualiza para o nome do usuário
+                if (defaultGroup.name == "Home" && userName.isNotEmpty()) {
+                    Log.d(TAG, "Renaming default group 'Home' to '$userName'")
+                    renameGroup(defaultGroup.groupId, userName)
+                    defaultGroup = defaultGroup.copy(name = userName)
+                }
                 Result.success(defaultGroup)
             } else {
                 // PROBLEMA 3 — Corrigido: ID único e campo isDefault
@@ -324,7 +330,7 @@ class FireGroupDataSource : GroupDataSource {
                 
                 val group = PostGroup(
                     groupId = newGroupId,
-                    name = "Home",
+                    name = userName.ifEmpty { "Meu Grupo" },
                     adminId = userId,
                     shareCode = shortCode,
                     createdAt = System.currentTimeMillis(),

@@ -98,7 +98,7 @@ fun GroupItem(
                         )
                         if (isDefault) {
                             Text(
-                                text = " (Padrão)",
+                                text = " (My-group)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,

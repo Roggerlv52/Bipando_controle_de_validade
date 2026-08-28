@@ -113,7 +113,7 @@ class HomeViewModel(
             if (activeGroupId != null) {
                 val currentGroup = groups.find { it.groupId == activeGroupId }
                 if (currentGroup != null) {
-                    val displayName = if (currentGroup.name == "Home") "" else currentGroup.name
+                    val displayName = if (currentGroup.isDefault) "" else currentGroup.name
                     _uiState.update { it.copy(currentGroupName = displayName) }
                 }
             }
@@ -131,8 +131,7 @@ class HomeViewModel(
                 groupRepository.getLocalGroupFlow().firstOrNull()
             }
 
-            val displayName =
-                if (mode == 1 && group != null && group.name != "Home") group.name else ""
+            val displayName = if (mode == 1 && group != null && !group.isDefault) group.name else ""
             val newGroupId = if (mode == 1) activeGroupId else ""
 
             val oldGroupId = _uiState.value.groupId

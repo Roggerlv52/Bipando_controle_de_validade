@@ -218,9 +218,7 @@ fun BipandoNavGraph(navController: NavHostController) {
                             navController.previousBackStackEntry?.savedStateHandle?.set("search_barcode", barcode)
                             navController.popBackStack()
                         } else {
-                            navController.navigate("add_product/$barcode/$categoryId") {
-                                popUpTo(Routes.SCANNER) { inclusive = true }
-                            }
+                            navController.navigate("add_product/$barcode/$categoryId")
                         }
                     },
                     onBackClick = { navController.popBackStack() }

@@ -33,7 +33,9 @@ fun MemberItem(
 ) {
     ListItem(
         headlineContent = { Text(member.name, fontWeight = FontWeight.Bold) },
-        supportingContent = { Text(if (member.role == "Admin") "Administrador" else if (member.role == "Editor") "Editor" else "Leitor") },
+        supportingContent = { Text(if (member.role == "Admin")
+            "Administrador" else if (member.role == "Editor")
+                "Editor" else "Leitor") },
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
             AsyncImage(
