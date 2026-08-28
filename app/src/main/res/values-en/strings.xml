@@ -203,7 +203,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="menu_premium">Premium</string>
     <string name="menu_groups">Groups</string>
     <string name="menu_share_app">Share App</string>
-    <string name="menu_support">Support</string>
+    <string name="menu_support">Support and Feedback </string>
     <string name="support_email_subject">Bipando Support - Suggestions/Questions</string>
     <string name="support_email_chooser">Send support email</string>
     <string name="cd_remove_group">Remove Group</string>

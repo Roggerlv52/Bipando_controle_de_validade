@@ -222,7 +222,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="menu_premium">Premium</string>
     <string name="menu_groups">Grupos</string>
     <string name="menu_share_app">Compartilhar App</string>
-    <string name="menu_support">Suporte</string>
+    <string name="menu_support">Suporte e Feedback </string>
     <string name="support_email_subject">Suporte Bipando - Sugestões/Dúvidas</string>
     <string name="support_email_chooser">Enviar e-mail de suporte</string>
     <string name="cd_remove_group">Remover Grupo</string>
