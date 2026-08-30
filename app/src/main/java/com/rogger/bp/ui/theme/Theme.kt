@@ -1,18 +1,14 @@
 package com.rogger.bp.ui.theme
 
-import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 
 enum class BipandoThemeType {
@@ -77,22 +73,8 @@ fun BipandoTheme(
         else -> ClassicColorScheme
     }
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            // Tornar transparente para permitir que a imagem fique sob as barras
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            
-            // Garantir que a imagem ocupe o espaço das barras mesmo em rotação
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-
-            // Forçar ícones da barra de status a serem sempre claros (branco)
-            // pois o fundo da LoginScreen é sempre escuro/colorido
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-        }
-    }
+    // No Android 15+, enableEdgeToEdge() na Activity já cuida de tudo.
+    // Removido SideEffect que usava APIs descontinuadas.
 
     MaterialTheme(
         colorScheme = colorScheme,

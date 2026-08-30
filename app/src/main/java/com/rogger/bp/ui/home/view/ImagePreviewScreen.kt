@@ -128,6 +128,7 @@ fun ImagePreviewScreen(
                 val imageRequest = remember(imageUri) {
                     ImageRequest.Builder(context)
                         .data(imageUri.ifEmpty { R.drawable.ic_shopping })
+                        .size(2000, 2000) // Limite para evitar erro de "Canvas: trying to draw too large bitmap"
                         .crossfade(true)
                         .build()
                 }

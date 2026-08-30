@@ -1,186 +1,142 @@
-package com.rogger.bp.util;
+package com.rogger.bp.util
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.ExifInterface;
-import android.net.Uri;
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
+import android.net.Uri
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-/*
- * Desenvolvido por Roger de Oliveira
- * Data: 15/07/2026
- * Hora: 13:58
+/**
+ * Utilitário para processamento de imagens antes do upload.
+ * Otimizado para reduzir o uso de memória e evitar erros de Canvas grande.
  */
-public class ImageUtils {
- private static final String TAG = "ImageUtils";
+object ImageUtils {
+    private const val MAX_DIMENSION = 720
+    private const val MAX_FILE_SIZE_BYTES = 80 * 1024
+    private const val INITIAL_QUALITY = 85
+    private const val MIN_QUALITY = 30
+    private const val QUALITY_STEP = 10
 
- // Dimensão máxima do lado maior da imagem (px)
- private static final int MAX_DIMENSION = 720;
+    @Throws(Exception::class)
+    fun processImage(context: Context, uri: Uri, outputFile: File): File {
+        // 1. Decode com subamostragem (evita OOM)
+        var bitmap = decodeSampledBitmap(context, uri, MAX_DIMENSION, MAX_DIMENSION)
+            ?: throw IOException("Não foi possível decodificar a imagem")
 
- // Tamanho máximo do arquivo final em bytes (80 KB)
- private static final int MAX_FILE_SIZE_BYTES = 80 * 1024;
+        // 2. Redimensionamento preciso (se necessário)
+        bitmap = resizeIfNeeded(bitmap)
 
- // Qualidade inicial e mínima permitida
- private static final int QUALIDADE_INICIAL = 85;
- private static final int QUALIDADE_MINIMA  = 30;
- // Passo de redução a cada iteração
- private static final int PASSO_QUALIDADE   = 10;
+        // 3. Rotação baseada em EXIF
+        bitmap = rotateIfNeeded(context, bitmap, uri)
 
- public static File processImage(Context context, Uri uri, File outputFile) throws Exception {
+        // 4. Compressão adaptativa (foca em tamanho de arquivo)
+        compressAdaptively(bitmap, outputFile)
+        
+        // 5. Liberação imediata de memória
+        if (!bitmap.isRecycled) {
+            bitmap.recycle()
+        }
 
-  Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_DIMENSION, MAX_DIMENSION);
+        return outputFile
+    }
 
-  bitmap = redimensionarSeNecessario(bitmap, MAX_DIMENSION);
+    private fun compressAdaptively(bitmap: Bitmap, outputFile: File) {
+        var quality = INITIAL_QUALITY
+        val bos = ByteArrayOutputStream()
 
-  bitmap = rotateBitmapIfRequired(context, bitmap, uri);
+        do {
+            bos.reset()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+            if (bos.size() <= MAX_FILE_SIZE_BYTES) break
+            quality -= QUALITY_STEP
+        } while (quality >= MIN_QUALITY)
 
-  comprimirAdaptativamente(bitmap, outputFile);
+        FileOutputStream(outputFile).use { fos ->
+            fos.write(bos.toByteArray())
+            fos.flush()
+        }
+    }
 
-  return outputFile;
- }
+    private fun resizeIfNeeded(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
 
- // ======================== COMPRESSÃO ADAPTATIVA ========================
+        if (width <= MAX_DIMENSION && height <= MAX_DIMENSION) return bitmap
 
- /**
-  * Comprime o bitmap reduzindo a qualidade JPEG progressivamente
-  * até o arquivo ficar abaixo de MAX_FILE_SIZE_BYTES ou atingir
-  * a qualidade mínima.
-  *
-  * Estratégia:
-  *   - Começa em QUALIDADE_INICIAL (85)
-  *   - Reduz PASSO_QUALIDADE (10) a cada iteração
-  *   - Para quando o arquivo couber em 100 KB ou qualidade chegar em 30
-  *   - Usa ByteArrayOutputStream em memória para medir antes de gravar
-  */
- private static void comprimirAdaptativamente(Bitmap bitmap, File outputFile)
-         throws IOException {
+        val scale = if (width >= height) {
+            MAX_DIMENSION.toFloat() / width
+        } else {
+            MAX_DIMENSION.toFloat() / height
+        }
 
-  int qualidade = QUALIDADE_INICIAL;
-  ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        val newWidth = (width * scale).toInt()
+        val newHeight = (height * scale).toInt()
 
-  do {
-   bos.reset();
-   bitmap.compress(Bitmap.CompressFormat.JPEG, qualidade, bos);
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
 
-   if (bos.size() <= MAX_FILE_SIZE_BYTES) break;
+    private fun decodeSampledBitmap(context: Context, uri: Uri, reqWidth: Int, reqHeight: Int): Bitmap? {
+        // Primeira passagem: apenas lê as dimensões
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true
+        }
+        
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            BitmapFactory.decodeStream(input, null, options)
+        }
+        
+        // Calcula o fator de subamostragem
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+        options.inJustDecodeBounds = false
+        
+        // Segunda passagem: decodificação real com subamostragem
+        return context.contentResolver.openInputStream(uri)?.use { input ->
+            BitmapFactory.decodeStream(input, null, options)
+        }
+    }
 
-   qualidade -= PASSO_QUALIDADE;
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val height = options.outHeight
+        val width = options.outWidth
+        var inSampleSize = 1
 
-  } while (qualidade >= QUALIDADE_MINIMA);
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight = height / 2
+            val halfWidth = width / 2
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
 
-  // Grava o resultado final no arquivo de saída
-  FileOutputStream fos = new FileOutputStream(outputFile);
-  fos.write(bos.toByteArray());
-  fos.flush();
-  fos.close();
- }
-
- // ======================== REDIMENSIONAMENTO ========================
-
- /**
-  * Redimensiona o bitmap proporcionalmente para que o lado maior
-  * não ultrapasse maxDimension. Se já estiver dentro do limite, retorna o original.
-  */
- private static Bitmap redimensionarSeNecessario(Bitmap bitmap, int maxDimension) {
-  int largura = bitmap.getWidth();
-  int altura  = bitmap.getHeight();
-
-  if (largura <= maxDimension && altura <= maxDimension) {
-   return bitmap; // já está dentro do limite
-  }
-
-  float escala;
-  if (largura >= altura) {
-   escala = (float) maxDimension / largura;
-  } else {
-   escala = (float) maxDimension / altura;
-  }
-
-  int novaLargura = Math.round(largura * escala);
-  int novaAltura  = Math.round(altura * escala);
-
-  return Bitmap.createScaledBitmap(bitmap, novaLargura, novaAltura, true);
- }
-
- // ======================== DECODE AMOSTRADO ========================
-
- /**
-  * Decodifica a imagem já subamostrada para evitar OutOfMemory
-  * em fotos de câmera de alta resolução (ex: 12MP, 48MP).
-  */
- private static Bitmap decodeSampledBitmap(Context context, Uri uri,
-                                           int reqWidth, int reqHeight) throws Exception {
-  // Primeira passagem — só lê dimensões
-  InputStream input = context.getContentResolver().openInputStream(uri);
-  BitmapFactory.Options options = new BitmapFactory.Options();
-  options.inJustDecodeBounds = true;
-  BitmapFactory.decodeStream(input, null, options);
-  input.close();
-
-  options.inSampleSize    = calculateInSampleSize(options, reqWidth, reqHeight);
-  options.inJustDecodeBounds = false;
-
-  // Segunda passagem — decodifica com subamostragem
-  input = context.getContentResolver().openInputStream(uri);
-  Bitmap bitmap = BitmapFactory.decodeStream(input, null, options);
-  input.close();
-
-  return bitmap;
- }
-
- private static int calculateInSampleSize(BitmapFactory.Options options,
-                                          int reqWidth, int reqHeight) {
-  int height     = options.outHeight;
-  int width      = options.outWidth;
-  int inSampleSize = 1;
-
-  if (height > reqHeight || width > reqWidth) {
-   int halfHeight = height / 2;
-   int halfWidth  = width  / 2;
-   while ((halfHeight / inSampleSize) >= reqHeight
-           && (halfWidth  / inSampleSize) >= reqWidth) {
-    inSampleSize *= 2;
-   }
-  }
-  return inSampleSize;
- }
-
- // ======================== CORREÇÃO DE ROTAÇÃO EXIF ========================
-
- private static Bitmap rotateBitmapIfRequired(Context context, Bitmap bitmap,
-                                              Uri uri) throws IOException {
-  InputStream input = context.getContentResolver().openInputStream(uri);
-  ExifInterface exif = new ExifInterface(input);
-
-  int orientation = exif.getAttributeInt(
-          ExifInterface.TAG_ORIENTATION,
-          ExifInterface.ORIENTATION_NORMAL);
-  input.close();
-
-  Matrix matrix = new Matrix();
-
-  switch (orientation) {
-   case ExifInterface.ORIENTATION_ROTATE_90:
-    matrix.postRotate(90);
-    break;
-   case ExifInterface.ORIENTATION_ROTATE_180:
-    matrix.postRotate(180);
-    break;
-   case ExifInterface.ORIENTATION_ROTATE_270:
-    matrix.postRotate(270);
-    break;
-   default:
-    return bitmap; // já está correta
-  }
-
-  return Bitmap.createBitmap(
-          bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
- }
+    private fun rotateIfNeeded(context: Context, bitmap: Bitmap, uri: Uri): Bitmap {
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val exif = ExifInterface(input)
+                val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                
+                val matrix = Matrix()
+                when (orientation) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                    ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                    ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                    else -> return bitmap
+                }
+                
+                val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                if (rotated != bitmap) {
+                    bitmap.recycle()
+                }
+                rotated
+            } ?: bitmap
+        } catch (_: Exception) {
+            bitmap
+        }
+    }
 }

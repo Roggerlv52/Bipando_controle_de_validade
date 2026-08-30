@@ -2,8 +2,10 @@ package com.rogger.bp.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import android.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.notification.NotificationScheduler
@@ -20,7 +22,10 @@ class ModernActivity : ComponentActivity() {
         NotificationUtil.createChannel(this)
         NotificationScheduler.start(this)
 
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+        )
         setContent {
             BipandoTheme {
                 val navController = rememberNavController()

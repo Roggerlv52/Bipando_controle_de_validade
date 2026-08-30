@@ -34,6 +34,7 @@
     </queries>
 
     <application
+        android:name=".BipandoApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/backup_rules"
         android:fullBackupContent="@xml/backup_rules"

@@ -286,11 +286,6 @@ class HomeViewModel(
     private fun refreshProducts() {
         if (isLoggingOut) return
 
-        if (homeRepository.isSyncing()) {
-            Log.d("HomeViewModel", "refreshProducts: sync already active, skipping full refresh")
-            return
-        }
-
         val user = authRepository.getCurrentUser()
         if (user == null) return
 
@@ -306,7 +301,7 @@ class HomeViewModel(
         homeRepository.fetchAll(object : FetchProductsCallback {
             override fun onSuccess(products: List<PostProduct>) {
                 // Ao receber dados do cache ou remoto, paramos o loading principal
-                _uiState.update { it.copy(isFirstLoad = true, isLoading = true) }
+                _uiState.update { it.copy(isFirstLoad = false, isLoading = false) }
             }
 
             override fun onFailure(message: String) {

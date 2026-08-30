@@ -18,7 +18,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.rogger.bp.ui.groups.presentation.GroupMember
 
 /*
@@ -39,7 +42,11 @@ fun MemberItem(
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
             AsyncImage(
-                model = member.photoUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(member.photoUrl)
+                    .size(150, 150)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)

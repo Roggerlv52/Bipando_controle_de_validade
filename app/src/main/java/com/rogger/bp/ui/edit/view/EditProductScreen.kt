@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.rogger.bp.R
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.edit.presentation.EditProductViewModel
@@ -226,8 +228,15 @@ fun EditProductScreen(
                         },
                     contentAlignment = Alignment.Center
                 ) {
+                    val imageRequest = remember(state.imageUri) {
+                        ImageRequest.Builder(context)
+                            .data(state.imageUri.ifEmpty { drawable.ic_shopping })
+                            .size(600, 600) // Otimizado para o preview de 150dp
+                            .crossfade(true)
+                            .build()
+                    }
                     AsyncImage(
-                        model = state.imageUri.ifEmpty { drawable.ic_shopping },
+                        model = imageRequest,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

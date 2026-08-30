@@ -49,7 +49,7 @@ fun DrawerHeader(state: HomeState) {
     ) {
         // Logotipo no canto superior direito
         Image(
-            painter = painterResource(id = R.drawable.bipando_logo),
+            painter = painterResource(id = R.drawable.bipando_smoll),
             contentDescription = null,
             modifier = Modifier
                 .size(50.dp)
@@ -69,6 +69,7 @@ fun DrawerHeader(state: HomeState) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(state.userPhoto.ifEmpty { R.drawable.ic_person_24 })
+                        .size(200, 200) // Otimizado para o avatar de 64dp
                         .crossfade(true)
                         .build(),
                     contentDescription = null,

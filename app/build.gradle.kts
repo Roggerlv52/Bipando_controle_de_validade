@@ -34,7 +34,7 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 40
+        versionCode = 41
         versionName = "2.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -104,8 +104,6 @@ dependencies {
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
     implementation(libs.recyclerview)
-
-    implementation(libs.glide)
 
     implementation(libs.appcompat)
     implementation(libs.material)

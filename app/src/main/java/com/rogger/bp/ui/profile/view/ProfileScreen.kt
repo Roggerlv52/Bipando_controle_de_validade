@@ -28,6 +28,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.rogger.bp.R
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.notification.NotificationUtil
@@ -182,7 +184,11 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
-                    model = state.userPhotoUrl.ifEmpty { R.drawable.ic_person_24 },
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(state.userPhotoUrl.ifEmpty { R.drawable.ic_person_24 })
+                        .size(300, 300) // Otimizado para o perfil de 100dp
+                        .crossfade(true)
+                        .build(),
                     contentDescription = stringResource(R.string.cd_profile_photo),
                     modifier = Modifier
                         .size(100.dp)

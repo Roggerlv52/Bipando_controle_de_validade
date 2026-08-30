@@ -24,7 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -57,7 +60,11 @@ fun InvitationItem(
             supportingContent = { Text("Grupo: ${invitation.groupName}") },
             leadingContent = {
                 AsyncImage(
-                    model = invitation.senderPhoto,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(invitation.senderPhoto)
+                        .size(150, 150)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
                         .size(40.dp)

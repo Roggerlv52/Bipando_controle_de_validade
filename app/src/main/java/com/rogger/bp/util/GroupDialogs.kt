@@ -7,6 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rogger.bp.data.model.PostInvitation
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
@@ -76,7 +79,11 @@ fun InvitationDialog(
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 AsyncImage(
-                    model = invitation.senderPhoto,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(invitation.senderPhoto)
+                        .size(200, 200)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier.size(64.dp).clip(CircleShape)
                 )
