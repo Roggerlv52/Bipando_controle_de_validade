@@ -247,13 +247,13 @@ fun ScannerScreen(
                         Column(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(top = 225.dp,end = 25.dp),
+                                .padding(bottom = 1.dp, end = 30.dp),
                             horizontalAlignment = Alignment.End
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.bp_title),
                                 contentDescription = stringResource(R.string.cd_logo_bipando),
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier.width(80.dp)
                             )
                         }
                     }
