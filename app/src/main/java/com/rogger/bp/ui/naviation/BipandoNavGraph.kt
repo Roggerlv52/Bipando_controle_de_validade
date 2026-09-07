@@ -254,7 +254,8 @@ fun BipandoNavGraph(navController: NavHostController) {
                             saveProductUseCase, 
                             getCategoriesUseCase,
                             registerItemRepository,
-                            categoryRepository
+                            categoryRepository,
+                            DependencyInjector.openFoodFactsRepository()
                         ) as T
                     }
                 }

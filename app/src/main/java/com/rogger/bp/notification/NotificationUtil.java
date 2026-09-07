@@ -118,6 +118,7 @@ public class NotificationUtil {
     private static PendingIntent getPendingIntent(Context c) {
         Intent intent = new Intent(c, ModernActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("from_notification", true);
         
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

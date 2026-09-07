@@ -10,12 +10,17 @@ import androidx.navigation.compose.rememberNavController
 import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.notification.NotificationScheduler
 import com.rogger.bp.notification.NotificationUtil
+import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.naviation.BipandoNavGraph
 import com.rogger.bp.ui.theme.BipandoTheme
 
 class ModernActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (intent?.getBooleanExtra("from_notification", false) == true) {
+            AnalyticsManager.logNotificationOpened()
+        }
         
         // Inicializações fundamentais
         ImageSyncScheduler.start(this)

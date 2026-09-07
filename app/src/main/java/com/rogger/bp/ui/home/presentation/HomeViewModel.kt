@@ -16,6 +16,7 @@ import com.rogger.bp.domain.repository.AuthRepository
 import com.rogger.bp.notification.NotificationPrefs
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
+import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.groups.data.GroupRepository
 import com.rogger.bp.ui.home.data.FetchProductsCallback
@@ -427,11 +428,13 @@ class HomeViewModel(
     }
 
     fun exportPdf(context: Context) {
-        PdfExportHelper.exportToPdf(context, _uiState.value.products.map { it.toData() })
+        val groupName = _uiState.value.currentGroupName.ifEmpty { context.getString(R.string.menu_home) }
+        PdfExportHelper.exportToPdf(context, _uiState.value.products.map { it.toData() }, groupName)
     }
 
     fun exportExcel(context: Context) {
-        ExcelExportHelper.exportToExcel(context, _uiState.value.products.map { it.toData() })
+        val groupName = _uiState.value.currentGroupName.ifEmpty { context.getString(R.string.menu_home) }
+        ExcelExportHelper.exportToExcel(context, _uiState.value.products.map { it.toData() }, groupName)
     }
 
     fun deleteProducts(products: List<Product>) {

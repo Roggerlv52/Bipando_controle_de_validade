@@ -110,6 +110,7 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.ui.home.presentation.HomeState
 import com.rogger.bp.ui.home.presentation.HomeViewModel
+import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.naviation.Routes
 import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.ui.componentes.LoadingDialog
@@ -285,8 +286,14 @@ fun HomeScreen(
             onCategoryClick = onCategoryClick,
             onMenuClick = { scope.launch { drawerState.open() } },
             onSearchQueryChange = viewModel::onSearchQueryChange,
-            onToggleSearch = viewModel::toggleSearch,
-            onScannerSearch = onScannerSearch,
+            onToggleSearch = { active ->
+                if (active) AnalyticsManager.logProductSearch("text")
+                viewModel.toggleSearch(active)
+            },
+            onScannerSearch = {
+                AnalyticsManager.logProductSearch("barcode")
+                onScannerSearch()
+            },
             onVoiceSearchClick = {
                 recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
             },
@@ -302,6 +309,8 @@ fun HomeScreen(
             VoiceSearchDialog(
                 onDismiss = { showVoiceSearchDialog = false },
                 onResult = { result ->
+                    AnalyticsManager.logVoiceSearch()
+                    AnalyticsManager.logProductSearch("voice")
                     viewModel.onSearchQueryChange(result)
                 }
             )

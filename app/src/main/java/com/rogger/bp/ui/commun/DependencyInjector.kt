@@ -6,6 +6,7 @@ import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.image.datasource.GlobalImageDataSource
 import com.rogger.bp.data.image.datasource.UserImageDataSource
 import com.rogger.bp.data.image.repository.ImageResolutionRepository
+import com.rogger.bp.data.remote.OpenFoodFactsRepository
 import com.rogger.bp.ui.add.data.FireRegisterDataSource
 import com.rogger.bp.ui.add.data.RegisterItemRepository
 import com.rogger.bp.ui.add.data.RegisterRepository
@@ -76,6 +77,10 @@ object DependencyInjector {
 
     fun profileRepository(): ProfileRepository {
         return ProfileRepository()
+    }
+
+    fun openFoodFactsRepository(): OpenFoodFactsRepository {
+        return OpenFoodFactsRepository()
     }
 
     fun registerGroupRepository(context: Context): GroupRepository {

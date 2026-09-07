@@ -22,14 +22,20 @@ import java.util.Locale;
  * Hora: 20:32
  */
 public class ExcelExportHelper {
-    public static void exportToExcel(Context context, List<PostProduct> products) {
+    public static void exportToExcel(Context context, List<PostProduct> products, String groupName) {
         if (products == null || products.isEmpty()) {
             Toast.makeText(context, "Nenhum produto ativo para exportar", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File excelFile = new File(downloadsDir, "bipando_relatorio_produtos.csv");
+        // ✅ CORREÇÃO: Usa pasta externa privada do app para compatibilidade total com Scoped Storage (Android 10+)
+        File reportDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        if (reportDir != null && !reportDir.exists()) {
+            reportDir.mkdirs();
+        }
+
+        String fileName = "bipando_relatorio_" + groupName.replaceAll("[^a-zA-Z0-9]", "_") + ".csv";
+        File excelFile = new File(reportDir, fileName);
 
         SimpleDateFormat dateSdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
@@ -40,6 +46,9 @@ public class ExcelExportHelper {
             fos.write(0xEF);
             fos.write(0xBB);
             fos.write(0xBF);
+
+            // Cabeçalho com nome do grupo
+            writer.write("Relatório de Produtos - Grupo: " + groupName + "\n\n");
 
             // Cabeçalhos (Semicolons são nativos para Excel em computadores de língua portuguesa)
             writer.write("Produto;Código de Barras;Categoria;Vencimento;Dias Restantes;Notas\n");
@@ -58,7 +67,7 @@ public class ExcelExportHelper {
             }
 
             writer.flush();
-            Toast.makeText(context, "Planilha guardada em Downloads/bipando_relatorio_produtos.csv!", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Planilha guardada em Downloads/" + fileName + "!", Toast.LENGTH_LONG).show();
 
         } catch (IOException e) {
             e.printStackTrace();

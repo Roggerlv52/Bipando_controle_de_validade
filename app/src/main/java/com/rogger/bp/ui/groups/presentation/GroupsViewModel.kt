@@ -6,6 +6,7 @@ import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.data.model.PostMember
 import com.rogger.bp.data.model.PostInvitation
 import com.rogger.bp.domain.repository.AuthRepository
+import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.content.Context
 import com.rogger.bp.ui.groups.data.GroupRepository
@@ -223,6 +224,7 @@ class GroupsViewModel(
         viewModelScope.launch {
             val result = groupRepository.createGroup(newGroup, adminMember)
             if (result.isSuccess) {
+                AnalyticsManager.logGroupCreated()
                 // Tenta sincronizar dados do usuário para o novo grupo criado
                 val syncResult = groupRepository.syncUserToGroup(user.uuid, groupId)
                 if (syncResult.isSuccess) {
@@ -258,6 +260,7 @@ class GroupsViewModel(
         viewModelScope.launch {
             val result = groupRepository.joinGroup(code, member)
             result.onSuccess { group ->
+                AnalyticsManager.logGroupJoined()
                 SharedPreferencesManager.setWorkMode(context, 1)
                 SharedPreferencesManager.setActiveGroupId(context, group.groupId)
                 _uiState.update { it.copy(showJoinDialog = false, hasGroup = true, workMode = 1, groupId = group.groupId) }

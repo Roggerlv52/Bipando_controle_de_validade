@@ -10,6 +10,8 @@ import com.rogger.bp.domain.model.Category
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.domain.usecase.GetCategoriesUseCase
 import com.rogger.bp.domain.usecase.SaveProductUseCase
+import com.rogger.bp.data.remote.OpenFoodFactsRepository
+import com.rogger.bp.ui.commun.AnalyticsManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -39,7 +41,8 @@ class AddProductViewModel(
     private val saveProductUseCase: SaveProductUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val registerRepository: RegisterItemRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val openFoodFactsRepository: OpenFoodFactsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddProductState())
@@ -117,10 +120,32 @@ class AddProductViewModel(
 
                 override fun onFailure(message: String) {
                     android.util.Log.e("AddProductViewModel", "Erro ao resolver barcode $barcode remotamente: $message")
+                    // 3. Se não existir no Firebase -> consulta Open Food Facts
+                    fetchFromOpenFoodFacts(barcode)
                 }
 
                 override fun onComplete() {}
             })
+        }
+    }
+
+    private fun fetchFromOpenFoodFacts(barcode: String) {
+        viewModelScope.launch {
+            val product = openFoodFactsRepository.fetchProduct(barcode)
+            
+            // Verifica se ainda estamos interessados neste barcode
+            if (_uiState.value.barcode != barcode) return@launch
+
+            if (product != null) {
+                _uiState.update { state ->
+                    state.copy(
+                        // Preenche o nome se estiver vazio
+                        name = if (state.name.isBlank()) product.name else state.name,
+                        // Preenche a imagem se estiver vazia
+                        imageUri = if (state.imageUri == null && product.uri.isNotEmpty()) Uri.parse(product.uri) else state.imageUri
+                    )
+                }
+            }
         }
     }
 
@@ -156,6 +181,7 @@ class AddProductViewModel(
                     deleted = false
                 )
                 saveProductUseCase(product)
+                AnalyticsManager.logProductAdded(if (state.barcode.isNotEmpty()) "barcode" else "manual")
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }

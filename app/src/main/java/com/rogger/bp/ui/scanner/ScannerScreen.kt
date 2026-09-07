@@ -62,6 +62,7 @@ import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeView
 import com.journeyapps.barcodescanner.DefaultDecoderFactory
 import com.rogger.bp.R
+import com.rogger.bp.ui.commun.AnalyticsManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +133,9 @@ fun ScannerScreen(
                 Button(
                     onClick = {
                         if (isValid) {
-                            onBarcodeScanned(manualBarcode.trim())
+                            val trimmed = manualBarcode.trim()
+                            AnalyticsManager.logBarcodeScanned("manual")
+                            onBarcodeScanned(trimmed)
                             showManualEntryDialog = false
                         }
                     },
@@ -169,6 +172,7 @@ fun ScannerScreen(
                             decodeContinuous { result ->
                                 result.text?.let { 
                                     pause()
+                                    AnalyticsManager.logBarcodeScanned("camera")
                                     onBarcodeScanned(it)
                                 }
                             }

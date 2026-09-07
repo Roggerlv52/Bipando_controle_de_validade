@@ -13,6 +13,7 @@ import com.rogger.bp.ui.groups.data.GroupRepository
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.content.Context
 import kotlinx.coroutines.flow.*
@@ -136,6 +137,7 @@ class EditProductViewModel(
                     note = state.note
                 )
                 saveProductUseCase(updatedProduct)
+                AnalyticsManager.logProductEdited()
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
@@ -162,6 +164,7 @@ class EditProductViewModel(
         viewModelScope.launch {
             try {
                 deleteProductUseCase(product)
+                AnalyticsManager.logProductDeleted()
                 _uiState.update { it.copy(isLoading = false, isDeleted = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
