@@ -34,8 +34,8 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 45
-        versionName = "2.0.3-beta"
+        versionCode = 46
+        versionName = "2.1.3-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {

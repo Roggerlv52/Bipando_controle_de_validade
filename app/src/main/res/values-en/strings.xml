@@ -232,6 +232,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="scanner_subtitle">BUY AND SELL</string>
     <string name="scanner_permission_needed">Camera permission is required to scan.</string>
     <string name="scanner_grant_permission">Grant Permission</string>
+    <string name="scanner_title">Scan barcode</string>
     <string name="cd_back">Back</string>
 
     <string name="add_product_title">New Product</string>
@@ -300,5 +301,9 @@ lost and when you create your account again using the same email, you will need 
     <string name="dialog_select_image_title">Select Image</string>
     <string name="dialog_camera">Camera</string>
     <string name="dialog_gallery">Gallery</string>
+
+    <string name="preview_code">View Code</string>
+    <string name="preview_image">View Image</string>
+    <string name="error_loading_image">Error loading image</string>
 
 </resources>

@@ -251,6 +251,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="scanner_subtitle">COMPRA E VENDA</string>
     <string name="scanner_permission_needed">Permissão da câmera é necessária para escanear.</string>
     <string name="scanner_grant_permission">Conceder Permissão</string>
+    <string name="scanner_title">Escanear código de barras</string>
     <string name="cd_back">Voltar</string>
 
     <string name="add_product_title">Novo Produto</string>
@@ -319,5 +320,9 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="dialog_select_image_title">Selecionar Imagem</string>
     <string name="dialog_camera">Câmera</string>
     <string name="dialog_gallery">Galeria</string>
+
+    <string name="preview_code">Visualizar Código</string>
+    <string name="preview_image">Visualizar Imagem</string>
+    <string name="error_loading_image">Erro ao carregar imagem</string>
 
 </resources>

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +44,7 @@ fun ImagePreviewScreen(
             TopAppBar(
                 title = { 
                     Text(
-                        if (barcode.isNotEmpty()) "Visualizar Código" else "Visualizar Imagem", 
+                        text = if (barcode.isNotEmpty()) stringResource(R.string.preview_code) else stringResource(R.string.preview_image), 
                         fontWeight = FontWeight.Bold
                     ) 
                 },
@@ -51,7 +52,7 @@ fun ImagePreviewScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -108,7 +109,7 @@ fun ImagePreviewScreen(
                     ) {
                         Image(
                             bitmap = barcodeBitmap.asImageBitmap(),
-                            contentDescription = "Código de barras",
+                            contentDescription = stringResource(R.string.txt_toolbar_barcode),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp)
@@ -158,13 +159,13 @@ fun ImagePreviewScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_shopping),
-                                contentDescription = "Erro ao carregar imagem",
+                                contentDescription = stringResource(R.string.error_loading_image),
                                 tint = Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(64.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Erro ao carregar imagem",
+                                text = stringResource(R.string.error_loading_image),
                                 color = Color.White.copy(alpha = 0.5f)
                             )
                         }

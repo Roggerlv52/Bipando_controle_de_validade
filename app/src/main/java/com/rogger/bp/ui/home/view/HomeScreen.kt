@@ -319,9 +319,12 @@ fun HomeScreen(
 }
 
 private fun abrirSuporteEmail(context: android.content.Context) {
+    val subject = context.getString(R.string.support_email_subject)
+    val uriText = "mailto:bipandosuporte@gmail.com" +
+            "?subject=" + Uri.encode(subject)
+
     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("mailto:bipandosuporte@gmail.com")
-        putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.support_email_subject))
+        data = Uri.parse(uriText)
     }
     try {
         context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.support_email_chooser)))

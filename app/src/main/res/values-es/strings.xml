@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Bipando</string>
+    <!-- Estado del límite en la navegación lateral -->
+    <string name="premium_active_status">Plan Premium Activo (%1$d registrados)</string>
+    <string name="free_limit_status">Límite de Productos: %1$d/100</string>
+
+    <!-- Flujo de Compartir la Aplicación -->
+    <string name="share_app_message">¡Echa un vistazo a Bipando - Control de Caducidad! Evita el desperdicio de productos de forma sencilla y rápida.\n\nDescárgalo ahora en la Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
+    <string name="share_app_title">Compartir Bipando vía:</string>
+    <string name="share_app_no_app_found">No se encontró ninguna aplicación para compartir.</string>
+
+    <!-- Notificación -->
+    <string name="notification_name">Caducidad de Productos</string>
+    <string name="notification_title">Producto por caducar</string>
+    <string name="notification_title_2">producto por caducar</string>
+    <string name="expiration_notice">Aviso de caducidad</string>
+    <string name="notification_description">Avisos de productos próximos a su fecha de caducidad</string>
+    <string name="notif_vencendo_body_single">\'%1$s\' está próximo a caducar.</string>
+    <string name="notif_vencendo_body_multiple">Tienes %1$d productos próximos a caducar.</string>
+    <string name="notif_vencidos_title_single">Producto caducado</string>
+    <string name="notif_vencidos_title_multiple">%1$d productos caducados</string>
+    <string name="notif_vencidos_body_single">¡\'%1$s\' ya ha caducado!</string>
+    <string name="notif_vencidos_body_multiple">¡Tienes %1$d productos que ya han caducado!</string>
+
+    <string name="login_with_google">Iniciar sesión con Google</string>
+
+    <string name="product_deleted_success">\"%1$s\" eliminado</string>
+    <string name="product_deleted_restored">\"%1$s\" restaurado</string>
+
+    <string name="action_settings">Configuración</string>
+    <string name="agree_terms_policy"> <b>Política de Privacidad</b></string>
+
+    <string name="menu_home">Inicio</string>
+    <string name="menu_deleted">Elementos eliminados</string>
+    <string name="menu_profile_config">Configuración del perfil</string>
+
+    <string name="saved">¡Guardado con éxito!</string>
+    <string name="remove_text">¡Eliminado con éxito!</string>
+    <string name="selct_date">Seleccione una fecha.</string>
+    <string name="mesage_scanner">Este codificador acepta (números) y (letras), escriba según desee.</string>
+    <string name="name_barcode_valid_">¡El nombre del producto es obligatorio!</string>
+
+    <string name="build_version">Versión (%1$s)</string>
+
+    <string name="enter_manual_code">Introducir código de barras</string>
+
+    <string name="product_deleted">Productos eliminados</string>
+    <string name="edit">Editar</string>
+
+    <string name="logout">Salir</string>
+
+    <string name="digitaliz_c_digo_de_barras">Introducir código de barras</string>
+    <!-- EditTextView hint -->
+    <string name="edit_hint_name">Nombre del producto</string>
+    <string name="edit_hint_category">Nombre de la categoría</string>
+    <string name="edit_hint_notes">Nota</string>
+    <!-- EditTextView valide -->
+    <string name="edit_validate_fields">Seleccione la fecha de caducidad</string>
+    <string name="edit_txt_mandatory">Campo obligatorio</string>
+    <string name="edit_txt_mandatory_2">Mínimo 4 caracteres</string>
+    <string name="edit_txt_mandatory_3">Introduzca un nombre</string>
+
+    <!-- Button -->
+    <string name="button_save">Guardar</string>
+    <string name="category"> Categorías</string>
+    <string name="category_2"> Categoría</string>
+
+    <string name="toast_product_not_loaded">Producto no cargado</string>
+    <string name="toast_msg_error_invalid_product">Producto inválido — falta el identificador</string>
+    <string name="toast_msg_error_img_gallery">Error al procesar la imagen de la galería</string>
+    <string name="toast_msg_error_gallery">Error al procesar la imagen de la galería</string>
+    <string name="toast_msg_error_camera">Error en la cámara</string>
+    <string name="toast_no_internet_msg">Sin conexión a Internet. Verifique su red. El producto se guardará localmente.</string>
+    <string name="toast_txt_created">creada</string>
+    <string name="toast_msg_error_img">Error al procesar la imagen</string>
+    <string name="toast_txt_excluded">excluida</string>
+    <string name="toast_msg_error_access">Es necesario acceder a la galería para seleccionar imágenes.</string>
+    <string name="toast_msg_error_google">Fallo al iniciar sesión con Google (código</string>
+    <string name="toast_msg_error_google_token">No se pudo obtener el token de Google.</string>
+    <string name="toast_msg_error_google_invalid_token">Token inválido. Inténtelo de nuevo.</string>
+    <string name="toast_msg_error_google_invalid_token_2">Token de autenticación inválido</string>
+    <string name="toast_msg_error_google_authentication_failed">Fallo en la autenticación con Google</string>
+    <string name="toast_msg_error_google_user_not_found">Usuario no encontrado tras la autenticación</string>
+
+    <string name="category_txt_update">Categoría actualizada a</string>
+    <string name="category_txt_exists">ya existe en su lista</string>
+
+    <string name="delete_item">Elementos eliminados</string>
+
+    <string name="menu_payment">Pago</string>
+    <string name="search_hint_default">Introduzca un nombre o escanee un código de barras\n</string>
+
+    <string name="delete_account"><b><font color="#FF0000">Atención:</font></b>\n \n Al confirmar la <b>eliminación de la cuenta</b>, sus datos, como los artículos registrados, se perderán. Esta acción no se puede deshacer, pero puede volver a crear una cuenta iniciando sesión con Google.\n &#8226; Si tiene un plan activo, los datos del plan se perderán y, al volver a crear su cuenta con el mismo correo electrónico, deberá elegir un plan de pago nuevamente.</string>
+
+    <!-- Grupos de Validade -->
+    <string name="group_expired">Caducado</string>
+    <string name="group_today">Caduca hoy</string>
+    <string name="group_tomorrow">Caduca mañana</string>
+    <string name="group_day_left">%1$d día restante</string>
+    <string name="group_days_left">%1$d días restantes</string>
+    <!-- Dialog bottom -->
+    <string name="dialog_button_accept">Aceptar</string>
+    <string name="dialog_button_cancel">Cancelar</string>
+    <string name="dialog_button_not_now">Ahora no</string>
+    <string name="excluir">Eliminar</string>
+    <string name="dialog_button_delete_permanently">Eliminar definitivamente</string>
+    <string name="dialog_button_restore">Restaurar</string>
+    <!-- Diálogos de Confirmação -->
+    <string name="dialog_title_option">¿Qué desea hacer?</string>
+    <string name="dialog_title_no_category">No se encontró ninguna categoría</string>
+    <string name="dialog_title">Confirmar eliminación</string>
+    <string name="dialog_title_delete_item">Elemento eliminado</string>
+    <string name="dialog_title_delete_really">¿Realmente desea eliminar?</string>
+    <string name="dialog_title_delete"> ¿Desea eliminar?</string>
+    <string name="dialog_title_select">seleccione una categoría</string>
+    <string name="dialog_add_category_title">Crear categoría</string>
+    <string name="dialog_msg_start_managing">Para empezar a gestionar sus productos, es necesario crear al menos una categoría. ¿Desea crear una ahora?</string>
+
+    <string name="delete_confirm_single">¿Realmente desea mover el producto \"%1$s\" a la papelera?</string>
+    <string name="delete_confirm_multiple">¿Realmente desea mover estos %1$d productos de \"%2$s\" a la papelera?</string>
+
+    <string name="delete_account_confirme">¿Está seguro de que desea eliminar la cuenta?\nSus datos se perderán.</string>
+
+    <!-- Alertas de Limite Premium -->
+    <string name="premium_limit_title">Límite gratuito alcanzado</string>
+    <string name="premium_limit_message">Has alcanzado el límite máximo de 100 productos en el plan gratuito. ¡Adquiere el Plan Premium para disfrutar de capacidad ilimitada y continuar gestionando tu inventario de forma profesional!</string>
+    <string name="premium_limit_positive">Ver Planes Premium</string>
+    <string name="premium_limit_negative">Más tarde</string>
+    <string name="shared_app">"Compartir "</string>
+    <string name="assinatura">Suscripción</string>
+
+    <!-- Spiner titulo -->
+    <string name="spinner__selected_category">Seleccione una categoría</string>
+
+    <string name="txt_msg_deleted">Ningún elemento eliminado</string>
+    <string name="config_account_profile">Configuración de la cuenta</string>
+    <string name="txt_name_profile">Nombre</string>
+    <string name="Select_theme">Seleccione el tema</string>
+    <string name="theme_bipando">Tema Clásico (Oscuro)</string>
+    <string name="theme_green">Tema verde de Android</string>
+    <string name="theme_red">Tema rojo</string>
+    <string name="active_beep">Activar pitido</string>
+    <string name="active_notification">Activar notificación</string>
+    <string name="spinner_indicator">Indicador de caducidad próxima</string>
+    <string name="delete_account_button">Eliminar la cuenta</string>
+    <string name="title_promotion">¡Únete a Premium\nDisfruta de funciones\nilimitadas!</string>
+    <string name="sub_title_promotion">"🔥"</string>
+    <string name="text_unlimited_promotion">Escaneo y registro ilimitados.</string>
+    <string name="text_customized_notification">Notificaciones personalizadas por producto</string>
+    <string name="text_unlimited_categories">Categorías ilimitadas para tu inventario</string>
+    <string name="plan_name_mensal">Mensual</string>
+    <string name="plan_name_semestral">Semestral</string>
+    <string name="select_plan">Seleccione un plan</string>
+    <string name="information_payment">30 días gratis, luego 14,99 R$/mes</string>
+    <string name="information_subscription">La suscripción se renovará automáticamente mensual o semestralmente hasta que se cancele en la configuración de la Play Store.</string>
+    <string name="add_product">Añadir producto</string>
+    <string name="menu_gallery">Galería</string>
+
+    <string name="current_plan">✓ Plan actual</string>
+    <string name="change_plan_text">Cambiar al plan %1$s</string>
+    <string name="btn_subscribe_now">Suscribirse ahora</string>
+
+    <!-- Aviso de alteração de plano na faturação -->
+    <string name="plan_change_info_text">⚠️ Al confirmar, su plan cambiará a %1$s. El cambio entrará en vigor en el próximo ciclo de facturación. No se le cobrará ahora. Gestione su suscripción en cualquier momento en la Google Play Store.</string>
+    <string name="change_subscription">Cambiar plan de suscripción</string>
+    <string name="dialog_confirm_exchange">Confirmar cambio</string>
+    <string name="trial_duration_text">%1$s gratis, luego %2$s/mes</string>
+    <!-- Mensagem informativa de plano já ativo -->
+    <string name="plan_active_info_text">Plan %1$s activo. Los cambios de plan se aplicarán automáticamente en el próximo vencimiento.</string>
+    <string name="plan_change_dialog_message">Está cambiando del plan %1$s al plan %2$s.\n\n• El cambio se aplicará en el próximo ciclo de facturación.\n• No se le cobrará ahora por el nuevo plan.\n• Su acceso premium sigue activo hasta el final del periodo actual.\n\n¿Desea continuar?</string>
+    <string name="txt_logo_bottom">CONTROL DE CADUCIDAD</string>
+    <string name="txt_no_categories_registered">Ninguna categoría registrada.\nToque en + para crear una.</string>
+    <string name="txt_empty_list">Lista vacía \n Haga clic en + para añadir productos</string>
+    <string name="enter_name_barcode">Introduzca el nombre o el código de barras</string>
+    <string name="name_or_barcode">Nombre o código de barras</string>
+    <string name="txt_no_products">No se han encontrado productos</string>
+    <string name="txt_toolbar_barcode">Código de barras</string>
+    <string name="date_format">dd/mm/aaaa</string>
+    <string name="date_format_hour">dd/mm/aaaa hh:mm</string>
+    <string name="menu_exporta">Exportar</string>
+
+    <plurals name="categories_selected_count">
+        <item quantity="one">%1$d seleccionada</item>
+        <item quantity="other">%1$d seleccionadas</item>
+    </plurals>
+    <string name="day__count">%1$d día</string>
+    <string name="days__count">%1$d días</string>
+    <plurals name="days_selected_count">
+        <item quantity="one">%1$d día</item>
+        <item quantity="other">%1$d días</item>
+    </plurals>
+    <!--PdfExportHelper-->
+    <string name="msg_no_active_products">Ningún producto activo para exportar</string>
+    <string name="bp_expiration_date_control">Bipando - Control de Caducidad</string>
+    <string name="report_generated_on">Informe generado el: </string>
+    <string name="product">Producto</string>
+    <string name="expiration_date">Caducidad</string>
+    <string name="days_remaining">Días rest.</string>
+    <string name="share_pdf_report">Compartir informe PDF:</string>
+
+    <string name="menu_profile">Perfil</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_groups">Grupos</string>
+    <string name="menu_share_app">Compartir aplicación</string>
+    <string name="menu_support">Soporte y comentarios</string>
+    <string name="support_email_subject">Soporte Bipando - Sugerencias/Dudas</string>
+    <string name="support_email_chooser">Enviar correo de soporte</string>
+    <string name="cd_remove_group">Eliminar grupo</string>
+    <string name="cd_menu">Menú</string>
+    <string name="cd_search">Buscar</string>
+    <string name="cd_more_options">Más opciones</string>
+    <string name="menu_export_pdf">Exportar PDF</string>
+    <string name="menu_export_excel">Exportar Excel</string>
+    <string name="search_products_placeholder">Buscar productos...</string>
+    <string name="cd_voice_search">Búsqueda por voz</string>
+    <string name="cd_close_search">Cerrar búsqueda</string>
+    <string name="search_no_results">No se han encontrado productos para su búsqueda.</string>
+    <string name="add_first_product">Añadir mi primer producto</string>
+    <string name="status_today">Hoy</string>
+
+    <string name="login_network_error">Error de conexión. Por favor, verifique su internet e inténtelo de nuevo.</string>
+    <string name="login_welcome">Bienvenido a Bipando</string>
+    <string name="login_continue">Inicie sesión para continuar</string>
+    <string name="cd_logo_bipando">Logo de Bipando</string>
+
+    <string name="scanner_manual_title">Introducir código manualmente</string>
+    <string name="scanner_manual_hint">Código de barras</string>
+    <string name="scanner_manual_error">Introduzca al menos 4 dígitos</string>
+    <string name="scanner_confirm">Confirmar</string>
+    <string name="scanner_bipando">Bipando</string>
+    <string name="scanner_subtitle">COMPRA Y VENTA</string>
+    <string name="scanner_permission_needed">Se requiere permiso de cámara para escanear.</string>
+    <string name="scanner_grant_permission">Conceder permiso</string>
+    <string name="scanner_title">Escanear código de barras</string>
+    <string name="cd_back">Voltar</string>
+
+    <string name="add_product_title">Nuevo producto</string>
+    <string name="edit_product_title">Editar producto</string>
+    <string name="add_photo">Añadir foto</string>
+    <string name="select_category_hint">Seleccionar categoría</string>
+    <string name="expiration_date_label">Fecha de caducidad</string>
+    <string name="notes_optional_hint">Notas (Opcional)</string>
+    <string name="notes_hint">Notas</string>
+    <string name="save_product_button">Guardar producto</string>
+    <string name="save_changes_button">Guardar cambios</string>
+    <string name="select_category_title">Seleccione una categoría</string>
+    <string name="cd_add_photo">Añadir foto</string>
+
+    <string name="delete_product_title">Eliminar producto</string>
+    <string name="delete_product_confirm_msg">¿Realmente desea eliminar \"%1$s\"?</string>
+
+    <string name="cd_close">Cerrar</string>
+    <string name="status_active_caps">ACTIVO</string>
+
+    <string name="profile_delete_account_title">Eliminar cuenta permanentemente</string>
+    <string name="profile_delete_warning_header">ATENCIÓN: Esta acción es irreversible.</string>
+    <string name="profile_delete_warning_body">Al eliminar su cuenta, todos sus datos se borrarán definitivamente de nuestro sistema:</string>
+    <string name="profile_delete_item_1">• Todos sus productos y categorías.</string>
+    <string name="profile_delete_item_2">• Todas las imágenes de productos subidas por usted.</string>
+    <string name="profile_delete_item_3">• Su perfil y configuración de grupo.</string>
+    <string name="profile_delete_item_4">• Estado de suscripción Premium.</string>
+    <string name="profile_delete_final_question">¿Realmente desea proceder con la eliminación total de sus datos?</string>
+    <string name="profile_delete_all_button">Eliminar todo</string>
+    <string name="profile_title">Configuración</string>
+    <string name="cd_profile_photo">Foto de perfil</string>
+    <string name="profile_user_code">Su código: %1$s</string>
+    <string name="cd_share_code">Compartir código</string>
+    <string name="profile_preferences">Preferencias</string>
+    <string name="profile_date_picker_type">Tipo de selector de fecha</string>
+    <string name="profile_date_picker_calendar">Calendario (Predeterminado)</string>
+    <string name="profile_date_picker_spinner">Spinner (Desplazamiento)</string>
+    <string name="profile_appearance">Apariencia</string>
+    <string name="profile_theme_classic">Tema Clásico</string>
+    <string name="profile_theme_green">Tema Verde</string>
+    <string name="profile_theme_red">Tema Rojo</string>
+    <string name="profile_theme_dark">Tema Nocturno</string>
+    <string name="profile_notifications">Notificaciones</string>
+    <string name="profile_enable_notifications">Activar notificaciones</string>
+    <string name="profile_expiry_warning_label">Aviso de caducidad: %1$d días antes</string>
+    <string name="profile_notification_time">Horario de la notificación</string>
+    <string name="profile_notification_sound">Sonido de la notificación</string>
+    <string name="profile_sounds">Sonidos</string>
+    <string name="profile_enable_beep">Activar pitido</string>
+    <string name="profile_management">Gestión</string>
+    <string name="profile_trash">Papelera</string>
+    <string name="profile_view_deleted">Ver elementos eliminados</string>
+    <string name="profile_delete_account_button">Eliminar cuenta</string>
+    <string name="profile_privacy_policy">Política de privacidad</string>
+    <string name="profile_plan_usage">Uso del plan</string>
+    <string name="profile_premium_subscriber">Suscriptor Premium</string>
+    <string name="profile_unlimited_registration">Usted posee registro ilimitado</string>
+    <string name="profile_registered_products">Productos registrados</string>
+    <string name="profile_limit_reached_msg">¡Límite alcanzado! Hágase Premium para continuar.</string>
+    <string name="profile_approaching_limit_msg">Está alcanzando el límite gratuito.</string>
+    <string name="profile_remove_limits">Eliminar límites</string>
+    <string name="cd_copy">Copiar</string>
+
+    <string name="dialog_no_category_found">No se ha encontrado ninguna categoría.</string>
+    <string name="dialog_create_new_category">Crear nueva categoría</string>
+    <string name="dialog_select_image_title">Seleccionar imagen</string>
+    <string name="dialog_camera">Cámara</string>
+    <string name="dialog_gallery">Galería</string>
+
+    <string name="preview_code">Visualizar código</string>
+    <string name="preview_image">Visualizar imagen</string>
+    <string name="error_loading_image">Error al cargar la imagen</string>
+</resources>
