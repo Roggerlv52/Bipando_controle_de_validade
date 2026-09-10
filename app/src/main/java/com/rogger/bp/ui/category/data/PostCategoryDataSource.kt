@@ -9,5 +9,5 @@ interface PostCategoryDataSource {
     fun deleteCategory(category: PostCategory, callback: CategoryCallback)
     fun fetchCategories(callback: FetchCategoriesCallback)
 
-    fun addCategoriesSnapshotListener(callback: FetchCategoriesCallback): ListenerRegistration?
+    fun addCategoriesSnapshotListener(groupId: String? = null, callback: FetchCategoriesCallback): ListenerRegistration?
 }

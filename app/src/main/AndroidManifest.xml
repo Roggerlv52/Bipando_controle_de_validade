@@ -5,24 +5,37 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="true" />
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.camera.front"
         android:required="false" />
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <package android:name="com.google.android.gms" />
+    </queries>
+
     <application
+        android:name=".BipandoApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/backup_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -33,27 +46,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bpd"
         tools:targetApi="31">
-        <activity
-            android:name="com.rogger.bp.MainActivity"
-            android:configChanges="screenSize|orientation"
-            android:exported="false"
-            android:theme="@style/Theme.Bpd">
 
-        </activity>
         <activity
-            android:name="com.rogger.bp.ui.login.view.LoginActivity"
-            android:screenOrientation="fullSensor"
-            android:configChanges="orientation|screenSize"
-            android:exported="true">
-
+            android:name="com.rogger.bp.ui.ModernActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Bpd"
+            android:configChanges="screenSize|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.rogger.bp.ui.scanner.ImageBarcode"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

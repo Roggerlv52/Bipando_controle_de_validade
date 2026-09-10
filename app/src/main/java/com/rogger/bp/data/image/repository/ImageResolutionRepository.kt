@@ -5,6 +5,7 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.image.datasource.GlobalImageDataSource
 import com.rogger.bp.data.image.datasource.UserImageDataSource
+import android.content.Context
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 28/05/2026
@@ -65,29 +66,40 @@ class ImageResolutionRepository(
             return ImageResult.NoImage
         }
 
-        Log.d(TAG, "Resolvendo imagem para barcode=$barcode")
+        val trimmedBarcode = barcode.trim()
+        Log.d(TAG, "Resolvendo imagem para barcode=$trimmedBarcode")
 
         // ── Passo 1: Imagem personalizada ─────────────────────────────────
-        val userResult = userImageDataSource.fetchUserImage(barcode)
-        if (userResult is ImageResult.CustomImage) {
-            Log.d(TAG, "Usando imagem personalizada para barcode=$barcode")
-            return userResult
-        }
+        try {
+            val userResult = userImageDataSource.fetchUserImage(trimmedBarcode)
+            if (userResult is ImageResult.CustomImage) {
+                Log.d(TAG, "Usando imagem personalizada para barcode=$trimmedBarcode")
+                return userResult
+            }
 
-        // Erros de autenticação são fatais — não faz sentido continuar
-        if (userResult is ImageResult.Error && userResult.message == "Utilizador não autenticado") {
-            return userResult
+            if (userResult is ImageResult.Error && userResult.message == "Utilizador não autenticado") {
+                Log.w(TAG, "Utilizador não autenticado ao buscar imagem personalizada")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro não crítico ao buscar imagem personalizada: ${e.message}")
         }
 
         // ── Passo 2: Imagem global ────────────────────────────────────────
-        val globalResult = globalImageDataSource.fetchGlobalImage(barcode)
+        Log.d(TAG, "Iniciando busca global para barcode=$trimmedBarcode")
+        val globalResult = globalImageDataSource.fetchGlobalImage(trimmedBarcode)
+        
         if (globalResult is ImageResult.GlobalImage) {
-            Log.d(TAG, "Usando imagem global para barcode=$barcode")
+            Log.d(TAG, "Sucesso na busca global para barcode=$trimmedBarcode")
+            return globalResult
+        }
+
+        if (globalResult is ImageResult.Error) {
+            Log.e(TAG, "Erro na busca global para barcode=$trimmedBarcode: ${globalResult.message}")
             return globalResult
         }
 
         // ── Passo 3: Sem imagem ───────────────────────────────────────────
-        Log.d(TAG, "Nenhuma imagem encontrada para barcode=$barcode")
+        Log.d(TAG, "Nenhuma imagem encontrada em nenhuma camada para barcode=$trimmedBarcode")
         return ImageResult.NoImage
     }
 
@@ -107,12 +119,13 @@ class ImageResolutionRepository(
      * @param imageUri     URI local da imagem
      */
     suspend fun uploadGlobalImage(
+        context: Context,
         barcode: String,
         productName: String,
         imageUri: String
     ): UploadResult {
         Log.d(TAG, "Criando imagem global para barcode=$barcode")
-        return globalImageDataSource.createGlobalImageIfAbsent(barcode, productName, imageUri)
+        return globalImageDataSource.createGlobalImageIfAbsent(context, barcode, productName, imageUri)
     }
 
     // ── 3. Salvar imagem personalizada (utilizador altera a sua view) ──────
@@ -126,9 +139,9 @@ class ImageResolutionRepository(
      * @param barcode   código de barras do produto
      * @param imageUri  URI local da nova imagem
      */
-    suspend fun saveUserImage(barcode: String, imageUri: String): UploadResult {
+    suspend fun saveUserImage(context: Context, barcode: String, imageUri: String): UploadResult {
         Log.d(TAG, "Salvando imagem personalizada para barcode=$barcode")
-        return userImageDataSource.saveUserImage(barcode, imageUri)
+        return userImageDataSource.saveUserImage(context, barcode, imageUri)
     }
 
     // ── 4. Remover imagem personalizada ───────────────────────────────────

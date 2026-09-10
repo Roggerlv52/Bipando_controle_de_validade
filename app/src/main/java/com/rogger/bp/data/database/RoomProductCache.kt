@@ -37,8 +37,11 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
     }
 
     suspend fun replaceAllProducts(products: List<PostProduct>) {
-        productDao.clearAllProducts()
-        productDao.putAllProducts(products)
+        productDao.replaceAllProducts(products)
+    }
+
+    suspend fun replaceAllProductsByGroup(groupId: String, products: List<PostProduct>) {
+        productDao.replaceAllProductsByGroup(groupId, products)
     }
 
     override suspend fun clear() {
@@ -49,12 +52,12 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.putAllProducts(categories)
     }
 
-    fun getAllProductsFlow(): Flow<List<PostProduct>> {
-        return productDao.getAllProducts()
+    fun getAllProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getAllProducts(groupId)
     }
 
-    fun getProductsByCategoryFlow(categoryId: String): Flow<List<PostProduct>> {
-        return productDao.getProductsByCategory(categoryId)
+    fun getProductsByCategoryFlow(categoryId: String, groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getProductsByCategory(categoryId, groupId)
     }
 
     suspend fun insertProduct(product: PostProduct) {
@@ -63,6 +66,10 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
 
     suspend fun updateProduct(product: PostProduct) {
         productDao.updateProduct(product)
+    }
+
+    suspend fun getProductByBarcode(barcode: String): PostProduct? {
+        return productDao.getProductByBarcode(barcode)
     }
 
     suspend fun deleteProduct(product: PostProduct) {

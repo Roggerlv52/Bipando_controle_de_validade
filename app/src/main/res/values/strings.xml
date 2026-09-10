@@ -5,7 +5,7 @@
     <string name="free_limit_status">Limite de Produtos: %1$d/100</string>
 
     <!-- Fluxo de Partilha da Aplicação -->
-    <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
+    <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
     <string name="share_app_title">Compartilhar Bipando via:</string>
     <string name="share_app_no_app_found">Nenhum aplicativo encontrado para compartilhar.</string>
 
@@ -160,7 +160,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="spinner_indicator">Indicador de vencimento proxímo</string>
     <string name="delete_account_button">"Excluir a conta"</string>
     <string name="title_promotion">Junte-se ao Premium\nAproveite recursos\nilimitados!</string>
-    <string name="sub_title_promotion">"🔥Milhares de usuários confiam "</string>
+    <string name="sub_title_promotion">"🔥"</string>
     <string name="text_unlimited_promotion">Digitalização e registro ilimitados.</string>
     <string name="text_customized_notification">Notificações customizadas por produto</string>
     <string name="text_unlimited_categories">Categorias ilimitadas para o seu estoque</string>
@@ -196,7 +196,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="date_format">dd/MM/yyyy</string>
     <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Exportar</string>
-    <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
+    <string name="menu_exporta_pdf" translatable="false">PDF</string>
     <string name="menu_exporta_excel" translatable="false">EXCEL</string>
 
     <plurals name="categories_selected_count">
@@ -217,5 +217,112 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="expiration_date">Vencimento</string>
     <string name="days_remaining">Dias rest.</string>
     <string name="share_pdf_report">Compartilhar Relatório PDF:</string>
+
+    <string name="menu_profile">Perfil</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_groups">Grupos</string>
+    <string name="menu_share_app">Compartilhar App</string>
+    <string name="menu_support">Suporte e Feedback </string>
+    <string name="support_email_subject">Suporte Bipando - Sugestões/Dúvidas</string>
+    <string name="support_email_chooser">Enviar e-mail de suporte</string>
+    <string name="cd_remove_group">Remover Grupo</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_search">Pesquisar</string>
+    <string name="cd_more_options">Mais opções</string>
+    <string name="menu_export_pdf">Exportar PDF</string>
+    <string name="menu_export_excel">Exportar Excel</string>
+    <string name="search_products_placeholder">Pesquisar produtos...</string>
+    <string name="cd_voice_search">Pesquisa por Voz</string>
+    <string name="cd_close_search">Fechar Pesquisa</string>
+    <string name="search_no_results">Nenhum produto encontrado para sua busca.</string>
+    <string name="add_first_product">Adicionar Meu Primeiro Produto</string>
+    <string name="status_today">Hoje</string>
+
+    <string name="login_network_error">Falha na conexão. Por favor, verifique sua internet e tente novamente.</string>
+    <string name="login_welcome">Bem-vindo ao Bipando</string>
+    <string name="login_continue">Faça login para continuar</string>
+    <string name="cd_logo_bipando">Logo Bipando</string>
+
+    <string name="scanner_manual_title">Digitar Código Manualmente</string>
+    <string name="scanner_manual_hint">Código de Barras</string>
+    <string name="scanner_manual_error">Digite ao menos 4 dígitos</string>
+    <string name="scanner_confirm">Confirmar</string>
+    <string name="scanner_bipando">Bipando</string>
+    <string name="scanner_subtitle">COMPRA E VENDA</string>
+    <string name="scanner_permission_needed">Permissão da câmera é necessária para escanear.</string>
+    <string name="scanner_grant_permission">Conceder Permissão</string>
+    <string name="scanner_title">Escanear código de barras</string>
+    <string name="cd_back">Voltar</string>
+
+    <string name="add_product_title">Novo Produto</string>
+    <string name="edit_product_title">Editar Produto</string>
+    <string name="add_photo">Adicionar Foto</string>
+    <string name="select_category_hint">Selecionar Categoria</string>
+    <string name="expiration_date_label">Data de Vencimento</string>
+    <string name="notes_optional_hint">Notas (Opcional)</string>
+    <string name="notes_hint">Notas</string>
+    <string name="save_product_button">Salvar Produto</string>
+    <string name="save_changes_button">Salvar Alterações</string>
+    <string name="select_category_title">Selecione uma Categoria</string>
+    <string name="cd_add_photo">Adicionar Foto</string>
+
+    <string name="delete_product_title">Excluir Produto</string>
+    <string name="delete_product_confirm_msg">Deseja realmente excluir \"%1$s\"?</string>
+
+    <string name="cd_close">Fechar</string>
+    <string name="status_active_caps">ATIVO</string>
+
+    <string name="profile_delete_account_title">Excluir Conta permanentemente</string>
+    <string name="profile_delete_warning_header">ATENÇÃO: Esta ação é irreversível.</string>
+    <string name="profile_delete_warning_body">Ao excluir sua conta, todos os seus dados serão apagados definitivamente do nosso sistema:</string>
+    <string name="profile_delete_item_1">• Todos os seus produtos e categorias.</string>
+    <string name="profile_delete_item_2">• Todas as imagens de produtos enviadas por você.</string>
+    <string name="profile_delete_item_3">• Seu perfil e configurações de grupo.</string>
+    <string name="profile_delete_item_4">• Status de assinatura Premium.</string>
+    <string name="profile_delete_final_question">Deseja realmente prosseguir com a exclusão total dos seus dados?</string>
+    <string name="profile_delete_all_button">Excluir Tudo</string>
+    <string name="profile_title">Configurações</string>
+    <string name="cd_profile_photo">Foto de perfil</string>
+    <string name="profile_user_code">Seu Código: %1$s</string>
+    <string name="cd_share_code">Compartilhar Código</string>
+    <string name="profile_preferences">Preferências</string>
+    <string name="profile_date_picker_type">Tipo de Seletor de Data</string>
+    <string name="profile_date_picker_calendar">Calendário (Padrão)</string>
+    <string name="profile_date_picker_spinner">Spinner (Rolagem)</string>
+    <string name="profile_appearance">Aparência</string>
+    <string name="profile_theme_classic">Tema Clássico</string>
+    <string name="profile_theme_green">Tema Verde</string>
+    <string name="profile_theme_red">Tema Vermelho</string>
+    <string name="profile_theme_dark">Tema Noturno</string>
+    <string name="profile_notifications">Notificações</string>
+    <string name="profile_enable_notifications">Ativar Notificações</string>
+    <string name="profile_expiry_warning_label">Aviso de vencimento: %1$d dias antes</string>
+    <string name="profile_notification_time">Horário da Notificação</string>
+    <string name="profile_notification_sound">Som da Notificação</string>
+    <string name="profile_sounds">Sons</string>
+    <string name="profile_enable_beep">Ativar Bip</string>
+    <string name="profile_management">Gerenciamento</string>
+    <string name="profile_trash">Lixeira</string>
+    <string name="profile_view_deleted">Ver itens removidos</string>
+    <string name="profile_delete_account_button">Excluir Conta</string>
+    <string name="profile_privacy_policy">Política de Privacidade</string>
+    <string name="profile_plan_usage">Uso do Plano</string>
+    <string name="profile_premium_subscriber">Assinante Premium</string>
+    <string name="profile_unlimited_registration">Você possui cadastro ilimitado</string>
+    <string name="profile_registered_products">Produtos Cadastrados</string>
+    <string name="profile_limit_reached_msg">Limite atingido! Torne-se Premium para continuar.</string>
+    <string name="profile_approaching_limit_msg">Você está atingindo o limite gratuito.</string>
+    <string name="profile_remove_limits">Remover Limites</string>
+    <string name="cd_copy">Copiar</string>
+
+    <string name="dialog_no_category_found">Nenhuma categoria encontrada.</string>
+    <string name="dialog_create_new_category">Criar Nova Categoria</string>
+    <string name="dialog_select_image_title">Selecionar Imagem</string>
+    <string name="dialog_camera">Câmera</string>
+    <string name="dialog_gallery">Galeria</string>
+
+    <string name="preview_code">Visualizar Código</string>
+    <string name="preview_image">Visualizar Imagem</string>
+    <string name="error_loading_image">Erro ao carregar imagem</string>
 
 </resources>

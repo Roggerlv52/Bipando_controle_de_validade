@@ -6,7 +6,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
     id("kotlin-parcelize")
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
@@ -27,14 +29,14 @@ android {
         }
     }
     namespace = "com.rogger.bp"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.rogger.bp"
         minSdk = 24
-        targetSdk = 37
-        versionCode = 37
-        versionName = "1.${versionCode}"
+        targetSdk = 36
+        versionCode = 49
+        versionName = "2.1.4-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {
@@ -72,12 +74,27 @@ android {
 
 
 dependencies {
+    //compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.androidx.compose.material.icons.extended)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.billing.ktx)
-
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.storage)
 
     implementation(libs.guava)
@@ -90,8 +107,6 @@ dependencies {
     implementation(libs.legacy.support.v4)
     implementation(libs.core.ktx)
     implementation(libs.recyclerview)
-
-    implementation(libs.glide)
 
     implementation(libs.appcompat)
     implementation(libs.material)

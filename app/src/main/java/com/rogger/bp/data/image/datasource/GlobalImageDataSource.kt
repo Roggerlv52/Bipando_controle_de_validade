@@ -7,8 +7,11 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.model.PostImage
 import com.rogger.bp.ui.commun.NetworkUtils
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import android.content.Context
 /*
  * Desenvolvido por Roger de Oliveira
  * Data: 28/05/2026
@@ -32,37 +35,73 @@ class GlobalImageDataSource {
      */
     suspend fun fetchGlobalImage(barcode: String): ImageResult {
         if (barcode.isBlank()) {
-            return ImageResult.Error("Código de barras inválido")
+            return ImageResult.NoImage
         }
 
-        // 👉 Se estiver offline, retorna NoImage direto para evitar a exceção do Firebase
         if (!NetworkUtils.isNetworkAvailable()) {
             Log.d(TAG, "Dispositivo offline — ignorando busca de imagem global para barcode=$barcode")
             return ImageResult.NoImage
         }
 
         return try {
-            val snapshot = db.collection("imageProdutos")
-                .document(barcode)
+            val barcodeClean = barcode.trim()
+            Log.d(TAG, "Buscando imagem global em imageProdutos para barcode='$barcodeClean'")
+            
+            // Tenta primeiro pelo ID do documento (mais eficiente)
+            var snapshot = db.collection("imageProdutos")
+                .document(barcodeClean)
                 .get()
                 .await()
 
+            // Se não encontrar pelo ID, tenta uma query pelo campo 'barcode'
+            if (!snapshot.exists()) {
+                Log.d(TAG, "Documento não encontrado pelo ID '$barcodeClean', tentando query por campo...")
+                val query = db.collection("imageProdutos")
+                    .whereEqualTo("barcode", barcodeClean)
+                    .limit(1)
+                    .get()
+                    .await()
+                
+                if (!query.isEmpty) {
+                    snapshot = query.documents.first()
+                    Log.d(TAG, "Documento encontrado via query por campo barcode")
+                }
+            }
+
             if (snapshot.exists()) {
+                Log.d(TAG, "Documento resolvido. Dados: ${snapshot.data}")
+                
                 val image = snapshot.toObject(PostImage::class.java)
-                if (image != null && image.uri.isNotEmpty()) {
-                    Log.d(TAG, "Imagem global encontrada para barcode=$barcode")
-                    ImageResult.GlobalImage(url = image.uri, name = image.name)
+                
+                // Fallback agressivo: busca por todos os nomes de campos possíveis
+                val resolvedName = if (image?.name?.isNotEmpty() == true) image.name else {
+                    snapshot.getString("nomeProduto") 
+                        ?: snapshot.getString("name") 
+                        ?: snapshot.getString("productName") 
+                        ?: ""
+                }
+                
+                val resolvedUri = if (image?.uri?.isNotEmpty() == true) image.uri else {
+                    snapshot.getString("imageUri") 
+                        ?: snapshot.getString("uri") 
+                        ?: snapshot.getString("url") 
+                        ?: snapshot.getString("imageUrl") 
+                        ?: ""
+                }
+
+                if (resolvedUri.isNotEmpty()) {
+                    Log.d(TAG, "Sucesso: Imagem global resolvida. Nome: $resolvedName, URL: $resolvedUri")
+                    ImageResult.GlobalImage(url = resolvedUri, name = resolvedName)
                 } else {
-                    Log.w(TAG, "Documento existe mas uri está vazia para barcode=$barcode")
+                    Log.w(TAG, "Aviso: Documento existe mas 'resolvedUri' está vazio para $barcodeClean")
                     ImageResult.NoImage
                 }
             } else {
-                Log.d(TAG, "Nenhuma imagem global para barcode=$barcode")
+                Log.d(TAG, "Log: Documento com barcode '$barcodeClean' não existe em imageProdutos")
                 ImageResult.NoImage
             }
-
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar imagem global: ${e.message}")
+            Log.e(TAG, "Erro crítico ao buscar imagem global: ${e.message}", e)
             ImageResult.Error(e.message ?: "Erro ao buscar imagem global")
         }
     }
@@ -81,6 +120,7 @@ class GlobalImageDataSource {
      * souberem que a imagem global existe.
      */
     suspend fun createGlobalImageIfAbsent(
+        context: Context,
         barcode: String,
         productName: String,
         imageUri: String
@@ -94,6 +134,7 @@ class GlobalImageDataSource {
             return UploadResult.Error("OFFLINE")
         }
 
+        var tempFile: File? = null
         return try {
             // ── Verificação de existência (guarda de segurança) ──────────
             val existing = db.collection("imageProdutos")
@@ -109,19 +150,27 @@ class GlobalImageDataSource {
                 }
             }
 
-            // ── Upload para o Storage ─────────────────────────────────────
-            val fileUri: Uri = when {
+            // ── Otimização e Upload para o Storage ────────────────────────
+            val sourceUri: Uri = when {
                 imageUri.startsWith("content://") -> Uri.parse(imageUri)
                 imageUri.startsWith("file://")    -> Uri.parse(imageUri)
                 else                              -> Uri.fromFile(File(imageUri))
             }
 
+            tempFile = ImagePikerUtil.createImageFile(context)
+            ImageUtils.processImage(context, sourceUri, tempFile)
+            val processedUri = Uri.fromFile(tempFile)
+
             val imageRef = storage.reference
                 .child("imagens_produtos/$barcode.jpg")
 
-            Log.d(TAG, "Iniciando upload da imagem global para: imagens_produtos/$barcode.jpg")
+            Log.d(TAG, "Iniciando upload da imagem global (otimizada) para: imagens_produtos/$barcode.jpg")
 
-            imageRef.putFile(fileUri).await()
+            val metadata = com.google.firebase.storage.storageMetadata {
+                contentType = "image/jpeg"
+            }
+
+            imageRef.putFile(processedUri, metadata).await()
 
             val downloadUrl = imageRef.downloadUrl.await().toString()
 
@@ -137,17 +186,18 @@ class GlobalImageDataSource {
                 .set(postImage)
                 .await()
 
-            Log.d(TAG, "Imagem global criada com sucesso para barcode=$barcode")
+            Log.d(TAG, "Imagem global criada e otimizada com sucesso para barcode=$barcode")
             UploadResult.Success(downloadUrl)
 
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao criar imagem global: ${e.message}")
-            // 👉 Se falhar devido à falta de rede durante a execução, retorna OFFLINE de forma amigável
             if (e.message?.contains("offline", ignoreCase = true) == true ||
                 e.message?.contains("unavailable", ignoreCase = true) == true) {
                 return UploadResult.Error("OFFLINE")
             }
             UploadResult.Error(e.message ?: "Erro ao criar imagem global")
+        } finally {
+            tempFile?.let { ImagePikerUtil.cleanUpTempFiles(it) }
         }
     }
 }

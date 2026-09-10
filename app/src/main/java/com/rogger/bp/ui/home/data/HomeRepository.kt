@@ -5,6 +5,7 @@ import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.model.PostProduct
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -20,31 +21,62 @@ class HomeRepository(
 ) {
 
     private var productsListenerRegistration: ListenerRegistration? = null
+    private var syncJob: Job? = null
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
-    fun fetchAll(callback: FetchProductsCallback) {
-        CoroutineScope(Dispatchers.IO).launch {
-            // 1. Mostrar dados do cache imediatamente (se houver)
-            localCache.getAllProductsFlow().firstOrNull()?.let { cachedProducts ->
-                if (cachedProducts.isNotEmpty()) {
-                    callback.onSuccess(cachedProducts)
-                }
+    private var currentTargetGroupId: String? = null
+    private var currentWorkMode: Int = -1
+
+    fun isSyncing(): Boolean = productsListenerRegistration != null
+
+    fun fetchAll(callback: FetchProductsCallback, forceRefresh: Boolean = false, workMode: Int = 0, groupId: String? = null) {
+        repositoryScope.launch {
+            val targetGroupId = if (workMode == 1) groupId else null
+            
+            // Se o modo é GRUPO mas não temos groupId ainda, não inicia fetch individual
+            if (workMode == 1 && targetGroupId == null) {
+                android.util.Log.w("HomeRepository", "FetchAll: Modo grupo ativo mas groupId ainda não disponível")
+                callback.onComplete()
+                return@launch
             }
 
-            // 2. Listener do Firestore — snapshot contém SOMENTE deleted=false
-            productsListenerRegistration =
-                remoteDataSource.addProductsSnapshotListener(object : FetchProductsCallback {
-                    override fun onSuccess(products: List<PostProduct>) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            localCache.replaceAllProducts(products)
+            // Se já estamos sincronizando exatamente o que foi pedido, não reinicia
+            if (!forceRefresh && productsListenerRegistration != null && 
+                currentTargetGroupId == targetGroupId && currentWorkMode == workMode) {
+                callback.onComplete()
+                return@launch
+            }
+
+            syncJob?.cancel()
+            syncJob = repositoryScope.launch {
+                currentTargetGroupId = targetGroupId
+                currentWorkMode = workMode
+
+                // 1. Mostrar dados do cache local imediatamente
+                localCache.getAllProductsFlow(targetGroupId ?: "").firstOrNull()?.let { cached ->
+                    if (cached.isNotEmpty()) callback.onSuccess(cached)
+                }
+
+                stopListeningForProducts()
+                
+                productsListenerRegistration = remoteDataSource.addProductsSnapshotListener(
+                    targetGroupId,
+                    object : FetchProductsCallback {
+                        override fun onSuccess(products: List<PostProduct>) {
+                            repositoryScope.launch {
+                                localCache.replaceAllProductsByGroup(targetGroupId ?: "", products)
+                                callback.onComplete()
+                            }
                         }
-                    }
 
-                    override fun onFailure(message: String) {
-                        callback.onFailure(message)
-                    }
+                        override fun onFailure(message: String) {
+                            callback.onFailure(message)
+                        }
 
-                    override fun onComplete() {}
-                })
+                        override fun onComplete() {}
+                    }
+                )
+            }
         }
     }
 
@@ -70,49 +102,17 @@ class HomeRepository(
         })
     }
 
-    fun restore(product: PostProduct, callback: HomeCallback) {
-        remoteDataSource.restoreProduct(product, object : HomeCallback {
-            override fun onSuccess(p: PostProduct) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    // Marca deleted=false no Room para restaurar na lista imediatamente
-                    val restoredProduct = p.copy(deleted = false, deletedAt = null)
-                    localCache.updateProduct(restoredProduct)
-                }
-                callback.onSuccess(p)
-            }
-
-            override fun onFailure(message: String) {
-                callback.onFailure(message)
-            }
-
-            override fun onComplete() {
-                callback.onComplete()
-            }
-        })
-    }
-
     fun stopListeningForProducts() {
         productsListenerRegistration?.remove()
         productsListenerRegistration = null
+        syncJob?.cancel()
     }
 
-    suspend fun insertProductIntoCache(product: PostProduct) {
-        localCache.insertProduct(product)
+    suspend fun clearLocalCache() {
+        localCache.clear()
     }
 
-    suspend fun updateProductInCache(product: PostProduct) {
-        localCache.updateProduct(product)
-    }
-
-    suspend fun deleteProductFromCache(product: PostProduct) {
-        localCache.deleteProduct(product)
-    }
-
-    fun getCachedProductsFlow(): Flow<List<PostProduct>> {
-        return localCache.getAllProductsFlow()
-    }
-
-    fun getCachedProductsByCategoryFlow(i: String): Flow<List<PostProduct>> {
-        return localCache.getProductsByCategoryFlow(i)
+    fun getCachedProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
+        return localCache.getAllProductsFlow(groupId)
     }
 }
