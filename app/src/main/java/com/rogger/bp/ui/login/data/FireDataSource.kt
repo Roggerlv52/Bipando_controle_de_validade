@@ -64,12 +64,11 @@ class FireDataSource : LoginDataSource {
                             "email" to finalEmail
                         )
 
-                        // Se for um novo usuário, inicializa isPremium como false
                         if (!document.exists()) {
                             firestoreData["isPremium"] = false
+                            firestoreData["shareCode"] = uid.take(8).uppercase()
                         }
 
-                        // Só adiciona a foto do Google se o campo photoUrl no Firestore estiver vazio ou não existir
                         val existingPhoto = document.getString("photoUrl")
                         if (existingPhoto.isNullOrEmpty()) {
                             firestoreData["photoUrl"] = googlePhotoUrl
@@ -80,22 +79,24 @@ class FireDataSource : LoginDataSource {
                             .set(firestoreData, SetOptions.merge())
                             .addOnSuccessListener {
                                 val userAuth = UserAuth(
-                                    uuid = uid,
-                                    name = userName,
-                                    email = finalEmail,
+                                    uuid     = uid,
+                                    name     = userName,
+                                    email    = finalEmail,
                                     password = "",
-                                    photoUri = if (!existingPhoto.isNullOrEmpty()) android.net.Uri.parse(existingPhoto) else user.photoUrl
+                                    photoUri = if (!existingPhoto.isNullOrEmpty())
+                                        android.net.Uri.parse(existingPhoto)
+                                    else user.photoUrl
                                 )
                                 callback.onSuccess(userAuth)
+                                callback.onComplete()
                             }
-                            .addOnFailureListener {
-                                callback.onFailure("Erro ao salvar dados do usuário")
+                            .addOnFailureListener { e ->
+                                callback.onFailure("Erro ao salvar dados do usuário: ${e.message}")
+                                callback.onComplete()
                             }
                     }
-                    .addOnFailureListener {
-                        callback.onFailure("Erro ao verificar usuário existente")
-                    }
-                    .addOnCompleteListener {
+                    .addOnFailureListener { e ->
+                        callback.onFailure("Erro ao verificar usuário existente: ${e.message}")
                         callback.onComplete()
                     }
             }

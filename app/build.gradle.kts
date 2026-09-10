@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
     id("kotlin-parcelize")
 }
 val keystorePropertiesFile = rootProject.file("local.properties")
@@ -34,8 +35,8 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 46
-        versionName = "2.1.3-beta"
+        versionCode = 49
+        versionName = "2.1.4-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {
@@ -93,6 +94,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.storage)
 
     implementation(libs.guava)
