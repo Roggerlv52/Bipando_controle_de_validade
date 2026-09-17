@@ -54,13 +54,13 @@ class GroupsViewModel(
     private val _uiState = MutableStateFlow(GroupsState())
     val uiState: StateFlow<GroupsState> = _uiState.asStateFlow()
 
+    private val countJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
     init {
         loadInitialData()
         observeGroups()
         observeInvitations()
     }
-
-    private val countJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     private fun observeCountForGroup(groupId: String) {
         if (countJobs.containsKey(groupId)) return

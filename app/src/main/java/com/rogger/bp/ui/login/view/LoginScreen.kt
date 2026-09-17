@@ -9,9 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -165,10 +162,10 @@ fun LoginScreen(
                     // Usando Spacer com min height em vez de weight para funcionar bem no scroll
                     Spacer(modifier = Modifier.height(40.dp))
 
-                    // Área do Logo
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        modifier = Modifier.wrapContentSize()
+                    // Área do Logo - Usando Box para garantir centralização e sobreposição correta
+                    Box(
+                        modifier = Modifier.wrapContentSize(),
+                        contentAlignment = Alignment.BottomCenter
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.bipando_smoll),
@@ -182,9 +179,8 @@ fun LoginScreen(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 1.sp,
-                            modifier = Modifier
-                                .offset(y = (-55).dp)
-                                .padding(end = 20.dp)
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.offset(y = (-28).dp, x =(40).dp )
                         )
                     }
 

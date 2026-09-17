@@ -10,6 +10,7 @@ import com.rogger.bp.ui.profile.data.ProfileRepository
 import com.rogger.bp.ui.profile.data.UpdateProfileCallback
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import androidx.lifecycle.asFlow
 
 data class PaymentState(
     val selectedPlanId: String? = null,
@@ -18,12 +19,15 @@ data class PaymentState(
     val semestralPrice: String = "",
     val mensalTrialText: String? = null,
     val semestralTrialText: String? = null,
+    val isPremium: Boolean = false,
+    val isLimitReached: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
 class PaymentViewModel(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val productDao: com.rogger.bp.data.dao.ProductDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PaymentState())
@@ -31,8 +35,30 @@ class PaymentViewModel(
 
     private var billingManager: BillingManager? = null
 
+    init {
+        observeProductLimit()
+    }
+
+    private fun observeProductLimit() {
+        // Observa a contagem global de produtos para determinar se o limite foi atingido
+        productDao.getGlobalTotalProductsCountLiveData().asFlow()
+            .onEach { count ->
+                _uiState.update { state ->
+                    val isPremiumNow = state.activePlanId != null || state.isPremium
+                    state.copy(
+                        isLimitReached = !isPremiumNow && (count ?: 0) >= 100
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     fun initBilling(activity: Activity) {
         if (billingManager != null) return
+
+        // Atualiza estado inicial de premium a partir do cache local
+        val initialPremium = SharedPreferencesManager.isPremium(activity)
+        _uiState.update { it.copy(isPremium = initialPremium) }
 
         billingManager = BillingManager(
             context = activity,
@@ -48,7 +74,7 @@ class PaymentViewModel(
                 }
             },
             onSubscriptionStatusLoaded = { activeProductId ->
-                _uiState.update { it.copy(activePlanId = activeProductId) }
+                _uiState.update { it.copy(activePlanId = activeProductId, isPremium = activeProductId != null) }
                 val premiumAtivo = activeProductId != null
                 
                 // 1. Salva localmente para feedback imediato

@@ -27,12 +27,16 @@ import com.rogger.bp.ui.theme.BipandoTheme
 @Composable
 fun PaymentScreen(
     viewModel: PaymentViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isLimitReached: Boolean = false
 ) {
     val context = LocalContext.current
     val activity = context as Activity
     val state by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+
+    // O limite é considerado atingido se o parâmetro externo for true OU se o estado do banco de dados confirmar
+    val showLimitWarning = isLimitReached || state.isLimitReached
 
     LaunchedEffect(Unit) {
         viewModel.initBilling(activity)
@@ -81,14 +85,17 @@ fun PaymentScreen(
                         lineHeight = 36.sp
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    if (showLimitWarning) {
+                        Text(
+                            text = stringResource(id = R.string.premium_limit_message),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
 
-                    Text(
-                        text = stringResource(id = R.string.sub_title_promotion),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color(0xFF5CB82E),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    //Spacer(modifier = Modifier.height(16.dp))
 
                     Spacer(modifier = Modifier.height(32.dp))
 

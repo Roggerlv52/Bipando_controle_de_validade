@@ -4,6 +4,8 @@ import com.rogger.bp.data.dao.Cache
 import com.rogger.bp.data.dao.ProductDao
 import com.rogger.bp.data.model.PostProduct
 import kotlinx.coroutines.flow.Flow
+import androidx.lifecycle.asFlow
+import kotlinx.coroutines.flow.map
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -58,6 +60,10 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
 
     fun getProductsByCategoryFlow(categoryId: String, groupId: String = ""): Flow<List<PostProduct>> {
         return productDao.getProductsByCategory(categoryId, groupId)
+    }
+
+    fun getGlobalTotalProductsCountFlow(): Flow<Int> {
+        return productDao.getGlobalTotalProductsCountLiveData().asFlow().map { it ?: 0 }
     }
 
     suspend fun insertProduct(product: PostProduct) {

@@ -115,4 +115,8 @@ class HomeRepository(
     fun getCachedProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
         return localCache.getAllProductsFlow(groupId)
     }
+
+    fun getGlobalTotalProductsCountFlow(): Flow<Int> {
+        return localCache.getGlobalTotalProductsCountFlow()
+    }
 }

@@ -70,7 +70,9 @@ import com.rogger.bp.ui.commun.AnalyticsManager
 @Composable
 fun ScannerScreen(
     onBarcodeScanned: (String) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isLimitReached: Boolean = false,
+    isSearchMode: Boolean = false
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -82,6 +84,8 @@ fun ScannerScreen(
 
     var showManualEntryDialog by remember { mutableStateOf(false) }
     var barcodeView by remember { mutableStateOf<BarcodeView?>(null) }
+    var isScanned by remember { mutableStateOf(false) }
+    val limitMessage = stringResource(R.string.premium_limit_message)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -134,7 +138,12 @@ fun ScannerScreen(
                 val isValid = manualBarcode.trim().length >= 4
                 Button(
                     onClick = {
-                        if (isValid) {
+                        if (isValid && !isScanned) {
+                            if (isLimitReached && !isSearchMode) {
+                                android.widget.Toast.makeText(context, limitMessage, android.widget.Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+                            isScanned = true
                             val trimmed = manualBarcode.trim()
                             AnalyticsManager.logBarcodeScanned("manual")
                             onBarcodeScanned(trimmed)
@@ -173,9 +182,17 @@ fun ScannerScreen(
                             decoderFactory = DefaultDecoderFactory(formats)
                             decodeContinuous { result ->
                                 result.text?.let { 
-                                    pause()
-                                    AnalyticsManager.logBarcodeScanned("camera")
-                                    onBarcodeScanned(it)
+                                    if (!isScanned) {
+                                        if (isLimitReached && !isSearchMode) {
+                                            isScanned = true // Evita múltiplos toasts
+                                            android.widget.Toast.makeText(context, limitMessage, android.widget.Toast.LENGTH_LONG).show()
+                                            return@decodeContinuous
+                                        }
+                                        isScanned = true
+                                        pause()
+                                        AnalyticsManager.logBarcodeScanned("camera")
+                                        onBarcodeScanned(it)
+                                    }
                                 }
                             }
                             barcodeView = this

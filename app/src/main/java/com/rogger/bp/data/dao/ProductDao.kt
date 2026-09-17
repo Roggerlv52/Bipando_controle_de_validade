@@ -46,6 +46,9 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products")
     fun getGlobalTotalProductsCountLiveData(): androidx.lifecycle.LiveData<Int>
 
+    @Query("SELECT COUNT(*) FROM products")
+    suspend fun getGlobalTotalProductsCount(): Int
+
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     suspend fun removeProduct(key: String)
 

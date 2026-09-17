@@ -4,6 +4,9 @@ import com.rogger.bp.ui.groups.presentation.GroupsViewModel
 import com.rogger.bp.ui.groups.view.GroupsScreen
 import com.rogger.bp.ui.profile.view.ProfileScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -154,8 +157,8 @@ fun BipandoNavGraph(navController: NavHostController) {
                     onCategoryClick = {
                         navController.navigate(Routes.CATEGORY)
                     },
-                    onPaymentClick = {
-                        navController.navigate(Routes.PAYMENT)
+                    onPaymentClick = { limitReached ->
+                        navController.navigate("payment?limitReached=$limitReached")
                     },
                     onLogout = {
                         navController.navigate(Routes.LOGIN) {
@@ -210,18 +213,32 @@ fun BipandoNavGraph(navController: NavHostController) {
                 else -> BipandoThemeType.CLASSIC
             }
 
+            // Verifica limite global para o scanner (apenas se for para ADD)
+            val isPremium = SharedPreferencesManager.isPremium(context)
+            val (isLimitReached, setIsLimitReached) = remember { mutableStateOf(false) }
+            
+            LaunchedEffect(Unit) {
+                if (!isPremium) {
+                    val count = BpDatabase.getDatabase(context).productDao().getGlobalTotalProductsCount()
+                    setIsLimitReached(count >= 100)
+                }
+            }
+
             BipandoTheme(themeType = themeType) {
                 ScannerScreen(
                     onBarcodeScanned = { barcode ->
+                        val encodedBarcode = java.net.URLEncoder.encode(barcode, "UTF-8")
                         if (categoryId == "SEARCH") {
                             // Envia o barcode de volta através do savedStateHandle
                             navController.previousBackStackEntry?.savedStateHandle?.set("search_barcode", barcode)
                             navController.popBackStack()
                         } else {
-                            navController.navigate("add_product/$barcode/$categoryId")
+                            navController.navigate("add_product/$encodedBarcode/$categoryId")
                         }
                     },
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    isLimitReached = isLimitReached,
+                    isSearchMode = categoryId == "SEARCH"
                 )
             }
         }
@@ -279,7 +296,8 @@ fun BipandoNavGraph(navController: NavHostController) {
                         navController.popBackStack()
                     },
                     onBarcodeClick = { code ->
-                        navController.navigate("image_preview?barcode=$code")
+                        val encodedCode = java.net.URLEncoder.encode(code, "UTF-8")
+                        navController.navigate("image_preview?barcode=$encodedCode")
                     }
                 )
             }
@@ -349,8 +367,8 @@ fun BipandoNavGraph(navController: NavHostController) {
                     onTrashClick = {
                         navController.navigate(Routes.TRASH)
                     },
-                    onPaymentClick = {
-                        navController.navigate(Routes.PAYMENT)
+                    onPaymentClick = { limitReached ->
+                        navController.navigate("payment?limitReached=$limitReached")
                     }
                 )
             }
@@ -394,18 +412,30 @@ fun BipandoNavGraph(navController: NavHostController) {
             }
         }
 
-        composable(Routes.PAYMENT) {
+        composable(
+            route = Routes.PAYMENT,
+            arguments = listOf(
+                navArgument("limitReached") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val limitReached = backStackEntry.arguments?.getBoolean("limitReached") ?: false
             val profileRepository = DependencyInjector.profileRepository()
+            val productDao = BpDatabase.getDatabase(context).productDao()
+            
             val viewModel: PaymentViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return PaymentViewModel(profileRepository) as T
+                        return PaymentViewModel(profileRepository, productDao) as T
                     }
                 }
             )
             PaymentScreen(
                 viewModel = viewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                isLimitReached = limitReached
             )
         }
 
@@ -460,7 +490,8 @@ fun BipandoNavGraph(navController: NavHostController) {
                         navController.popBackStack()
                     },
                     onBarcodeClick = { barcode ->
-                        navController.navigate("image_preview?barcode=$barcode")
+                        val encodedBarcode = java.net.URLEncoder.encode(barcode, "UTF-8")
+                        navController.navigate("image_preview?barcode=$encodedBarcode")
                     }
                 )
             }

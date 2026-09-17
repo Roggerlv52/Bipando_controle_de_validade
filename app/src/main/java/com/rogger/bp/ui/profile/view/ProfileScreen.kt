@@ -53,7 +53,7 @@ fun ProfileScreen(
     onBackClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
     onTrashClick: () -> Unit,
-    onPaymentClick: () -> Unit
+    onPaymentClick: (Boolean) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -252,7 +252,7 @@ fun ProfileScreen(
                 }
             }
 
-            PremiumStatusSection(state = state, onPaymentClick = onPaymentClick)
+            PremiumStatusSection(state = state, onPaymentClick = { onPaymentClick(false) })
 
             SettingsSection(title = stringResource(R.string.profile_preferences)) {
                 Text(
@@ -288,7 +288,7 @@ fun ProfileScreen(
                         if (state.isPremium) {
                             viewModel.onThemeChange(context, BipandoThemeType.GREEN)
                         } else {
-                            onPaymentClick()
+                            onPaymentClick(false)
                         }
                     }
                 )
@@ -301,7 +301,7 @@ fun ProfileScreen(
                         if (state.isPremium) {
                             viewModel.onThemeChange(context, BipandoThemeType.RED)
                         } else {
-                            onPaymentClick()
+                            onPaymentClick(false)
                         }
                     }
                 )

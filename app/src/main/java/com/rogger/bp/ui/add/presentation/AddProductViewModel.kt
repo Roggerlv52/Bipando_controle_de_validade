@@ -22,6 +22,7 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.content.Context
 import android.util.Log
+import com.rogger.bp.R
 
 data class AddProductState(
     val name: String = "",
@@ -169,6 +170,19 @@ class AddProductViewModel(
         
         viewModelScope.launch {
             try {
+                // ✅ VERIFICAÇÃO DE LIMITE PREMIUM
+                if (!SharedPreferencesManager.isPremium(context)) {
+                    val database = com.rogger.bp.data.database.BpDatabase.getDatabase(context)
+                    val totalCount = database.productDao().getGlobalTotalProductsCount()
+                    if (totalCount >= 100) {
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            errorMessage = context.getString(R.string.premium_limit_message)
+                        ) }
+                        return@launch
+                    }
+                }
+
                 val product = Product(
                     uuid = UUID.randomUUID().toString(),
                     name = state.name,

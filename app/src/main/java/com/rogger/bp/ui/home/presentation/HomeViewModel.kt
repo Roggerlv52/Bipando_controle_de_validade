@@ -53,6 +53,8 @@ data class HomeState(
     val userPhoto: String = "",
     val isPremium: Boolean = false,
     val activeCount: Int = 0,
+    val globalTotalCount: Int = 0,
+    val isLimitReached: Boolean = false,
     val categoryCount: Int = 0,
     val deletedCount: Int = 0,
     val yellowWarningDays: Int = 3,
@@ -395,6 +397,16 @@ class HomeViewModel(
                 }
             }.collect {}
         }
+
+        // Novo observador para o limite global (Premium/Free)
+        homeRepository.getGlobalTotalProductsCountFlow().onEach { count ->
+            _uiState.update { state ->
+                state.copy(
+                    globalTotalCount = count,
+                    isLimitReached = !state.isPremium && count >= 100
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun logout(context: Context, onLogout: () -> Unit) {

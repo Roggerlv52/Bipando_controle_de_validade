@@ -10,7 +10,7 @@ object Routes {
     const val PROFILE = "profile"
     const val EDIT_PRODUCT = "edit_product/{uuid}"
     const val TRASH = "trash"
-    const val PAYMENT = "payment"
+    const val PAYMENT = "payment?limitReached={limitReached}"
     const val GROUPS = "groups"
     const val IMAGE_PREVIEW = "image_preview?uri={uri}&barcode={barcode}"
 }

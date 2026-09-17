@@ -140,7 +140,7 @@ fun HomeScreen(
     onScannerNavigate: (String, String) -> Unit,
     onProfileClick: () -> Unit,
     onCategoryClick: () -> Unit,
-    onPaymentClick: () -> Unit,
+    onPaymentClick: (Boolean) -> Unit,
     onScannerSearch: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -245,7 +245,7 @@ fun HomeScreen(
                     icon = Icons.Default.Star,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        onPaymentClick()
+                        onPaymentClick(false)
                     }
                 )
                 DrawerItem(
@@ -299,6 +299,7 @@ fun HomeScreen(
             },
             onDeleteProducts = viewModel::deleteProducts,
             onLogout = { viewModel.logout(context, onLogout) },
+            onPaymentClick = onPaymentClick,
             onExportPdf = { viewModel.exportPdf(context) },
             onExportExcel = { viewModel.exportExcel(context) }
         )
@@ -350,6 +351,7 @@ fun HomeScreenContent(
     onVoiceSearchClick: () -> Unit,
     onDeleteProducts: (List<Product>) -> Unit,
     onLogout: () -> Unit,
+    onPaymentClick: (Boolean) -> Unit,
     onExportPdf: () -> Unit,
     onExportExcel: () -> Unit
 ) {
@@ -358,6 +360,7 @@ fun HomeScreenContent(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var deleteDialogProducts by remember { mutableStateOf<Pair<List<Product>, String>?>(null) }
     val removingProductUuids = remember { mutableStateListOf<String>() }
+    val limitMessage = stringResource(R.string.premium_limit_message)
 
     // Estado derivado para evitar que o "EmptyState" apareça enquanto itens ainda estão sendo removidos visualmente
     val isListVisuallyEmpty by remember(state.products, removingProductUuids) {
@@ -427,7 +430,13 @@ fun HomeScreenContent(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showCategoryDialog = true },
+                onClick = { 
+                    if (state.isLimitReached) {
+                        onPaymentClick(true)
+                    } else {
+                        showCategoryDialog = true 
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
