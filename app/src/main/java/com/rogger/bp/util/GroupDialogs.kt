@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.rogger.bp.R
 import com.rogger.bp.data.model.PostInvitation
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -25,15 +27,15 @@ fun CreateGroupDialog(
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nomear seu Grupo") },
+        title = { Text(stringResource(R.string.group_dialog_name_title)) },
         text = {
             Column {
-                Text("Dê um nome ao seu grupo colaborativo para começar a convidar membros.")
+                Text(stringResource(R.string.group_dialog_name_desc))
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nome do Grupo") },
+                    label = { Text(stringResource(R.string.group_name_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -55,13 +57,13 @@ fun CreateGroupDialog(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Salvar")
+                    Text(stringResource(R.string.save_changes_button))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.dialog_button_cancel))
             }
         }
     )
@@ -75,7 +77,7 @@ fun InvitationDialog(
 ) {
     AlertDialog(
         onDismissRequest = { }, // Force action
-        title = { Text("Convite para Grupo") },
+        title = { Text(stringResource(R.string.group_dialog_invitation_title)) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 AsyncImage(
@@ -89,19 +91,19 @@ fun InvitationDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "${invitation.senderName} convidou você para o grupo \"${invitation.groupName}\".",
+                    text = stringResource(R.string.group_dialog_invitation_msg, invitation.senderName, invitation.groupName),
                     fontWeight = FontWeight.Bold
                 )
             }
         },
         confirmButton = {
             Button(onClick = onAccept) {
-                Text("Aceitar")
+                Text(stringResource(R.string.group_invitation_accept))
             }
         },
         dismissButton = {
             TextButton(onClick = onDecline) {
-                Text("Recusar")
+                Text(stringResource(R.string.group_invitation_decline))
             }
         }
     )

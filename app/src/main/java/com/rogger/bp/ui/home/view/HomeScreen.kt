@@ -186,9 +186,13 @@ fun HomeScreen(
         // Carrega as informações do usuário. O sync de produtos ocorrerá após carregar o perfil ou no init.
         viewModel.loadUserInfo(context)
         viewModel.syncAndFetchProducts(context)
-        
+    }
+
+    LaunchedEffect(initialCategoryId, initialCategoryName) {
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)
+        } else {
+            viewModel.fetchProducts(null, null)
         }
     }
 
@@ -214,12 +218,9 @@ fun HomeScreen(
                     count = state.activeCount,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        // Se estiver filtrado por categoria ou se houver uma busca/filtro ativo,
-                        // navegamos para a rota base "home" sem argumentos, resetando o estado da navegação.
                         if (state.categoryFilterName != null || state.isSearchActive) {
-                            navController.navigate("home") {
-                                popUpTo("home") { inclusive = true }
-                            }
+                            viewModel.toggleSearch(false)
+                            viewModel.fetchProducts(null, null)
                         }
                     }
                 )
@@ -419,7 +420,7 @@ fun HomeScreenContent(
                 )
             } else {
                 HomeTopAppBar(
-                    title =  state.currentGroupName,
+                    title = state.categoryFilterName ?: "",
                     onSearchClick = { onToggleSearch(true) },
                     onMenuClick = onMenuClick,
                     onLogout = onLogout,
@@ -449,8 +450,20 @@ fun HomeScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
+            // Imagem de fundo preenchendo o layout
+            /*
+            AsyncImage(
+                model = R.drawable.fundo_vector,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+             */
+
+            // Overlay para garantir legibilidade (consistente com CategoryScreen)
+            Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.2f)))
+
             // Se estiver carregando pela primeira vez, mostramos apenas o loader centralizado
             if (state.isLoading && state.products.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -472,7 +485,8 @@ fun HomeScreenContent(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 0.5.dp, bottom = 80.dp)
+                    contentPadding = PaddingValues(top = 0.9
+                        .dp, bottom = 80.dp)
                 ) {
                     groupedProducts.forEach { (days, items) ->
                         val isGroupRemoving =

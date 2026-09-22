@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -43,10 +43,10 @@ fun EmptyState(isSearch: Boolean, onAddClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = if (isSearch) stringResource(R.string.search_no_results) else stringResource(id = R.string.txt_empty_list),
+            text = if (isSearch) stringResource(R.string.search_no_results)
+            else stringResource(id = R.string.txt_empty_list),
             textAlign = TextAlign.Center,
             fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (!isSearch) {
             Spacer(modifier = Modifier.height(24.dp))

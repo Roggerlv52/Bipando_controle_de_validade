@@ -1,5 +1,6 @@
 package com.rogger.bp.ui.groups.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,9 +50,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.rogger.bp.R
 import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.ui.componentes.BipandoTextField
 import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
@@ -83,7 +86,6 @@ fun GroupsScreen(
     var memberToManage by remember { mutableStateOf<Pair<String, GroupMember>?>(null) }
     var expandedGroupId by remember { mutableStateOf<String?>(null) }
 
-
     LaunchedEffect(Unit) {
         viewModel.loadWorkMode(context)
     }
@@ -114,34 +116,34 @@ fun GroupsScreen(
                 groupToInvite = null
                 viewModel.clearError()
             },
-            title = { Text("Convidar para ${group.name}") },
+            title = { Text(stringResource(R.string.group_invite_title, group.name)) },
             text = {
                 Column {
-                    Text("O usuário convidado poderá colaborar na lista do grupo ${group.name}.")
+                    Text(stringResource(R.string.group_invite_desc, group.name))
                     Spacer(modifier = Modifier.height(16.dp))
                     BipandoTextField(
                         value = newUserCode,
                         onValueChange = { newUserCode = it },
-                        label = "Código de 8 dígitos do Usuário",
+                        label = stringResource(R.string.group_user_code_label),
                         leadingIcon = Icons.Default.Person
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Permissão:", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.group_permission_label), fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(
                             selected = selectedRole == "Editor",
                             onClick = { selectedRole = "Editor" })
-                        Text("Editor")
+                        Text(stringResource(R.string.group_role_editor))
                         Spacer(modifier = Modifier.width(16.dp))
                         RadioButton(
                             selected = selectedRole == "Reader",
                             onClick = { selectedRole = "Reader" })
-                        Text("Leitor")
+                        Text(stringResource(R.string.group_role_reader))
                     }
                     Text(
                         text = if (selectedRole == "Editor")
-                            "Pode adicionar, editar e remover permanentemente."
-                        else "Pode adicionar e editar (exceto remoção permanente).",
+                            stringResource(R.string.group_editor_desc)
+                        else stringResource(R.string.group_reader_desc),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
@@ -169,7 +171,7 @@ fun GroupsScreen(
                             color = Color.White
                         )
                     } else {
-                        Text("Convidar")
+                        Text(stringResource(R.string.group_btn_invite))
                     }
                 }
             },
@@ -178,7 +180,7 @@ fun GroupsScreen(
                     groupToInvite = null
                     viewModel.clearError()
                 }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
@@ -188,12 +190,12 @@ fun GroupsScreen(
         var newName by remember { mutableStateOf(group.name) }
         AlertDialog(
             onDismissRequest = { groupToEdit = null },
-            title = { Text("Renomear Grupo") },
+            title = { Text(stringResource(R.string.group_rename_title)) },
             text = {
                 BipandoTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = "Novo Nome do Grupo",
+                    label = stringResource(R.string.group_rename_label),
                     leadingIcon = Icons.Default.Edit
                 )
             },
@@ -202,12 +204,12 @@ fun GroupsScreen(
                     viewModel.renameGroup(group.groupId, newName)
                     groupToEdit = null
                 }) {
-                    Text("Salvar")
+                    Text(stringResource(R.string.save_changes_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { groupToEdit = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
@@ -216,8 +218,8 @@ fun GroupsScreen(
     groupToLeave?.let { group ->
         AlertDialog(
             onDismissRequest = { groupToLeave = null },
-            title = { Text("Sair do Grupo") },
-            text = { Text("Tem certeza que deseja sair do grupo \"${group.name}\"?") },
+            title = { Text(stringResource(R.string.group_leave_title)) },
+            text = { Text(stringResource(R.string.group_leave_confirm, group.name)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -226,25 +228,32 @@ fun GroupsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Sair")
+                    Text(stringResource(R.string.group_leave_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { groupToLeave = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
     }
 
     memberToManage?.let { (groupId, member) ->
+        val roleText = when (member.role) {
+            "Admin" -> stringResource(R.string.group_role_admin)
+            "Editor" -> stringResource(R.string.group_role_editor)
+            else -> stringResource(R.string.group_role_reader)
+        }
+        val targetRoleText = if (member.role == "Editor") stringResource(R.string.group_role_reader) else stringResource(R.string.group_role_editor)
+
         AlertDialog(
             onDismissRequest = { memberToManage = null },
-            title = { Text("Gerenciar Membro") },
+            title = { Text(stringResource(R.string.group_manage_member_title)) },
             text = {
                 Column {
-                    Text("Membro: ${member.name}", fontWeight = FontWeight.Bold)
-                    Text("Papel atual: ${if (member.role == "Admin") "Administrador" else if (member.role == "Editor") "Editor" else "Leitor"}")
+                    Text(stringResource(R.string.group_member_label, member.name), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.group_current_role_label, roleText))
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -260,7 +269,7 @@ fun GroupsScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Tornar ${if (member.role == "Editor") "Leitor" else "Editor"}")
+                            Text(stringResource(R.string.group_make_role_btn, targetRoleText))
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -273,17 +282,17 @@ fun GroupsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {
-                            Text("Remover do Grupo")
+                            Text(stringResource(R.string.group_remove_member_btn))
                         }
                     } else {
-                        Text("O Administrador não pode ter seu papel alterado.")
+                        Text(stringResource(R.string.group_admin_cant_change))
                     }
                 }
             },
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { memberToManage = null }) {
-                    Text("Fechar")
+                    Text(stringResource(R.string.cd_close))
                 }
             }
         )
@@ -300,16 +309,16 @@ fun GroupsScreen(
     if (showCreateGroupDialog) {
         AlertDialog(
             onDismissRequest = { showCreateGroupDialog = false },
-            title = { Text("Criar Novo Grupo") },
+            title = { Text(stringResource(R.string.group_create_dialog_title)) },
             text = {
                 Column {
-                    Text("Dê um nome ao seu grupo para começar a colaborar com outros usuários.")
+                    Text(stringResource(R.string.group_create_dialog_desc))
                     Spacer(modifier = Modifier.height(16.dp))
 
                     BipandoTextField(
                         value = groupNameInput,
                         onValueChange = { groupNameInput = it },
-                        label = "Nome do Grupo",
+                        label = stringResource(R.string.group_name_label),
                         leadingIcon = Icons.Default.Groups
                     )
 
@@ -334,13 +343,13 @@ fun GroupsScreen(
                             color = Color.White
                         )
                     } else {
-                        Text("Criar")
+                        Text(stringResource(R.string.group_btn_create))
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateGroupDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         )
@@ -353,19 +362,21 @@ fun GroupsScreen(
         }
     }
 
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Grupos de Usuários", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.group_screen_title),
+                    fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showCreateGroupDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Novo Grupo")
+                        Icon(Icons.Default.Add,
+                            contentDescription = stringResource(R.string.group_screen_new_group))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -384,6 +395,7 @@ fun GroupsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f)))
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -399,60 +411,58 @@ fun GroupsScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.groups, key = { it.groupId }) { group ->
-                        val members = state.membersMap[group.groupId] ?: emptyList()
-                        val admin = members.find { it.role == "Admin" }?.name ?: ""
+                            val members = state.membersMap[group.groupId] ?: emptyList()
+                            val admin = members.find { it.role == "Admin" }?.name ?: ""
 
-                        SwipeToDeleteContainer(
-                            item = group,
-                            onDelete = if (!group.isDefault) { { groupToLeave = it } } else null,
-                            onEdit = { groupToEdit = it }
-                        ) {
-                            GroupItem(
-                                groupName = group.name,
-                                isDefault = group.isDefault,
-                                participantCount = members.size,
-                                activeItemsCount = state.activeItemsCountMap[group.groupId]
-                                    ?: 0,
-                                members = members,
-                                adminName = admin,
-                                isExpanded = expandedGroupId == group.groupId,
-                                isSelected = state.workMode == 1 && state.groupId == group.groupId,
-                                onExpandClick = {
-                                    expandedGroupId =
-                                        if (expandedGroupId == group.groupId) null else group.groupId
-                                },
-                                onMemberClick = { member ->
-                                    if (state.userRole == "Admin") {
-                                        memberToManage = group.groupId to member
-                                    }
-                                },
-                                onSelectGroup = {
-                                    viewModel.onWorkModeChange(context, 1, group.groupId)
-                                },
-                                onInviteClick = { groupToInvite = group }
-                            )
+                            SwipeToDeleteContainer(
+                                item = group,
+                                onDelete = if (!group.isDefault) { { groupToLeave = it } } else null,
+                                onEdit = { groupToEdit = it }
+                            ) {
+                                GroupItem(
+                                    groupName = group.name,
+                                    isDefault = group.isDefault,
+                                    participantCount = members.size,
+                                    activeItemsCount = state.activeItemsCountMap[group.groupId] ?: 0,
+                                    members = members,
+                                    adminName = admin,
+                                    isExpanded = expandedGroupId == group.groupId,
+                                    isSelected = state.workMode == 1 && state.groupId == group.groupId,
+                                    onExpandClick = {
+                                        expandedGroupId = if (expandedGroupId == group.groupId) null else group.groupId
+                                    },
+                                    onMemberClick = { member ->
+                                        if (state.userRole == "Admin") {
+                                            memberToManage = group.groupId to member
+                                        }
+                                    },
+                                    onSelectGroup = {
+                                        viewModel.onWorkModeChange(context, 1, group.groupId)
+                                    },
+                                    onInviteClick = { groupToInvite = group }
+                                )
+                            }
+                        }
+                        if (state.invitations.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = stringResource(R.string.group_pending_invitations),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            items(state.invitations) { invitation ->
+                                InvitationItem(
+                                    invitation = invitation,
+                                    onAccept = { viewModel.respondInvitation(context, invitation, true) },
+                                    onDecline = { viewModel.respondInvitation(context, invitation, false) }
+                                )
+                            }
                         }
                     }
-                    if (state.invitations.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Convites Pendentes",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        items(state.invitations) { invitation ->
-                            InvitationItem(
-                                invitation = invitation,
-                                onAccept = { viewModel.respondInvitation(context, invitation, true) },
-                                onDecline = { viewModel.respondInvitation(context, invitation, false) }
-                            )
-                        }
-                    }
-                }
-            } else {
+                } else {
                     // Estado vazio ou erro
                     Column(
                         modifier = Modifier
@@ -470,14 +480,15 @@ fun GroupsScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Ocorreu um erro ao carregar seus grupos.\n\n${state.error}",
+                                text = stringResource(R.string.group_load_error,
+                                    state.error ?: ""),
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(onClick = { viewModel.refreshGroups() }) {
-                                Text("Tentar Novamente")
+                                Text(stringResource(R.string.group_try_again))
                             }
                         } else {
                             Icon(
@@ -488,7 +499,7 @@ fun GroupsScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.",
+                                text = stringResource(R.string.group_empty_msg),
                                 textAlign = TextAlign.Center,
                                 color = Color.Gray,
                                 style = MaterialTheme.typography.bodyLarge,
@@ -496,7 +507,7 @@ fun GroupsScreen(
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(onClick = { showCreateGroupDialog = true }) {
-                                Text("Começar Agora")
+                                Text(stringResource(R.string.group_start_now))
                             }
                         }
                     }

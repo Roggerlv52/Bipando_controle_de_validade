@@ -49,6 +49,9 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products")
     suspend fun getGlobalTotalProductsCount(): Int
 
+    @Query("SELECT COUNT(*) FROM products WHERE deleted = 0")
+    suspend fun getGlobalActiveProductsCount(): Int
+
     @Query("DELETE FROM products WHERE firestoreDocId = :key")
     suspend fun removeProduct(key: String)
 

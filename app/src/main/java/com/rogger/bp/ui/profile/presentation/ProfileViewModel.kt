@@ -40,6 +40,7 @@ data class ProfileState(
     val datePickerType: Int = 0, // 0 = Calendário, 1 = Spinner
     val groupId: String = "",
     val isLoading: Boolean = false,
+    val isDeletingAccount: Boolean = false,
     val errorMessage: String? = null,
     val isLoggedOut: Boolean = false
 )
@@ -253,18 +254,20 @@ class ProfileViewModel(
     }
 
     fun deleteAccount(context: Context) {
-        _uiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isDeletingAccount = true) }
         profileRepository.deleteUserAccount(object : com.rogger.bp.ui.profile.data.DeleteAccountCallback {
             override fun onSuccess() {
+                // Mantemos isDeletingAccount como true durante o logout para cobrir a limpeza de cache
                 logout(context)
             }
 
             override fun onFailure(message: String) {
-                _uiState.update { it.copy(errorMessage = message, isLoading = false) }
+                _uiState.update { it.copy(errorMessage = message, isDeletingAccount = false) }
             }
 
             override fun onComplete() {
-                _uiState.update { it.copy(isLoading = false) }
+                // Só resetamos se não houver sucesso iniciado (isLoggedOut ainda é false)
+                // Se o logout já começou, a navegação cuidará de fechar a tela.
             }
         })
     }

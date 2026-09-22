@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.ui.theme.BipandoThemeType
 import com.rogger.bp.ui.commun.SharedPreferencesManager
+import com.rogger.bp.ui.tour.OnboardingScreen
 
 @Composable
 fun BipandoNavGraph(navController: NavHostController) {
@@ -58,6 +59,22 @@ fun BipandoNavGraph(navController: NavHostController) {
     
     // Persistência de login: Se o usuário já está logado no Firebase, vai direto para HOME
     val startDestination = if (auth.currentUser != null) Routes.HOME else Routes.LOGIN
+
+    // Inicia o onboarding automaticamente se o usuário estiver logado e não tiver visto
+    LaunchedEffect(auth.currentUser) {
+        val tourCompleted = SharedPreferencesManager.isTourCompleted(context)
+        if (auth.currentUser != null && !tourCompleted) {
+            // Pequeno delay para transição suave
+            kotlinx.coroutines.delay(500)
+            
+            val activeProductsCount = database.productDao().getGlobalActiveProductsCount()
+            if (activeProductsCount == 0) {
+                navController.navigate(Routes.ONBOARDING) {
+                    popUpTo(Routes.HOME) { inclusive = false }
+                }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -101,7 +118,16 @@ fun BipandoNavGraph(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString("categoryId")
-            val categoryName = backStackEntry.arguments?.getString("categoryName")
+            val rawCategoryName = backStackEntry.arguments?.getString("categoryName")
+            val categoryName = remember(rawCategoryName) {
+                rawCategoryName?.let {
+                    try {
+                        java.net.URLDecoder.decode(it, "UTF-8")
+                    } catch (_: Exception) {
+                        it
+                    }
+                }
+            }
 
             val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
             val homeRepository = DependencyInjector.registerHomeRepository(context)
@@ -194,8 +220,12 @@ fun BipandoNavGraph(navController: NavHostController) {
                     onBackClick = { navController.popBackStack() },
                     onCategoryClick = { category ->
                         val encodedName = java.net.URLEncoder.encode(category.name, "UTF-8")
-                        navController.navigate("${Routes.HOME}?categoryId=${category.id}&categoryName=$encodedName") {
-                            popUpTo(Routes.HOME) { inclusive = true }
+                        val route = "${Routes.HOME}?categoryId=${category.id}&categoryName=$encodedName"
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
                         }
                     }
                 )
@@ -219,7 +249,7 @@ fun BipandoNavGraph(navController: NavHostController) {
             
             LaunchedEffect(Unit) {
                 if (!isPremium) {
-                    val count = BpDatabase.getDatabase(context).productDao().getGlobalTotalProductsCount()
+                    val count = database.productDao().getGlobalTotalProductsCount()
                     setIsLimitReached(count >= 100)
                 }
             }
@@ -233,7 +263,9 @@ fun BipandoNavGraph(navController: NavHostController) {
                             navController.previousBackStackEntry?.savedStateHandle?.set("search_barcode", barcode)
                             navController.popBackStack()
                         } else {
-                            navController.navigate("add_product/$encodedBarcode/$categoryId")
+                            navController.navigate("add_product/$encodedBarcode/$categoryId") {
+                                popUpTo(Routes.SCANNER) { inclusive = true }
+                            }
                         }
                     },
                     onBackClick = { navController.popBackStack() },
@@ -423,7 +455,7 @@ fun BipandoNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val limitReached = backStackEntry.arguments?.getBoolean("limitReached") ?: false
             val profileRepository = DependencyInjector.profileRepository()
-            val productDao = BpDatabase.getDatabase(context).productDao()
+            val productDao = database.productDao()
             
             val viewModel: PaymentViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
@@ -528,6 +560,15 @@ fun BipandoNavGraph(navController: NavHostController) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+        }
+
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onFinish = {
+                    SharedPreferencesManager.setTourCompleted(context, true)
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(Routes.REGISTER) { }

@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.rogger.bp.R
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -53,11 +55,11 @@ fun InvitationItem(
         ListItem(
             headlineContent = {
                 Text(
-                    "${invitation.senderName} convidou você",
+                    stringResource(R.string.group_invited_you, invitation.senderName),
                     fontWeight = FontWeight.Bold
                 )
             },
-            supportingContent = { Text("Grupo: ${invitation.groupName}") },
+            supportingContent = { Text(stringResource(R.string.group_invitation_group_prefix, invitation.groupName)) },
             leadingContent = {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -78,14 +80,14 @@ fun InvitationItem(
                     IconButton(onClick = onAccept) {
                         Icon(
                             Icons.Default.Check,
-                            contentDescription = "Aceitar",
+                            contentDescription = stringResource(R.string.group_invitation_accept),
                             tint = Color(0xFF4CAF50)
                         )
                     }
                     IconButton(onClick = (onDecline)) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Recusar",
+                            contentDescription = stringResource(R.string.group_invitation_decline),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }

@@ -36,6 +36,7 @@ import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.profile.presentation.ProfileState
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.theme.BipandoThemeType
+import com.rogger.bp.ui.componentes.LoadingDialog
 import com.rogger.bp.util.ShareUtil
 import com.rogger.bp.util.SystemSoundPickerDialog
 import com.rogger.bp.util.NotificationSoundDialog
@@ -140,6 +141,10 @@ fun ProfileScreen(
                 showSoundDialog = false
             }
         )
+    }
+
+    if (state.isDeletingAccount) {
+        LoadingDialog(isLoading = true)
     }
 
     LaunchedEffect(Unit) {

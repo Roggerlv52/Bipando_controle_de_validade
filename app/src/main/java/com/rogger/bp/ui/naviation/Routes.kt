@@ -12,5 +12,6 @@ object Routes {
     const val TRASH = "trash"
     const val PAYMENT = "payment?limitReached={limitReached}"
     const val GROUPS = "groups"
+    const val ONBOARDING = "onboarding"
     const val IMAGE_PREVIEW = "image_preview?uri={uri}&barcode={barcode}"
 }
