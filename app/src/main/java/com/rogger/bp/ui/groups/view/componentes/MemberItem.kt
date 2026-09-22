@@ -15,13 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.rogger.bp.R
 import com.rogger.bp.ui.groups.presentation.GroupMember
 
 /*
@@ -34,11 +36,15 @@ fun MemberItem(
     member: GroupMember,
     onClick: () -> Unit
 ) {
+    val roleText = when (member.role) {
+        "Admin" -> stringResource(R.string.group_role_admin)
+        "Editor" -> stringResource(R.string.group_role_editor)
+        else -> stringResource(R.string.group_role_reader)
+    }
+
     ListItem(
         headlineContent = { Text(member.name, fontWeight = FontWeight.Bold) },
-        supportingContent = { Text(if (member.role == "Admin")
-            "Administrador" else if (member.role == "Editor")
-                "Editor" else "Leitor") },
+        supportingContent = { Text(roleText) },
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
             AsyncImage(
@@ -58,7 +64,7 @@ fun MemberItem(
         trailingContent = {
             AssistChip(
                 onClick = onClick,
-                label = { Text(member.role, fontSize = 10.sp) },
+                label = { Text(roleText, fontSize = 10.sp) },
                 colors = AssistChipDefaults.assistChipColors(
                     labelColor = if (member.role == "Admin") MaterialTheme.colorScheme.primary else Color.Gray
                 )

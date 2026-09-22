@@ -113,7 +113,7 @@
     <string name="dialog_title_delete_item">Elemento eliminado</string>
     <string name="dialog_title_delete_really">¿Realmente desea eliminar?</string>
     <string name="dialog_title_delete"> ¿Desea eliminar?</string>
-    <string name="dialog_title_select">seleccione una categoría</string>
+    <string name="dialog_title_select">Seleccione una categoría</string>
     <string name="dialog_add_category_title">Crear categoría</string>
     <string name="dialog_msg_start_managing">Para empezar a gestionar sus productos, es necesario crear al menos una categoría. ¿Desea crear una ahora?</string>
 
@@ -305,4 +305,77 @@
     <string name="preview_code">Visualizar código</string>
     <string name="preview_image">Visualizar imagen</string>
     <string name="error_loading_image">Error al cargar la imagen</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_categories">Organice por Categorías</string>
+    <string name="onboarding_desc_categories">Comience organizando sus productos. Cree categorías como Abarrotes, Fiambres o Quesos para facilitar la gestión.</string>
+    <string name="onboarding_title_groups">Trabaje en Equipo</string>
+    <string name="onboarding_desc_groups">Cree grupos para compartir el control de caducidad con su familia o equipo de la tienda en tiempo real.</string>
+    <string name="onboarding_title_alerts">Alertas de Caducidad</string>
+    <string name="onboarding_desc_alerts">Reciba notificaciones programadas para no volver a perder productos por caducidad. Ahorro y organización.</string>
+    <string name="onboarding_btn_next">Siguiente</string>
+    <string name="onboarding_btn_start">Comenzar</string>
+
+    <!-- Voice Search Dialog -->
+    <string name="voice_search_title">Búsqueda por Voz</string>
+    <string name="voice_search_subtitle">Diga el nombre del producto o el código de barras</string>
+    <string name="voice_search_hold_to_speak">Mantenga presionado el botón para hablar</string>
+    <string name="voice_search_not_available">El reconocimiento de voz no está disponible en este dispositivo.</string>
+    <string name="voice_search_listening">Escuchando...</string>
+    <string name="voice_search_error_no_match">No entendí, intente de nuevo.</string>
+    <string name="voice_search_error_network">Error de conexión.</string>
+    <string name="voice_search_error_permissions">Permiso de audio requerido.</string>
+    <string name="voice_search_error_generic">Error al escuchar (%1$d). Intente de nuevo.</string>
+    <string name="cd_microphone">Micrófono</string>
+
+    <!-- Groups & Group Items -->
+    <string name="group_default_label">(Mi Grupo)</string>
+    <string name="group_leader_prefix">Líder: %1$s • </string>
+    <string name="group_participants_and_items">%1$d participantes • %2$d elementos activos</string>
+    <string name="group_btn_active">Activo</string>
+    <string name="group_btn_work">Trabajar</string>
+    <string name="group_btn_invite">Invitar</string>
+    <string name="group_members_title">Miembros del Grupo</string>
+    <string name="group_role_admin">Administrador</string>
+    <string name="group_role_editor">Editor</string>
+    <string name="group_role_reader">Lector</string>
+    <string name="group_invited_you">%1$s te invitó</string>
+    <string name="group_invitation_group_prefix">Grupo: %1$s</string>
+    <string name="group_invitation_accept">Aceptar</string>
+    <string name="group_invitation_decline">Rechazar</string>
+    <string name="group_screen_title">Grupos de Usuarios</string>
+    <string name="group_screen_new_group">Nuevo Grupo</string>
+    <string name="group_invite_title">Invitar a %1$s</string>
+    <string name="group_invite_desc">El usuario invitado podrá colaborar en la lista del grupo %1$s.</string>
+    <string name="group_user_code_label">Código de 8 dígitos de Usuario</string>
+    <string name="group_permission_label">Permiso:</string>
+    <string name="group_editor_desc">Puede añadir, editar y eliminar permanentemente.</string>
+    <string name="group_reader_desc">Puede añadir y editar (excepto eliminación permanente).</string>
+    <string name="group_rename_title">Renombrar Grupo</string>
+    <string name="group_rename_label">Nuevo Nombre del Grupo</string>
+    <string name="group_leave_title">Salir del Grupo</string>
+    <string name="group_leave_confirm">¿Está seguro de que desea salir del grupo \"%1$s\"?</string>
+    <string name="group_leave_btn">Salir</string>
+    <string name="group_manage_member_title">Gestionar Miembro</string>
+    <string name="group_member_label">Miembro: %1$s</string>
+    <string name="group_current_role_label">Rol actual: %1$s</string>
+    <string name="group_make_role_btn">Hacer %1$s</string>
+    <string name="group_remove_member_btn">Eliminar del Grupo</string>
+    <string name="group_admin_cant_change">El rol del Administrador no se puede cambiar.</string>
+    <string name="group_create_dialog_title">Crear Nuevo Grupo</string>
+    <string name="group_create_dialog_desc">Dé un nombre a su grupo para comenzar a colaborar con otros usuarios.</string>
+    <string name="group_name_label">Nombre del Grupo</string>
+    <string name="group_btn_create">Crear</string>
+    <string name="group_pending_invitations">Invitaciones Pendientes</string>
+    <string name="group_load_error">Ocurrió un error al cargar sus grupos.\n\n%1$s</string>
+    <string name="group_try_again">Intentar de Nuevo</string>
+    <string name="group_empty_msg">Aún no participa en un grupo colaborativo.\n\nCree su grupo o pida ser invitado.</string>
+    <string name="group_start_now">Comenzar Ahora</string>
+    <string name="group_dialog_name_title">Nombrar su Grupo</string>
+    <string name="group_dialog_name_desc">Dé un nombre a su grupo colaborativo para comenzar a invitar miembros.</string>
+    <string name="group_dialog_invitation_title">Invitación a Grupo</string>
+    <string name="group_dialog_invitation_msg">%1$s te invitó al grupo \"%2$s\".</string>
+    <string name="cd_selected">Seleccionado</string>
+    <string name="cd_expand">Expandir</string>
+    <string name="cd_collapse">Contraer</string>
 </resources>

@@ -15,17 +15,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.rogger.bp.R
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.ui.category.presentation.CategoryViewModel
 import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
 import com.rogger.bp.ui.componentes.BipandoTextField
+import kotlin.text.ifEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,10 +167,21 @@ fun CategoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
+            // Imagem de fundo preenchendo o layout
+            AsyncImage(
+                model = R.drawable.fundo_vector,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+
+            // Imagem "ww" centralizada
+            // Overlay para garantir legibilidade das categorias
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+
             if (state.categories.isEmpty() && !state.isLoading) {
-                EmptyCategoriesState(onAddClick = { showAddDialog = true })
+                EmptyCategoriesState()
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -248,7 +265,7 @@ fun CategoryItem(category: Category, onClick: () -> Unit) {
 }
 
 @Composable
-fun EmptyCategoriesState(onAddClick: () -> Unit) {
+fun EmptyCategoriesState() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -256,22 +273,17 @@ fun EmptyCategoriesState(onAddClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        AsyncImage(
+            model = R.drawable.ww,
+            contentDescription = null,
+            modifier = Modifier.size(150.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(id = R.string.txt_no_categories_registered),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onAddClick,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text("Criar Minha Primeira Categoria")
-        }
     }
 }

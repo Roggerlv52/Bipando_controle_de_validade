@@ -161,15 +161,44 @@ class ProfileRepository {
                 deleteSubcollection("users/$uid/category")
                 deleteSubcollection("users/$uid/productImages")
 
-                // 2. Se o usuário for dono de um grupo (ID do grupo = UID), removemos o grupo e seus dados
+                // 2. Deletar grupos onde o usuário é dono (adminId == uid)
                 try {
-                    deleteSubcollection("groups/$uid/products")
-                    deleteSubcollection("groups/$uid/category")
-                    deleteSubcollection("groups/$uid/members")
-                    deleteSubcollection("groups/$uid/invitations")
-                    firestore.collection("groups").document(uid).delete().await()
+                    val ownedGroupsQuery = firestore.collection("groups")
+                        .whereEqualTo("adminId", uid)
+                        .get().await()
+
+                    for (groupDoc in ownedGroupsQuery.documents) {
+                        val groupId = groupDoc.id
+                        deleteSubcollection("groups/$groupId/products")
+                        deleteSubcollection("groups/$groupId/category")
+                        deleteSubcollection("groups/$groupId/members")
+                        deleteSubcollection("groups/$groupId/invitations")
+                        deleteSubcollection("groups/$groupId/productImages")
+
+                        // Remove pasta de imagens do grupo no Storage se houver
+                        try {
+                            val groupImagesFolder = storage.reference.child("produtos/$groupId")
+                            val listResult = groupImagesFolder.listAll().await()
+                            for (item in listResult.items) {
+                                item.delete().await()
+                            }
+                        } catch (e: Exception) { /* Ignora se pasta não existir */ }
+
+                        groupDoc.reference.delete().await()
+                    }
+
+                    // Fallback: se existir um grupo legado com ID igual ao UID
+                    val legacyGroupDoc = firestore.collection("groups").document(uid).get().await()
+                    if (legacyGroupDoc.exists()) {
+                        deleteSubcollection("groups/$uid/products")
+                        deleteSubcollection("groups/$uid/category")
+                        deleteSubcollection("groups/$uid/members")
+                        deleteSubcollection("groups/$uid/invitations")
+                        deleteSubcollection("groups/$uid/productImages")
+                        legacyGroupDoc.reference.delete().await()
+                    }
                 } catch (e: Exception) {
-                    Log.w("ProfileRepository", "Erro ao remover grupo próprio: ${e.message}")
+                    Log.w("ProfileRepository", "Erro ao remover grupos próprios: ${e.message}")
                 }
 
                 // 3. Remover usuário de outros grupos onde ele é membro
@@ -177,15 +206,36 @@ class ProfileRepository {
                     val memberQuery = firestore.collectionGroup("members")
                         .whereEqualTo("userId", uid)
                         .get().await()
-                    
+
                     for (doc in memberQuery.documents) {
-                        doc.reference.delete().await()
+                        try {
+                            doc.reference.delete().await()
+                        } catch (e: Exception) { /* Ignora se já tiver sido removido com a deleção do grupo */ }
                     }
                 } catch (e: Exception) {
                     Log.w("ProfileRepository", "Erro ao remover de outros grupos: ${e.message}")
                 }
 
-                // 3. Deletar imagens no Storage
+                // 4. Deletar convites pendentes/enviados relacionados ao usuário
+                try {
+                    val targetInvites = firestore.collectionGroup("invitations")
+                        .whereEqualTo("targetUid", uid)
+                        .get().await()
+                    for (doc in targetInvites.documents) {
+                        try { doc.reference.delete().await() } catch (e: Exception) {}
+                    }
+
+                    val senderInvites = firestore.collectionGroup("invitations")
+                        .whereEqualTo("senderId", uid)
+                        .get().await()
+                    for (doc in senderInvites.documents) {
+                        try { doc.reference.delete().await() } catch (e: Exception) {}
+                    }
+                } catch (e: Exception) {
+                    Log.w("ProfileRepository", "Erro ao remover convites do usuário: ${e.message}")
+                }
+
+                // 5. Deletar imagens no Storage
                 // Imagem de perfil
                 try {
                     storage.reference.child("profile_images/$uid.jpg").delete().await()
@@ -200,10 +250,10 @@ class ProfileRepository {
                     }
                 } catch (e: Exception) { /* Ignora se pasta não existir */ }
 
-                // 4. Deletar documento principal do usuário
+                // 6. Deletar documento principal do usuário
                 firestore.collection("users").document(uid).delete().await()
 
-                // 5. Deletar a conta do Auth (Pode exigir reautenticação se for login antigo)
+                // 7. Deletar a conta do Auth (Pode exigir reautenticação se for login antigo)
                 user.delete().await()
 
                 withContext(Dispatchers.Main) {
@@ -228,8 +278,12 @@ class ProfileRepository {
     private suspend fun deleteSubcollection(path: String) {
         try {
             val snapshot = firestore.collection(path).get().await()
-            for (doc in snapshot.documents) {
-                doc.reference.delete().await()
+            if (!snapshot.isEmpty) {
+                snapshot.documents.chunked(500).forEach { chunk ->
+                    val batch = firestore.batch()
+                    chunk.forEach { doc -> batch.delete(doc.reference) }
+                    batch.commit().await()
+                }
             }
         } catch (e: Exception) {
             Log.w("ProfileRepository", "Falha ao limpar subcoleção $path: ${e.message}")

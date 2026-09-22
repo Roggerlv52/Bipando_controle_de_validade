@@ -32,9 +32,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.rogger.bp.R
 import com.rogger.bp.ui.groups.presentation.GroupMember
 import kotlin.collections.forEach
 
@@ -99,7 +101,7 @@ fun GroupItem(
                         )
                         if (isDefault) {
                             Text(
-                                text = " (My-group)",
+                                text = " ${stringResource(R.string.group_default_label)}",
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodySmall,
@@ -110,9 +112,9 @@ fun GroupItem(
                         }
                     }
                     Row {
-                        val membersText = if (adminName.isNotEmpty()) "Líder: $adminName • " else ""
+                        val membersText = if (adminName.isNotEmpty()) stringResource(R.string.group_leader_prefix, adminName) else ""
                         Text(
-                            text = "$membersText$participantCount participantes • $activeItemsCount itens ativos",
+                            text = "$membersText${stringResource(R.string.group_participants_and_items, participantCount, activeItemsCount)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -122,7 +124,7 @@ fun GroupItem(
                 if (isSelected) {
                     Icon(
                         Icons.Default.CheckCircle,
-                        contentDescription = "Selecionado",
+                        contentDescription = stringResource(R.string.cd_selected),
                         tint = Color(0xFF5CB82E),
                         modifier = Modifier
                             .size(24.dp)
@@ -133,7 +135,7 @@ fun GroupItem(
                 IconButton(onClick = onExpandClick) {
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Recolher" else "Expandir"
+                        contentDescription = stringResource(if (isExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
             }
@@ -164,7 +166,7 @@ fun GroupItem(
                                 null
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(if (isSelected) "Ativo" else "Trabalhar")
+                            Text(stringResource(if (isSelected) R.string.group_btn_active else R.string.group_btn_work))
                         }
 
                         Button(
@@ -177,14 +179,14 @@ fun GroupItem(
                         ) {
                             Icon(Icons.Default.PersonAdd, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Convidar")
+                            Text(stringResource(R.string.group_btn_invite))
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Membros do Grupo",
+                        text = stringResource(R.string.group_members_title),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isSelected) Color(0xFF5CB82E) else MaterialTheme.colorScheme.primary

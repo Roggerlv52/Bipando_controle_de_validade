@@ -20,12 +20,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.rogger.bp.R
 import java.util.*
+
+private sealed interface VoiceStatus {
+    object HoldToSpeak : VoiceStatus
+    object Listening : VoiceStatus
+    object NotAvailable : VoiceStatus
+    object ErrorNoMatch : VoiceStatus
+    object ErrorNetwork : VoiceStatus
+    object ErrorPermissions : VoiceStatus
+    data class ErrorGeneric(val code: Int) : VoiceStatus
+}
 
 @Composable
 fun VoiceSearchDialog(
@@ -34,16 +46,16 @@ fun VoiceSearchDialog(
 ) {
     val context = LocalContext.current
     var isListening by remember { mutableStateOf(false) }
-    var speechText by remember { mutableStateOf("Segure o botão para falar") }
     
     val isAvailable = remember { SpeechRecognizer.isRecognitionAvailable(context) }
+    var statusState by remember {
+        mutableStateOf<VoiceStatus>(
+            if (isAvailable) VoiceStatus.HoldToSpeak else VoiceStatus.NotAvailable
+        )
+    }
     
     val speechRecognizer = remember { 
         if (isAvailable) SpeechRecognizer.createSpeechRecognizer(context) else null 
-    }
-
-    if (!isAvailable) {
-        speechText = "Reconhecimento de voz não disponível neste dispositivo."
     }
 
     val recognizerIntent = remember {
@@ -58,7 +70,7 @@ fun VoiceSearchDialog(
 
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) { 
-                speechText = "Ouvindo..." 
+                statusState = VoiceStatus.Listening
             }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) {}
@@ -68,11 +80,11 @@ fun VoiceSearchDialog(
             }
             override fun onError(error: Int) {
                 isListening = false
-                speechText = when (error) {
-                    SpeechRecognizer.ERROR_NO_MATCH -> "Não entendi, tente novamente."
-                    SpeechRecognizer.ERROR_NETWORK -> "Erro de conexão."
-                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Permissão de áudio necessária."
-                    else -> "Erro ao ouvir ($error). Tente novamente."
+                statusState = when (error) {
+                    SpeechRecognizer.ERROR_NO_MATCH -> VoiceStatus.ErrorNoMatch
+                    SpeechRecognizer.ERROR_NETWORK -> VoiceStatus.ErrorNetwork
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> VoiceStatus.ErrorPermissions
+                    else -> VoiceStatus.ErrorGeneric(error)
                 }
             }
             override fun onResults(results: Bundle?) {
@@ -102,6 +114,16 @@ fun VoiceSearchDialog(
         label = "pulseScale"
     )
 
+    val statusText = when (val status = statusState) {
+        VoiceStatus.HoldToSpeak -> stringResource(R.string.voice_search_hold_to_speak)
+        VoiceStatus.Listening -> stringResource(R.string.voice_search_listening)
+        VoiceStatus.NotAvailable -> stringResource(R.string.voice_search_not_available)
+        VoiceStatus.ErrorNoMatch -> stringResource(R.string.voice_search_error_no_match)
+        VoiceStatus.ErrorNetwork -> stringResource(R.string.voice_search_error_network)
+        VoiceStatus.ErrorPermissions -> stringResource(R.string.voice_search_error_permissions)
+        is VoiceStatus.ErrorGeneric -> stringResource(R.string.voice_search_error_generic, status.code)
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(28.dp),
@@ -116,7 +138,7 @@ fun VoiceSearchDialog(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Busca por Voz",
+                    text = stringResource(R.string.voice_search_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -125,7 +147,7 @@ fun VoiceSearchDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Fale o nome do produto ou o código de barras",
+                    text = stringResource(R.string.voice_search_subtitle),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -175,7 +197,7 @@ fun VoiceSearchDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
-                            contentDescription = "Microfone",
+                            contentDescription = stringResource(R.string.cd_microphone),
                             modifier = Modifier.size(40.dp),
                             tint = if (isListening) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                         )
@@ -185,7 +207,7 @@ fun VoiceSearchDialog(
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Text(
-                    text = speechText,
+                    text = statusText,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -195,7 +217,7 @@ fun VoiceSearchDialog(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 TextButton(onClick = onDismiss) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.dialog_button_cancel))
                 }
             }
         }
