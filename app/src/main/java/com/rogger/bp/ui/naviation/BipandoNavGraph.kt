@@ -117,8 +117,10 @@ fun BipandoNavGraph(navController: NavHostController) {
                 navArgument("categoryName") { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
-            val categoryId = backStackEntry.arguments?.getString("categoryId")
-            val rawCategoryName = backStackEntry.arguments?.getString("categoryName")
+            val categoryId = backStackEntry.savedStateHandle.remove<String>("selected_category_id")
+                ?: backStackEntry.arguments?.getString("categoryId")
+            val rawCategoryName = backStackEntry.savedStateHandle.remove<String>("selected_category_name")
+                ?: backStackEntry.arguments?.getString("categoryName")
             val categoryName = remember(rawCategoryName) {
                 rawCategoryName?.let {
                     try {
@@ -219,14 +221,9 @@ fun BipandoNavGraph(navController: NavHostController) {
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onCategoryClick = { category ->
-                        val encodedName = java.net.URLEncoder.encode(category.name, "UTF-8")
-                        val route = "${Routes.HOME}?categoryId=${category.id}&categoryName=$encodedName"
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                        }
+                        navController.previousBackStackEntry?.savedStateHandle?.set("selected_category_id", category.id)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("selected_category_name", category.name)
+                        navController.popBackStack()
                     }
                 )
             }

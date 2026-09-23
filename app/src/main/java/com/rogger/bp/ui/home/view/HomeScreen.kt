@@ -191,8 +191,6 @@ fun HomeScreen(
     LaunchedEffect(initialCategoryId, initialCategoryName) {
         if (initialCategoryId != null) {
             viewModel.fetchProducts(initialCategoryId, initialCategoryName)
-        } else {
-            viewModel.fetchProducts(null, null)
         }
     }
 
