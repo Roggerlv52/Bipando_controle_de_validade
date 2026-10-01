@@ -181,29 +181,46 @@ class DeleteItemDataSource(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Verificar se ainda existe algum produto com este barcode para este usuário
-                // Procuramos em products (usuário) e em todos os grupos onde ele é o dono (individual ou admin)
+                // 1. Verificar se ainda existe algum produto com este barcode para este usuário ou grupo
                 val userProductsQuery = db.collection("users").document(uid).collection("products")
                     .whereEqualTo("barcode", barcode)
                     .get().await()
 
-                if (userProductsQuery.isEmpty) {
-                    // 2. Se não houver mais produtos com esse barcode, removemos a entrada em productImages
-                    Log.d(TAG, "Limpando metadados de imagem para barcode: $barcode")
+                val groupProductsQuery = if (product.groupId.isNotEmpty()) {
+                    db.collection("groups").document(product.groupId).collection("products")
+                        .whereEqualTo("barcode", barcode)
+                        .get().await()
+                } else null
+
+                val totalRemaining = userProductsQuery.size() + (groupProductsQuery?.size() ?: 0)
+
+                if (totalRemaining == 0) {
+                    // 2. Se não houver mais produtos com esse barcode, removemos a entrada privada em productImages
+                    Log.d(TAG, "Limpando metadados de imagem privada para barcode: $barcode")
                     db.collection("users").document(uid)
                         .collection("productImages").document(barcode)
                         .delete().await()
 
-                    // 3. Opcional: Remover arquivo físico do Storage se for imagem privada
+                    // 3. Remover arquivo físico do Storage se for imagem privada do usuário ou do grupo
                     try {
-                        val storagePath = "produtos/$uid/$barcode.jpg"
-                        storage.reference.child(storagePath).delete().await()
-                        Log.d(TAG, "Arquivo no Storage removido: $storagePath")
+                        val userStoragePath = "produtos/$uid/$barcode.jpg"
+                        storage.reference.child(userStoragePath).delete().await()
+                        Log.d(TAG, "Arquivo no Storage removido: $userStoragePath")
                     } catch (e: Exception) {
                         // Ignora se o arquivo não existir
                     }
+
+                    if (product.groupId.isNotEmpty()) {
+                        try {
+                            val groupStoragePath = "produtos/${product.groupId}/$barcode.jpg"
+                            storage.reference.child(groupStoragePath).delete().await()
+                            Log.d(TAG, "Arquivo no Storage do grupo removido: $groupStoragePath")
+                        } catch (e: Exception) {
+                            // Ignora se o arquivo não existir
+                        }
+                    }
                 } else {
-                    Log.d(TAG, "Imagem mantida: ainda existem ${userProductsQuery.size()} produtos com o barcode $barcode")
+                    Log.d(TAG, "Imagem mantida: ainda existem $totalRemaining produtos com o barcode $barcode")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao limpar imagem do produto: ${e.message}")

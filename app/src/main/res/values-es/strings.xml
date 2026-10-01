@@ -220,7 +220,7 @@
     <string name="status_today">Hoy</string>
 
     <string name="login_network_error">Error de conexión. Por favor, verifique su internet e inténtelo de nuevo.</string>
-    <string name="login_welcome">Bienvenido a Bipando</string>
+    <string name="login_welcome">Bienvenido</string>
     <string name="login_continue">Inicie sesión para continuar</string>
     <string name="cd_logo_bipando">Logo de Bipando</string>
 
@@ -389,4 +389,27 @@
 
     <string name="msg_barcode_copied">¡Código de barras copiado!</string>
     <string name="tap_to_copy">Toque para copiar</string>
+
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DÍAS GRATIS</string>
+    <string name="promo_subtitle_30_days">¡Nuevos suscriptores obtienen 30 días de prueba gratis!</string>
+    <string name="plan_mensal_trial_badge">30 Días Gratis</string>
+    <string name="trial_duration_default_text">30 días gratis, luego %1$s/mes</string>
+    <!-- Category Image Selection -->
+    <string name="category_select_image_title">Elija una imagen para la categoría</string>
+
+    <!-- Category Image Names -->
+    <string name="cat_img_carne">Carne</string>
+    <string name="cat_img_congelado">Congelado</string>
+    <string name="cat_img_embutidos">Embutidos</string>
+    <string name="cat_img_frutos_mar">Mariscos</string>
+    <string name="cat_img_laticinios">Lácteos</string>
+    <string name="cat_img_leite">Leche</string>
+    <string name="cat_img_mercearia">Abarrotes</string>
+    <string name="cat_img_hortifruti">Frutas y Verduras</string>
+    <string name="cat_img_padaria">Panadería</string>
+    <string name="cat_img_queijo">Queso</string>
+    <string name="cat_img_salames">Salami</string>
+    <string name="cat_img_sorvete">Helado</string>
+    <string name="cat_img_suco">Jugo</string>
 </resources>

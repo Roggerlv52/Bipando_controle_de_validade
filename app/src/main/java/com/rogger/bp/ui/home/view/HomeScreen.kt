@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -127,7 +131,6 @@ import com.rogger.bp.util.ShareUtil
 import com.rogger.bp.util.TimeFormatter
 import com.rogger.bp.util.VoiceSearchDialog
 import kotlinx.coroutines.launch
-import okhttp3.internal.notify
 
 @Composable
 fun HomeScreen(
@@ -252,7 +255,7 @@ fun HomeScreen(
                     icon = Icons.Default.Group,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        navController.navigate(Routes.GROUPS)
+                        navController.navigate(Routes.GROUPS) { launchSingleTop = true }
                     }
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -407,6 +410,8 @@ fun HomeScreenContent(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             if (state.isSearchActive) {
                 SearchTopAppBar(
@@ -436,6 +441,7 @@ fun HomeScreenContent(
                         showCategoryDialog = true 
                     }
                 },
+                modifier = Modifier.navigationBarsPadding(),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -447,20 +453,10 @@ fun HomeScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
-            // Imagem de fundo preenchendo o layout
-            /*
-            AsyncImage(
-                model = R.drawable.fundo_vector,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-             */
-
             // Overlay para garantir legibilidade (consistente com CategoryScreen)
-            Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.2f)))
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)))
 
             // Se estiver carregando pela primeira vez, mostramos apenas o loader centralizado
             if (state.isLoading && state.products.isEmpty()) {
@@ -481,10 +477,14 @@ fun HomeScreenContent(
                         .groupBy { it.second }
                 }
 
+                val navBarBottomPadding = WindowInsets.navigationBars
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+                val totalBottomPadding = 88.dp + navBarBottomPadding
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 0.9
-                        .dp, bottom = 80.dp)
+                    contentPadding = PaddingValues(top = 0.9.dp, bottom = totalBottomPadding)
                 ) {
                     groupedProducts.forEach { (days, items) ->
                         val isGroupRemoving =
@@ -527,6 +527,25 @@ fun HomeScreenContent(
                         }
                     }
                 }
+            }
+
+            // Sombra/Gradiente sutil na barra de navegação inferior
+            val navBarBottomHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            if (navBarBottomHeight > 0.dp) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(navBarBottomHeight + 28.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.55f)
+                                )
+                            )
+                        )
+                )
             }
         }
     }

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.size.Precision
 import com.rogger.bp.R
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.edit.presentation.EditProductViewModel
@@ -231,7 +232,8 @@ fun EditProductScreen(
                     val imageRequest = remember(state.imageUri) {
                         ImageRequest.Builder(context)
                             .data(state.imageUri.ifEmpty { drawable.ic_shopping })
-                            .size(600, 600) // Otimizado para o preview de 150dp
+                            .size(600, 600)
+                            .precision(Precision.INEXACT)
                             .crossfade(true)
                             .build()
                     }

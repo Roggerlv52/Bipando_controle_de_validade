@@ -390,4 +390,28 @@ lost and when you create your account again using the same email, you will need 
     <string name="msg_barcode_copied">Barcode copied!</string>
     <string name="tap_to_copy">Tap to copy</string>
 
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DAYS FREE</string>
+    <string name="promo_subtitle_30_days">New subscribers get a 30-day free trial!</string>
+    <string name="plan_mensal_trial_badge">30 Days Free</string>
+    <string name="trial_duration_default_text">30 days free, then %1$s/month</string>
+
+    <!-- Category Image Selection -->
+    <string name="category_select_image_title">Select an image for category</string>
+
+    <!-- Category Image Names -->
+    <string name="cat_img_carne">Meat</string>
+    <string name="cat_img_congelado">Frozen</string>
+    <string name="cat_img_embutidos">Cold Cuts</string>
+    <string name="cat_img_frutos_mar">Seafood</string>
+    <string name="cat_img_laticinios">Dairy</string>
+    <string name="cat_img_leite">Milk</string>
+    <string name="cat_img_mercearia">Grocery</string>
+    <string name="cat_img_hortifruti">Produce</string>
+    <string name="cat_img_padaria">Bakery</string>
+    <string name="cat_img_queijo">Cheese</string>
+    <string name="cat_img_salames">Salami</string>
+    <string name="cat_img_sorvete">Ice Cream</string>
+    <string name="cat_img_suco">Juice</string>
+
 </resources>

@@ -1,6 +1,10 @@
 package com.rogger.bp
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.rogger.bp.ui.commun.AnalyticsManager
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -13,6 +17,22 @@ class BipandoApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Inicialização do Firebase
+        FirebaseApp.initializeApp(this)
+
+        // Inicialização do Firebase App Check
+        val firebaseAppCheck = FirebaseAppCheck.getInstance()
+        if (BuildConfig.DEBUG) {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                DebugAppCheckProviderFactory.getInstance()
+            )
+        } else {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                PlayIntegrityAppCheckProviderFactory.getInstance()
+            )
+        }
+
         AnalyticsManager.initialize(this)
     }
 

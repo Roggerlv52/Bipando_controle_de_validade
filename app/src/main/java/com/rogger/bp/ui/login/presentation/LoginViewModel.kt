@@ -3,21 +3,23 @@ package com.rogger.bp.ui.login.presentation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rogger.bp.data.model.PostCategory
+import com.rogger.bp.data.model.PostProduct
 import com.rogger.bp.domain.usecase.LoginUseCase
-import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.category.data.CategoryRepository
+import com.rogger.bp.ui.category.data.FetchCategoriesCallback
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.groups.data.GroupRepository
 import com.rogger.bp.ui.home.data.FetchProductsCallback
-import com.rogger.bp.ui.category.data.FetchCategoriesCallback
-import com.rogger.bp.data.model.PostProduct
-import com.rogger.bp.data.model.PostCategory
-import com.rogger.bp.ui.commun.SharedPreferencesManager
+import com.rogger.bp.ui.home.data.HomeRepository
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 
 data class LoginState(
@@ -55,31 +57,38 @@ class LoginViewModel(
                         user.email
                     )
                     
-                    // Sincroniza dados ANTES de navegar
+                    // Sincroniza dados ANTES de navegar com limite de tempo de 15 segundos
                     viewModelScope.launch {
-                        val groupResult = groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
-                        groupRepository.syncUserGroup(user.uuid)
+                        try {
+                            // Adiciona tempo limite de 15s para evitar travamentos em conexões lentas
+                            withTimeout(15_000L) {
+                                val groupResult = groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
+                                groupRepository.syncUserGroup(user.uuid)
 
-                        var targetGroupId: String? = null
-                        var effectiveWorkMode = workMode
+                                var targetGroupId: String? = null
+                                var effectiveWorkMode = workMode
 
-                        groupResult.onSuccess { group ->
-                            if (group.isDefault) {
-                                SharedPreferencesManager.setWorkMode(context, 1)
-                                SharedPreferencesManager.setActiveGroupId(context, group.groupId)
-                                targetGroupId = group.groupId
-                                effectiveWorkMode = 1
+                                groupResult.onSuccess { group ->
+                                    if (group.isDefault) {
+                                        SharedPreferencesManager.setWorkMode(context, 1)
+                                        SharedPreferencesManager.setActiveGroupId(context, group.groupId)
+                                        targetGroupId = group.groupId
+                                        effectiveWorkMode = 1
+                                    }
+                                }
+
+                                syncProducts(effectiveWorkMode, targetGroupId)
+                                syncCategories(effectiveWorkMode, targetGroupId)
                             }
+                        } catch (e: TimeoutCancellationException) {
+                            // Se o limite de 15s for atingido, ignora a exceção e deixa o usuário prosseguir normalmente
+                        } finally {
+                            // Para economizar recursos, paramos os listeners da tela de login
+                            homeRepository.stopListeningForProducts()
+                            categoryRepository.stopListeningForCategories()
+                            
+                            _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
                         }
-
-                        val productsSynced = syncProducts(effectiveWorkMode, targetGroupId)
-                        val categoriesSynced = syncCategories(effectiveWorkMode, targetGroupId)
-                        
-                        // Para economizar recursos, paramos os listeners da tela de login
-                        homeRepository.stopListeningForProducts()
-                        categoryRepository.stopListeningForCategories()
-                        
-                        _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
                     }
                 }.onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }

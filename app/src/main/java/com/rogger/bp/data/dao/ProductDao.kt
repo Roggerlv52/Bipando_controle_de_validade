@@ -52,8 +52,11 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products WHERE deleted = 0")
     suspend fun getGlobalActiveProductsCount(): Int
 
-    @Query("DELETE FROM products WHERE firestoreDocId = :key")
+    @Query("DELETE FROM products WHERE firestoreDocId = :key OR uuid = :key")
     suspend fun removeProduct(key: String)
+
+    @Query("DELETE FROM products WHERE firestoreDocId = :docId OR firestoreDocId = :uuid OR uuid = :docId OR uuid = :uuid")
+    suspend fun removeProductByDocIdOrUuid(docId: String, uuid: String)
 
     @Query("UPDATE products SET categoryName = :newName WHERE categoryId = :categoryId AND groupId = :groupId")
     suspend fun updateCategoryNameInProducts(categoryId: String, newName: String, groupId: String)

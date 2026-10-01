@@ -35,8 +35,8 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 54
-        versionName = "2.1.8-beta"
+        versionCode = 58
+        versionName = "2.2.2-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {
@@ -64,6 +64,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
     kotlin {
 
@@ -96,8 +97,12 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
 
     implementation(libs.guava)
+
+    implementation(libs.androidx.security.crypto)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

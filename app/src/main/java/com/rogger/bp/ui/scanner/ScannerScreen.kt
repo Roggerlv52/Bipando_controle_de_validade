@@ -65,6 +65,23 @@ import com.journeyapps.barcodescanner.BarcodeView
 import com.journeyapps.barcodescanner.DefaultDecoderFactory
 import com.rogger.bp.R
 import com.rogger.bp.ui.commun.AnalyticsManager
+import com.rogger.bp.ui.commun.SharedPreferencesManager
+import android.media.MediaPlayer
+import android.util.Log
+
+private fun playBeepIfEnabled(context: android.content.Context) {
+    if (SharedPreferencesManager.getBeepState(context, "beep")) {
+        try {
+            val mediaPlayer = MediaPlayer.create(context.applicationContext, R.raw.scan_bipando)
+            mediaPlayer?.setOnCompletionListener { mp ->
+                mp.release()
+            }
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            Log.e("ScannerScreen", "Erro ao tocar beep: ${e.message}")
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,13 +136,10 @@ fun ScannerScreen(
             text = {
                 OutlinedTextField(
                     value = manualBarcode,
-                    onValueChange = { manualBarcode = it },
-                    label = { Text(stringResource(R.string.scanner_manual_hint)) },
-                    supportingText = {
-                        if (manualBarcode.isNotEmpty() && manualBarcode.length < 4) {
-                            Text(stringResource(R.string.scanner_manual_error), color = MaterialTheme.colorScheme.error)
-                        }
+                    onValueChange = { input ->
+                        manualBarcode = input.filter { it.isDigit() }
                     },
+                    label = { Text(stringResource(R.string.scanner_manual_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -135,20 +149,19 @@ fun ScannerScreen(
                 )
             },
             confirmButton = {
-                val isValid = manualBarcode.trim().length >= 4
+                val isValid = manualBarcode.trim().isNotEmpty()
                 Button(
                     onClick = {
-                        if (isValid && !isScanned) {
-                            if (isLimitReached && !isSearchMode) {
-                                android.widget.Toast.makeText(context, limitMessage, android.widget.Toast.LENGTH_LONG).show()
-                                return@Button
-                            }
-                            isScanned = true
-                            val trimmed = manualBarcode.trim()
-                            AnalyticsManager.logBarcodeScanned("manual")
-                            onBarcodeScanned(trimmed)
-                            showManualEntryDialog = false
+                        if (isLimitReached && !isSearchMode) {
+                            android.widget.Toast.makeText(context, limitMessage, android.widget.Toast.LENGTH_LONG).show()
+                            return@Button
                         }
+                        isScanned = true
+                        val trimmed = manualBarcode.trim()
+                        playBeepIfEnabled(context)
+                        AnalyticsManager.logBarcodeScanned("manual")
+                        onBarcodeScanned(trimmed)
+                        showManualEntryDialog = false
                     },
                     enabled = isValid
                 ) {
@@ -190,6 +203,7 @@ fun ScannerScreen(
                                         }
                                         isScanned = true
                                         pause()
+                                        playBeepIfEnabled(context)
                                         AnalyticsManager.logBarcodeScanned("camera")
                                         onBarcodeScanned(it)
                                     }
@@ -316,7 +330,7 @@ fun ScannerScreen(
                                 color = Color.Red.copy(alpha = 0.6f),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Normal,
-                                maxLines = 1                         // evita quebra de linha em landscape
+                                maxLines = 1
                             )
                         }
                     }

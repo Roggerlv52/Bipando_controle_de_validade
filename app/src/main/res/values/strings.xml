@@ -239,13 +239,13 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="status_today">Hoje</string>
 
     <string name="login_network_error">Falha na conexão. Por favor, verifique sua internet e tente novamente.</string>
-    <string name="login_welcome">Bem-vindo ao Bipando</string>
+    <string name="login_welcome">Bem-vindo</string>
     <string name="login_continue">Faça login para continuar</string>
     <string name="cd_logo_bipando">Logo Bipando</string>
 
     <string name="scanner_manual_title">Digitar Código Manualmente</string>
     <string name="scanner_manual_hint">Código de Barras</string>
-    <string name="scanner_manual_error">Digite ao menos 4 dígitos</string>
+    <string name="scanner_manual_error">Campo não pode ser vazio!</string>
     <string name="scanner_confirm">Confirmar</string>
     <string name="scanner_bipando">Bipando</string>
     <string name="scanner_subtitle">COMPRA E VENDA</string>
@@ -408,5 +408,29 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
 
     <string name="msg_barcode_copied">Código de barras copiado!</string>
     <string name="tap_to_copy">Toque para copiar</string>
+
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DIAS GRÁTIS</string>
+    <string name="promo_subtitle_30_days">Novos assinantes ganham 30 dias de teste grátis!</string>
+    <string name="plan_mensal_trial_badge">30 Dias Grátis</string>
+    <string name="trial_duration_default_text">30 dias grátis, depois %1$s/mês</string>
+
+    <!-- Category Image Selection -->
+    <string name="category_select_image_title">Escolha uma imagem para a categoria</string>
+
+    <!-- Category Image Names -->
+    <string name="cat_img_carne">Carne</string>
+    <string name="cat_img_congelado">Congelado</string>
+    <string name="cat_img_embutidos">Embutidos</string>
+    <string name="cat_img_frutos_mar">Frutos do Mar</string>
+    <string name="cat_img_laticinios">Laticínios</string>
+    <string name="cat_img_leite">Leite</string>
+    <string name="cat_img_mercearia">Mercearia</string>
+    <string name="cat_img_hortifruti">Hortifruti</string>
+    <string name="cat_img_padaria">Padaria</string>
+    <string name="cat_img_queijo">Queijo</string>
+    <string name="cat_img_salames">Salame</string>
+    <string name="cat_img_sorvete">Sorvete</string>
+    <string name="cat_img_suco">Suco</string>
 
 </resources>

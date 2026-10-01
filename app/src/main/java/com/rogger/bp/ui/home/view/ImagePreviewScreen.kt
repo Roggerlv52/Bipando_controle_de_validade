@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.size.Precision
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.rogger.bp.R
@@ -167,7 +168,8 @@ fun ImagePreviewScreen(
                 val imageRequest = remember(imageUri) {
                     ImageRequest.Builder(context)
                         .data(imageUri.ifEmpty { R.drawable.ic_shopping })
-                        .size(2000, 2000) // Limite para evitar erro de "Canvas: trying to draw too large bitmap"
+                        .size(1920, 1920)
+                        .precision(Precision.INEXACT)
                         .crossfade(true)
                         .build()
                 }

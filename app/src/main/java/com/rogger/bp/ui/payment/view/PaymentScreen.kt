@@ -95,8 +95,6 @@ fun PaymentScreen(
                         )
                     }
 
-                    //Spacer(modifier = Modifier.height(16.dp))
-
                     Spacer(modifier = Modifier.height(32.dp))
 
                     // Benefícios
@@ -117,8 +115,9 @@ fun PaymentScreen(
                     PlanCard(
                         title = stringResource(id = R.string.plan_name_mensal),
                         price = state.mensalPrice,
-                        isSelected = state.selectedPlanId == "bipando_premium_mensal",
-                        isActive = state.activePlanId == "bipando_premium_mensal",
+                        isSelected = state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal",
+                        isActive = state.activePlanId == "bipando_premium_mensal" || state.activePlanId == "plano-mensal",
+                        badge = if (state.isEligibleForTrial && state.mensalTrialText != null) stringResource(R.string.plan_mensal_trial_badge) else null,
                         onClick = { viewModel.onPlanSelect("bipando_premium_mensal") }
                     )
 
@@ -137,12 +136,14 @@ fun PaymentScreen(
                     // Banner de Trial / Info
                     val bannerText = when {
                         state.activePlanId != null -> {
-                            val name = if (state.activePlanId == "bipando_premium_mensal") 
+                            val name = if (state.activePlanId == "bipando_premium_mensal" || state.activePlanId == "plano-mensal") 
                                 stringResource(R.string.plan_name_mensal) else stringResource(R.string.plan_name_semestral)
                             stringResource(R.string.plan_active_info_text, name)
                         }
-                        state.selectedPlanId == "bipando_premium_mensal" -> state.mensalTrialText
-                        state.selectedPlanId == "bipando_premium_semestral" -> state.semestralTrialText
+                        (state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal") -> 
+                            if (state.isEligibleForTrial) state.mensalTrialText else null
+                        state.selectedPlanId == "bipando_premium_semestral" -> 
+                            if (state.isEligibleForTrial) state.semestralTrialText else null
                         else -> null
                     }
 
@@ -168,7 +169,7 @@ fun PaymentScreen(
                         state.selectedPlanId == null -> stringResource(R.string.select_plan)
                         state.selectedPlanId == state.activePlanId -> stringResource(R.string.current_plan)
                         state.activePlanId != null -> {
-                            val name = if (state.selectedPlanId == "bipando_premium_mensal") 
+                            val name = if (state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal") 
                                 stringResource(R.string.plan_name_mensal) else stringResource(R.string.plan_name_semestral)
                             stringResource(R.string.change_plan_text, name)
                         }
@@ -226,6 +227,7 @@ fun PlanCard(
     price: String,
     isSelected: Boolean,
     isActive: Boolean,
+    badge: String? = null,
     onClick: () -> Unit
 ) {
     val borderColor = if (isSelected) Color(0xFF5CB82E) else Color.White.copy(alpha = 0.2f)
@@ -243,7 +245,24 @@ fun PlanCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = title, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
+                    if (badge != null && !isActive) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = Color(0xFF5CB82E),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = badge,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 if (price.isNotEmpty()) {
                     Text(text = price, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
                 }

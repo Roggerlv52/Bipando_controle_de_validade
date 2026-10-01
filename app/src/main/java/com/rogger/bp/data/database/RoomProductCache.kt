@@ -32,10 +32,14 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
 
     override suspend fun remove(key: String) {
         if (key.isNotEmpty()) {
-            productDao.removeCachedProduct(key) // Tenta remover um produto específico
+            productDao.removeProduct(key) // Tenta remover por docId ou uuid
         } else {
             productDao.clearAllProducts()
         }
+    }
+
+    suspend fun removeProductByDocIdOrUuid(docId: String, uuid: String) {
+        productDao.removeProductByDocIdOrUuid(docId, uuid)
     }
 
     suspend fun replaceAllProducts(products: List<PostProduct>) {

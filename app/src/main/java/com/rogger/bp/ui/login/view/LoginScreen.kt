@@ -206,12 +206,14 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Botão Google
+                    // Botão Google protegido contra duplo clique
                     GoogleSignInButton(
                         onClick = {
-                            // Limpa sessão anterior em background sem bloquear o clique atual
-                            googleSignInClient.signOut()
-                            launcher.launch(googleSignInClient.signInIntent)
+                            if (!state.isLoading) {
+                                // Limpa sessão anterior em background sem bloquear o clique atual
+                                googleSignInClient.signOut()
+                                launcher.launch(googleSignInClient.signInIntent)
+                            }
                         },
                         isLoading = state.isLoading
                     )

@@ -1,37 +1,80 @@
 package com.rogger.bp.ui.category.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.rogger.bp.R
 import com.rogger.bp.domain.model.Category
 import com.rogger.bp.ui.category.presentation.CategoryViewModel
-import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
+import androidx.annotation.StringRes
+import com.rogger.bp.ui.category.view.componentes.CategoryImageSelectionDialog
+import com.rogger.bp.ui.category.view.componentes.CategoryItem
+import com.rogger.bp.ui.category.view.componentes.EmptyCategoriesState
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import com.rogger.bp.ui.componentes.BipandoTextField
-import kotlin.text.ifEmpty
+import com.rogger.bp.ui.componentes.SwipeToDeleteContainer
+
+data class CategoryImageOption(
+    @param:StringRes val nameRes: Int,
+    val resId: Int
+)
+
+val categoryImageOptions = listOf(
+    CategoryImageOption(R.string.cat_img_carne, R.drawable.carne),
+    CategoryImageOption(R.string.cat_img_congelado, R.drawable.congelado),
+    CategoryImageOption(R.string.cat_img_embutidos, R.drawable.embotidos),
+    CategoryImageOption(R.string.cat_img_frutos_mar, R.drawable.frutos_mar),
+    CategoryImageOption(R.string.cat_img_laticinios, R.drawable.laticineos),
+    CategoryImageOption(R.string.cat_img_leite, R.drawable.leite),
+    CategoryImageOption(R.string.cat_img_mercearia, R.drawable.mercearia),
+    CategoryImageOption(R.string.cat_img_hortifruti, R.drawable.ortifrute),
+    CategoryImageOption(R.string.cat_img_padaria, R.drawable.padaria),
+    CategoryImageOption(R.string.cat_img_queijo, R.drawable.queijo),
+    CategoryImageOption(R.string.cat_img_salames, R.drawable.salames),
+    CategoryImageOption(R.string.cat_img_sorvete, R.drawable.sorvete),
+    CategoryImageOption(R.string.cat_img_suco, R.drawable.suco)
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +83,7 @@ fun CategoryScreen(
     onBackClick: () -> Unit,
     onCategoryClick: (Category) -> Unit,
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
@@ -48,6 +92,10 @@ fun CategoryScreen(
     var editCategoryName by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var categoryToDelete by remember { mutableStateOf<Category?>(null) }
+
+    // Estado para o Dialog de Seleção de Imagem da Categoria
+    var categoryForIconPicker by remember { mutableStateOf<Category?>(null) }
+    var iconRefreshTrigger by remember { mutableIntStateOf(0) }
 
     if (showAddDialog) {
         AlertDialog(
@@ -136,7 +184,22 @@ fun CategoryScreen(
         )
     }
 
+    if (categoryForIconPicker != null) {
+        CategoryImageSelectionDialog(
+            onDismiss = { categoryForIconPicker = null },
+            onImageSelected = { selectedResId ->
+                categoryForIconPicker?.let { cat ->
+                    SharedPreferencesManager.setCategoryIcon(context, cat.id, selectedResId)
+                    iconRefreshTrigger++
+                }
+                categoryForIconPicker = null
+            }
+        )
+    }
+
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.category), fontWeight = FontWeight.Bold) },
@@ -166,9 +229,8 @@ fun CategoryScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
-            // Imagem de fundo preenchendo o layout
             AsyncImage(
                 model = R.drawable.fundo_vector,
                 contentDescription = null,
@@ -176,16 +238,22 @@ fun CategoryScreen(
                 contentScale = ContentScale.Crop,
             )
 
-            // Imagem "ww" centralizada
             // Overlay para garantir legibilidade das categorias
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
 
             if (state.categories.isEmpty() && !state.isLoading) {
                 EmptyCategoriesState()
             } else {
+                val navBarBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp + navBarBottomPadding
+                    ),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
@@ -206,7 +274,9 @@ fun CategoryScreen(
                         ) {
                             CategoryItem(
                                 category = category,
-                                onClick = { onCategoryClick(category) }
+                                refreshTrigger = iconRefreshTrigger,
+                                onClick = { onCategoryClick(category) },
+                                onIconClick = { categoryForIconPicker = category }
                             )
                         }
                     }
@@ -217,73 +287,5 @@ fun CategoryScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
-    }
-}
-
-@Composable
-fun CategoryItem(category: Category, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Category,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Text(
-                text = "${category.name} (${category.itemCount})",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun EmptyCategoriesState() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AsyncImage(
-            model = R.drawable.ww,
-            contentDescription = null,
-            modifier = Modifier.size(150.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(id = R.string.txt_no_categories_registered),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.White
-        )
     }
 }

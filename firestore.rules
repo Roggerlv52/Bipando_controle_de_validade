@@ -26,36 +26,52 @@ service cloud.firestore {
 
     // 2. Grupos
     match /groups/{groupId} {
-      allow read: if isSignedIn();
+      // Permite ler se for admin (pelo campo adminId), membro ou busca por código de compartilhamento
+      allow read: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        isGroupAdmin(groupId) ||
+        isGroupMember(groupId) ||
+        resource.data.shareCode != null
+      );
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && isGroupAdmin(groupId);
+      allow update, delete: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        isGroupAdmin(groupId)
+      );
 
       match /members/{memberId} {
         allow read: if isSignedIn();
-        allow write: if isSignedIn() && (isGroupAdmin(groupId) || isOwner(memberId));
+        allow write: if isSignedIn() && (
+          isGroupAdmin(groupId) ||
+          isOwner(memberId) ||
+          memberId == request.auth.uid
+        );
       }
 
       match /products/{productId} {
-        allow read, write: if isSignedIn() && (isGroupAdmin(groupId) || isGroupMember(groupId));
+        allow read, write: if isSignedIn() && (
+          isGroupAdmin(groupId) ||
+          isGroupMember(groupId)
+        );
       }
 
       match /category/{categoryId} {
-        allow read, write: if isSignedIn() && (isGroupAdmin(groupId) || isGroupMember(groupId));
+        allow read, write: if isSignedIn() && (
+          isGroupAdmin(groupId) ||
+          isGroupMember(groupId)
+        );
       }
 
       match /invitations/{invitationId} {
-        // Permite ler se for o alvo, remetente ou admin do grupo
         allow read: if isSignedIn() && (
           resource.data.targetUid == request.auth.uid ||
           resource.data.senderId == request.auth.uid ||
           isGroupAdmin(groupId)
         );
 
-        // Permite criar se estiver logado.
-        // O app garante que o remetente seja o usuário atual.
-        allow create: if isSignedIn();
+        // Validação estrita: O remetente do convite DEVE ser o próprio usuário autenticado
+        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
 
-        // Permite atualizar se for o alvo ou o admin
         allow update: if isSignedIn() && (
           resource.data.targetUid == request.auth.uid ||
           isGroupAdmin(groupId)
@@ -68,7 +84,7 @@ service cloud.firestore {
       }
     }
 
-    // 3. Imagens Globais
+    // 3. Imagens Globais (Catálogo público)
     match /imageProdutos/{barcode} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
