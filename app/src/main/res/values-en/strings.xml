@@ -390,4 +390,10 @@ lost and when you create your account again using the same email, you will need 
     <string name="msg_barcode_copied">Barcode copied!</string>
     <string name="tap_to_copy">Tap to copy</string>
 
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DAYS FREE</string>
+    <string name="promo_subtitle_30_days">New subscribers get a 30-day free trial!</string>
+    <string name="plan_mensal_trial_badge">30 Days Free</string>
+    <string name="trial_duration_default_text">30 days free, then %1$s/month</string>
+
 </resources>

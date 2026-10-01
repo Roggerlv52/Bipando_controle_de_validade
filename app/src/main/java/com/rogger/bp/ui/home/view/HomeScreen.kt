@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -407,6 +410,7 @@ fun HomeScreenContent(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             if (state.isSearchActive) {
                 SearchTopAppBar(
@@ -436,6 +440,7 @@ fun HomeScreenContent(
                         showCategoryDialog = true 
                     }
                 },
+                modifier = Modifier.navigationBarsPadding(),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -447,18 +452,8 @@ fun HomeScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
-            // Imagem de fundo preenchendo o layout
-            /*
-            AsyncImage(
-                model = R.drawable.fundo_vector,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-             */
-
             // Overlay para garantir legibilidade (consistente com CategoryScreen)
             Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.2f)))
 
@@ -481,10 +476,14 @@ fun HomeScreenContent(
                         .groupBy { it.second }
                 }
 
+                val navBarBottomPadding = WindowInsets.navigationBars
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+                val totalBottomPadding = 88.dp + navBarBottomPadding
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 0.9
-                        .dp, bottom = 80.dp)
+                    contentPadding = PaddingValues(top = 0.9.dp, bottom = totalBottomPadding)
                 ) {
                     groupedProducts.forEach { (days, items) ->
                         val isGroupRemoving =

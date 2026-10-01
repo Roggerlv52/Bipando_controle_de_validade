@@ -57,23 +57,13 @@ fun BipandoNavGraph(navController: NavHostController) {
     val database = BpDatabase.getDatabase(context)
     val auth = FirebaseAuth.getInstance()
     
-    // Persistência de login: Se o usuário já está logado no Firebase, vai direto para HOME
-    val startDestination = if (auth.currentUser != null) Routes.HOME else Routes.LOGIN
+    val tourCompleted = SharedPreferencesManager.isTourCompleted(context)
 
-    // Inicia o onboarding automaticamente se o usuário estiver logado e não tiver visto
-    LaunchedEffect(auth.currentUser) {
-        val tourCompleted = SharedPreferencesManager.isTourCompleted(context)
-        if (auth.currentUser != null && !tourCompleted) {
-            // Pequeno delay para transição suave
-            kotlinx.coroutines.delay(500)
-            
-            val activeProductsCount = database.productDao().getGlobalActiveProductsCount()
-            if (activeProductsCount == 0) {
-                navController.navigate(Routes.ONBOARDING) {
-                    popUpTo(Routes.HOME) { inclusive = false }
-                }
-            }
-        }
+    // Persistência de login e verificação de Onboarding
+    val startDestination = if (auth.currentUser != null) {
+        if (!tourCompleted) Routes.ONBOARDING else Routes.HOME
+    } else {
+        Routes.LOGIN
     }
 
     NavHost(
@@ -103,8 +93,15 @@ fun BipandoNavGraph(navController: NavHostController) {
             LoginScreen(
                 viewModel = viewModel,
                 onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    val isTourDone = SharedPreferencesManager.isTourCompleted(context)
+                    if (!isTourDone) {
+                        navController.navigate(Routes.ONBOARDING) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -563,7 +560,9 @@ fun BipandoNavGraph(navController: NavHostController) {
             OnboardingScreen(
                 onFinish = {
                     SharedPreferencesManager.setTourCompleted(context, true)
-                    navController.popBackStack()
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
                 }
             )
         }

@@ -19,6 +19,7 @@ data class PaymentState(
     val semestralPrice: String = "",
     val mensalTrialText: String? = null,
     val semestralTrialText: String? = null,
+    val isEligibleForTrial: Boolean = true,
     val isPremium: Boolean = false,
     val isLimitReached: Boolean = false,
     val isLoading: Boolean = false,
@@ -63,13 +64,14 @@ class PaymentViewModel(
         billingManager = BillingManager(
             context = activity,
             activity = activity,
-            onPricesLoaded = { mensalPrice, semestralPrice, mensalTrial, semestralTrial ->
+            onPricesLoaded = { mensalPrice, semestralPrice, mensalTrial, semestralTrial, isEligibleForTrial ->
                 _uiState.update { 
                     it.copy(
                         mensalPrice = mensalPrice,
                         semestralPrice = semestralPrice,
                         mensalTrialText = mensalTrial,
-                        semestralTrialText = semestralTrial
+                        semestralTrialText = semestralTrial,
+                        isEligibleForTrial = isEligibleForTrial
                     ) 
                 }
             },
