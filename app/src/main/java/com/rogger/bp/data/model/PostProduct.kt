@@ -26,6 +26,7 @@ data class PostProduct(
     var deleted: Boolean = false,
     var deletedAt: Long? = null,
     var categoryName: String = "",
+    var groupId: String = "",
     @Ignore val localUri: Uri? = null, // Ignorar para o Room, pois Uri não é um tipo primitivo
     @Ignore val publisher: UserAuth? = null // Ignorar para o Room
 ) : Parcelable {
@@ -43,7 +44,8 @@ data class PostProduct(
         timestamp: Long,
         imageUri: String,
         deleted: Boolean,
-        deletedAt: Long?
+        deletedAt: Long?,
+        groupId: String = ""
     ) : this(
         firestoreDocId = firestoreDocId,
         id = id,
@@ -58,6 +60,7 @@ data class PostProduct(
         imageUri = imageUri,
         deleted = deleted,
         deletedAt = deletedAt,
+        groupId = groupId,
         localUri = null,
         publisher = null
     )

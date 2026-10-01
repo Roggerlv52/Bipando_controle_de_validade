@@ -14,6 +14,7 @@ import androidx.core.content.FileProvider;
 
 import com.rogger.bp.R;
 import com.rogger.bp.data.model.PostProduct;
+import com.rogger.bp.notification.NotificationPrefs;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,7 +32,7 @@ import java.util.Locale;
  */
 public class PdfExportHelper {
 
-    public static void exportToPdf(Context context, List<PostProduct> products) {
+    public static void exportToPdf(Context context, List<PostProduct> products, String groupName) {
         if (products == null || products.isEmpty()) {
             Toast.makeText(context,  context.getString(R.string.msg_no_active_products), Toast.LENGTH_SHORT).show();
             return;
@@ -40,8 +41,8 @@ public class PdfExportHelper {
         products.sort(new Comparator<PostProduct>() {
             @Override
             public int compare(PostProduct p1, PostProduct p2) {
-                long dias1 = com.rogger.bp.ui.base.Utils.calcDifferencInDays(p1.getTimestamp());
-                long dias2 = com.rogger.bp.ui.base.Utils.calcDifferencInDays(p2.getTimestamp());
+                long dias1 = TimeFormatter.getDaysRemaining(p1.getTimestamp());
+                long dias2 = TimeFormatter.getDaysRemaining(p2.getTimestamp());
                 return Long.compare(dias1, dias2);
             }
         });
@@ -61,12 +62,16 @@ public class PdfExportHelper {
         paint.setColor(Color.WHITE);
         paint.setTextSize(18);
         paint.setFakeBoldText(true);
-        canvas.drawText(context.getString(R.string.bp_expiration_date_control), 24, 46, paint);
+        canvas.drawText(context.getString(R.string.bp_expiration_date_control), 24, 40, paint);
+
+        paint.setTextSize(12);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Grupo: " + groupName, 24, 60, paint);
 
         paint.setTextSize(10);
         paint.setFakeBoldText(false);
         SimpleDateFormat sdf = new SimpleDateFormat(context.getString(R.string.date_format_hour), Locale.getDefault());
-        canvas.drawText(context.getString(R.string.report_generated_on) + sdf.format(new Date()), 24, 66, paint);
+        canvas.drawText(context.getString(R.string.report_generated_on) + sdf.format(new Date()), 350, 60, paint);
 
         // 2. Títulos das Colunas da Tabela
         paint.setColor(Color.BLACK);
@@ -88,6 +93,7 @@ public class PdfExportHelper {
         int y = 145;
 
         SimpleDateFormat dateSdf = new SimpleDateFormat(context.getString(R.string.date_format), Locale.getDefault());
+        int yellowLimit = NotificationPrefs.getDays(context);
 
         for (PostProduct product : products) {
             // Se exceder a margem inferior da folha, abre uma nova página A4 automaticamente
@@ -105,7 +111,23 @@ public class PdfExportHelper {
                 name = name.substring(0, 25) + "...";
             }
 
-            long daysLeft = com.rogger.bp.ui.base.Utils.calcDifferencInDays(product.getTimestamp());
+            long daysLeft = TimeFormatter.getDaysRemaining(product.getTimestamp());
+            
+            // ✅ Aplicar cor sutil na linha baseada no vencimento
+            if (daysLeft < 1) {
+                // Vencido: Fundo vermelho bem sutil e texto em tom de vermelho
+                paint.setColor(0x0F991B1B); // ~6% opacidade
+                canvas.drawRect(24, y - 12, 571, y + 6, paint);
+                paint.setColor(Color.BLACK);
+            } else if (daysLeft <= yellowLimit) {
+                // Próximo: Fundo amarelo bem sutil e texto em tom de amarelo/laranja
+                paint.setColor(0xFFFFFBEB); // ~6% opacidade
+                canvas.drawRect(24, y - 12, 571, y + 6, paint);
+                paint.setColor(Color.BLACK);
+            } else {
+                paint.setColor(Color.BLACK);
+            }
+
             String daysStr;
             if (daysLeft < 0) {
                 daysStr = context.getString(R.string.group_expired);
@@ -127,9 +149,14 @@ public class PdfExportHelper {
 
         document.finishPage(page);
 
-        // Guarda o documento na pasta pública de "Downloads" do telemóvel (Não exige permissões na API 29+)
-        File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File pdfFile = new File(downloadsDir, "bipando_relatorio_produtos.pdf");
+        // ✅ CORREÇÃO: Usa pasta externa privada do app para compatibilidade total com Scoped Storage (Android 10+)
+        File reportDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        if (reportDir != null && !reportDir.exists()) {
+            reportDir.mkdirs();
+        }
+        
+        String fileName = "bipando_relatorio_" + groupName.replaceAll("[^a-zA-Z0-9]", "_") + ".pdf";
+        File pdfFile = new File(reportDir, fileName);
 
         try {
             document.writeTo(new FileOutputStream(pdfFile));

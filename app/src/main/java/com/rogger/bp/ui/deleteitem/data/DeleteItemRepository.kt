@@ -54,13 +54,17 @@ class DeleteItemRepository(
     fun deletePermanently(item: PostProduct, callback: DeleteItemCallback) {
         val isOnline = NetworkUtils.isNetworkAvailable()
 
+        fun removeLocalCopy() {
+            CoroutineScope(Dispatchers.IO).launch {
+                localCache.removeProductByDocIdOrUuid(item.firestoreDocId, item.uuid)
+            }
+        }
+
         if (isOnline) {
             // ── CENÁRIO ONLINE ──
             dataSource.deletePermanently(item, object : DeleteItemCallback {
                 override fun onSuccess(items: List<PostProduct>?) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        localCache.remove(item.firestoreDocId)
-                    }
+                    removeLocalCopy()
                     callback.onSuccess(items)
                 }
                 override fun onFailure(message: String) = callback.onFailure(message)
@@ -68,9 +72,7 @@ class DeleteItemRepository(
             })
         } else {
             // ── CENÁRIO OFFLINE ──
-            CoroutineScope(Dispatchers.IO).launch {
-                localCache.remove(item.firestoreDocId)
-            }
+            removeLocalCopy()
             dataSource.deletePermanently(item, callback)
             // Retorna o sucesso imediatamente para disparar o toast simples na UI
             callback.onSuccess(null)

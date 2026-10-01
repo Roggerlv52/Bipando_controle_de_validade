@@ -100,7 +100,7 @@
     <string name="dialog_title">Confirm deletion</string>
     <string name="dialog_title_delete">Do you want to delete</string>
     <string name="dialog_add_category_title">Create category</string>
-    <string name="dialog_title_select">select a category</string>
+    <string name="dialog_title_select">Select a category</string>
     <string name="dialog_button_accept">accept</string>
     <string name="dialog_button_cancel">Cancel</string>
     <string name="dialog_button_restore">Restaurar</string>
@@ -142,7 +142,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="spinner_indicator">Indicator of an upcoming expiration date.</string>
     <string name="delete_account_button">"Delete the account"</string>
     <string name="title_promotion">Join Premium\nEnjoy unlimited features!</string>
-    <string name="sub_title_promotion">"🔥Thousands of users trust"</string>
+    <string name="sub_title_promotion">"🔥"</string>
     <string name="text_unlimited_promotion">Unlimited scanning and registration.</string>
     <string name="text_customized_notification">Customized notifications per product</string>
     <string name="text_unlimited_categories">Unlimited categories for your inventory.</string>
@@ -198,5 +198,202 @@ lost and when you create your account again using the same email, you will need 
     <string name="expiration_date"> Expiration date</string>
     <string name="days_remaining">Days left</string>
     <string name="share_pdf_report">Share PDF Report:</string>
+
+    <string name="menu_profile">Profile</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_groups">Groups</string>
+    <string name="menu_share_app">Share App</string>
+    <string name="menu_support">Support and Feedback </string>
+    <string name="support_email_subject">Bipando Support - Suggestions/Questions</string>
+    <string name="support_email_chooser">Send support email</string>
+    <string name="cd_remove_group">Remove Group</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_more_options">More options</string>
+    <string name="menu_export_pdf">Export PDF</string>
+    <string name="menu_export_excel">Export Excel</string>
+    <string name="search_products_placeholder">Search products...</string>
+    <string name="cd_voice_search">Voice Search</string>
+    <string name="cd_close_search">Close Search</string>
+    <string name="search_no_results">No products found for your search.</string>
+    <string name="add_first_product">Add My First Product</string>
+    <string name="status_today">Today</string>
+
+    <string name="login_network_error">Connection failed. Please check your internet and try again.</string>
+    <string name="login_welcome">Welcome to Bipando</string>
+    <string name="login_continue">Sign in to continue</string>
+    <string name="cd_logo_bipando">Bipando Logo</string>
+
+    <string name="scanner_manual_title">Enter Code Manually</string>
+    <string name="scanner_manual_hint">Barcode</string>
+    <string name="scanner_manual_error">Enter at least 4 digits</string>
+    <string name="scanner_confirm">Confirm</string>
+    <string name="scanner_bipando">Bipando</string>
+    <string name="scanner_subtitle">BUY AND SELL</string>
+    <string name="scanner_permission_needed">Camera permission is required to scan.</string>
+    <string name="scanner_grant_permission">Grant Permission</string>
+    <string name="scanner_title">Scan barcode</string>
+    <string name="cd_back">Back</string>
+
+    <string name="add_product_title">New Product</string>
+    <string name="edit_product_title">Edit Product</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="select_category_hint">Select Category</string>
+    <string name="expiration_date_label">Expiration Date</string>
+    <string name="notes_optional_hint">Notes (Optional)</string>
+    <string name="notes_hint">Notes</string>
+    <string name="save_product_button">Save Product</string>
+    <string name="save_changes_button">Save Changes</string>
+    <string name="select_category_title">Select a Category</string>
+    <string name="cd_add_photo">Add Photo</string>
+
+    <string name="delete_product_title">Delete Product</string>
+    <string name="delete_product_confirm_msg">Do you really want to delete \"%1$s\"?</string>
+
+    <string name="cd_close">Close</string>
+    <string name="status_active_caps">ACTIVE</string>
+
+    <string name="profile_delete_account_title">Delete account permanently</string>
+    <string name="profile_delete_warning_header">WARNING: This action is irreversible.</string>
+    <string name="profile_delete_warning_body">By deleting your account, all your data will be permanently deleted from our system:</string>
+    <string name="profile_delete_item_1">• All your products and categories.</string>
+    <string name="profile_delete_item_2">• All product images uploaded by you.</string>
+    <string name="profile_delete_item_3">• Your profile and group settings.</string>
+    <string name="profile_delete_item_4">• Premium subscription status.</string>
+    <string name="profile_delete_final_question">Do you really want to proceed with the total deletion of your data?</string>
+    <string name="profile_delete_all_button">Delete Everything</string>
+    <string name="profile_title">Settings</string>
+    <string name="cd_profile_photo">Profile picture</string>
+    <string name="profile_user_code">Your Code: %1$s</string>
+    <string name="cd_share_code">Share Code</string>
+    <string name="profile_preferences">Preferences</string>
+    <string name="profile_date_picker_type">Date Picker Type</string>
+    <string name="profile_date_picker_calendar">Calendar (Default)</string>
+    <string name="profile_date_picker_spinner">Spinner (Scroll)</string>
+    <string name="profile_appearance">Appearance</string>
+    <string name="profile_theme_classic">Classic Theme</string>
+    <string name="profile_theme_green">Green Theme</string>
+    <string name="profile_theme_red">Red Theme</string>
+    <string name="profile_theme_dark">Dark Theme</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_enable_notifications">Enable Notifications</string>
+    <string name="profile_expiry_warning_label">Expiration warning: %1$d days before</string>
+    <string name="profile_notification_time">Notification Time</string>
+    <string name="profile_notification_sound">Notification Sound</string>
+    <string name="profile_sounds">Sounds</string>
+    <string name="profile_enable_beep">Enable Beep</string>
+    <string name="profile_management">Management</string>
+    <string name="profile_trash">Trash</string>
+    <string name="profile_view_deleted">View deleted items</string>
+    <string name="profile_delete_account_button">Delete Account</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_plan_usage">Plan Usage</string>
+    <string name="profile_premium_subscriber">Premium Subscriber</string>
+    <string name="profile_unlimited_registration">You have unlimited registration</string>
+    <string name="profile_registered_products">Registered Products</string>
+    <string name="profile_limit_reached_msg">Limit reached! Become Premium to continue.</string>
+    <string name="profile_approaching_limit_msg">You are reaching the free limit.</string>
+    <string name="profile_remove_limits">Remove Limits</string>
+    <string name="cd_copy">Copy</string>
+
+    <string name="dialog_no_category_found">No category found.</string>
+    <string name="dialog_create_new_category">Create New Category</string>
+    <string name="dialog_select_image_title">Select Image</string>
+    <string name="dialog_camera">Camera</string>
+    <string name="dialog_gallery">Gallery</string>
+
+    <string name="preview_code">View Code</string>
+    <string name="preview_image">View Image</string>
+    <string name="error_loading_image">Error loading image</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_categories">Organize by Categories</string>
+    <string name="onboarding_desc_categories">Start by organizing your products. Create categories like Grocery, Cold Cuts, or Cheeses for easier management.</string>
+    <string name="onboarding_title_groups">Work as a Team</string>
+    <string name="onboarding_desc_groups">Create groups to share expiration control with your family or store team in real time.</string>
+    <string name="onboarding_title_alerts">Expiration Alerts</string>
+    <string name="onboarding_desc_alerts">Receive scheduled notifications so you never lose products to expiration again. Savings and organization.</string>
+    <string name="onboarding_btn_next">Next</string>
+    <string name="onboarding_btn_start">Start</string>
+
+    <!-- Voice Search Dialog -->
+    <string name="voice_search_title">Voice Search</string>
+    <string name="voice_search_subtitle">Say the product name or barcode</string>
+    <string name="voice_search_hold_to_speak">Hold the button to speak</string>
+    <string name="voice_search_not_available">Voice recognition is not available on this device.</string>
+    <string name="voice_search_listening">Listening...</string>
+    <string name="voice_search_error_no_match">Didn\'t catch that, please try again.</string>
+    <string name="voice_search_error_network">Connection error.</string>
+    <string name="voice_search_error_permissions">Audio permission required.</string>
+    <string name="voice_search_error_generic">Listening error (%1$d). Try again.</string>
+    <string name="cd_microphone">Microphone</string>
+
+    <!-- Groups & Group Items -->
+    <string name="group_default_label">(My Group)</string>
+    <string name="group_leader_prefix">Leader: %1$s • </string>
+    <string name="group_participants_and_items">%1$d members • %2$d active items</string>
+    <string name="group_btn_active">Active</string>
+    <string name="group_btn_work">Work</string>
+    <string name="group_btn_invite">Invite</string>
+    <string name="group_members_title">Group Members</string>
+    <string name="group_role_admin">Administrator</string>
+    <string name="group_role_editor">Editor</string>
+    <string name="group_role_reader">Reader</string>
+    <string name="group_invited_you">%1$s invited you</string>
+    <string name="group_invitation_group_prefix">Group: %1$s</string>
+    <string name="group_invitation_accept">Accept</string>
+    <string name="group_invitation_decline">Decline</string>
+    <string name="group_screen_title">User Groups</string>
+    <string name="group_screen_new_group">New Group</string>
+    <string name="group_invite_title">Invite to %1$s</string>
+    <string name="group_invite_desc">The invited user will be able to collaborate on the group list %1$s.</string>
+    <string name="group_user_code_label">8-digit User Code</string>
+    <string name="group_permission_label">Permission:</string>
+    <string name="group_editor_desc">Can add, edit, and permanently remove items.</string>
+    <string name="group_reader_desc">Can add and edit (except permanent removal).</string>
+    <string name="group_rename_title">Rename Group</string>
+    <string name="group_rename_label">New Group Name</string>
+    <string name="group_leave_title">Leave Group</string>
+    <string name="group_leave_confirm">Are you sure you want to leave the group \"%1$s\"?</string>
+    <string name="group_leave_btn">Leave</string>
+    <string name="group_manage_member_title">Manage Member</string>
+    <string name="group_member_label">Member: %1$s</string>
+    <string name="group_current_role_label">Current role: %1$s</string>
+    <string name="group_make_role_btn">Make %1$s</string>
+    <string name="group_remove_member_btn">Remove from Group</string>
+    <string name="group_admin_cant_change">The Administrator\'s role cannot be changed.</string>
+    <string name="group_create_dialog_title">Create New Group</string>
+    <string name="group_create_dialog_desc">Give your group a name to start collaborating with other users.</string>
+    <string name="group_name_label">Group Name</string>
+    <string name="group_btn_create">Create</string>
+    <string name="group_pending_invitations">Pending Invitations</string>
+    <string name="group_load_error">An error occurred loading your groups.\n\n%1$s</string>
+    <string name="group_try_again">Try Again</string>
+    <string name="group_empty_msg">You are not in a collaborative group yet.\n\nCreate your group or ask to be invited.</string>
+    <string name="group_start_now">Start Now</string>
+    <string name="group_dialog_name_title">Name Your Group</string>
+    <string name="group_dialog_name_desc">Give your collaborative group a name to start inviting members.</string>
+    <string name="group_dialog_invitation_title">Group Invitation</string>
+    <string name="group_dialog_invitation_msg">%1$s invited you to the group \"%2$s\".</string>
+    <string name="cd_selected">Selected</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_collapse">Collapse</string>
+
+    <!-- Category Dialogs -->
+    <string name="category_dialog_new_title">New Category</string>
+    <string name="category_dialog_edit_title">Edit Category</string>
+    <string name="category_dialog_delete_title">Delete Category</string>
+    <string name="category_dialog_delete_confirm">Are you sure you want to delete category \"%1$s\"? This action cannot be undone.</string>
+    <string name="category_name_field_label">Category Name</string>
+    <string name="category_btn_delete">Delete</string>
+
+    <string name="msg_barcode_copied">Barcode copied!</string>
+    <string name="tap_to_copy">Tap to copy</string>
+
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DAYS FREE</string>
+    <string name="promo_subtitle_30_days">New subscribers get a 30-day free trial!</string>
+    <string name="plan_mensal_trial_badge">30 Days Free</string>
+    <string name="trial_duration_default_text">30 days free, then %1$s/month</string>
 
 </resources>
