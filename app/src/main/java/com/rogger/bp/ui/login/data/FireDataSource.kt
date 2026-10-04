@@ -57,7 +57,8 @@ class FireDataSource : LoginDataSource {
                 val googlePhotoUrl = user.photoUrl?.toString() ?: ""
                 val finalEmail = if (email.isNotEmpty()) email else user.email ?: ""
 
-                // 1. Filtro de domínios suspeitos para bloquear bots e logins falsos
+                // 1. Filtro de domínios suspeitos para bloquear bots e logins falsos.
+                // Verifica se o e-mail pertence a um dos domínios temporários/suspeitos bloqueados.
                 val domain = finalEmail.substringAfter("@", "").lowercase()
                 val suspiciousDomains = listOf(
                     "cloudtestlabaccounts.com",
@@ -67,7 +68,7 @@ class FireDataSource : LoginDataSource {
                 )
 
                 if (suspiciousDomains.contains(domain)) {
-                    // Exclui a conta criada no Firebase Auth e rejeita o login
+                    // Se for um domínio suspeito, deleta a conta do Firebase Auth criada e retorna erro
                     user.delete().addOnCompleteListener {
                         callback.onFailure("Domínio de e-mail não permitido.")
                         callback.onComplete()
@@ -86,8 +87,10 @@ class FireDataSource : LoginDataSource {
                         if (!document.exists()) {
                             firestoreData["isPremium"] = false
                             firestoreData["shareCode"] = uid.take(8).uppercase()
+                            
                             // 2. Salva o campo createdAt com Timestamp.now() apenas quando o documento não existir
                             firestoreData["createdAt"] = Timestamp.now()
+                            
                             // 3. Salva o campo migrated como false apenas quando o documento não existir
                             firestoreData["migrated"] = false
                         }

@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 data class LoginState(
     val isLoading: Boolean = false,
@@ -57,11 +58,11 @@ class LoginViewModel(
                         user.email
                     )
                     
-                    // Sincroniza dados ANTES de navegar com limite de tempo de 15 segundos
+                    // Sincroniza dados do usuário e grupos com limite de tempo
                     viewModelScope.launch {
                         try {
-                            // Adiciona tempo limite de 15s para evitar travamentos em conexões lentas
-                            withTimeout(15_000L) {
+                            // Adiciona tempo limite de 15 segundos em volta da sincronização para não travar na tela de loading
+                            withTimeout(15_000L.milliseconds) {
                                 val groupResult = groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
                                 groupRepository.syncUserGroup(user.uuid)
 
@@ -81,7 +82,7 @@ class LoginViewModel(
                                 syncCategories(effectiveWorkMode, targetGroupId)
                             }
                         } catch (e: TimeoutCancellationException) {
-                            // Se o limite de 15s for atingido, ignora a exceção e deixa o usuário prosseguir normalmente
+                            // Se atingir o tempo limite de 15s (TimeoutCancellationException), permite que o usuário entre normalmente sem travar no loading
                         } finally {
                             // Para economizar recursos, paramos os listeners da tela de login
                             homeRepository.stopListeningForProducts()

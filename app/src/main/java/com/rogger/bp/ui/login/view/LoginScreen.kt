@@ -206,7 +206,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Botão Google protegido contra duplo clique
+                    // Proteção do botão de login contra duplo clique verificando se o estado não está em carregamento (!state.isLoading)
                     GoogleSignInButton(
                         onClick = {
                             if (!state.isLoading) {

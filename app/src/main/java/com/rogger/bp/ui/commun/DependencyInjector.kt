@@ -9,7 +9,6 @@ import com.rogger.bp.data.image.repository.ImageResolutionRepository
 import com.rogger.bp.data.remote.OpenFoodFactsRepository
 import com.rogger.bp.ui.add.data.FireRegisterDataSource
 import com.rogger.bp.ui.add.data.RegisterItemRepository
-import com.rogger.bp.ui.add.data.RegisterRepository
 import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.RoomCategoryCache
