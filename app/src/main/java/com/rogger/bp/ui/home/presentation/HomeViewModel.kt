@@ -44,6 +44,7 @@ data class HomeState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = true,
     val isFirstLoad: Boolean = true,
+    val isRoomReady: Boolean = false, // NOVO — true quando Room já emitiu pela primeira vez
     val errorMessage: String? = null,
     val categoryFilterName: String? = null,
     val searchQuery: String = "",
@@ -149,6 +150,7 @@ class HomeViewModel(
                         // Reset loading state for new group/mode
                         isLoading = true,
                         isFirstLoad = true,
+                        isRoomReady = false,
                         products = emptyList()
                     )
                 }
@@ -229,8 +231,8 @@ class HomeViewModel(
             _uiState.update {
                 it.copy(
                     products = productList,
+                    isRoomReady = true, // Marca que o Room já emitiu pela primeira vez
                     // Paramos o loading se a lista não estiver vazia.
-                    // Se estiver vazia, mantemos o estado de loading atual (que pode ser true se o sync começou).
                     isLoading = if (productList.isNotEmpty()) false else it.isLoading,
                     isFirstLoad = if (productList.isNotEmpty()) false else it.isFirstLoad
                 )

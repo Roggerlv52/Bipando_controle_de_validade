@@ -47,7 +47,7 @@
         <activity
             android:name="com.rogger.bp.ui.ModernActivity"
             android:exported="true"
-            android:theme="@style/Theme.Bpd"
+            android:theme="@style/Theme.Bpd.Splash"
             android:configChanges="screenSize|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

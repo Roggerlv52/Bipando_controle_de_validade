@@ -463,13 +463,13 @@ fun HomeScreenContent(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (isListVisuallyEmpty) {
-                // Estado vazio real (após o carregamento terminar e não houver itens)
+            } else if (isListVisuallyEmpty && state.isRoomReady && !state.isFirstLoad) {
+                // Estado vazio real (após o Room já ter emitido a leitura e a lista realmente estar vazia)
                 EmptyState(
                     isSearch = state.searchQuery.isNotEmpty(),
                     onAddClick = { showCategoryDialog = true }
                 )
-            } else {
+            } else if (!isListVisuallyEmpty) {
                 val groupedProducts = remember(state.products) {
                     state.products
                         .map { it to TimeFormatter.getDaysRemaining(it.timestamp) }

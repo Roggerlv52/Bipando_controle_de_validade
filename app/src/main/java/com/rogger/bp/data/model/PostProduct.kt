@@ -6,11 +6,20 @@ import android.net.Uri
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-@Entity(tableName = "products")
+@Entity(
+    tableName = "products",
+    indices = [
+        Index(value = ["groupId"]),
+        Index(value = ["deleted"]),
+        Index(value = ["categoryId"]),
+        Index(value = ["groupId", "deleted"])
+    ]
+)
 data class PostProduct(
     @PrimaryKey
     var firestoreDocId: String = "", // Usado como chave primária no Room, deve ser o documentId do Firestore

@@ -18,10 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.rogger.bp.R
 import com.rogger.bp.domain.model.Product
@@ -55,10 +55,13 @@ fun TrashScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Lixeira", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.trash_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -116,8 +119,8 @@ fun TrashItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Excluir Definitivamente") },
-            text = { Text("Esta ação não pode ser desfeita. Deseja excluir \"${product.name}\" para sempre?") },
+            title = { Text(stringResource(R.string.trash_delete_permanently_title)) },
+            text = { Text(stringResource(R.string.trash_delete_permanently_msg, product.name)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -126,10 +129,10 @@ fun TrashItem(
                         showDeleteConfirm = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Excluir") }
+                ) { Text(stringResource(R.string.trash_delete_button)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.trash_cancel_button)) }
             },
             shape = RoundedCornerShape(16.dp),
             containerColor = MaterialTheme.colorScheme.surface,
@@ -141,8 +144,8 @@ fun TrashItem(
     if (showRestoreConfirm) {
         AlertDialog(
             onDismissRequest = { showRestoreConfirm = false },
-            title = { Text("Restaurar Produto") },
-            text = { Text("Deseja devolver \"${product.name}\" para a sua lista de produtos?") },
+            title = { Text(stringResource(R.string.trash_restore_title)) },
+            text = { Text(stringResource(R.string.trash_restore_msg, product.name)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -151,10 +154,10 @@ fun TrashItem(
                         showRestoreConfirm = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) { Text("Restaurar") }
+                ) { Text(stringResource(R.string.trash_restore_button)) }
             },
             dismissButton = {
-                TextButton(onClick = { showRestoreConfirm = false }) { Text("Cancelar") }
+                TextButton(onClick = { showRestoreConfirm = false }) { Text(stringResource(R.string.trash_cancel_button)) }
             },
             shape = RoundedCornerShape(16.dp),
             containerColor = MaterialTheme.colorScheme.surface,
@@ -201,7 +204,7 @@ fun TrashItem(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Vencimento: ${TimeFormatter.formatTimestamp(product.timestamp)}",
+                        text = stringResource(R.string.trash_expiration_prefix, TimeFormatter.formatTimestamp(product.timestamp)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -211,14 +214,14 @@ fun TrashItem(
                     IconButton(onClick = { showRestoreConfirm = true }) {
                         Icon(
                             imageVector = Icons.Default.Restore, 
-                            contentDescription = "Restaurar", 
+                            contentDescription = stringResource(R.string.trash_cd_restore), 
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = { showDeleteConfirm = true }) {
                         Icon(
                             imageVector = Icons.Default.DeleteForever, 
-                            contentDescription = "Excluir", 
+                            contentDescription = stringResource(R.string.trash_cd_delete), 
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -243,7 +246,7 @@ fun EmptyTrashState() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Sua lixeira está vazia",
+            text = stringResource(R.string.trash_empty_message),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

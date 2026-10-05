@@ -414,4 +414,18 @@ lost and when you create your account again using the same email, you will need 
     <string name="cat_img_sorvete">Ice Cream</string>
     <string name="cat_img_suco">Juice</string>
 
+    <!-- Trash Screen -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_empty_message">Your trash is empty</string>
+    <string name="trash_delete_permanently_title">Delete Permanently</string>
+    <string name="trash_delete_permanently_msg">This action cannot be undone. Do you want to delete \"%1$s\" forever?</string>
+    <string name="trash_restore_title">Restore Product</string>
+    <string name="trash_restore_msg">Do you want to return \"%1$s\" to your product list?</string>
+    <string name="trash_delete_button">Delete</string>
+    <string name="trash_restore_button">Restore</string>
+    <string name="trash_cancel_button">Cancel</string>
+    <string name="trash_expiration_prefix">Expiration: %1$s</string>
+    <string name="trash_cd_restore">Restore</string>
+    <string name="trash_cd_delete">Delete</string>
+
 </resources>

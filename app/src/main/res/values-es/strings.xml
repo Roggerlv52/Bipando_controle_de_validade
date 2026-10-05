@@ -412,4 +412,19 @@
     <string name="cat_img_salames">Salami</string>
     <string name="cat_img_sorvete">Helado</string>
     <string name="cat_img_suco">Jugo</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_title">Papelera</string>
+    <string name="trash_empty_message">Tu papelera está vacía</string>
+    <string name="trash_delete_permanently_title">Eliminar Definitivamente</string>
+    <string name="trash_delete_permanently_msg">Esta acción no se puede deshacer. ¿Deseas eliminar \"%1$s\" para siempre?</string>
+    <string name="trash_restore_title">Restaurar Producto</string>
+    <string name="trash_restore_msg">¿Deseas devolver \"%1$s\" a tu lista de productos?</string>
+    <string name="trash_delete_button">Eliminar</string>
+    <string name="trash_restore_button">Restaurar</string>
+    <string name="trash_cancel_button">Cancelar</string>
+    <string name="trash_expiration_prefix">Vencimiento: %1$s</string>
+    <string name="trash_cd_restore">Restaurar</string>
+    <string name="trash_cd_delete">Eliminar</string>
+
 </resources>

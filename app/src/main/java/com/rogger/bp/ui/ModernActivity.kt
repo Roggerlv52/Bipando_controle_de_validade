@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.rogger.bp.data.image.notification.ImageSyncScheduler
 import com.rogger.bp.notification.NotificationScheduler
@@ -28,6 +29,8 @@ class ModernActivity : ComponentActivity() {
         NotificationUtil.createChannel(this)
         NotificationScheduler.start(this)
 
+        // Configura Edge-to-Edge completo para preencher a tela inteira
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)

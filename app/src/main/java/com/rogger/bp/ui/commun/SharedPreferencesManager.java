@@ -8,6 +8,7 @@ import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -145,7 +146,20 @@ public class SharedPreferencesManager {
         int savedDatePicker = getDatePickerType(context);
         boolean savedTour = isTourCompleted(context);
 
-        SharedPreferences.Editor editor = getPreferences(context).edit();
+        // Preserva os dados de ícones salvos antes de limpar o SharedPreferences
+        SharedPreferences prefs = getPreferences(context);
+        Map<String, ?> allEntries = prefs.getAll();
+        Map<String, Object> savedIcons = new HashMap<>();
+        if (allEntries != null) {
+            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                String key = entry.getKey();
+                if (key != null && (key.startsWith("category_icon_") || key.toLowerCase().contains("icon"))) {
+                    savedIcons.put(key, entry.getValue());
+                }
+            }
+        }
+
+        SharedPreferences.Editor editor = prefs.edit();
         editor.clear(); // remove tudo
         editor.apply();
 
@@ -155,6 +169,26 @@ public class SharedPreferencesManager {
         sharedBeepState(context, "beep", savedBeep);
         setDatePickerType(context, savedDatePicker);
         setTourCompleted(context, savedTour);
+
+        // Restaura os dados de ícones salvos
+        if (!savedIcons.isEmpty()) {
+            SharedPreferences.Editor restoreEditor = prefs.edit();
+            for (Map.Entry<String, Object> entry : savedIcons.entrySet()) {
+                Object value = entry.getValue();
+                if (value instanceof Integer) {
+                    restoreEditor.putInt(entry.getKey(), (Integer) value);
+                } else if (value instanceof String) {
+                    restoreEditor.putString(entry.getKey(), (String) value);
+                } else if (value instanceof Boolean) {
+                    restoreEditor.putBoolean(entry.getKey(), (Boolean) value);
+                } else if (value instanceof Long) {
+                    restoreEditor.putLong(entry.getKey(), (Long) value);
+                } else if (value instanceof Float) {
+                    restoreEditor.putFloat(entry.getKey(), (Float) value);
+                }
+            }
+            restoreEditor.apply();
+        }
     }
 
     public static void setDatePickerType(Context context, int type) {

@@ -16,7 +16,7 @@ import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostGroup
 import com.rogger.bp.data.model.PostProduct
 
-@Database(entities = [PostProduct::class, PostCategory::class, PostGroup::class], version = 3, exportSchema = false)
+@Database(entities = [PostProduct::class, PostCategory::class, PostGroup::class], version = 4, exportSchema = false)
 abstract class BpDatabase : RoomDatabase() {
 
     abstract fun productDao(): ProductDao

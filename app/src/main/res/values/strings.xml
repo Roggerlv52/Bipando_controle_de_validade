@@ -433,4 +433,18 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="cat_img_sorvete">Sorvete</string>
     <string name="cat_img_suco">Suco</string>
 
+    <!-- Trash Screen -->
+    <string name="trash_title">Lixeira</string>
+    <string name="trash_empty_message">Sua lixeira está vazia</string>
+    <string name="trash_delete_permanently_title">Excluir Definitivamente</string>
+    <string name="trash_delete_permanently_msg">Esta ação não pode ser desfeita. Deseja excluir \"%1$s\" para sempre?</string>
+    <string name="trash_restore_title">Restaurar Produto</string>
+    <string name="trash_restore_msg">Deseja devolver \"%1$s\" para a sua lista de produtos?</string>
+    <string name="trash_delete_button">Excluir</string>
+    <string name="trash_restore_button">Restaurar</string>
+    <string name="trash_cancel_button">Cancelar</string>
+    <string name="trash_expiration_prefix">Vencimento: %1$s</string>
+    <string name="trash_cd_restore">Restaurar</string>
+    <string name="trash_cd_delete">Excluir</string>
+
 </resources>

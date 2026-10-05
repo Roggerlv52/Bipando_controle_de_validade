@@ -49,6 +49,8 @@ import com.rogger.bp.ui.payment.view.PaymentScreen
 import com.rogger.bp.ui.profile.presentation.ProfileViewModel
 import com.rogger.bp.ui.profile.view.ProfileScreen
 import com.rogger.bp.ui.scanner.ScannerScreen
+import com.rogger.bp.ui.splash.presentation.SplashViewModel
+import com.rogger.bp.ui.splash.view.SplashScreen
 import com.rogger.bp.ui.theme.BipandoTheme
 import com.rogger.bp.ui.theme.BipandoThemeType
 import com.rogger.bp.ui.tour.OnboardingScreen
@@ -58,8 +60,6 @@ fun BipandoNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val database = BpDatabase.getDatabase(context)
     val auth = FirebaseAuth.getInstance()
-    
-    val tourCompleted = SharedPreferencesManager.isTourCompleted(context)
 
     // Log de diagnóstico do Back Stack
     LaunchedEffect(navController) {
@@ -68,14 +68,8 @@ fun BipandoNavGraph(navController: NavHostController) {
         }
     }
 
-    // Persistência de login e verificação de Onboarding
-    val startDestination = remember {
-        if (auth.currentUser != null) {
-            if (!tourCompleted) Routes.ONBOARDING else Routes.HOME
-        } else {
-            Routes.LOGIN
-        }
-    }
+    // A Splash Screen é a rota inicial do app
+    val startDestination = Routes.SPLASH
 
     // Tema reativo aplicado uma única vez
     var themeType by remember {
@@ -112,6 +106,36 @@ fun BipandoNavGraph(navController: NavHostController) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            composable(Routes.SPLASH) {
+                val viewModel: SplashViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return SplashViewModel(context) as T
+                        }
+                    }
+                )
+
+                SplashScreen(
+                    viewModel = viewModel,
+                    onNavigateToHome = {
+                        val isTourDone = SharedPreferencesManager.isTourCompleted(context)
+                        if (!isTourDone) {
+                            navController.navigate(Routes.ONBOARDING) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable(Routes.LOGIN) {
                 val authRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
                 val loginUseCase = LoginUseCase(authRepository)

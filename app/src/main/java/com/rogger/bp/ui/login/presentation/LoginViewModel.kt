@@ -44,7 +44,7 @@ class LoginViewModel(
         val workMode = SharedPreferencesManager.getWorkMode(context)
         
         // Reset logging out flag
-        com.rogger.bp.ui.groups.data.GroupRepository.setLoggingOut(false)
+        GroupRepository.setLoggingOut(false)
 
         viewModelScope.launch {
             loginUseCase.loginWithGoogle(idToken).collect { result ->
@@ -62,7 +62,7 @@ class LoginViewModel(
                     viewModelScope.launch {
                         try {
                             // Adiciona tempo limite de 15 segundos em volta da sincronização para não travar na tela de loading
-                            withTimeout(15_000L.milliseconds) {
+                            withTimeout(10_000L.milliseconds) {
                                 val groupResult = groupRepository.handleUserLogin(user.uuid, user.name, user.photoUri?.toString() ?: "")
                                 groupRepository.syncUserGroup(user.uuid)
 
