@@ -29,16 +29,16 @@ class ModernActivity : ComponentActivity() {
         NotificationUtil.createChannel(this)
         NotificationScheduler.start(this)
 
-        // Configura Edge-to-Edge completo para preencher a tela inteira
+        // Configura Edge-to-Edge forçando ícones e texto claros (brancos) na barra de status no topo
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
         )
 
-        // No Android 10 (API 29) ou superior, desativa o contraste forçado da barra de navegação
-        // para garantir transparência total permitindo visualizar os itens por trás da barra inferior.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // No Android 10 (API 29) até Android 14 (API 34), desativa o contraste forçado da barra de navegação.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < 35) {
+            @Suppress("DEPRECATION")
             window.isNavigationBarContrastEnforced = false
         }
 

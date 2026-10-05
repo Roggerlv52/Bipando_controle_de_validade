@@ -50,11 +50,12 @@ fun SplashScreen(
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         onDispose {
-            // Restaura as barras do sistema ao navegar para fora da Splash Screen
+            // Restaura as barras do sistema ao navegar para fora da Splash Screen e garante ícones claros (brancos) no topo
             val window = (context as? Activity)?.window
             if (window != null) {
                 val controller = WindowCompat.getInsetsController(window, window.decorView)
                 controller.show(WindowInsetsCompat.Type.systemBars())
+                controller.isAppearanceLightStatusBars = false // Ícones/Hora/Notificações sempre em BRANCO
             }
         }
     }
