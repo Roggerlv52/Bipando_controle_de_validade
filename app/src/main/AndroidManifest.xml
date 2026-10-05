@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -42,18 +41,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Bpd"
+        android:resizeableActivity="true"
         tools:targetApi="31">
 
+        <!-- Activity principal reativa, redimensionável e sem restrições de orientação -->
         <activity
             android:name="com.rogger.bp.ui.ModernActivity"
             android:exported="true"
             android:theme="@style/Theme.Bpd.Splash"
-            android:configChanges="screenSize|orientation">
+            android:resizeableActivity="true"
+            android:configChanges="screenSize|orientation|keyboardHidden|keyboard|smallestScreenSize|screenLayout|uiMode|density">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Override da CaptureActivity do ZXing para remover restrições de orientação em telas grandes (Tablets/Dobráveis/Android 16+) -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="unspecified"
+            android:resizeableActivity="true"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:replace="android:screenOrientation,android:resizeableActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
