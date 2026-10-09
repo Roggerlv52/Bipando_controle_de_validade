@@ -10,7 +10,8 @@
         <item name="colorSecondaryVariant">@color/teal_200</item>
         <item name="colorOnSecondary">@color/white</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- Customize your theme here. -->
         <item name="ic_color_theme">@color/white</item>
         <item name="_color_theme_status">?attr/colorPrimary</item>
@@ -20,5 +21,13 @@
     <style name="ThemeOverlay.Bipando.FullscreenContainer" parent="">
         <item name="fullscreenBackgroundColor">@color/light_blue_900</item>
         <item name="fullscreenTextColor">@color/light_blue_A400</item>
+    </style>
+
+    <!-- Tema inicial da Activity para ocultar barras do sistema e exibir o fundo inicial -->
+    <style name="Theme.Bpd.Splash" parent="Theme.Bpd">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

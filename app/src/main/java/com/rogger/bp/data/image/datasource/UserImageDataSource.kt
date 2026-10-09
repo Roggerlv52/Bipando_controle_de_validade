@@ -15,8 +15,11 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.model.UserProductImage
 import com.rogger.bp.ui.commun.NetworkUtils
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import android.content.Context
 
 /**
  * DataSource responsável pela imagem PERSONALIZADA do utilizador.
@@ -82,7 +85,7 @@ class UserImageDataSource {
 
     // ── 2. Salvar imagem personalizada ───────────────────────────────────
 
-    suspend fun saveUserImage(barcode: String, imageUri: String): UploadResult {
+    suspend fun saveUserImage(context: Context, barcode: String, imageUri: String): UploadResult {
         val uid = currentUid()
             ?: return UploadResult.Error("Utilizador não autenticado")
 
@@ -91,23 +94,33 @@ class UserImageDataSource {
         }
 
         // 👉 Bloqueia início se estiver offline
-        if (!NetworkUtils.isNetworkAvailable()) { // ← NOT invertido
+        if (!NetworkUtils.isNetworkAvailable()) { 
             return UploadResult.Error("OFFLINE")
         }
-        Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
+        
+        var tempFile: File? = null
         return try {
-            val fileUri: Uri = when {
+            val sourceUri: Uri = when {
                 imageUri.startsWith("content://") -> Uri.parse(imageUri)
                 imageUri.startsWith("file://")    -> Uri.parse(imageUri)
                 else                              -> Uri.fromFile(File(imageUri))
             }
 
+            // Otimização de imagem antes do upload
+            tempFile = ImagePikerUtil.createImageFile(context)
+            ImageUtils.processImage(context, sourceUri, tempFile)
+            val processedUri = Uri.fromFile(tempFile)
+
             val storagePath = "produtos/$uid/$barcode.jpg"
             val imageRef = storage.reference.child(storagePath)
 
-            Log.d(TAG, "Upload imagem personalizada para: $storagePath")
+            Log.d(TAG, "Upload imagem personalizada (otimizada) para: $storagePath")
 
-            imageRef.putFile(fileUri).await()
+            val metadata = com.google.firebase.storage.storageMetadata {
+                contentType = "image/jpeg"
+            }
+
+            imageRef.putFile(processedUri, metadata).await()
 
             val downloadUrl = imageRef.downloadUrl.await().toString()
 
@@ -124,17 +137,18 @@ class UserImageDataSource {
                 .set(userImage)
                 .await()
 
-            Log.d(TAG, "Imagem personalizada salva: uid=$uid barcode=$barcode url=$downloadUrl")
+            Log.d(TAG, "Imagem personalizada salva e otimizada: uid=$uid barcode=$barcode url=$downloadUrl")
             UploadResult.Success(downloadUrl)
 
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao salvar imagem personalizada: ${e.message}")
-            // 👉 Trata queda de conexão durante o processo
             if (e.message?.contains("offline", ignoreCase = true) == true ||
                 e.message?.contains("unavailable", ignoreCase = true) == true) {
                 return UploadResult.Error("OFFLINE")
             }
             UploadResult.Error(e.message ?: "Erro ao salvar imagem personalizada")
+        } finally {
+            tempFile?.let { ImagePikerUtil.cleanUpTempFiles(it) }
         }
     }
 

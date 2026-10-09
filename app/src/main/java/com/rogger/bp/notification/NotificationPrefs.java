@@ -9,6 +9,9 @@ public class NotificationPrefs {
     private static final String ALERT = "alert";
     private static final String HOUR = "notif_hour";
     private static final String MINUTE = "notif_minute";
+    private static final String SOUND_TYPE = "notif_sound_type";
+    private static final String SOUND_URI = "notif_sound_uri";
+    private static final String SOUND_NAME = "notif_sound_name";
 
     public static void onAlert(Context context, boolean beep) {
         SharedPreferences sharedp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
@@ -44,6 +47,36 @@ public class NotificationPrefs {
     public static int getMinute(Context c) {
         return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .getInt(MINUTE, 0); // padrão :00
+    }
+
+    public static void saveSoundType(Context c, int type) {
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .edit()
+                .putInt(SOUND_TYPE, type)
+                .apply();
+    }
+
+    public static int getSoundType(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .getInt(SOUND_TYPE, 2); // padrão 2 (Vibrar e Tocar)
+    }
+
+    public static void saveSoundUri(Context c, String uri, String name) {
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .edit()
+                .putString(SOUND_URI, uri)
+                .putString(SOUND_NAME, name)
+                .apply();
+    }
+
+    public static String getSoundUri(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .getString(SOUND_URI, "");
+    }
+
+    public static String getSoundName(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .getString(SOUND_NAME, "Padrão");
     }
 
     public static boolean getAlert(Context context) {

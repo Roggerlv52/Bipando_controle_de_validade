@@ -5,7 +5,7 @@
     <string name="free_limit_status">Limite de Produtos: %1$d/100</string>
 
     <!-- Fluxo de Partilha da Aplicação -->
-    <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
+    <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
     <string name="share_app_title">Compartilhar Bipando via:</string>
     <string name="share_app_no_app_found">Nenhum aplicativo encontrado para compartilhar.</string>
 
@@ -127,7 +127,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="dialog_title_delete_item">Item excluído</string>
     <string name="dialog_title_delete_really">Deseja realmente excluir</string>
     <string name="dialog_title_delete"> Deseja excluir</string>
-    <string name="dialog_title_select">selecione uma categoria</string>
+    <string name="dialog_title_select">Selecione uma categoria</string>
     <string name="dialog_add_category_title">Criar categoria</string>
     <string name="dialog_msg_start_managing">Para começar a gerir os seus produtos, é necessário criar pelo menos uma categoria. Deseja criar uma agora?</string>
 
@@ -160,7 +160,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="spinner_indicator">Indicador de vencimento proxímo</string>
     <string name="delete_account_button">"Excluir a conta"</string>
     <string name="title_promotion">Junte-se ao Premium\nAproveite recursos\nilimitados!</string>
-    <string name="sub_title_promotion">"🔥Milhares de usuários confiam "</string>
+    <string name="sub_title_promotion">"🔥"</string>
     <string name="text_unlimited_promotion">Digitalização e registro ilimitados.</string>
     <string name="text_customized_notification">Notificações customizadas por produto</string>
     <string name="text_unlimited_categories">Categorias ilimitadas para o seu estoque</string>
@@ -196,7 +196,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="date_format">dd/MM/yyyy</string>
     <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Exportar</string>
-    <string name="menu_exporta_pdf" translatable="false">PDF</string>excel
+    <string name="menu_exporta_pdf" translatable="false">PDF</string>
     <string name="menu_exporta_excel" translatable="false">EXCEL</string>
 
     <plurals name="categories_selected_count">
@@ -217,5 +217,234 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="expiration_date">Vencimento</string>
     <string name="days_remaining">Dias rest.</string>
     <string name="share_pdf_report">Compartilhar Relatório PDF:</string>
+
+    <string name="menu_profile">Perfil</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_groups">Grupos</string>
+    <string name="menu_share_app">Compartilhar App</string>
+    <string name="menu_support">Suporte e Feedback </string>
+    <string name="support_email_subject">Suporte Bipando - Sugestões/Dúvidas</string>
+    <string name="support_email_chooser">Enviar e-mail de suporte</string>
+    <string name="cd_remove_group">Remover Grupo</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_search">Pesquisar</string>
+    <string name="cd_more_options">Mais opções</string>
+    <string name="menu_export_pdf">Exportar PDF</string>
+    <string name="menu_export_excel">Exportar Excel</string>
+    <string name="search_products_placeholder">Pesquisar produtos...</string>
+    <string name="cd_voice_search">Pesquisa por Voz</string>
+    <string name="cd_close_search">Fechar Pesquisa</string>
+    <string name="search_no_results">Nenhum produto encontrado para sua busca.</string>
+    <string name="add_first_product">Adicionar Meu Primeiro Produto</string>
+    <string name="status_today">Hoje</string>
+
+    <string name="login_network_error">Falha na conexão. Por favor, verifique sua internet e tente novamente.</string>
+    <string name="login_welcome">Bem-vindo</string>
+    <string name="login_continue">Faça login para continuar</string>
+    <string name="cd_logo_bipando">Logo Bipando</string>
+
+    <string name="scanner_manual_title">Digitar Código Manualmente</string>
+    <string name="scanner_manual_hint">Código de Barras</string>
+    <string name="scanner_manual_error">Campo não pode ser vazio!</string>
+    <string name="scanner_confirm">Confirmar</string>
+    <string name="scanner_bipando">Bipando</string>
+    <string name="scanner_subtitle">COMPRA E VENDA</string>
+    <string name="scanner_permission_needed">Permissão da câmera é necessária para escanear.</string>
+    <string name="scanner_grant_permission">Conceder Permissão</string>
+    <string name="scanner_title">Escanear código de barras</string>
+    <string name="cd_back">Voltar</string>
+
+    <string name="add_product_title">Novo Produto</string>
+    <string name="edit_product_title">Editar Produto</string>
+    <string name="add_photo">Adicionar Foto</string>
+    <string name="select_category_hint">Selecionar Categoria</string>
+    <string name="expiration_date_label">Data de Vencimento</string>
+    <string name="notes_optional_hint">Notas (Opcional)</string>
+    <string name="notes_hint">Notas</string>
+    <string name="save_product_button">Salvar Produto</string>
+    <string name="save_changes_button">Salvar Alterações</string>
+    <string name="select_category_title">Selecione uma categoria</string>
+    <string name="cd_add_photo">Adicionar Foto</string>
+
+    <string name="delete_product_title">Excluir Produto</string>
+    <string name="delete_product_confirm_msg">Deseja realmente excluir \"%1$s\"?</string>
+
+    <string name="cd_close">Fechar</string>
+    <string name="status_active_caps">ATIVO</string>
+
+    <string name="profile_delete_account_title">Excluir Conta permanentemente</string>
+    <string name="profile_delete_warning_header">ATENÇÃO: Esta ação é irreversível.</string>
+    <string name="profile_delete_warning_body">Ao excluir sua conta, todos os seus dados serão apagados definitivamente do nosso sistema:</string>
+    <string name="profile_delete_item_1">• Todos os seus produtos e categorias.</string>
+    <string name="profile_delete_item_2">• Todas as imagens de produtos enviadas por você.</string>
+    <string name="profile_delete_item_3">• Seu perfil e configurações de grupo.</string>
+    <string name="profile_delete_item_4">• Status de assinatura Premium.</string>
+    <string name="profile_delete_final_question">Deseja realmente prosseguir com a exclusão total dos seus dados?</string>
+    <string name="profile_delete_all_button">Excluir Tudo</string>
+    <string name="profile_title">Configurações</string>
+    <string name="cd_profile_photo">Foto de perfil</string>
+    <string name="profile_user_code">Seu Código: %1$s</string>
+    <string name="cd_share_code">Compartilhar Código</string>
+    <string name="profile_preferences">Preferências</string>
+    <string name="profile_date_picker_type">Tipo de Seletor de Data</string>
+    <string name="profile_date_picker_calendar">Calendário (Padrão)</string>
+    <string name="profile_date_picker_spinner">Spinner (Rolagem)</string>
+    <string name="profile_appearance">Aparência</string>
+    <string name="profile_theme_classic">Tema Clássico</string>
+    <string name="profile_theme_green">Tema Verde</string>
+    <string name="profile_theme_red">Tema Vermelho</string>
+    <string name="profile_theme_dark">Tema Noturno</string>
+    <string name="profile_notifications">Notificações</string>
+    <string name="profile_enable_notifications">Ativar Notificações</string>
+    <string name="profile_expiry_warning_label">Aviso de vencimento: %1$d dias antes</string>
+    <string name="profile_notification_time">Horário da Notificação</string>
+    <string name="profile_notification_sound">Som da Notificação</string>
+    <string name="profile_sounds">Sons</string>
+    <string name="profile_enable_beep">Ativar Bip</string>
+    <string name="profile_management">Gerenciamento</string>
+    <string name="profile_trash">Lixeira</string>
+    <string name="profile_view_deleted">Ver itens removidos</string>
+    <string name="profile_delete_account_button">Excluir Conta</string>
+    <string name="profile_privacy_policy">Política de Privacidade</string>
+    <string name="profile_plan_usage">Uso do Plano</string>
+    <string name="profile_premium_subscriber">Assinante Premium</string>
+    <string name="profile_unlimited_registration">Você possui cadastro ilimitado</string>
+    <string name="profile_registered_products">Produtos Cadastrados</string>
+    <string name="profile_limit_reached_msg">Limite atingido! Torne-se Premium para continuar.</string>
+    <string name="profile_approaching_limit_msg">Você está atingindo o limite gratuito.</string>
+    <string name="profile_remove_limits">Remover Limites</string>
+    <string name="cd_copy">Copiar</string>
+
+    <string name="dialog_no_category_found">Nenhuma categoria encontrada.</string>
+    <string name="dialog_create_new_category">Criar Nova Categoria</string>
+    <string name="dialog_select_image_title">Selecionar Imagem</string>
+    <string name="dialog_camera">Câmera</string>
+    <string name="dialog_gallery">Galeria</string>
+
+    <string name="preview_code">Visualizar Código</string>
+    <string name="preview_image">Visualizar Imagem</string>
+    <string name="error_loading_image">Erro ao carregar imagem</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_categories">Organize por Categorias</string>
+    <string name="onboarding_desc_categories">Comece organizando seus produtos. Crie categorias como Mercearia, Frios ou Queijos para facilitar a gestão.</string>
+    <string name="onboarding_title_groups">Trabalhe em Equipe</string>
+    <string name="onboarding_desc_groups">Crie grupos para compartilhar o controle de validade com sua família ou equipe da loja em tempo real.</string>
+    <string name="onboarding_title_alerts">Alertas de Vencimento</string>
+    <string name="onboarding_desc_alerts">Receba notificações programadas para nunca mais perder produtos por vencimento. Economia e organização.</string>
+    <string name="onboarding_btn_next">Próximo</string>
+    <string name="onboarding_btn_start">Começar</string>
+
+    <!-- Voice Search Dialog -->
+    <string name="voice_search_title">Busca por Voz</string>
+    <string name="voice_search_subtitle">Fale o nome do produto ou o código de barras</string>
+    <string name="voice_search_hold_to_speak">Segure o botão para falar</string>
+    <string name="voice_search_not_available">Reconhecimento de voz não disponível neste dispositivo.</string>
+    <string name="voice_search_listening">Ouvindo...</string>
+    <string name="voice_search_error_no_match">Não entendi, tente novamente.</string>
+    <string name="voice_search_error_network">Erro de conexão.</string>
+    <string name="voice_search_error_permissions">Permissão de áudio necessária.</string>
+    <string name="voice_search_error_generic">Erro ao ouvir (%1$d). Tente novamente.</string>
+    <string name="cd_microphone">Microfone</string>
+
+    <!-- Groups & Group Items -->
+    <string name="group_default_label">(Meu Grupo)</string>
+    <string name="group_leader_prefix">Líder: %1$s • </string>
+    <string name="group_participants_and_items">%1$d participantes • %2$d itens ativos</string>
+    <string name="group_btn_active">Ativo</string>
+    <string name="group_btn_work">Trabalhar</string>
+    <string name="group_btn_invite">Convidar</string>
+    <string name="group_members_title">Membros do Grupo</string>
+    <string name="group_role_admin">Administrador</string>
+    <string name="group_role_editor">Editor</string>
+    <string name="group_role_reader">Leitor</string>
+    <string name="group_invited_you">%1$s convidou você</string>
+    <string name="group_invitation_group_prefix">Grupo: %1$s</string>
+    <string name="group_invitation_accept">Aceitar</string>
+    <string name="group_invitation_decline">Recusar</string>
+    <string name="group_screen_title">Grupos de Usuários</string>
+    <string name="group_screen_new_group">Novo Grupo</string>
+    <string name="group_invite_title">Convidar para %1$s</string>
+    <string name="group_invite_desc">O usuário convidado poderá colaborar na lista do grupo %1$s.</string>
+    <string name="group_user_code_label">Código de 8 dígitos do Usuário</string>
+    <string name="group_permission_label">Permissão:</string>
+    <string name="group_editor_desc">Pode adicionar, editar e remover permanentemente.</string>
+    <string name="group_reader_desc">Pode adicionar e editar (exceto remoção permanente).</string>
+    <string name="group_rename_title">Renomear Grupo</string>
+    <string name="group_rename_label">Novo Nome do Grupo</string>
+    <string name="group_leave_title">Sair do Grupo</string>
+    <string name="group_leave_confirm">Tem certeza que deseja sair do grupo \"%1$s\"?</string>
+    <string name="group_leave_btn">Sair</string>
+    <string name="group_manage_member_title">Gerenciar Membro</string>
+    <string name="group_member_label">Membro: %1$s</string>
+    <string name="group_current_role_label">Papel atual: %1$s</string>
+    <string name="group_make_role_btn">Tornar %1$s</string>
+    <string name="group_remove_member_btn">Remover do Grupo</string>
+    <string name="group_admin_cant_change">O Administrador não pode ter seu papel alterado.</string>
+    <string name="group_create_dialog_title">Criar Novo Grupo</string>
+    <string name="group_create_dialog_desc">Dê um nome ao seu grupo para começar a colaborar com outros usuários.</string>
+    <string name="group_name_label">Nome do Grupo</string>
+    <string name="group_btn_create">Criar</string>
+    <string name="group_pending_invitations">Convites Pendentes</string>
+    <string name="group_load_error">Ocorreu um erro ao carregar seus grupos.\n\n%1$s</string>
+    <string name="group_try_again">Tentar Novamente</string>
+    <string name="group_empty_msg">Você ainda não participa de um grupo colaborativo.\n\nCrie o seu grupo ou peça para ser convidado.</string>
+    <string name="group_start_now">Começar Agora</string>
+    <string name="group_dialog_name_title">Nomear seu Grupo</string>
+    <string name="group_dialog_name_desc">Dê um nome ao seu grupo colaborativo para começar a convidar membros.</string>
+    <string name="group_dialog_invitation_title">Convite para Grupo</string>
+    <string name="group_dialog_invitation_msg">%1$s convidou você para o grupo \"%2$s\".</string>
+    <string name="cd_selected">Selecionado</string>
+    <string name="cd_expand">Expandir</string>
+    <string name="cd_collapse">Recolher</string>
+
+    <!-- Category Dialogs -->
+    <string name="category_dialog_new_title">Nova Categoria</string>
+    <string name="category_dialog_edit_title">Editar Categoria</string>
+    <string name="category_dialog_delete_title">Excluir Categoria</string>
+    <string name="category_dialog_delete_confirm">Tem certeza que deseja excluir a categoria \"%1$s\"? Esta ação não pode ser desfeita.</string>
+    <string name="category_name_field_label">Nome da Categoria</string>
+    <string name="category_btn_delete">Excluir</string>
+
+    <string name="msg_barcode_copied">Código de barras copiado!</string>
+    <string name="tap_to_copy">Toque para copiar</string>
+
+    <!-- 30-Day Promotion -->
+    <string name="promo_badge_30_days">🎁 30 DIAS GRÁTIS</string>
+    <string name="promo_subtitle_30_days">Novos assinantes ganham 30 dias de teste grátis!</string>
+    <string name="plan_mensal_trial_badge">30 Dias Grátis</string>
+    <string name="trial_duration_default_text">30 dias grátis, depois %1$s/mês</string>
+
+    <!-- Category Image Selection -->
+    <string name="category_select_image_title">Escolha uma imagem para a categoria</string>
+
+    <!-- Category Image Names -->
+    <string name="cat_img_carne">Carne</string>
+    <string name="cat_img_congelado">Congelado</string>
+    <string name="cat_img_embutidos">Embutidos</string>
+    <string name="cat_img_frutos_mar">Frutos do Mar</string>
+    <string name="cat_img_laticinios">Laticínios</string>
+    <string name="cat_img_leite">Leite</string>
+    <string name="cat_img_mercearia">Mercearia</string>
+    <string name="cat_img_hortifruti">Hortifruti</string>
+    <string name="cat_img_padaria">Padaria</string>
+    <string name="cat_img_queijo">Queijo</string>
+    <string name="cat_img_salames">Salame</string>
+    <string name="cat_img_sorvete">Sorvete</string>
+    <string name="cat_img_suco">Suco</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_title">Lixeira</string>
+    <string name="trash_empty_message">Sua lixeira está vazia</string>
+    <string name="trash_delete_permanently_title">Excluir Definitivamente</string>
+    <string name="trash_delete_permanently_msg">Esta ação não pode ser desfeita. Deseja excluir \"%1$s\" para sempre?</string>
+    <string name="trash_restore_title">Restaurar Produto</string>
+    <string name="trash_restore_msg">Deseja devolver \"%1$s\" para a sua lista de produtos?</string>
+    <string name="trash_delete_button">Excluir</string>
+    <string name="trash_restore_button">Restaurar</string>
+    <string name="trash_cancel_button">Cancelar</string>
+    <string name="trash_expiration_prefix">Vencimento: %1$s</string>
+    <string name="trash_cd_restore">Restaurar</string>
+    <string name="trash_cd_delete">Excluir</string>
 
 </resources>

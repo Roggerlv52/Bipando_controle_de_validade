@@ -11,13 +11,12 @@ class BillingManager(
     private val context: Context,
     private val activity: Activity,
 
-    // ✅ Correção: agora envia o texto de trial SEPARADO por plano (Mensal/Semestral),
-    // em vez de um único texto genérico que era exibido independente do plano selecionado.
     private val onPricesLoaded: (
         mensalPrice: String,
         semestralPrice: String,
         mensalTrialText: String?,
-        semestralTrialText: String?
+        semestralTrialText: String?,
+        isEligibleForTrial: Boolean
     ) -> Unit,
     private val onSubscriptionStatusLoaded: (activeProductId: String?) -> Unit = {}
 ) : PurchasesUpdatedListener {
@@ -26,6 +25,7 @@ class BillingManager(
 
     // IDs dos produtos na Play Console
     val productMensalId = "bipando_premium_mensal"
+    val productPlanoMensalId = "plano-mensal"
     val productSemestralId = "bipando_premium_semestral"
 
     init {
@@ -33,14 +33,13 @@ class BillingManager(
     }
 
     private fun setupBillingClient() {
-        // ✅ Correção: Criação do parâmetro obrigatório exigido na v9.0.0
         val pendingPurchasesParams = PendingPurchasesParams.newBuilder()
             .enableOneTimeProducts() // Obrigatório para suportar transações pendentes
             .build()
 
         billingClient = BillingClient.newBuilder(context)
             .setListener(this)
-            .enablePendingPurchases(pendingPurchasesParams) // Passa o parâmetro obrigatório
+            .enablePendingPurchases(pendingPurchasesParams)
             .build()
 
         startConnection()
@@ -63,13 +62,46 @@ class BillingManager(
         })
     }
 
-    // Busca os preços dos produtos de forma dinâmica
+    /**
+     * Consulta as compras/assinaturas na Play Store para verificar se a conta
+     * da Play Store já realizou alguma assinatura deste aplicativo no passado.
+     */
+    fun checkSubscriptionHistory(onResult: (hasHadPreviousSubscription: Boolean) -> Unit) {
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+
+        billingClient.queryPurchasesAsync(params) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                val hasHadPrevious = purchases.any { purchase ->
+                    purchase.products.any { id ->
+                        id == productMensalId || id == productPlanoMensalId || id == productSemestralId
+                    }
+                }
+                Log.d("Billing", "checkSubscriptionHistory: hasHadPreviousSubscription=$hasHadPrevious (purchases count=${purchases.size})")
+                activity.runOnUiThread {
+                    onResult(hasHadPrevious)
+                }
+            } else {
+                Log.w("Billing", "checkSubscriptionHistory error: ${result.debugMessage}")
+                activity.runOnUiThread {
+                    onResult(false)
+                }
+            }
+        }
+    }
+
+    // Busca os preços dos produtos e valida a elegibilidade do trial nativamente
     private fun querySubscriptionProducts() {
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
                 listOf(
                     QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(productMensalId)
+                        .setProductType(BillingClient.ProductType.SUBS)
+                        .build(),
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(productPlanoMensalId)
                         .setProductType(BillingClient.ProductType.SUBS)
                         .build(),
                     QueryProductDetailsParams.Product.newBuilder()
@@ -84,52 +116,62 @@ class BillingManager(
             val productList = queryProductDetailsResult.productDetailsList
 
             if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null) {
-                var mensalPrice = "R$ 14,99"
-                var semestralPrice = "R$ 77,70"
-                var mensalTrialText: String? = null    // ✅ Trial específico do plano Mensal
-                var semestralTrialText: String? = null // ✅ Trial específico do plano Semestral
+                var mensalPrice = ""
+                var semestralPrice = ""
+                var rawMensalTrialText: String? = null
+                var rawSemestralTrialText: String? = null
 
                 for (productDetails in productList) {
-                    val firstOffer = productDetails.getSubscriptionOfferDetails()?.getOrNull(0)
-                    val pricingPhases = firstOffer?.getPricingPhases()?.getPricingPhaseList()
+                    val offerDetailsList = productDetails.subscriptionOfferDetails ?: emptyList()
 
-                    val regularPrice = firstOffer?.getPricingPhases()
-                        ?.getPricingPhaseList()?.getOrNull(0)
-                        ?.getFormattedPrice() ?: ""
+                    val trialOffer = offerDetailsList.firstOrNull { offer ->
+                        offer.offerId == "teste-30-dias" ||
+                                offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
+                    }
+                    val selectedOffer = trialOffer ?: offerDetailsList.firstOrNull()
 
-                    // ✅ DETEÇÃO DINÂMICA DE TESTE GRATUITO (FREE TRIAL)
-                    // Antes só era verificado para o Mensal; agora verifica qualquer plano,
-                    // já que o Google Play permite configurar trial em qualquer oferta.
+                    val regularPrice = selectedOffer?.pricingPhases
+                        ?.pricingPhaseList?.lastOrNull()
+                        ?.formattedPrice
+                        ?: selectedOffer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                        ?: ""
+
                     var detectedTrialText: String? = null
-                    if (pricingPhases != null) {
-                        for (phase in pricingPhases) {
-                            if (phase.getPriceAmountMicros() == 0L) {
-                                // Detetou fase gratuita! Lê a duração (ex: P1M ou P30D)
-                                val duration = parseBillingPeriod(phase.getBillingPeriod(), context)
+                    if (selectedOffer != null) {
+                        for (phase in selectedOffer.pricingPhases.pricingPhaseList) {
+                            if (phase.priceAmountMicros == 0L) {
+                                val duration = parseBillingPeriod(phase.billingPeriod, context)
                                 detectedTrialText = context.getString(R.string.trial_duration_text, duration, regularPrice)
                                 break
                             }
                         }
                     }
 
-                    if (productDetails.productId == productMensalId) {
-                        mensalPrice = regularPrice
-                        mensalTrialText = detectedTrialText
+                    if (productDetails.productId == productMensalId || productDetails.productId == productPlanoMensalId) {
+                        if (regularPrice.isNotEmpty()) mensalPrice = regularPrice
+                        rawMensalTrialText = detectedTrialText
                     } else if (productDetails.productId == productSemestralId) {
-                        semestralPrice = regularPrice
-                        semestralTrialText = detectedTrialText
+                        if (regularPrice.isNotEmpty()) semestralPrice = regularPrice
+                        rawSemestralTrialText = detectedTrialText
                     }
                 }
 
-                activity.runOnUiThread {
-                    // ✅ Envia os dados completos e o estado da promoção, por plano
-                    onPricesLoaded(mensalPrice, semestralPrice, mensalTrialText, semestralTrialText)
+                // ✅ Consulta as compras da Play Store para validar se o usuário é elegível ao Teste Grátis
+                checkSubscriptionHistory { hasHadPreviousSubscription ->
+                    val isEligible = !hasHadPreviousSubscription
+                    val finalMensalTrial = if (isEligible) rawMensalTrialText else null
+                    val finalSemestralTrial = if (isEligible) rawSemestralTrialText else null
+
+                    activity.runOnUiThread {
+                        onPricesLoaded(mensalPrice, semestralPrice, finalMensalTrial, finalSemestralTrial, isEligible)
+                    }
                 }
             } else {
                 Log.e("Billing", "Falha ao consultar produtos: ${result.debugMessage}")
             }
         }
     }
+
     /**
      * Consulta as assinaturas ativas do usuário na Play Store.
      * Retorna o productId do plano ativo, ou null se não houver assinatura.
@@ -145,9 +187,8 @@ class BillingManager(
                     purchase.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
 
-                // Identifica qual plano está ativo (mensal ou semestral)
                 val activeProductId = activePurchase?.products?.firstOrNull { productId ->
-                    productId == productMensalId || productId == productSemestralId
+                    productId == productMensalId || productId == productPlanoMensalId || productId == productSemestralId
                 }
 
                 activity.runOnUiThread {
@@ -164,43 +205,62 @@ class BillingManager(
 
     /**
      * Inicia o fluxo de compra/assinatura de um plano.
-     * O Google Play cuida automaticamente de upgrades/downgrades entre planos.
      */
     fun purchaseSubscription(productId: String) {
+        val targetIds = if (productId == productMensalId || productId == productPlanoMensalId) {
+            listOf(productMensalId, productPlanoMensalId)
+        } else {
+            listOf(productId)
+        }
+
+        val productListParams = targetIds.map { id ->
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(id)
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+        }
+
         val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(
-                listOf(
-                    QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(productId)
-                        .setProductType(BillingClient.ProductType.SUBS)
-                        .build()
-                )
-            )
+            .setProductList(productListParams)
             .build()
 
-        // ✅ Correção: O segundo parâmetro agora é "queryProductDetailsResult" (do tipo QueryProductDetailsResult)
         billingClient.queryProductDetailsAsync(params) { result, queryProductDetailsResult ->
-            // Extraímos a lista real de produtos
             val productList = queryProductDetailsResult.productDetailsList
 
-            if (result.responseCode == BillingClient.BillingResponseCode.OK && productList != null && productList.isNotEmpty()) {
-                val productDetails = productList[0] // O indexador [0] agora funciona corretamente
+            if (result.responseCode == BillingClient.BillingResponseCode.OK && !productList.isNullOrEmpty()) {
+                val productDetails = productList[0]
+                val offerDetailsList = productDetails.subscriptionOfferDetails ?: emptyList()
 
-                val offerToken = productDetails.getSubscriptionOfferDetails()
-                    ?.getOrNull(0)
-                    ?.getOfferToken() ?: ""
+                // ✅ Consulta o histórico nativo da Play Store para selecionar a oferta apropriada
+                checkSubscriptionHistory { hasHadPreviousSubscription ->
+                    val isEligible = !hasHadPreviousSubscription
 
-                val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
-                    .setProductDetails(productDetails)
-                    .setOfferToken(offerToken)
-                    .build()
+                    val selectedOffer = if (isEligible) {
+                        offerDetailsList.firstOrNull { offer ->
+                            offer.offerId == "teste-30-dias" ||
+                                    offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
+                        } ?: offerDetailsList.firstOrNull()
+                    } else {
+                        // Se o usuário já teve assinatura anterior na Play Store, seleciona o plano regular sem teste grátis
+                        offerDetailsList.firstOrNull { offer ->
+                            offer.pricingPhases.pricingPhaseList.none { it.priceAmountMicros == 0L }
+                        } ?: offerDetailsList.firstOrNull()
+                    }
 
-                val billingFlowParams = BillingFlowParams.newBuilder()
-                    .setProductDetailsParamsList(listOf(productDetailsParams))
-                    .build()
+                    val offerToken = selectedOffer?.offerToken ?: ""
 
-                activity.runOnUiThread {
-                    billingClient.launchBillingFlow(activity, billingFlowParams)
+                    val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails)
+                        .setOfferToken(offerToken)
+                        .build()
+
+                    val billingFlowParams = BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(listOf(productDetailsParams))
+                        .build()
+
+                    activity.runOnUiThread {
+                        billingClient.launchBillingFlow(activity, billingFlowParams)
+                    }
                 }
             } else {
                 Log.e("Billing", "Falha ao consultar detalhes do produto para compra: ${result.debugMessage}")
@@ -213,7 +273,6 @@ class BillingManager(
             for (purchase in purchases) {
                 handlePurchase(purchase)
             }
-            // Atualiza o status após uma compra/mudança de plano
             queryActiveSubscriptions()
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d("Billing", "Usuário cancelou o fluxo de compra")
@@ -233,6 +292,7 @@ class BillingManager(
             }
         }
     }
+
     private fun parseBillingPeriod(period: String, context: Context): String {
         val regex = """P(\d+)([DWMY])""".toRegex()
         val matchResult = regex.matchEntire(period) ?: return "30 dias"

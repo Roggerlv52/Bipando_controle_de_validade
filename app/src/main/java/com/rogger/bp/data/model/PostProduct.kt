@@ -6,11 +6,20 @@ import android.net.Uri
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-@Entity(tableName = "products")
+@Entity(
+    tableName = "products",
+    indices = [
+        Index(value = ["groupId"]),
+        Index(value = ["deleted"]),
+        Index(value = ["categoryId"]),
+        Index(value = ["groupId", "deleted"])
+    ]
+)
 data class PostProduct(
     @PrimaryKey
     var firestoreDocId: String = "", // Usado como chave primária no Room, deve ser o documentId do Firestore
@@ -26,6 +35,7 @@ data class PostProduct(
     var deleted: Boolean = false,
     var deletedAt: Long? = null,
     var categoryName: String = "",
+    var groupId: String = "",
     @Ignore val localUri: Uri? = null, // Ignorar para o Room, pois Uri não é um tipo primitivo
     @Ignore val publisher: UserAuth? = null // Ignorar para o Room
 ) : Parcelable {
@@ -43,7 +53,8 @@ data class PostProduct(
         timestamp: Long,
         imageUri: String,
         deleted: Boolean,
-        deletedAt: Long?
+        deletedAt: Long?,
+        groupId: String = ""
     ) : this(
         firestoreDocId = firestoreDocId,
         id = id,
@@ -58,6 +69,7 @@ data class PostProduct(
         imageUri = imageUri,
         deleted = deleted,
         deletedAt = deletedAt,
+        groupId = groupId,
         localUri = null,
         publisher = null
     )

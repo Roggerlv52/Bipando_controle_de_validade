@@ -6,9 +6,9 @@ import com.rogger.bp.data.database.RoomProductCache
 import com.rogger.bp.data.image.datasource.GlobalImageDataSource
 import com.rogger.bp.data.image.datasource.UserImageDataSource
 import com.rogger.bp.data.image.repository.ImageResolutionRepository
+import com.rogger.bp.data.remote.OpenFoodFactsRepository
 import com.rogger.bp.ui.add.data.FireRegisterDataSource
 import com.rogger.bp.ui.add.data.RegisterItemRepository
-import com.rogger.bp.ui.add.data.RegisterRepository
 import com.rogger.bp.ui.category.data.CategoryDataSource
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.RoomCategoryCache
@@ -16,10 +16,13 @@ import com.rogger.bp.ui.deleteitem.data.DeleteItemDataSource
 import com.rogger.bp.ui.deleteitem.data.DeleteItemRepository
 import com.rogger.bp.ui.edit.data.EditDataSource
 import com.rogger.bp.ui.edit.data.EditRepository
+import com.rogger.bp.ui.groups.data.FireGroupDataSource
+import com.rogger.bp.ui.groups.data.GroupRepository
 import com.rogger.bp.ui.home.data.HomeDataSource
 import com.rogger.bp.ui.home.data.HomeRepository
 import com.rogger.bp.ui.login.data.FireDataSource
 import com.rogger.bp.ui.login.data.LoginRepository
+import com.rogger.bp.ui.profile.data.ProfileRepository
 
 object DependencyInjector {
 
@@ -29,23 +32,24 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        return RegisterItemRepository(FireRegisterDataSource(), roomProductCache)
+        return RegisterItemRepository(FireRegisterDataSource(context), roomProductCache)
     }
 
     fun registerCategoryRepository(context: Context): CategoryRepository {
         val database = BpDatabase.getDatabase(context)
         val categoryDao = database.categoryDao()
         val productDao = database.productDao() // 👉 Adicionado para buscar contagem
+        val groupDao = database.groupDao()
         val roomCategoryCache = RoomCategoryCache(categoryDao)
-        val categoryDataSource = CategoryDataSource()
-        return CategoryRepository(categoryDataSource, roomCategoryCache,productDao)
+        val categoryDataSource = CategoryDataSource(context, groupDao)
+        return CategoryRepository(categoryDataSource, roomCategoryCache, productDao, groupDao)
     }
 
     fun registerHomeRepository(context: Context): HomeRepository {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        val homeDataSource = HomeDataSource()
+        val homeDataSource = HomeDataSource(context)
         return HomeRepository(homeDataSource, roomProductCache)
     }
 
@@ -53,7 +57,7 @@ object DependencyInjector {
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
         val roomProductCache = RoomProductCache(productDao)
-        return EditRepository(EditDataSource(), roomProductCache)
+        return EditRepository(EditDataSource(context), roomProductCache)
     }
 
     fun loginRepository(): LoginRepository {
@@ -64,9 +68,23 @@ object DependencyInjector {
 
         val database = BpDatabase.getDatabase(context)
         val productDao = database.productDao()
+        val groupDao = database.groupDao()
         val roomProductCache = RoomProductCache(productDao)
-        return DeleteItemRepository(DeleteItemDataSource(), roomProductCache)
+        return DeleteItemRepository(DeleteItemDataSource(context, groupDao), roomProductCache)
 
+    }
+
+    fun profileRepository(): ProfileRepository {
+        return ProfileRepository()
+    }
+
+    fun openFoodFactsRepository(): OpenFoodFactsRepository {
+        return OpenFoodFactsRepository()
+    }
+
+    fun registerGroupRepository(context: Context): GroupRepository {
+        val database = BpDatabase.getDatabase(context)
+        return GroupRepository(FireGroupDataSource(), database.groupDao(), database.productDao())
     }
 
     // ── Novos repositórios de imagem ──────────────────────────────────────
