@@ -1,6 +1,7 @@
 package com.rogger.bp
 
 import android.app.Application
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -12,6 +13,9 @@ import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import coil3.util.DebugLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BipandoApplication : Application(), SingletonImageLoader.Factory {
 
@@ -31,6 +35,11 @@ class BipandoApplication : Application(), SingletonImageLoader.Factory {
             firebaseAppCheck.installAppCheckProviderFactory(
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             )
+        }
+
+        // Inicialização do Google Mobile Ads SDK em segundo plano
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@BipandoApplication)
         }
 
         AnalyticsManager.initialize(this)

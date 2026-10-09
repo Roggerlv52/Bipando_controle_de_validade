@@ -1,8 +1,9 @@
 package com.rogger.bp.ui.edit.view
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,23 +28,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.rogger.bp.BuildConfig
 import com.rogger.bp.R
+import com.rogger.bp.R.drawable
 import com.rogger.bp.ui.commun.SharedPreferencesManager
-import com.rogger.bp.ui.edit.presentation.EditProductViewModel
 import com.rogger.bp.ui.componentes.BipandoButton
 import com.rogger.bp.ui.componentes.BipandoTextField
-import com.rogger.bp.ui.componentes.LoadingDialog
+import com.rogger.bp.ui.edit.presentation.EditProductViewModel
 import com.rogger.bp.util.ImagePickerBottomSheet
 import com.rogger.bp.util.ImagePikerUtil
 import com.rogger.bp.util.TimeFormatter
-import android.net.Uri
-import androidx.compose.foundation.BorderStroke
-import com.rogger.bp.R.drawable
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,8 +133,6 @@ fun EditProductScreen(
             }
         )
     }
-
-    //LoadingDialog(isLoading = state.isLoading)
 
     if (showDatePicker) {
         val pickerType = SharedPreferencesManager.getDatePickerType(context)
@@ -260,7 +260,7 @@ fun EditProductScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AsyncImage(
-                                model =   drawable.ic_barcode_scanner_24,
+                                model = drawable.ic_barcode_scanner_24,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -342,6 +342,14 @@ fun EditProductScreen(
                     onClick = viewModel::saveProduct,
                     isLoading = state.isLoading
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Banner de publicidade com ID de teste oficial do AdMob
+                AdBanner(
+                    modifier = Modifier.fillMaxWidth(),
+                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                )
             }
         }
     }
@@ -378,4 +386,27 @@ fun EditProductScreen(
             }
         )
     }
+}
+
+/**
+ * Componente de Banner do AdMob para Jetpack Compose
+ */
+@Composable
+fun AdBanner(
+    modifier: Modifier = Modifier,
+    adUnitId: String = if (BuildConfig.DEBUG)
+        "ca-app-pub-3940256099942544/6300978111" // ID de teste oficial do Google (banner)
+    else
+        "ca-app-pub-9022156527276774/5455163691" // seu bloco real
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            AdView(context).apply {
+                setAdSize(AdSize.BANNER)
+                this.adUnitId = adUnitId
+                loadAd(AdRequest.Builder().build())
+            }
+        }
+    )
 }

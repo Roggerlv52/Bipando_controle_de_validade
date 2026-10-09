@@ -44,6 +44,10 @@
         android:resizeableActivity="true"
         tools:targetApi="31">
 
+        <!-- ID de Aplicação do AdMob -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-9022156527276774~9704565748" />
         <!-- Activity principal reativa, redimensionável e sem restrições de orientação -->
         <activity
             android:name="com.rogger.bp.ui.ModernActivity"
