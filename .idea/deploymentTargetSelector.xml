@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-10-06T18:55:21.576354Z">
+        <DropdownSelection timestamp="2026-10-13T11:00:10.620633200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZF523HMLQJ" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\anapa\.android\avd\LG_K22.avd" />
             </handle>
           </Target>
         </DropdownSelection>

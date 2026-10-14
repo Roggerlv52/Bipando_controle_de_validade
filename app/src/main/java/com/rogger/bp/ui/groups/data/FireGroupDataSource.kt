@@ -1,6 +1,5 @@
 package com.rogger.bp.ui.groups.data
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -17,7 +16,6 @@ import kotlinx.coroutines.tasks.await
 
 class FireGroupDataSource : GroupDataSource {
     private val db = FirebaseFirestore.getInstance()
-    private val TAG = "FireGroupDataSource"
 
     override suspend fun createGroup(group: PostGroup, adminMember: PostMember): Result<Unit> {
         return try {
@@ -26,23 +24,32 @@ class FireGroupDataSource : GroupDataSource {
                 throw Exception("Você já possui um grupo com o nome \"${group.name}\"")
             }
 
-            Log.d(TAG, "Creating group: ${group.groupId} (Default: ${group.isDefault})")
             db.collection("groups").document(group.groupId).set(group).await()
 
-            Log.d(TAG, "Adding admin member: ${adminMember.userId}")
             db.collection("groups").document(group.groupId)
                 .collection("members").document(group.adminId).set(adminMember).await()
             
+            // Registra o código do grupo na coleção 'shareCodes' para busca direta sem PERMISSION_DENIED
+            if (group.shareCode.isNotEmpty()) {
+                val shareData = hashMapOf(
+                    "type" to "group",
+                    "groupId" to group.groupId,
+                    "adminId" to group.adminId,
+                    "name" to group.name
+                )
+                try {
+                    db.collection("shareCodes").document(group.shareCode.uppercase()).set(shareData, SetOptions.merge())
+                } catch (_: Exception) {}
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating group: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     override suspend fun joinGroup(shareCode: String, member: PostMember): Result<PostGroup> {
         return try {
-            Log.d(TAG, "Joining group with code: $shareCode")
             val query = db.collection("groups").whereEqualTo("shareCode", shareCode.uppercase()).get().await()
             if (query.isEmpty) {
                 Result.failure(Exception("Grupo não encontrado"))
@@ -56,7 +63,6 @@ class FireGroupDataSource : GroupDataSource {
                 Result.success(group)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error joining group: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -75,8 +81,6 @@ class FireGroupDataSource : GroupDataSource {
     override suspend fun fetchUserGroups(userId: String): Result<List<PostGroup>> {
         return try {
             coroutineScope {
-                Log.d(TAG, "fetchUserGroups started for: $userId (Current auth: ${FirebaseAuth.getInstance().currentUser?.uid})")
-                
                 // 1. Busca onde o usuário é o admin
                 val adminQueryTask = async {
                     db.collection("groups").whereEqualTo("adminId", userId).get().await()
@@ -87,22 +91,10 @@ class FireGroupDataSource : GroupDataSource {
                     db.collectionGroup("members").whereEqualTo("userId", userId).get().await()
                 }
 
-                val adminSnapshot = try { 
-                    adminQueryTask.await() 
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in adminQueryTask: ${e.message}")
-                    throw e
-                }
-                
-                val memberSnapshot = try { 
-                    memberQueryTask.await() 
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in memberQueryTask: ${e.message}")
-                    throw e
-                }
+                val adminSnapshot = adminQueryTask.await()
+                val memberSnapshot = memberQueryTask.await()
 
                 val groups = adminSnapshot.toObjects(PostGroup::class.java).toMutableList()
-                Log.d(TAG, "Found ${groups.size} groups as admin")
 
                 // Busca os documentos de grupo para as participações como membro em paralelo
                 val memberGroups = memberSnapshot.documents.map { doc ->
@@ -115,19 +107,16 @@ class FireGroupDataSource : GroupDataSource {
                                 // Adiciona se não for admin (para não duplicar) e for válido
                                 if (group != null && group.adminId != userId) group else null
                             } else null
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error fetching group doc from member ref: ${e.message}")
+                        } catch (_: Exception) {
                             null
                         }
                     }
                 }.awaitAll().filterNotNull()
 
-                Log.d(TAG, "Found ${memberGroups.size} groups as member")
                 groups.addAll(memberGroups)
                 Result.success(groups.distinctBy { it.groupId })
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in fetchUserGroups: ${e.message}")
             Result.failure(e)
         }
     }
@@ -143,33 +132,85 @@ class FireGroupDataSource : GroupDataSource {
     override suspend fun findGroupByCode(shareCode: String): Result<PostGroup> {
         return try {
             val code = shareCode.trim().uppercase()
-            val groupQuery = db.collection("groups").whereEqualTo("shareCode", code).get().await()
-            
-            if (!groupQuery.isEmpty) {
+
+            // 1. Busca direta na coleção 'shareCodes' por ID do documento
+            try {
+                val shareDoc = db.collection("shareCodes").document(code).get().await()
+                if (shareDoc.exists()) {
+                    val type = shareDoc.getString("type")
+                    val name = shareDoc.getString("name") ?: "Grupo"
+
+                    if (type == "group") {
+                        val groupId = shareDoc.getString("groupId") ?: code
+                        val adminId = shareDoc.getString("adminId") ?: ""
+                        return Result.success(PostGroup(
+                            groupId = groupId,
+                            adminId = adminId,
+                            name = name,
+                            shareCode = code
+                        ))
+                    } else {
+                        val targetUid = shareDoc.getString("targetUid") ?: shareDoc.getString("userId") ?: shareDoc.id
+                        return Result.success(PostGroup(
+                            groupId = "placeholder",
+                            adminId = targetUid,
+                            name = name,
+                            shareCode = code
+                        ))
+                    }
+                }
+            } catch (_: Exception) {}
+
+            // 2. Busca na coleção 'groups' por 'shareCode' tratando erros de permissão silenciosamente
+            val groupQuery = try {
+                db.collection("groups").whereEqualTo("shareCode", code).get().await()
+            } catch (_: Exception) {
+                null
+            }
+
+            if (groupQuery != null && !groupQuery.isEmpty) {
                 val group = groupQuery.documents.first().toObject(PostGroup::class.java)!!
-                Result.success(group)
-            } else {
-                val userQuery = db.collection("users").whereEqualTo("shareCode", code).get().await()
-                if (userQuery.isEmpty) {
-                    Result.failure(Exception("Código inválido ou inexistente"))
-                } else {
-                    val userDoc = userQuery.documents.first()
-                    val targetUid = userDoc.id
-                    val name = userDoc.getString("name") ?: "Grupo"
-                    
-                    Log.d(TAG, "User found by code, but no group document yet. Returning placeholder for targetUid: $targetUid")
-                    // Retorna um placeholder com o adminId correto para que o convite possa ser enviado.
-                    // O usuário alvo criará seu próprio grupo (com seu nome) ao fazer login.
-                    Result.success(PostGroup(
+                return Result.success(group)
+            }
+
+            // 3. Busca na coleção 'users' por 'shareCode' tratando erros de permissão silenciosamente
+            val userQuery = try {
+                db.collection("users").whereEqualTo("shareCode", code).get().await()
+            } catch (_: Exception) {
+                null
+            }
+
+            if (userQuery != null && !userQuery.isEmpty) {
+                val userDoc = userQuery.documents.first()
+                val targetUid = userDoc.id
+                val name = userDoc.getString("name") ?: "Grupo"
+
+                return Result.success(PostGroup(
+                    groupId = "placeholder",
+                    adminId = targetUid,
+                    name = name,
+                    shareCode = code
+                ))
+            }
+
+            // 4. Caso o código fornecido seja os primeiros 8 caracteres do UID ou o próprio ID do usuário em 'users'
+            try {
+                val userDocDirect = db.collection("users").document(code).get().await()
+                if (userDocDirect.exists()) {
+                    val targetUid = userDocDirect.id
+                    val name = userDocDirect.getString("name") ?: "Grupo"
+                    return Result.success(PostGroup(
                         groupId = "placeholder",
                         adminId = targetUid,
-                        name = name
+                        name = name,
+                        shareCode = code
                     ))
                 }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar grupo por código: ${e.message}")
-            Result.failure(e)
+            } catch (_: Exception) {}
+
+            Result.failure(Exception("Usuário não encontrado com este código"))
+        } catch (_: Exception) {
+            Result.failure(Exception("Usuário não encontrado com este código"))
         }
     }
 
@@ -181,15 +222,11 @@ class FireGroupDataSource : GroupDataSource {
             val id = db.collection("groups").document(groupId).collection("invitations").document().id
             val inv = invitation.copy(id = id, createdAt = System.currentTimeMillis())
             
-            Log.d(TAG, "Sending invitation: id=$id, group=$groupId, sender=${inv.senderId}, target=${inv.targetUid}")
-            
             db.collection("groups").document(groupId)
                 .collection("invitations").document(id).set(inv).await()
                 
-            Log.d(TAG, "Invitation sent successfully to Firestore")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending invitation: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -201,28 +238,19 @@ class FireGroupDataSource : GroupDataSource {
      * Campos: targetUid (Ascending), status (Ascending)
      */
     override fun getInvitationsFlow(userId: String): Flow<List<PostInvitation>> = callbackFlow {
-        Log.d(TAG, "getInvitationsFlow started for userId: $userId")
         val registration = db.collectionGroup("invitations")
             .whereEqualTo("targetUid", userId)
             .whereEqualTo("status", "pending")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    val isLoggingOut = GroupRepository.isLoggingOut()
-                    if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                        Log.e(TAG, "PERMISSION_DENIED in getInvitationsFlow. Check firestore.rules and indexes. (isLoggingOut=$isLoggingOut)")
-                    } else {
-                        Log.e(TAG, "Error in getInvitationsFlow listener: ${error.message}", error)
-                    }
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
                     val invites = snapshot.toObjects(PostInvitation::class.java)
-                    Log.d(TAG, "getInvitationsFlow: received ${invites.size} invitations")
                     trySend(invites)
                 }
             }
         awaitClose { 
-            Log.d(TAG, "getInvitationsFlow: closing listener")
             registration.remove() 
         }
     }
@@ -284,7 +312,6 @@ class FireGroupDataSource : GroupDataSource {
             
             Result.success(joinedGroup)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao responder convite: ${e.message}")
             Result.failure(e)
         }
     }
@@ -305,6 +332,17 @@ class FireGroupDataSource : GroupDataSource {
 
     override suspend fun ensureUserGroupExists(userId: String, userName: String, photoUrl: String): Result<PostGroup> {
         return try {
+            // Garante que o código de 8 dígitos do usuário esteja registrado na coleção pública 'shareCodes'
+            val userShareCode = userId.take(8).uppercase()
+            try {
+                val shareData = hashMapOf(
+                    "type" to "user",
+                    "targetUid" to userId,
+                    "name" to userName
+                )
+                db.collection("shareCodes").document(userShareCode).set(shareData, SetOptions.merge())
+            } catch (_: Exception) {}
+
             val existingGroupsResult = fetchUserGroups(userId)
             if (existingGroupsResult.isFailure) {
                 return Result.failure(existingGroupsResult.exceptionOrNull() ?: Exception("Falha ao buscar grupos existentes"))
@@ -318,7 +356,6 @@ class FireGroupDataSource : GroupDataSource {
             if (defaultGroup != null) {
                 // Se o nome ainda for "Home", atualiza para o nome do usuário
                 if (defaultGroup.name == "Home" && userName.isNotEmpty()) {
-                    Log.d(TAG, "Renaming default group 'Home' to '$userName'")
                     renameGroup(defaultGroup.groupId, userName)
                     defaultGroup = defaultGroup.copy(name = userName)
                 }
@@ -347,7 +384,6 @@ class FireGroupDataSource : GroupDataSource {
                 Result.success(group)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in ensureUserGroupExists: ${e.message}")
             Result.failure(e)
         }
     }
@@ -359,7 +395,6 @@ class FireGroupDataSource : GroupDataSource {
             val group = groupDoc.toObject(PostGroup::class.java)
             
             if (group != null && group.adminId == userId) {
-                Log.d(TAG, "Admin leaving. Deleting group and all subcollections: $groupId")
                 // PROBLEMA 1 — Corrigido: Deleta subcoleções antes do pai
                 coroutineScope {
                     val subcollections = listOf("members", "invitations", "products", "category")
@@ -373,7 +408,6 @@ class FireGroupDataSource : GroupDataSource {
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error leaving group: ${e.message}")
             Result.failure(e)
         }
     }
@@ -388,27 +422,19 @@ class FireGroupDataSource : GroupDataSource {
                     batch.commit().await()
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error deleting collection: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
 
     override suspend fun syncUserProductsToGroup(userId: String, groupId: String): Result<Unit> {
         return try {
-            Log.d(TAG, "Starting syncUserProductsToGroup. User: $userId, Group: $groupId")
-            
             val userProducts = db.collection("users").document(userId).collection("products").get().await()
             val userCategories = db.collection("users").document(userId).collection("category").get().await()
             
-            Log.d(TAG, "Found ${userProducts.size()} products and ${userCategories.size()} categories in user collection.")
-            
             if (userProducts.isEmpty && userCategories.isEmpty) {
-                Log.d(TAG, "No data to sync from user collection.")
                 Result.success(Unit)
             } else {
                 // Sincroniza Categorias
                 if (!userCategories.isEmpty) {
-                    Log.d(TAG, "Syncing ${userCategories.size()} categories...")
                     userCategories.documents.chunked(400).forEach { chunk ->
                         val batch = db.batch()
                         chunk.forEach { doc ->
@@ -421,7 +447,6 @@ class FireGroupDataSource : GroupDataSource {
                 
                 // Sincroniza Produtos
                 if (!userProducts.isEmpty) {
-                    Log.d(TAG, "Syncing ${userProducts.size()} products...")
                     userProducts.documents.chunked(400).forEach { chunk ->
                         val batch = db.batch()
                         chunk.forEach { doc ->
@@ -434,11 +459,9 @@ class FireGroupDataSource : GroupDataSource {
                     }
                 }
                 
-                Log.d(TAG, "Sync completed successfully.")
                 Result.success(Unit)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in syncUserProductsToGroup: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -447,16 +470,12 @@ class FireGroupDataSource : GroupDataSource {
      * NOVA FUNCIONALIDADE — Migração segura de dados
      */
     override suspend fun handleUserLogin(userId: String, userName: String, photoUrl: String): Result<PostGroup> = try {
-        Log.d(TAG, "Handling login for user: $userId")
         val userDoc = db.collection("users").document(userId).get().await()
         val isMigrated = userDoc.getBoolean("migrated") ?: false
 
         if (isMigrated) {
-            Log.d(TAG, "User already migrated.")
             ensureUserGroupExists(userId, userName, photoUrl)
         } else {
-            Log.d(TAG, "Starting migration flow for user: $userId")
-            
             // Verifica se tem produtos antigos
             val productsSnapshot = db.collection("users").document(userId).collection("products").limit(1).get().await()
             val hasOldData = !productsSnapshot.isEmpty
@@ -469,26 +488,20 @@ class FireGroupDataSource : GroupDataSource {
                 val migrationResult = migrateUserProductsToGroup(userId, group.groupId)
                 if (migrationResult.isSuccess) {
                     db.collection("users").document(userId).update("migrated", true).await()
-                    Log.d(TAG, "Migration successful and flag set.")
                 } else {
-                    Log.e(TAG, "Migration failed, flag not set.")
                     throw migrationResult.exceptionOrNull() ?: Exception("Migration failed")
                 }
             } else {
                 // Sem dados antigos, apenas marca como migrado
                 db.collection("users").document(userId).update("migrated", true).await()
-                Log.d(TAG, "No old data found. Flag set.")
             }
             Result.success(group)
         }
     } catch (e: Exception) {
-        Log.e(TAG, "Error in handleUserLogin: ${e.message}")
         Result.failure(e)
     }
 
     private suspend fun migrateUserProductsToGroup(userId: String, groupId: String): Result<Unit> = try {
-        Log.d(TAG, "Migrating products from users/$userId to groups/$groupId")
-        
         val userProducts = db.collection("users").document(userId).collection("products").get().await()
         val userCategories = db.collection("users").document(userId).collection("category").get().await()
 
@@ -518,21 +531,15 @@ class FireGroupDataSource : GroupDataSource {
             }
         }
 
-        // 3. Verificação (Opcional, mas recomendado: verificar se destino não está vazio se origem não estava)
-        // Se chegamos aqui sem exceção, os commits foram bem sucedidos.
-
         // 4. Deleção dos dados antigos
-        Log.d(TAG, "Copy successful. Deleting old data...")
         coroutineScope {
             val delProducts = async { deleteCollection(db.collection("users").document(userId).collection("products")) }
             val delCategories = async { deleteCollection(db.collection("users").document(userId).collection("category")) }
             awaitAll(delProducts, delCategories)
         }
 
-        Log.d(TAG, "Migration complete for $userId")
         Result.success(Unit)
     } catch (e: Exception) {
-        Log.e(TAG, "Error during migration: ${e.message}")
         Result.failure(e)
     }
 

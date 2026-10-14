@@ -59,11 +59,8 @@ public class ExpirationWork extends Worker {
         }
 
         if (produtos.isEmpty()) {
-            android.util.Log.d("ExpirationWork", "Nenhum produto para notificar.");
             return Result.success();
         }
-
-        android.util.Log.d("ExpirationWork", "Processando " + produtos.size() + " produtos.");
 
         // Zera horas do dia atual para comparação apenas por data
         Calendar calHoje = Calendar.getInstance();

@@ -84,9 +84,10 @@ class FireDataSource : LoginDataSource {
                             "email" to finalEmail
                         )
 
+                        val userShareCode = uid.take(8).uppercase()
                         if (!document.exists()) {
                             firestoreData["isPremium"] = false
-                            firestoreData["shareCode"] = uid.take(8).uppercase()
+                            firestoreData["shareCode"] = userShareCode
                             
                             // 2. Salva o campo createdAt com Timestamp.now() apenas quando o documento não existir
                             firestoreData["createdAt"] = Timestamp.now()
@@ -94,6 +95,14 @@ class FireDataSource : LoginDataSource {
                             // 3. Salva o campo migrated como false apenas quando o documento não existir
                             firestoreData["migrated"] = false
                         }
+
+                        // Registra o código de 8 dígitos na coleção 'shareCodes' para permitir busca pública de convites sem PERMISSION_DENIED
+                        val shareData = hashMapOf(
+                            "type" to "user",
+                            "targetUid" to uid,
+                            "name" to userName
+                        )
+                        firestore.collection("shareCodes").document(userShareCode).set(shareData, SetOptions.merge())
 
                         val existingPhoto = document.getString("photoUrl")
                         if (existingPhoto.isNullOrEmpty()) {

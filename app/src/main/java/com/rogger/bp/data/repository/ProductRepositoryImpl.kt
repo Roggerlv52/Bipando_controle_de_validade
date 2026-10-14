@@ -112,9 +112,7 @@ class ProductRepositoryImpl(
                 } else if (result is UploadResult.Error && result.message.startsWith("ALREADY_EXISTS:")) {
                     finalImageUri = result.message.removePrefix("ALREADY_EXISTS:")
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ProductRepo", "Erro ao fazer upload da imagem: ${e.message}")
-            }
+            } catch (_: Exception) {}
         }
 
         val workMode = com.rogger.bp.ui.commun.SharedPreferencesManager.getWorkMode(context)
@@ -206,15 +204,7 @@ class ProductRepositoryImpl(
             }
 
             docRef.set(updates, SetOptions.merge())
-                .addOnSuccessListener {
-                    android.util.Log.d("ProductRepo", "Firestore sync success: ${product.name} to ${if (effectiveGroupId.isNotEmpty()) "Group" else "User"}")
-                }
-                .addOnFailureListener { e ->
-                    android.util.Log.e("ProductRepo", "Firestore sync failed: ${e.message}")
-                }
-        } catch (e: Exception) {
-            android.util.Log.e("ProductRepo", "Firestore sync exception: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
 
     override suspend fun restoreProduct(product: Product) = withContext(Dispatchers.IO) {

@@ -34,6 +34,7 @@ navigationCompose = "2.9.6"
 coroutines = "1.9.0"
 coil = "3.1.0"
 securityCrypto = "1.1.0"
+appUpdate = "2.1.0"
 
 
 [libraries]
@@ -76,6 +77,7 @@ lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx
 navigation-fragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigation" }
 navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigation" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+play-appupdate-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdate" }
 
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }

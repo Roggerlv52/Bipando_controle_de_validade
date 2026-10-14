@@ -427,4 +427,15 @@
     <string name="trash_cd_restore">Restaurar</string>
     <string name="trash_cd_delete">Eliminar</string>
 
+    <!-- In-App Update -->
+    <string name="update_title">Nueva versión disponible</string>
+    <string name="update_message">Actualiza Bipando para obtener las últimas mejoras y correcciones.</string>
+    <string name="update_btn_now">Actualizar agora</string>
+    <string name="update_btn_later">Ahora no</string>
+    <string name="update_downloaded_title">Actualización descargada</string>
+    <string name="update_btn_restart">Reiniciar</string>
+    <string name="update_app_icon_description">Ícono de Bipando</string>
+    <string name="update_downloading">Descargando actualización…</string>
+    <string name="update_progress_percent">%1$d%%</string>
+
 </resources>

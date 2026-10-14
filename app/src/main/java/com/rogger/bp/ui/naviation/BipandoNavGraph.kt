@@ -1,6 +1,5 @@
 package com.rogger.bp.ui.naviation
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -60,13 +59,6 @@ fun BipandoNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val database = BpDatabase.getDatabase(context)
     val auth = FirebaseAuth.getInstance()
-
-    // Log de diagnóstico do Back Stack
-    LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { entry ->
-            Log.d("NAV", "atual=${entry.destination.route}")
-        }
-    }
 
     // A Splash Screen é a rota inicial do app
     val startDestination = Routes.SPLASH

@@ -428,4 +428,15 @@ lost and when you create your account again using the same email, you will need 
     <string name="trash_cd_restore">Restore</string>
     <string name="trash_cd_delete">Delete</string>
 
+    <!-- In-App Update -->
+    <string name="update_title">New version available</string>
+    <string name="update_message">Update Bipando to get the latest improvements and bug fixes.</string>
+    <string name="update_btn_now">Update now</string>
+    <string name="update_btn_later">Not now</string>
+    <string name="update_downloaded_title">Update downloaded</string>
+    <string name="update_btn_restart">Restart</string>
+    <string name="update_app_icon_description">Bipando icon</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_progress_percent">%1$d%%</string>
+
 </resources>

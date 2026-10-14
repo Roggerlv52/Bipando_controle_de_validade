@@ -11,11 +11,15 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import coil3.util.DebugLogger
+import com.rogger.bp.data.remote.FirebaseAppCheckInterceptor
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 
 class BipandoApplication : Application(), SingletonImageLoader.Factory {
 
@@ -42,11 +46,21 @@ class BipandoApplication : Application(), SingletonImageLoader.Factory {
             MobileAds.initialize(this@BipandoApplication)
         }
 
+        // Limpa o estado de dispensa do aviso de atualização para nova sessão de uso do app
+        SharedPreferencesManager.clearUpdateDismissedInSession(this)
+
         AnalyticsManager.initialize(this)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(FirebaseAppCheckInterceptor())
+            .build()
+
         return ImageLoader.Builder(context)
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient }))
+            }
             .memoryCache {
                 MemoryCache.Builder()
                     .maxSizePercent(context, 0.25)

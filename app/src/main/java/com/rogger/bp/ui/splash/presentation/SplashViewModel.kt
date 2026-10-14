@@ -4,15 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.appcheck.FirebaseAppCheck
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
-import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.rogger.bp.BuildConfig
 import com.rogger.bp.data.database.BpDatabase
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.data.model.PostProduct
+import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.ui.commun.DependencyInjector
 import com.rogger.bp.ui.commun.SharedPreferencesManager
@@ -71,25 +68,7 @@ class SplashViewModel(
                 // Limite de tempo máximo para toda a inicialização e pré-carregamento dos dados
                 withTimeout(9000L.milliseconds) {
                     coroutineScope {
-                        // 1. Inicializa Firebase App Check em background
-                        val appCheckJob = async(Dispatchers.IO) {
-                            try {
-                                val firebaseAppCheck = FirebaseAppCheck.getInstance()
-                                if (BuildConfig.DEBUG) {
-                                    firebaseAppCheck.installAppCheckProviderFactory(
-                                        DebugAppCheckProviderFactory.getInstance()
-                                    )
-                                } else {
-                                    firebaseAppCheck.installAppCheckProviderFactory(
-                                        PlayIntegrityAppCheckProviderFactory.getInstance()
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                Log.e("SplashViewModel", "Erro ao inicializar Firebase App Check", e)
-                            }
-                        }
-
-                        // 2. Inicializa e verifica o banco de dados Room em background
+                        // 1. Inicializa e verifica o banco de dados Room em background
                         val roomJob = async(Dispatchers.IO) {
                             try {
                                 val database = BpDatabase.getDatabase(appContext)
@@ -189,6 +168,19 @@ class SplashViewModel(
                                     } catch (e: Exception) {
                                         Log.e("SplashViewModel", "Erro ao verificar produtos locais no Room", e)
                                     }
+
+                                    // F. Verifica convites pendentes e dispara notificação do sistema ao iniciar o app
+                                    try {
+                                        val pendingInvites = groupRepository.getInvitationsFlow(currentUser.uid).firstOrNull()
+                                        pendingInvites?.forEach { invitation ->
+                                            if (!SharedPreferencesManager.isInvitationNotified(appContext, invitation.id)) {
+                                                NotificationUtil.showInvitation(appContext, invitation.senderName, invitation.groupName)
+                                                SharedPreferencesManager.setInvitationNotified(appContext, invitation.id, true)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("SplashViewModel", "Erro ao verificar convites pendentes na Splash Screen", e)
+                                    }
                                 } else {
                                     isUserLoggedIn = false
                                 }
@@ -198,7 +190,7 @@ class SplashViewModel(
                         }
 
                         // Executa inicializações de sistema e o pré-carregamento dos dados em paralelo
-                        awaitAll(appCheckJob, roomJob, dataPreloadJob)
+                        awaitAll(roomJob, dataPreloadJob)
                     }
                 }
             } catch (e: TimeoutCancellationException) {

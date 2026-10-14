@@ -48,7 +48,6 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-9022156527276774~9704565748" />
-        <!-- Activity principal reativa, redimensionável e sem restrições de orientação -->
         <activity
             android:name="com.rogger.bp.ui.ModernActivity"
             android:exported="true"
@@ -61,7 +60,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Override da CaptureActivity do ZXing para remover restrições de orientação em telas grandes (Tablets/Dobráveis/Android 16+) -->
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="unspecified"

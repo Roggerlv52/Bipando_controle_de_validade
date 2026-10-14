@@ -67,8 +67,6 @@ import com.rogger.bp.R
 import com.rogger.bp.ui.commun.AnalyticsManager
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.media.MediaPlayer
-import android.util.Log
-
 private fun playBeepIfEnabled(context: android.content.Context) {
     if (SharedPreferencesManager.getBeepState(context, "beep")) {
         try {
@@ -77,9 +75,7 @@ private fun playBeepIfEnabled(context: android.content.Context) {
                 mp.release()
             }
             mediaPlayer?.start()
-        } catch (e: Exception) {
-            Log.e("ScannerScreen", "Erro ao tocar beep: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
 }
 

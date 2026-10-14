@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.home.data
 
 import android.content.Context
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -18,15 +17,11 @@ class HomeDataSource(
     private val context: Context
 ) : PostHomeDataSource {
 
-    private val TAG = "HomeDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    /**
-     * PROBLEMA 7 — Corrigido: Prioriza sempre o grupo, usando user apenas como fallback de leitura.
-     */
     private fun productsRef(groupId: String? = null): CollectionReference? {
         val uid = getUserId() ?: return null
         val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
@@ -35,7 +30,6 @@ class HomeDataSource(
         return if (!targetGroupId.isNullOrEmpty()) {
             db.collection("groups").document(targetGroupId).collection("products")
         } else {
-            // Fallback temporário apenas para leitura durante migração
             db.collection("users").document(uid).collection("products")
         }
     }
@@ -43,7 +37,7 @@ class HomeDataSource(
     override fun deleteProduct(product: PostProduct, callback: HomeCallback) {
         CoroutineScope(Dispatchers.IO).launch {
             val uid = getUserId() ?: return@launch
-            
+
             if (product.groupId.isNotEmpty()) {
                 val hasPermission = checkUserPermission(uid, product.groupId)
                 if (!hasPermission) {
@@ -57,9 +51,9 @@ class HomeDataSource(
 
             if (product.firestoreDocId.isNotEmpty()) {
                 ref.document(product.firestoreDocId).update(updateData)
-                    .addOnSuccessListener { 
+                    .addOnSuccessListener {
                         cleanupProductImageIfNoMore(product)
-                        callback.onSuccess(product) 
+                        callback.onSuccess(product)
                     }
                     .addOnFailureListener { deleteByUuid(ref, product, updateData, callback) }
             } else {
@@ -71,20 +65,17 @@ class HomeDataSource(
     private suspend fun checkUserPermission(uid: String, groupId: String): Boolean {
         val cachedRole = SharedPreferencesManager.getCachedRole(context, groupId)
         if (cachedRole != null) {
-            Log.d(TAG, "checkUserPermission: Using cached role '$cachedRole' for group $groupId")
             return cachedRole.equals("Admin", ignoreCase = true) || cachedRole.equals("Editor", ignoreCase = true)
         }
 
         return try {
             val memberDoc = db.collection("groups").document(groupId)
                 .collection("members").document(uid).get().await()
-            
+
             val role = if (memberDoc.exists()) memberDoc.getString("role") ?: "Reader" else "Reader"
-            Log.d(TAG, "checkUserPermission: Fetched role '$role' from Firestore for user $uid in group $groupId")
             SharedPreferencesManager.setCachedRole(context, groupId, role)
             role.equals("Admin", ignoreCase = true) || role.equals("Editor", ignoreCase = true)
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao verificar permissões: ${e.message}")
+        } catch (_: Exception) {
             false
         }
     }
@@ -109,11 +100,8 @@ class HomeDataSource(
                         db.collection("users").document(uid).collection("productImages")
                     }
                     imgRef.document(barcode).delete().await()
-                    Log.d(TAG, "Limpando imagem para barcode: $barcode")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Erro ao limpar imagem: ${e.message}")
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -140,7 +128,9 @@ class HomeDataSource(
 
         return ref.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                callback.onFailure(error.message ?: "Erro no listener")
+                if (error.code != com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                    callback.onFailure(error.message ?: "Erro no listener")
+                }
                 return@addSnapshotListener
             }
             if (snapshot != null) {
@@ -170,7 +160,7 @@ class HomeDataSource(
                 deletedAt = data["deletedAt"] as? Long,
                 groupId = data["groupId"] as? String ?: ""
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

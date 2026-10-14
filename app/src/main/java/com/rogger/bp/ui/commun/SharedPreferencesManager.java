@@ -2,7 +2,6 @@ package com.rogger.bp.ui.commun;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class SharedPreferencesManager {
-    private static final String TAG = "SharedPreferencesManager";
     private static final String OLD_PREF_NAME = "shared_key_date";
     private static final String SECURE_PREF_NAME = "secure_shared_key_date";
 
@@ -42,7 +40,6 @@ public class SharedPreferencesManager {
             sSharedPreferences = encryptedPrefs;
             return sSharedPreferences;
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing EncryptedSharedPreferences, falling back to standard: " + e.getMessage(), e);
             sSharedPreferences = appContext.getSharedPreferences(OLD_PREF_NAME, Context.MODE_PRIVATE);
             return sSharedPreferences;
         }
@@ -52,7 +49,6 @@ public class SharedPreferencesManager {
         SharedPreferences oldPrefs = context.getSharedPreferences(OLD_PREF_NAME, Context.MODE_PRIVATE);
         Map<String, ?> all = oldPrefs.getAll();
         if (all != null && !all.isEmpty()) {
-            Log.d(TAG, "Migrating " + all.size() + " unencrypted preferences to EncryptedSharedPreferences...");
             SharedPreferences.Editor editor = encryptedPrefs.edit();
             for (Map.Entry<String, ?> entry : all.entrySet()) {
                 String key = entry.getKey();
@@ -71,7 +67,6 @@ public class SharedPreferencesManager {
             }
             editor.apply();
             oldPrefs.edit().clear().apply();
-            Log.d(TAG, "Migration to EncryptedSharedPreferences completed successfully.");
         }
     }
 
@@ -264,5 +259,33 @@ public class SharedPreferencesManager {
 
     public static int getCategoryIcon(Context context, String categoryId) {
         return getPreferences(context).getInt("category_icon_" + categoryId, 0);
+    }
+
+    public static boolean isInvitationNotified(Context context, String invitationId) {
+        if (invitationId == null || invitationId.isEmpty()) return false;
+        return getPreferences(context).getBoolean("notified_invitation_" + invitationId, false);
+    }
+
+    public static void setInvitationNotified(Context context, String invitationId, boolean notified) {
+        if (invitationId == null || invitationId.isEmpty()) return;
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("notified_invitation_" + invitationId, notified);
+        editor.apply();
+    }
+
+    public static boolean isUpdateDismissedInSession(Context context) {
+        return getPreferences(context).getBoolean("update_sheet_dismissed_session", false);
+    }
+
+    public static void setUpdateDismissedInSession(Context context, boolean dismissed) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("update_sheet_dismissed_session", dismissed);
+        editor.apply();
+    }
+
+    public static void clearUpdateDismissedInSession(Context context) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.remove("update_sheet_dismissed_session");
+        editor.apply();
     }
 }

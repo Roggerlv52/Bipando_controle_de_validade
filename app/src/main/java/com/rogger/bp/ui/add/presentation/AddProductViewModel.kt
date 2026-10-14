@@ -21,7 +21,6 @@ import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.data.model.PostCategory
 import com.rogger.bp.ui.commun.SharedPreferencesManager
 import android.content.Context
-import android.util.Log
 import com.rogger.bp.R
 
 data class AddProductState(
@@ -82,7 +81,6 @@ class AddProductViewModel(
     }
 
     private fun checkIfBarcodeExists(barcode: String) {
-        Log.d("Add",barcode)
         viewModelScope.launch {
             // 1. Tenta buscar no cache local primeiro
             val localProduct = registerRepository.getLocalProductByBarcode(barcode)
@@ -120,7 +118,6 @@ class AddProductViewModel(
                 }
 
                 override fun onFailure(message: String) {
-                    android.util.Log.e("AddProductViewModel", "Erro ao resolver barcode $barcode remotamente: $message")
                     // 3. Se não existir no Firebase -> consulta Open Food Facts
                     fetchFromOpenFoodFacts(barcode)
                 }

@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.profile.presentation
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.asFlow
@@ -238,9 +237,7 @@ class ProfileViewModel(
                     .requestEmail()
                     .build()
                 GoogleSignIn.getClient(context, gso).signOut()
-            } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Erro ao fazer logout do Google: ${e.message}")
-            }
+            } catch (_: Exception) {}
 
             homeRepository.stopListeningForProducts()
             homeRepository.clearLocalCache()

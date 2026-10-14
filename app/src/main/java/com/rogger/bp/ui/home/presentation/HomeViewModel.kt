@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.home.presentation
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -14,6 +13,7 @@ import com.rogger.bp.data.repository.toDomain
 import com.rogger.bp.domain.model.Product
 import com.rogger.bp.domain.repository.AuthRepository
 import com.rogger.bp.notification.NotificationPrefs
+import com.rogger.bp.notification.NotificationUtil
 import com.rogger.bp.ui.category.data.CategoryRepository
 import com.rogger.bp.ui.category.data.FetchCategoriesCallback
 import com.rogger.bp.ui.commun.AnalyticsManager
@@ -106,7 +106,7 @@ class HomeViewModel(
         if (user != null) {
             viewModelScope.launch {
                 kotlinx.coroutines.delay(500)
-                startInvitationListener()
+                startInvitationListener(context)
             }
         }
     }
@@ -272,14 +272,14 @@ class HomeViewModel(
                 SharedPreferencesManager.saveUserInfo(context, uid, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
 
-                startInvitationListener()
+                startInvitationListener(context)
             }
 
             override fun onFailure(message: String) {}
             override fun onComplete() {}
         })
 
-        startInvitationListener()
+        startInvitationListener(context)
 
         _uiState.update {
             it.copy(yellowWarningDays = NotificationPrefs.getDays(context))
@@ -310,12 +310,18 @@ class HomeViewModel(
             }
 
             override fun onFailure(message: String) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isFirstLoad = false,
-                        errorMessage = message
-                    )
+                if (!message.contains("PERMISSION_DENIED", ignoreCase = true)) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isFirstLoad = false,
+                            errorMessage = message
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(isLoading = false, isFirstLoad = false)
+                    }
                 }
             }
 
@@ -327,23 +333,27 @@ class HomeViewModel(
 
     private var invitationJob: kotlinx.coroutines.Job? = null
 
-    private fun startInvitationListener() {
+    private fun startInvitationListener(context: Context? = null) {
         if (invitationJob != null) return
 
         val user = authRepository.getCurrentUser() ?: return
-        Log.d("HomeViewModel", "Starting invitation listener for: ${user.uuid}")
 
         invitationJob = groupRepository.getInvitationsFlow(user.uuid)
             .onEach { invites ->
                 invites.forEach { invitation ->
                     if (!isLoggingOut) {
-                        Log.d("HomeViewModel", "Novo convite recebido de: ${invitation.senderName}")
+                        context?.let { ctx ->
+                            val appContext = ctx.applicationContext
+                            if (!SharedPreferencesManager.isInvitationNotified(appContext, invitation.id)) {
+                                NotificationUtil.showInvitation(appContext, invitation.senderName, invitation.groupName)
+                                SharedPreferencesManager.setInvitationNotified(appContext, invitation.id, true)
+                            }
+                        }
                     }
                 }
             }
             .catch { e ->
                 if (!isLoggingOut) {
-                    Log.e("HomeViewModel", "Erro no listener de convites: ${e.message}")
                     if (e.message?.contains("PERMISSION_DENIED") == true) {
                         invitationJob?.cancel()
                         invitationJob = null
@@ -426,9 +436,7 @@ class HomeViewModel(
                     .requestEmail()
                     .build()
                 GoogleSignIn.getClient(context, gso).signOut()
-            } catch (e: Exception) {
-                Log.e("HomeViewModel", "Erro ao fazer logout do Google: ${e.message}")
-            }
+            } catch (_: Exception) {}
 
             homeRepository.stopListeningForProducts()
             homeRepository.clearLocalCache()

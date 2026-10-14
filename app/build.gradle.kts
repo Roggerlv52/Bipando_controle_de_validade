@@ -35,8 +35,8 @@ android {
         applicationId = "com.rogger.bp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 60
-        versionName = "2.2.4-beta"
+        versionCode = 63
+        versionName = "2.3.3-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (signingConfigs.findByName("release") != null) {
@@ -122,7 +122,8 @@ dependencies {
     implementation(libs.navigation.ui)
 
     implementation(libs.play.services.auth)
-    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation("com.google.android.gms:play-services-ads:25.5.0")
+    implementation(libs.play.appupdate.ktx)
     implementation(libs.coordinatorlayout)
     implementation(libs.okhttp)
     implementation(libs.zxing.android.embedded)

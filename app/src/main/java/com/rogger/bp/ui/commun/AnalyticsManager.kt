@@ -2,22 +2,18 @@ package com.rogger.bp.ui.commun
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 
 object AnalyticsManager {
-    private const val TAG = "AnalyticsManager"
     private var firebaseAnalytics: FirebaseAnalytics? = null
 
     fun initialize(context: Context) {
         if (firebaseAnalytics == null) {
-            Log.d(TAG, "Inicializando Firebase Analytics")
             firebaseAnalytics = FirebaseAnalytics.getInstance(context)
         }
     }
 
     fun logEvent(name: String, params: Map<String, Any?> = emptyMap()) {
-        Log.d(TAG, "Enviando evento: $name | Params: $params")
         val bundle = Bundle()
         params.forEach { (key, value) ->
             when (value) {

@@ -31,12 +31,21 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
         val finalEmail = email ?: ""
 
         userRef.get().addOnSuccessListener { document ->
+            val userShareCode = user.uid.take(8).uppercase()
             val data = hashMapOf<String, Any>(
                 "uid" to user.uid,
                 "name" to (user.displayName ?: ""),
                 "email" to finalEmail,
-                "shareCode" to user.uid.take(8).uppercase() // Adiciona o código de 8 dígitos ao perfil
+                "shareCode" to userShareCode
             )
+
+            // Registra na coleção pública 'shareCodes' para permitir busca de convites sem PERMISSION_DENIED
+            val shareData = hashMapOf(
+                "type" to "user",
+                "targetUid" to user.uid,
+                "name" to (user.displayName ?: "")
+            )
+            firestore.collection("shareCodes").document(userShareCode).set(shareData, SetOptions.merge())
             
             if (!document.exists()) {
                 // Novo usuário: inicializa campos padrão

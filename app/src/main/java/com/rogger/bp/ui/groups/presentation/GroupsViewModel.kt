@@ -109,7 +109,6 @@ class GroupsViewModel(
     private fun observeInvitations() {
         val user = authRepository.getCurrentUser() ?: return
         groupRepository.getInvitationsFlow(user.uuid).onEach { invites ->
-            android.util.Log.d("GroupsViewModel", "Received ${invites.size} invitations for user ${user.uuid}")
             _uiState.update { it.copy(invitations = invites) }
         }.launchIn(viewModelScope)
     }
@@ -226,12 +225,7 @@ class GroupsViewModel(
             if (result.isSuccess) {
                 AnalyticsManager.logGroupCreated()
                 // Tenta sincronizar dados do usuário para o novo grupo criado
-                val syncResult = groupRepository.syncUserToGroup(user.uuid, groupId)
-                if (syncResult.isSuccess) {
-                    android.util.Log.d("GroupsViewModel", "Data sync to new group successful.")
-                } else {
-                    android.util.Log.e("GroupsViewModel", "Data sync failed: ${syncResult.exceptionOrNull()?.message}")
-                }
+                groupRepository.syncUserToGroup(user.uuid, groupId)
 
                 SharedPreferencesManager.setWorkMode(context, 1)
                 SharedPreferencesManager.setActiveGroupId(context, groupId)
@@ -366,13 +360,30 @@ class GroupsViewModel(
         
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
+            // Paramos os listeners ativos do grupo antes de sair/deletar para evitar PERMISSION_DENIED no Firestore
+            com.rogger.bp.ui.commun.DependencyInjector.registerHomeRepository(context).stopListeningForProducts()
+            com.rogger.bp.ui.commun.DependencyInjector.registerCategoryRepository(context).stopListeningForCategories()
+            SharedPreferencesManager.clearCachedRole(context, groupId)
+
             val result = groupRepository.leaveGroup(user.uuid, groupId)
             if (result.isSuccess) {
-                // If there are no more groups, reset work mode
-                val remainingGroups = _uiState.value.groups.filter { it.groupId != groupId }
-                if (remainingGroups.isEmpty() || remainingGroups.all { it.isDefault }) {
-                    SharedPreferencesManager.setWorkMode(context, 0)
+                // Limpa o cache local de produtos do grupo removido
+                val database = com.rogger.bp.data.database.BpDatabase.getDatabase(context)
+                database.productDao().clearProductsByGroup(groupId)
+
+                val activeGroupId = SharedPreferencesManager.getActiveGroupId(context)
+                if (activeGroupId == groupId) {
+                    val remainingGroups = _uiState.value.groups.filter { it.groupId != groupId }
+                    val defaultGroup = remainingGroups.find { it.isDefault }
+                    if (defaultGroup != null) {
+                        SharedPreferencesManager.setWorkMode(context, 1)
+                        SharedPreferencesManager.setActiveGroupId(context, defaultGroup.groupId)
+                    } else {
+                        SharedPreferencesManager.setWorkMode(context, 0)
+                        SharedPreferencesManager.setActiveGroupId(context, "")
+                    }
                 }
+                loadInitialData()
             } else {
                 _uiState.update { it.copy(error = result.exceptionOrNull()?.message) }
             }

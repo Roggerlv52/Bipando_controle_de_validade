@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.category.data
 
 import android.content.Context
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -16,7 +15,6 @@ class CategoryDataSource(
     private val context: Context,
     private val groupDao: GroupDao
 ) : PostCategoryDataSource {
-    private val TAG = "CategoryDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -218,7 +216,9 @@ class CategoryDataSource(
         return ref.orderBy("name")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    callback.onFailure(error.message ?: "Error in the category listener")
+                    if (error.code != com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        callback.onFailure(error.message ?: "Error in the category listener")
+                    }
                     return@addSnapshotListener
                 }
 

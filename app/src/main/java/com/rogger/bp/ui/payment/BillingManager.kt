@@ -2,7 +2,6 @@ package com.rogger.bp.ui.payment
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import com.android.billingclient.api.*
 import com.android.billingclient.api.PendingPurchasesParams
 import com.rogger.bp.R
@@ -49,14 +48,12 @@ class BillingManager(
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Log.d("Billing", "Conectado com sucesso ao Google Play Billing")
                     querySubscriptionProducts()
                     queryActiveSubscriptions()
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                Log.d("Billing", "Desconectado do serviço, tentando novamente...")
                 startConnection()
             }
         })
@@ -78,12 +75,10 @@ class BillingManager(
                         id == productMensalId || id == productPlanoMensalId || id == productSemestralId
                     }
                 }
-                Log.d("Billing", "checkSubscriptionHistory: hasHadPreviousSubscription=$hasHadPrevious (purchases count=${purchases.size})")
                 activity.runOnUiThread {
                     onResult(hasHadPrevious)
                 }
             } else {
-                Log.w("Billing", "checkSubscriptionHistory error: ${result.debugMessage}")
                 activity.runOnUiThread {
                     onResult(false)
                 }
@@ -166,8 +161,6 @@ class BillingManager(
                         onPricesLoaded(mensalPrice, semestralPrice, finalMensalTrial, finalSemestralTrial, isEligible)
                     }
                 }
-            } else {
-                Log.e("Billing", "Falha ao consultar produtos: ${result.debugMessage}")
             }
         }
     }
@@ -195,7 +188,6 @@ class BillingManager(
                     onSubscriptionStatusLoaded(activeProductId)
                 }
             } else {
-                Log.e("Billing", "Falha ao consultar assinaturas: ${result.debugMessage}")
                 activity.runOnUiThread {
                     onSubscriptionStatusLoaded(null)
                 }
@@ -231,7 +223,6 @@ class BillingManager(
                 val productDetails = productList[0]
                 val offerDetailsList = productDetails.subscriptionOfferDetails ?: emptyList()
 
-                // ✅ Consulta o histórico nativo da Play Store para selecionar a oferta apropriada
                 checkSubscriptionHistory { hasHadPreviousSubscription ->
                     val isEligible = !hasHadPreviousSubscription
 
@@ -241,7 +232,6 @@ class BillingManager(
                                     offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
                         } ?: offerDetailsList.firstOrNull()
                     } else {
-                        // Se o usuário já teve assinatura anterior na Play Store, seleciona o plano regular sem teste grátis
                         offerDetailsList.firstOrNull { offer ->
                             offer.pricingPhases.pricingPhaseList.none { it.priceAmountMicros == 0L }
                         } ?: offerDetailsList.firstOrNull()
@@ -262,8 +252,6 @@ class BillingManager(
                         billingClient.launchBillingFlow(activity, billingFlowParams)
                     }
                 }
-            } else {
-                Log.e("Billing", "Falha ao consultar detalhes do produto para compra: ${result.debugMessage}")
             }
         }
     }
@@ -274,8 +262,6 @@ class BillingManager(
                 handlePurchase(purchase)
             }
             queryActiveSubscriptions()
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
-            Log.d("Billing", "Usuário cancelou o fluxo de compra")
         }
     }
 
@@ -285,11 +271,7 @@ class BillingManager(
                 .setPurchaseToken(purchase.purchaseToken)
                 .build()
 
-            billingClient.acknowledgePurchase(params) { result ->
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Log.d("Billing", "Assinatura confirmada e liberada!")
-                }
-            }
+            billingClient.acknowledgePurchase(params) {}
         }
     }
 

@@ -1,6 +1,6 @@
 package com.rogger.bp.ui.add.data
 
-import android.util.Log
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rogger.bp.data.image.ImageResult
@@ -14,11 +14,8 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.content.Context
 
 class FireRegisterDataSource(private val context: Context) : ItemDataSource {
-
-    private val TAG = "FireRegisterDataSource"
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -82,7 +79,6 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
 
             when (result) {
                 is ImageResult.CustomImage -> {
-                    Log.d(TAG, "Imagem personalizada encontrada: ${result.url}")
                     val existing = PostImage(
                         barcode = image.barcode,
                         uri     = result.url,
@@ -94,7 +90,6 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                 }
 
                 is ImageResult.GlobalImage -> {
-                    Log.d(TAG, "Imagem global encontrada: ${result.url}")
                     val existing = PostImage(
                         barcode = image.barcode,
                         uri     = result.url,
@@ -106,12 +101,10 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                 }
 
                 is ImageResult.NoImage -> {
-                    Log.d(TAG, "resolveImage retornou NoImage para ${image.barcode}")
                     if (image.uri.isNotEmpty()) {
                         // Há URI local — tenta criar a imagem global
                         uploadGlobalImageInternal(image, callback)
                     } else {
-                        Log.d(TAG, "Sem imagem remota e sem URI local para ${image.barcode} — reportando falha")
                         CoroutineScope(Dispatchers.Main).launch {
                             callback.onFailure("Nenhuma imagem associada")
                             callback.onComplete()
@@ -120,7 +113,6 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                 }
 
                 is ImageResult.Error -> {
-                    Log.e(TAG, "resolveImage retornou Erro para ${image.barcode}: ${result.message}")
                     CoroutineScope(Dispatchers.Main).launch {
                         callback.onFailure(result.message)
                         callback.onComplete()
@@ -149,7 +141,6 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
 
         // 👉 Se estiver offline, pula o upload e conclui usando a URI local da imagem
         if (!NetworkUtils.isNetworkAvailable()) {
-            Log.d(TAG, "Dispositivo offline — pulando upload e salvando com URI local")
             callback.onSuccess(image)
             callback.onComplete()
             return
@@ -161,11 +152,9 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
 
             if (!globalExists) {
                 // ── Caso A: sem imagem global → cria global ────────────────
-                Log.d(TAG, "Criando imagem global para barcode=${image.barcode}")
                 uploadGlobalImageInternal(image, callback)
             } else {
                 // ── Caso B: imagem global existe → salva imagem personalizada
-                Log.d(TAG, "Imagem global já existe → salvando imagem personalizada para barcode=${image.barcode}")
                 saveUserImageInternal(image, callback)
             }
         }
@@ -202,7 +191,6 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
                         name    = image.name,
                         uri     = existingUrl
                     )
-                    Log.w(TAG, "Race condition: imagem global criada por outro utilizador, usando URL existente")
                     callback.onAlreadyExists(existing)
                     callback.onComplete()
                 }

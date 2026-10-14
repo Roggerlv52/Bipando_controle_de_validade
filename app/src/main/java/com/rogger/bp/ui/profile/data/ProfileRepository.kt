@@ -1,7 +1,6 @@
 package com.rogger.bp.ui.profile.data
 
 import android.net.Uri
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.firestore.FirebaseFirestore
@@ -76,7 +75,6 @@ class ProfileRepository {
     fun uploadProfileImage(context: android.content.Context, imageUri: Uri, callback: UploadProfileImageCallback) {
         val user = auth.currentUser
         if (user != null) {
-            Log.d("ProfileRepository", "Iniciando processamento de imagem para UID: ${user.uid}")
             try {
                 val processedFile = ImageUtils.processImage(context, imageUri, ImagePikerUtil.createImageFile(context))
                 val processedUri = Uri.fromFile(processedFile)
@@ -93,11 +91,9 @@ class ProfileRepository {
                             firestore.collection("users").document(user.uid)
                                 .update("photoUrl", photoUrl)
                                 .addOnSuccessListener {
-                                    Log.d("ProfileRepository", "Firestore atualizado com sucesso!")
                                     callback.onSuccess(photoUrl)
                                 }
                                 .addOnFailureListener { e ->
-                                    Log.e("ProfileRepository", "Erro ao atualizar Firestore: ${e.message}")
                                     callback.onFailure(e.message ?: "Erro ao atualizar foto no Firestore")
                                 }
                         }
@@ -105,7 +101,6 @@ class ProfileRepository {
                         ImagePikerUtil.cleanUpTempFiles(processedFile)
                     }
                     .addOnFailureListener { e ->
-                        Log.e("ProfileRepository", "Erro no upload para o Storage: ${e.message}")
                         callback.onFailure(e.message ?: "Erro ao fazer upload da imagem")
                         ImagePikerUtil.cleanUpTempFiles(processedFile)
                     }
@@ -113,12 +108,10 @@ class ProfileRepository {
                         callback.onComplete()
                     }
             } catch (e: Exception) {
-                Log.e("ProfileRepository", "Erro crítico no processamento/upload: ${e.message}")
                 callback.onFailure("Erro ao processar imagem: ${e.message}")
                 callback.onComplete()
             }
         } else {
-            Log.e("ProfileRepository", "Tentativa de upload sem usuário autenticado.")
             callback.onFailure("Usuário não autenticado")
             callback.onComplete()
         }
@@ -197,9 +190,7 @@ class ProfileRepository {
                         deleteSubcollection("groups/$uid/productImages")
                         legacyGroupDoc.reference.delete().await()
                     }
-                } catch (e: Exception) {
-                    Log.w("ProfileRepository", "Erro ao remover grupos próprios: ${e.message}")
-                }
+                } catch (_: Exception) {}
 
                 // 3. Remover usuário de outros grupos onde ele é membro
                 try {
@@ -210,11 +201,9 @@ class ProfileRepository {
                     for (doc in memberQuery.documents) {
                         try {
                             doc.reference.delete().await()
-                        } catch (e: Exception) { /* Ignora se já tiver sido removido com a deleção do grupo */ }
+                        } catch (_: Exception) { /* Ignora se já tiver sido removido com a deleção do grupo */ }
                     }
-                } catch (e: Exception) {
-                    Log.w("ProfileRepository", "Erro ao remover de outros grupos: ${e.message}")
-                }
+                } catch (_: Exception) {}
 
                 // 4. Deletar convites pendentes/enviados relacionados ao usuário
                 try {
@@ -222,24 +211,22 @@ class ProfileRepository {
                         .whereEqualTo("targetUid", uid)
                         .get().await()
                     for (doc in targetInvites.documents) {
-                        try { doc.reference.delete().await() } catch (e: Exception) {}
+                        try { doc.reference.delete().await() } catch (_: Exception) {}
                     }
 
                     val senderInvites = firestore.collectionGroup("invitations")
                         .whereEqualTo("senderId", uid)
                         .get().await()
                     for (doc in senderInvites.documents) {
-                        try { doc.reference.delete().await() } catch (e: Exception) {}
+                        try { doc.reference.delete().await() } catch (_: Exception) {}
                     }
-                } catch (e: Exception) {
-                    Log.w("ProfileRepository", "Erro ao remover convites do usuário: ${e.message}")
-                }
+                } catch (_: Exception) {}
 
                 // 5. Deletar imagens no Storage
                 // Imagem de perfil
                 try {
                     storage.reference.child("profile_images/$uid.jpg").delete().await()
-                } catch (e: Exception) { /* Ignora se não existir */ }
+                } catch (_: Exception) { /* Ignora se não existir */ }
 
                 // Imagens privadas de produtos (pasta do usuário)
                 try {
@@ -248,7 +235,7 @@ class ProfileRepository {
                     for (item in listResult.items) {
                         item.delete().await()
                     }
-                } catch (e: Exception) { /* Ignora se pasta não existir */ }
+                } catch (_: Exception) { /* Ignora se pasta não existir */ }
 
                 // 6. Deletar documento principal do usuário
                 firestore.collection("users").document(uid).delete().await()
@@ -261,7 +248,6 @@ class ProfileRepository {
                     callback.onComplete()
                 }
             } catch (e: Exception) {
-                Log.e("ProfileRepository", "Erro crítico ao deletar conta: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     val errorMessage = if (e is FirebaseAuthRecentLoginRequiredException) {
                         "Por segurança, esta operação requer login recente. Por favor, saia e entre novamente antes de excluir."
@@ -285,8 +271,6 @@ class ProfileRepository {
                     batch.commit().await()
                 }
             }
-        } catch (e: Exception) {
-            Log.w("ProfileRepository", "Falha ao limpar subcoleção $path: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
 }

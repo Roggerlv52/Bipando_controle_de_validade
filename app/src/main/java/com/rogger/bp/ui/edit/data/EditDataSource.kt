@@ -1,6 +1,6 @@
 package com.rogger.bp.ui.edit.data
 
-import android.util.Log
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,16 +13,9 @@ import com.rogger.bp.ui.commun.NetworkUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.content.Context
 
-/*
- * Desenvolvido por Roger de Oliveira
- * Data: 14/05/2026
- * Hora: 19:54
- */
 class EditDataSource(private val context: Context) : PostEditDataSource {
 
-    private val TAG = "EditDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -132,28 +125,16 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
                 (imageUri.startsWith("/") || imageUri.startsWith("file://") || imageUri.startsWith("content://"))
 
         if (isLocalPath) {
-            Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
             if (!NetworkUtils.isNetworkAvailable()) {
                 updateFirestoreDoc(ref, produto, imageUri, callback)
                 return
             }
             handleImageUploadForEdit(ref, produto, imageUri, callback)
         } else {
-            Log.d(TAG, "imageUri já é remota — atualizando Firestore diretamente")
             updateFirestoreDoc(ref, produto, imageUri, callback)
         }
     }
 
-    /**
-     * Resolve o upload de imagem no contexto de edição.
-     *
-     * Lógica:
-     *  1. Verifica se já existe imagem GLOBAL para o barcode.
-     *  2. Se NÃO existe → cria imagem global (este utilizador está a definir a imagem canónica).
-     *  3. Se JÁ existe → salva imagem PERSONALIZADA do utilizador (não altera a global).
-     *
-     * Em ambos os casos, o produto do utilizador é atualizado com a URL resultante.
-     */
     private fun handleImageUploadForEdit(
         ref: CollectionReference,
         produto: PostProduct,
@@ -165,7 +146,6 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
 
             if (!globalExists) {
                 // ── Sem imagem global: cria a imagem global ────────────────
-                Log.d(TAG, "Sem imagem global — criando para barcode=${produto.barcode}")
                 val result = imageRepository.uploadGlobalImage(
                     context = context,
                     barcode = produto.barcode,
@@ -176,10 +156,6 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
 
             } else {
                 // ── Imagem global existe: salva personalizada (privada) ────
-                Log.d(
-                    TAG,
-                    "Imagem global existe — salvando personalizada para barcode=${produto.barcode}"
-                )
                 val result = imageRepository.saveUserImage(
                     context = context,
                     barcode = produto.barcode,
@@ -198,7 +174,6 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
     ) {
         when {
             result is UploadResult.Success -> {
-                Log.d(TAG, "Upload concluído. URL: ${result.url}")
                 CoroutineScope(Dispatchers.Main).launch {
                     updateFirestoreDoc(ref, produto, result.url, callback)
                 }
@@ -207,7 +182,6 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
             result is UploadResult.Error &&
                     result.message.startsWith("ALREADY_EXISTS:") -> {
                 val existingUrl = result.message.removePrefix("ALREADY_EXISTS:")
-                Log.w(TAG, "Race condition no upload — usando URL existente: $existingUrl")
                 CoroutineScope(Dispatchers.Main).launch {
                     updateFirestoreDoc(ref, produto, existingUrl, callback)
                 }
@@ -215,17 +189,12 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
 
             // 👉 NOVO: Trata o resultado "OFFLINE" e atualiza o Firestore localmente usando a URI local
             result is UploadResult.Error && result.message == "OFFLINE" -> {
-                Log.d(
-                    TAG,
-                    "Falha no upload (Dispositivo Offline) — salvando localmente com URI local"
-                )
                 CoroutineScope(Dispatchers.Main).launch {
                     updateFirestoreDoc(ref, produto, produto.imageUri, callback)
                 }
             }
 
             result is UploadResult.Error -> {
-                Log.e(TAG, "Erro no upload: ${result.message}")
                 CoroutineScope(Dispatchers.Main).launch {
                     callback.onFailure(result.message)
                     callback.onComplete()
@@ -253,11 +222,9 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
         ref.document(produto.uuid)
             .update(updates)
             .addOnSuccessListener {
-                Log.d(TAG, "Produto atualizado: ${produto.uuid}")
                 callback.onSuccess(produto.copy(imageUri = imageUri))
             }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Erro ao atualizar Firestore: ${e.message}")
                 callback.onFailure(e.message ?: "Erro ao atualizar produto")
             }
             .addOnCompleteListener { callback.onComplete() }
@@ -281,11 +248,9 @@ class EditDataSource(private val context: Context) : PostEditDataSource {
                 )
             )
             .addOnSuccessListener {
-                Log.d(TAG, "Produto movido para lixeira: ${produto.uuid}")
                 callback.onSuccess(produto)
             }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Erro ao eliminar: ${e.message}")
                 callback.onFailure(e.message ?: "Erro ao eliminar produto")
             }
             .addOnCompleteListener { callback.onComplete() }

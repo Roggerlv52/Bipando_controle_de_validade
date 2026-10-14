@@ -35,7 +35,6 @@ class CategoryRepository(
 
             // Se o modo é GRUPO mas não temos groupId ainda, não inicia fetch individual
             if (workMode == 1 && targetGroupId == null) {
-                android.util.Log.w("CategoryRepository", "FetchAll: Modo grupo ativo mas groupId ainda não disponível")
                 callback.onComplete()
                 return@launch
             }

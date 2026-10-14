@@ -447,4 +447,15 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="trash_cd_restore">Restaurar</string>
     <string name="trash_cd_delete">Excluir</string>
 
+    <!-- In-App Update -->
+    <string name="update_title">Nova versão disponível</string>
+    <string name="update_message">Atualize o Bipando para ter as últimas melhorias e correções.</string>
+    <string name="update_btn_now">Atualizar agora</string>
+    <string name="update_btn_later">Agora não</string>
+    <string name="update_downloaded_title">Atualização baixada</string>
+    <string name="update_btn_restart">Reiniciar</string>
+    <string name="update_app_icon_description">Ícone do Bipando</string>
+    <string name="update_downloading">Baixando atualização…</string>
+    <string name="update_progress_percent">%1$d%%</string>
+
 </resources>
