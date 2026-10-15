@@ -82,6 +82,22 @@ public class SharedPreferencesManager {
         return getPreferences(context).getBoolean("is_premium", false);
     }
 
+    // ✅ Guarda a chave do plano ativo selecionado/comprado
+    public static void setActivePlanKey(Context context, String planKey) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        if (planKey != null) {
+            editor.putString("active_plan_key", planKey);
+        } else {
+            editor.remove("active_plan_key");
+        }
+        editor.apply();
+    }
+
+    // ✅ Retorna a chave do plano ativo selecionado/comprado
+    public static String getActivePlanKey(Context context) {
+        return getPreferences(context).getString("active_plan_key", null);
+    }
+
     // Método para adicionar um valor ao SharedPreferences
     public static void sharedBeepState(Context context, String key, boolean beep) {
         SharedPreferences.Editor editor = getPreferences(context).edit();

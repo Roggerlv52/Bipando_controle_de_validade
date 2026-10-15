@@ -1,7 +1,7 @@
 package com.rogger.bp.ui.payment.view
 
 import android.app.Activity
-import androidx.compose.animation.*
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rogger.bp.R
+import com.rogger.bp.ui.payment.PlanKeys
 import com.rogger.bp.ui.payment.presentation.PaymentViewModel
 import com.rogger.bp.ui.theme.BipandoTheme
 
@@ -41,6 +42,15 @@ fun PaymentScreen(
     LaunchedEffect(Unit) {
         viewModel.initBilling(activity)
     }
+
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearErrorMessage()
+        }
+    }
+
+    val anyPlanAvailable = state.mensalAvailable || state.semestralAvailable || state.anualAvailable
 
     // Forçar Tema Escuro e Barras Transparentes para efeito Full Screen
     BipandoTheme(darkTheme = true) {
@@ -112,38 +122,85 @@ fun PaymentScreen(
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    PlanCard(
-                        title = stringResource(id = R.string.plan_name_mensal),
-                        price = state.mensalPrice,
-                        isSelected = state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal",
-                        isActive = state.activePlanId == "bipando_premium_mensal" || state.activePlanId == "plano-mensal",
-                        badge = if (state.isEligibleForTrial && state.mensalTrialText != null) stringResource(R.string.plan_mensal_trial_badge) else null,
-                        onClick = { viewModel.onPlanSelect("bipando_premium_mensal") }
-                    )
+                    if (!anyPlanAvailable) {
+                        if (state.isLoading) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color(0xFF5CB82E))
+                            }
+                        } else {
+                            Surface(
+                                color = Color.White.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.plan_unavailable_message),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        if (state.mensalAvailable) {
+                            PlanCard(
+                                title = stringResource(id = R.string.plan_name_mensal),
+                                price = state.mensalPrice,
+                                isSelected = state.selectedPlanId == PlanKeys.MENSAL,
+                                isActive = state.activePlanId == PlanKeys.MENSAL,
+                                badge = if (state.isEligibleForTrial && state.mensalTrialText != null) stringResource(R.string.plan_mensal_trial_badge) else null,
+                                onClick = { viewModel.onPlanSelect(PlanKeys.MENSAL) }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        if (state.semestralAvailable) {
+                            PlanCard(
+                                title = stringResource(id = R.string.plan_name_semestral),
+                                price = state.semestralPrice,
+                                isSelected = state.selectedPlanId == PlanKeys.SEMESTRAL,
+                                isActive = state.activePlanId == PlanKeys.SEMESTRAL,
+                                badge = if (state.isEligibleForTrial && state.semestralTrialText != null) stringResource(R.string.plan_mensal_trial_badge) else null,
+                                onClick = { viewModel.onPlanSelect(PlanKeys.SEMESTRAL) }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
 
-                    PlanCard(
-                        title = stringResource(id = R.string.plan_name_semestral),
-                        price = state.semestralPrice,
-                        isSelected = state.selectedPlanId == "bipando_premium_semestral",
-                        isActive = state.activePlanId == "bipando_premium_semestral",
-                        onClick = { viewModel.onPlanSelect("bipando_premium_semestral") }
-                    )
+                        if (state.anualAvailable) {
+                            PlanCard(
+                                title = stringResource(id = R.string.plan_name_anual),
+                                price = state.anualPrice,
+                                isSelected = state.selectedPlanId == PlanKeys.ANUAL,
+                                isActive = state.activePlanId == PlanKeys.ANUAL,
+                                badge = if (state.isEligibleForTrial && state.anualTrialText != null) stringResource(R.string.plan_mensal_trial_badge) else null,
+                                onClick = { viewModel.onPlanSelect(PlanKeys.ANUAL) }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Banner de Trial / Info
                     val bannerText = when {
                         state.activePlanId != null -> {
-                            val name = if (state.activePlanId == "bipando_premium_mensal" || state.activePlanId == "plano-mensal") 
-                                stringResource(R.string.plan_name_mensal) else stringResource(R.string.plan_name_semestral)
+                            val name = when (state.activePlanId) {
+                                PlanKeys.MENSAL -> stringResource(R.string.plan_name_mensal)
+                                PlanKeys.SEMESTRAL -> stringResource(R.string.plan_name_semestral)
+                                PlanKeys.ANUAL -> stringResource(R.string.plan_name_anual)
+                                else -> ""
+                            }
                             stringResource(R.string.plan_active_info_text, name)
                         }
-                        (state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal") -> 
-                            if (state.isEligibleForTrial) state.mensalTrialText else null
-                        state.selectedPlanId == "bipando_premium_semestral" -> 
-                            if (state.isEligibleForTrial) state.semestralTrialText else null
+                        state.selectedPlanId == PlanKeys.MENSAL -> if (state.isEligibleForTrial) state.mensalTrialText else null
+                        state.selectedPlanId == PlanKeys.SEMESTRAL -> if (state.isEligibleForTrial) state.semestralTrialText else null
+                        state.selectedPlanId == PlanKeys.ANUAL -> if (state.isEligibleForTrial) state.anualTrialText else null
                         else -> null
                     }
 
@@ -169,8 +226,12 @@ fun PaymentScreen(
                         state.selectedPlanId == null -> stringResource(R.string.select_plan)
                         state.selectedPlanId == state.activePlanId -> stringResource(R.string.current_plan)
                         state.activePlanId != null -> {
-                            val name = if (state.selectedPlanId == "bipando_premium_mensal" || state.selectedPlanId == "plano-mensal") 
-                                stringResource(R.string.plan_name_mensal) else stringResource(R.string.plan_name_semestral)
+                            val name = when (state.selectedPlanId) {
+                                PlanKeys.MENSAL -> stringResource(R.string.plan_name_mensal)
+                                PlanKeys.SEMESTRAL -> stringResource(R.string.plan_name_semestral)
+                                PlanKeys.ANUAL -> stringResource(R.string.plan_name_anual)
+                                else -> ""
+                            }
                             stringResource(R.string.change_plan_text, name)
                         }
                         else -> stringResource(R.string.btn_subscribe_now)
@@ -181,7 +242,7 @@ fun PaymentScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = state.selectedPlanId != null && state.selectedPlanId != state.activePlanId,
+                        enabled = anyPlanAvailable && state.selectedPlanId != null && state.selectedPlanId != state.activePlanId,
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF5CB82E),
@@ -273,7 +334,7 @@ fun PlanCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "ATIVO",
+                        text = stringResource(R.string.plan_active_badge),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         color = Color.White,
                         fontSize = 10.sp,

@@ -148,12 +148,33 @@ lost and when you create your account again using the same email, you will need 
     <string name="text_unlimited_categories">Unlimited categories for your inventory.</string>
     <string name="plan_name_mensal">Monthly</string>
     <string name="plan_name_semestral">Semiannual</string>
+    <string name="plan_name_anual">Annual</string>
+    <string name="plan_active_badge">ACTIVE</string>
+    <string name="plan_unavailable_message">Plans currently unavailable</string>
     <string name="select_plan">Select a plan</string>
     <string name="information_payment">30 days free, then R$ 14.99/month</string>
-    <string name="information_subscription">The subscription will automatically renew monthly or semi-annually until canceled in the Play Store settings.</string>
+    <string name="information_subscription">The subscription will automatically renew (monthly, semi-annually, or annually) until canceled in the Play Store settings.</string>
 
     <string name="add_product">Add Product</string>
     <string name="menu_gallery">Gallery</string>
+
+    <plurals name="duration_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="duration_weeks">
+        <item quantity="one">%d week</item>
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="duration_months">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="duration_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+
     <string name="current_plan">✓ Current plan</string>
     <string name="change_plan_text">Switch to %1$s plan</string>
     <string name="btn_subscribe_now">Subscribe now</string>

@@ -166,11 +166,31 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="text_unlimited_categories">Categorias ilimitadas para o seu estoque</string>
     <string name="plan_name_mensal">Mensal</string>
     <string name="plan_name_semestral">Semestral</string>
+    <string name="plan_name_anual">Anual</string>
+    <string name="plan_active_badge">ATIVO</string>
+    <string name="plan_unavailable_message">Planos indisponíveis no momento</string>
     <string name="select_plan">Selecione um plano</string>
     <string name="information_payment">30 dias grátis, depois R$ 14,99/mês</string>
-    <string name="information_subscription">A assinatura será renovada automaticamente mensalmente ou semestralmente até ser cancelada nas configurações da Play Store.</string>
+    <string name="information_subscription">A assinatura será renovada automaticamente (mensal, semestral ou anual) até ser cancelada nas configurações da Play Store.</string>
     <string name="add_product">Adicionar Produto</string>
     <string name="menu_gallery">Galeria</string>
+
+    <plurals name="duration_days">
+        <item quantity="one">%d dia</item>
+        <item quantity="other">%d dias</item>
+    </plurals>
+    <plurals name="duration_weeks">
+        <item quantity="one">%d semana</item>
+        <item quantity="other">%d semanas</item>
+    </plurals>
+    <plurals name="duration_months">
+        <item quantity="one">%d mês</item>
+        <item quantity="other">%d meses</item>
+    </plurals>
+    <plurals name="duration_years">
+        <item quantity="one">%d ano</item>
+        <item quantity="other">%d anos</item>
+    </plurals>
 
     <string name="current_plan">✓ Plano atual</string>
     <string name="change_plan_text">Mudar para o plano %1$s</string>

@@ -151,11 +151,31 @@
     <string name="text_unlimited_categories">Categorías ilimitadas para tu inventario</string>
     <string name="plan_name_mensal">Mensual</string>
     <string name="plan_name_semestral">Semestral</string>
+    <string name="plan_name_anual">Anual</string>
+    <string name="plan_active_badge">ACTIVO</string>
+    <string name="plan_unavailable_message">Planes no disponibles por el momento</string>
     <string name="select_plan">Seleccione un plan</string>
     <string name="information_payment">30 días gratis, luego 14,99 R$/mes</string>
-    <string name="information_subscription">La suscripción se renovará automáticamente mensual o semestralmente hasta que se cancele en la configuración de la Play Store.</string>
+    <string name="information_subscription">La suscripción se renovará automáticamente (mensual, semestral o anual) hasta que se cancele en la configuración de la Play Store.</string>
     <string name="add_product">Añadir producto</string>
     <string name="menu_gallery">Galería</string>
+
+    <plurals name="duration_days">
+        <item quantity="one">%d día</item>
+        <item quantity="other">%d días</item>
+    </plurals>
+    <plurals name="duration_weeks">
+        <item quantity="one">%d semana</item>
+        <item quantity="other">%d semanas</item>
+    </plurals>
+    <plurals name="duration_months">
+        <item quantity="one">%d mes</item>
+        <item quantity="other">%d meses</item>
+    </plurals>
+    <plurals name="duration_years">
+        <item quantity="one">%d año</item>
+        <item quantity="other">%d años</item>
+    </plurals>
 
     <string name="current_plan">✓ Plan actual</string>
     <string name="change_plan_text">Cambiar al plan %1$s</string>
