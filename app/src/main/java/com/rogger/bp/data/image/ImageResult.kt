@@ -27,18 +27,10 @@ sealed class ImageResult {
      * @param name nome do produto associado à imagem global
      * @param isCustom sempre false
      */
-    data class GlobalImage(val url: String, val name: String = "", val isCustom: Boolean = false) : ImageResult()
+    data class GlobalImage(val url: String, val name: String = "",
+                           val isCustom: Boolean = false) : ImageResult()
 
-    /**
-     * Nenhuma imagem existe (nem global nem personalizada).
-     * A UI deve oferecer a opção de fazer upload — que criará a imagem GLOBAL.
-     */
     object NoImage : ImageResult()
-
-    /**
-     * Erro durante a busca (rede, autenticação, permissão).
-     * @param message mensagem legível para exibir ao utilizador
-     */
     data class Error(val message: String) : ImageResult()
 }
 

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="800dp"
+    android:viewportWidth="1229"
+    android:viewportHeight="2048">
+
+    <!-- Fundo principal -->
+    <path
+        android:fillColor="#006171"
+        android:pathData="M0,0 H1229 V2048 H0 Z" />
+
+    <!-- Faixa curva superior central -->
+    <path
+        android:fillColor="#117887"
+        android:pathData="M428,0
+            L343,83 L286,156 L236,248 L208,338 L199,431
+            L211,529 L241,617 L290,703 L353,781 L442,863
+            L552,939 L669,1001 L808,1057 L938,1096
+            L1072,1125 L1228,1145
+            L1228,827 L1154,802 L1039,752 L885,660
+            L818,605 L759,542 L715,477 L691,425
+            L671,330 L673,271 L685,216 L704,168
+            L735,114 L783,54 L839,0 Z" />
+
+    <!-- Faixa curva superior direita -->
+    <path
+        android:fillColor="#117887"
+        android:pathData="M1074,0
+            L1018,70 L986,138 L976,192 L986,273
+            L1013,333 L1059,394 L1148,471 L1228,520
+            L1228,0 Z" />
+
+    <!-- Faixa curva inferior principal -->
+    <path
+        android:fillColor="#117887"
+        android:pathData="M0,1175
+            L0,1473 L140,1511 L293,1569 L429,1642
+            L518,1711 L588,1795 L621,1876 L624,1955
+            L611,2005 L591,2047 L888,2047
+            L910,1973 L919,1904 L917,1832 L901,1752
+            L873,1680 L842,1624 L798,1563 L733,1493
+            L661,1432 L591,1383 L514,1338 L412,1289
+            L215,1220 Z" />
+
+    <!-- Faixa curva inferior esquerda -->
+    <path
+        android:fillColor="#117887"
+        android:pathData="M0,1647
+            L0,2047 L328,2047 L354,1988 L358,1936
+            L345,1889 L310,1835 L254,1782 L180,1732
+            L90,1685 Z" />
+
+</vector>
