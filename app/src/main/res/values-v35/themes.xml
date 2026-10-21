@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.Bpd" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/bipando_color</item>
+        <item name="colorPrimaryVariant">@color/black</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color. cursor de texto -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Customize your theme here. -->
+        <item name="ic_color_theme">@color/white</item>
+        <item name="_color_theme_status">?attr/colorPrimary</item>
+        <item name="_color_theme_navigation">@color/white</item>
+    </style>
+
+    <style name="Theme.Bpd.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Bpd_2" parent="Theme.Bpd_4">
+        <item name="colorPrimary">@color/green</item>
+    </style>
+
+    <style name="Theme.Bpd_3" parent="Theme.Bpd">
+        <item name="colorPrimary">@color/red</item>
+    </style>
+
+    <style name="Theme.Bpd_7" parent="Theme.Bpd">
+        <item name="colorPrimary">@color/white</item>
+    </style>
+
+    <style name="Theme.Bpd_4" parent="Theme.Bpd">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+    </style>
+
+    <style name="Theme.Bpd.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Bpd.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="ThemeOverlay.Bipando.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_600</item>
+        <item name="fullscreenTextColor">@color/light_blue_A200</item>
+    </style>
+
+    <!-- Tema inicial da Activity sem APIs descontinuadas para Android 15+ (API 35) -->
+    <style name="Theme.Bpd.Splash" parent="Theme.Bpd">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+</resources>
