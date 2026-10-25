@@ -37,10 +37,21 @@ class FireRegisterDataSource(private val context: Context) : ItemDataSource {
         }
 
         // 👉 Determina o local de gravação baseado no groupId
-        val docRef = if (produto.groupId.isNotEmpty()) {
-            db.collection("groups").document(produto.groupId).collection("products")
+        /*
+        Melhoria futura:
+        Melhora onde grava os dados se ouver membro no grupo grava em db.collection("groups")
+        se nao em db.collection("users")
+        Caso de usos: Se usuario adicionar membro dados produtos são migardo para grupo se o membro for add no grupo pessoal.
+         */
+        val docRef =
+            if (produto.groupId.isNotEmpty()) {
+            db.collection("groups").document(
+                produto.groupId)
+                .collection("products")
         } else {
-            db.collection("users").document(uid).collection("products")
+            db.collection("users").document(
+                uid)
+                .collection("products")
         }
 
         val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else docRef.document().id

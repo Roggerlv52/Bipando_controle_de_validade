@@ -25,6 +25,8 @@ data class PaymentState(
     val anualAvailable: Boolean = false,
     val isEligibleForTrial: Boolean = true,
     val isPremium: Boolean = false,
+    val trialEndsAtMillis: Long? = null,
+    val freeLimit: Int = 100,
     val isLimitReached: Boolean = false,
     val isLoading: Boolean = true,
     val errorMessage: String? = null
@@ -51,7 +53,12 @@ class PaymentViewModel(
                 _uiState.update { state ->
                     val isPremiumNow = state.activePlanId != null || state.isPremium
                     state.copy(
-                        isLimitReached = !isPremiumNow && (count ?: 0) >= 100
+                        isLimitReached = com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(
+                            isPremium = isPremiumNow,
+                            trialEndsAtMillis = state.trialEndsAtMillis,
+                            count = count ?: 0,
+                            freeLimit = state.freeLimit
+                        )
                     )
                 }
             }
@@ -62,7 +69,9 @@ class PaymentViewModel(
         if (billingManager != null) return
 
         val initialPremium = SharedPreferencesManager.isPremium(activity)
-        _uiState.update { it.copy(isPremium = initialPremium) }
+        val trialEndsAt = SharedPreferencesManager.getTrialEndsAt(activity)
+        val freeLimit = SharedPreferencesManager.getFreeLimit(activity)
+        _uiState.update { it.copy(isPremium = initialPremium, trialEndsAtMillis = trialEndsAt, freeLimit = freeLimit) }
 
         billingManager = BillingManager(
             context = activity,

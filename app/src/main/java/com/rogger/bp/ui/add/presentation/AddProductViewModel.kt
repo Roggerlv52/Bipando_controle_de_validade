@@ -167,17 +167,19 @@ class AddProductViewModel(
         
         viewModelScope.launch {
             try {
-                // ✅ VERIFICAÇÃO DE LIMITE PREMIUM
-                if (!SharedPreferencesManager.isPremium(context)) {
-                    val database = com.rogger.bp.data.database.BpDatabase.getDatabase(context)
-                    val totalCount = database.productDao().getGlobalTotalProductsCount()
-                    if (totalCount >= 100) {
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            errorMessage = context.getString(R.string.premium_limit_message)
-                        ) }
-                        return@launch
-                    }
+                // ✅ VERIFICAÇÃO DE LIMITE PREMIUM / TRIAL
+                val isPremium = SharedPreferencesManager.isPremium(context)
+                val trialEndsAt = SharedPreferencesManager.getTrialEndsAt(context)
+                val freeLimit = SharedPreferencesManager.getFreeLimit(context)
+                val database = com.rogger.bp.data.database.BpDatabase.getDatabase(context)
+                val totalCount = database.productDao().getGlobalTotalProductsCount()
+
+                if (com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(isPremium, trialEndsAt, totalCount, freeLimit)) {
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        errorMessage = context.getString(R.string.premium_limit_message, freeLimit)
+                    ) }
+                    return@launch
                 }
 
                 val product = Product(

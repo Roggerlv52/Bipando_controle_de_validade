@@ -273,13 +273,13 @@ fun BipandoNavGraph(navController: NavHostController) {
                 var handled by remember { mutableStateOf(false) }
 
                 val isPremium = SharedPreferencesManager.isPremium(context)
+                val trialEndsAt = SharedPreferencesManager.getTrialEndsAt(context)
+                val freeLimit = SharedPreferencesManager.getFreeLimit(context)
                 val (isLimitReached, setIsLimitReached) = remember { mutableStateOf(false) }
                 
                 LaunchedEffect(Unit) {
-                    if (!isPremium) {
-                        val count = database.productDao().getGlobalTotalProductsCount()
-                        setIsLimitReached(count >= 100)
-                    }
+                    val count = database.productDao().getGlobalTotalProductsCount()
+                    setIsLimitReached(com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(isPremium, trialEndsAt, count, freeLimit))
                 }
 
                 ScannerScreen(

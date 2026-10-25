@@ -6,8 +6,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -21,6 +24,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
@@ -318,7 +327,6 @@ fun HomeScreenContent(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var deleteDialogProducts by remember { mutableStateOf<Pair<List<Product>, String>?>(null) }
     val removingProductUuids = remember { mutableStateListOf<String>() }
-    val limitMessage = stringResource(R.string.premium_limit_message)
 
     // Estado derivado para evitar que o "EmptyState" apareça enquanto itens ainda estão sendo removidos visualmente
     val isListVisuallyEmpty by remember(state.products, removingProductUuids) {
@@ -442,6 +450,15 @@ fun HomeScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(top = 0.9.dp, bottom = totalBottomPadding)
                 ) {
+                    if (state.isTrialActive && state.trialDaysRemaining <= 7 && !state.isPremium) {
+                        item {
+                            TrialWarningBanner(
+                                daysRemaining = state.trialDaysRemaining,
+                                onPaymentClick = { onPaymentClick(false) }
+                            )
+                        }
+                    }
+
                     groupedProducts.forEach { (days, items) ->
                         val isGroupRemoving =
                             items.all { removingProductUuids.contains(it.first.uuid) }
@@ -502,6 +519,56 @@ fun HomeScreenContent(
                             )
                         )
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun TrialWarningBanner(
+    daysRemaining: Int,
+    onPaymentClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                val titleText = when (daysRemaining) {
+                    0 -> stringResource(R.string.trial_ending_today_title)
+                    1 -> stringResource(R.string.trial_ending_one_day_title)
+                    else -> stringResource(R.string.trial_ending_days_title, daysRemaining)
+                }
+                Text(
+                    text = titleText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.trial_ending_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = onPaymentClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(stringResource(R.string.trial_ending_button))
             }
         }
     }

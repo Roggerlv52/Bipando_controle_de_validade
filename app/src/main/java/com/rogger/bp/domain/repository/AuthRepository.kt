@@ -1,6 +1,7 @@
 package com.rogger.bp.domain.repository
 
 import com.rogger.bp.data.model.UserAuth
+import com.rogger.bp.data.model.UserDocumentData
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
@@ -8,4 +9,5 @@ interface AuthRepository {
     fun loginWithGoogle(idToken: String): Flow<Result<UserAuth>>
     fun getCurrentUser(): UserAuth?
     fun logout()
+    fun observeUserDocument(uid: String): Flow<UserDocumentData>
 }

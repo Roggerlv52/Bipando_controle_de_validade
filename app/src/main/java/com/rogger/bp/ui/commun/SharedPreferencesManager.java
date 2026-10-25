@@ -82,6 +82,48 @@ public class SharedPreferencesManager {
         return getPreferences(context).getBoolean("is_premium", false);
     }
 
+    // ✅ Guarda e retorna trialEndsAt (Timestamp em milissegundos)
+    public static void setTrialEndsAt(Context context, Long trialEndsAtMillis) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        if (trialEndsAtMillis != null && trialEndsAtMillis > 0) {
+            editor.putLong("trial_ends_at", trialEndsAtMillis);
+        } else {
+            editor.remove("trial_ends_at");
+        }
+        editor.apply();
+    }
+
+    public static Long getTrialEndsAt(Context context) {
+        SharedPreferences prefs = getPreferences(context);
+        if (prefs.contains("trial_ends_at")) {
+            long val = prefs.getLong("trial_ends_at", 0L);
+            return val > 0 ? val : null;
+        }
+        return null;
+    }
+
+    // ✅ Guarda e retorna limite de produtos gratuito (default 100)
+    public static void setFreeLimit(Context context, int limit) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt("free_limit", limit);
+        editor.apply();
+    }
+
+    public static int getFreeLimit(Context context) {
+        return getPreferences(context).getInt("free_limit", 100);
+    }
+
+    // ✅ Guarda e retorna promoActive
+    public static void setPromoActive(Context context, boolean active) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("promo_active", active);
+        editor.apply();
+    }
+
+    public static boolean isPromoActive(Context context) {
+        return getPreferences(context).getBoolean("promo_active", false);
+    }
+
     // ✅ Guarda a chave do plano ativo selecionado/comprado
     public static void setActivePlanKey(Context context, String planKey) {
         SharedPreferences.Editor editor = getPreferences(context).edit();

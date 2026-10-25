@@ -28,6 +28,11 @@ data class ProfileState(
     val totalProductsCount: Int = 0,
     val deletedProductsCount: Int = 0,
     val isPremium: Boolean = false,
+    val trialEndsAtMillis: Long? = null,
+    val freeLimit: Int = 100,
+    val isTrialActive: Boolean = false,
+    val trialDaysRemaining: Int = 0,
+    val hasUnlimitedAccess: Boolean = false,
     val themeType: BipandoThemeType = BipandoThemeType.CLASSIC,
     val isBeepEnabled: Boolean = false,
     val isNotificationEnabled: Boolean = false,
@@ -109,6 +114,12 @@ class ProfileViewModel(
         val userInfo = SharedPreferencesManager.getUserInfo(context)
         val userId = userInfo.getOrNull(0) ?: ""
         
+        val trialEndsAt = SharedPreferencesManager.getTrialEndsAt(context)
+        val freeLimit = SharedPreferencesManager.getFreeLimit(context)
+        val isTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(trialEndsAt)
+        val daysRemaining = com.rogger.bp.domain.policy.AccessPolicy.getTrialDaysRemaining(trialEndsAt)
+        val hasUnlimited = com.rogger.bp.domain.policy.AccessPolicy.hasUnlimitedAccess(isPremium, trialEndsAt)
+
         _uiState.update {
             it.copy(
                 userUid = userId,
@@ -116,6 +127,11 @@ class ProfileViewModel(
                 userEmail = userInfo.getOrNull(3) ?: "",
                 userPhotoUrl = userInfo.getOrNull(2) ?: "",
                 isPremium = isPremium,
+                trialEndsAtMillis = trialEndsAt,
+                freeLimit = freeLimit,
+                isTrialActive = isTrialActive,
+                trialDaysRemaining = daysRemaining,
+                hasUnlimitedAccess = hasUnlimited,
                 themeType = themeType,
                 isBeepEnabled = beepState,
                 isNotificationEnabled = notifEnabled,
@@ -131,17 +147,28 @@ class ProfileViewModel(
         _uiState.update { it.copy(isLoading = true) }
         
         profileRepository.getUserProfile(object : FetchProfileCallback {
-            override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean) {
+            override fun onSuccess(name: String, email: String, photoUrl: String, isPremium: Boolean, trialEndsAtMillis: Long?) {
+                val currentFreeLimit = SharedPreferencesManager.getFreeLimit(context)
+                val currentIsTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(trialEndsAtMillis)
+                val currentDaysRemaining = com.rogger.bp.domain.policy.AccessPolicy.getTrialDaysRemaining(trialEndsAtMillis)
+                val currentHasUnlimited = com.rogger.bp.domain.policy.AccessPolicy.hasUnlimitedAccess(isPremium, trialEndsAtMillis)
+
                 _uiState.update { 
                     it.copy(
                         userName = name,
                         userEmail = email,
                         userPhotoUrl = photoUrl,
-                        isPremium = isPremium
+                        isPremium = isPremium,
+                        trialEndsAtMillis = trialEndsAtMillis,
+                        freeLimit = currentFreeLimit,
+                        isTrialActive = currentIsTrialActive,
+                        trialDaysRemaining = currentDaysRemaining,
+                        hasUnlimitedAccess = currentHasUnlimited
                     )
                 }
                 SharedPreferencesManager.saveUserInfo(context, userId, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
+                SharedPreferencesManager.setTrialEndsAt(context, trialEndsAtMillis)
             }
             override fun onFailure(message: String) {
                 _uiState.update { it.copy(errorMessage = message) }

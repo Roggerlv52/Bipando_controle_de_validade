@@ -53,6 +53,11 @@ data class HomeState(
     val userEmail: String = "",
     val userPhoto: String = "",
     val isPremium: Boolean = false,
+    val trialEndsAtMillis: Long? = null,
+    val freeLimit: Int = 100,
+    val isTrialActive: Boolean = false,
+    val trialDaysRemaining: Int = 0,
+    val hasUnlimitedAccess: Boolean = false,
     val activeCount: Int = 0,
     val globalTotalCount: Int = 0,
     val isLimitReached: Boolean = false,
@@ -87,12 +92,31 @@ class HomeViewModel(
     private val _categoryId = MutableStateFlow<String?>(null)
 
     init {
-        // Carrega estado inicial de sincronização síncronamente no init para evitar flicker de troca de canal de Flow
+        // Carrega estado inicial síncronamente no init para evitar flicker
         val initialWorkMode = SharedPreferencesManager.getWorkMode(context)
         val initialGroupId =
             if (initialWorkMode == 1) SharedPreferencesManager.getActiveGroupId(context) else ""
 
-        _uiState.update { it.copy(workMode = initialWorkMode, groupId = initialGroupId) }
+        val initialIsPremium = SharedPreferencesManager.isPremium(context)
+        val initialTrialEndsAt = SharedPreferencesManager.getTrialEndsAt(context)
+        val initialFreeLimit = SharedPreferencesManager.getFreeLimit(context)
+
+        val isTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(initialTrialEndsAt)
+        val daysRemaining = com.rogger.bp.domain.policy.AccessPolicy.getTrialDaysRemaining(initialTrialEndsAt)
+        val hasUnlimited = com.rogger.bp.domain.policy.AccessPolicy.hasUnlimitedAccess(initialIsPremium, initialTrialEndsAt)
+
+        _uiState.update {
+            it.copy(
+                workMode = initialWorkMode,
+                groupId = initialGroupId,
+                isPremium = initialIsPremium,
+                trialEndsAtMillis = initialTrialEndsAt,
+                freeLimit = initialFreeLimit,
+                isTrialActive = isTrialActive,
+                trialDaysRemaining = daysRemaining,
+                hasUnlimitedAccess = hasUnlimited
+            )
+        }
 
         updateUserRole(context, initialGroupId, initialWorkMode)
 
@@ -100,6 +124,8 @@ class HomeViewModel(
         observeCategories()
         observeCounters()
         observeGroupChanges()
+        startUserDocumentObserver(context)
+        fetchConfigPlans(context)
 
         // Inicia o listener de convites globalmente se houver usuário
         val user = authRepository.getCurrentUser()
@@ -109,6 +135,66 @@ class HomeViewModel(
                 startInvitationListener(context)
             }
         }
+    }
+
+    private fun startUserDocumentObserver(context: Context) {
+        val user = authRepository.getCurrentUser() ?: return
+        authRepository.observeUserDocument(user.uuid)
+            .onEach { userDoc ->
+                if (!isLoggingOut) {
+                    SharedPreferencesManager.setPremiumState(context, userDoc.isPremium)
+                    SharedPreferencesManager.setTrialEndsAt(context, userDoc.trialEndsAtMillis)
+                    val freeLimit = SharedPreferencesManager.getFreeLimit(context)
+
+                    val isTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(userDoc.trialEndsAtMillis)
+                    val daysRemaining = com.rogger.bp.domain.policy.AccessPolicy.getTrialDaysRemaining(userDoc.trialEndsAtMillis)
+                    val hasUnlimited = com.rogger.bp.domain.policy.AccessPolicy.hasUnlimitedAccess(userDoc.isPremium, userDoc.trialEndsAtMillis)
+
+                    _uiState.update { state ->
+                        val isLimitReached = com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(
+                            userDoc.isPremium,
+                            userDoc.trialEndsAtMillis,
+                            state.globalTotalCount,
+                            freeLimit
+                        )
+                        state.copy(
+                            isPremium = userDoc.isPremium,
+                            trialEndsAtMillis = userDoc.trialEndsAtMillis,
+                            freeLimit = freeLimit,
+                            isTrialActive = isTrialActive,
+                            trialDaysRemaining = daysRemaining,
+                            hasUnlimitedAccess = hasUnlimited,
+                            isLimitReached = isLimitReached
+                        )
+                    }
+                }
+            }
+            .catch { android.util.Log.e("HomeViewModel", "Erro ao observar documento do usuário", it) }
+            .launchIn(viewModelScope)
+    }
+
+    private fun fetchConfigPlans(context: Context) {
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("config")
+            .document("plans")
+            .get()
+            .addOnSuccessListener { doc ->
+                if (doc != null && doc.exists()) {
+                    val freeLimit = doc.getLong("freeLimit")?.toInt() ?: 100
+                    val promoActive = doc.getBoolean("promoActive") ?: false
+                    SharedPreferencesManager.setFreeLimit(context, freeLimit)
+                    SharedPreferencesManager.setPromoActive(context, promoActive)
+                    _uiState.update { state ->
+                        val isLimitReached = com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(
+                            state.isPremium,
+                            state.trialEndsAtMillis,
+                            state.globalTotalCount,
+                            freeLimit
+                        )
+                        state.copy(freeLimit = freeLimit, isLimitReached = isLimitReached)
+                    }
+                }
+            }
     }
 
     private fun observeGroupChanges() {
@@ -258,19 +344,38 @@ class HomeViewModel(
                 name: String,
                 email: String,
                 photoUrl: String,
-                isPremium: Boolean
+                isPremium: Boolean,
+                trialEndsAtMillis: Long?
             ) {
-                _uiState.update {
-                    it.copy(
+                val freeLimit = SharedPreferencesManager.getFreeLimit(context)
+                val isTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(trialEndsAtMillis)
+                val daysRemaining = com.rogger.bp.domain.policy.AccessPolicy.getTrialDaysRemaining(trialEndsAtMillis)
+                val hasUnlimited = com.rogger.bp.domain.policy.AccessPolicy.hasUnlimitedAccess(isPremium, trialEndsAtMillis)
+
+                _uiState.update { state ->
+                    val isLimitReached = com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(
+                        isPremium,
+                        trialEndsAtMillis,
+                        state.globalTotalCount,
+                        freeLimit
+                    )
+                    state.copy(
                         userName = name,
                         userEmail = email,
                         userPhoto = photoUrl,
-                        isPremium = isPremium
+                        isPremium = isPremium,
+                        trialEndsAtMillis = trialEndsAtMillis,
+                        freeLimit = freeLimit,
+                        isTrialActive = isTrialActive,
+                        trialDaysRemaining = daysRemaining,
+                        hasUnlimitedAccess = hasUnlimited,
+                        isLimitReached = isLimitReached
                     )
                 }
                 val uid = authRepository.getCurrentUser()?.uuid ?: ""
                 SharedPreferencesManager.saveUserInfo(context, uid, name, photoUrl, email)
                 SharedPreferencesManager.setPremiumState(context, isPremium)
+                SharedPreferencesManager.setTrialEndsAt(context, trialEndsAtMillis)
 
                 startInvitationListener(context)
             }
@@ -410,12 +515,18 @@ class HomeViewModel(
             }.collect {}
         }
 
-        // Novo observador para o limite global (Premium/Free)
+        // Observador para o limite global (Premium/Trial/Free)
         homeRepository.getGlobalTotalProductsCountFlow().onEach { count ->
             _uiState.update { state ->
+                val isLimitReached = com.rogger.bp.domain.policy.AccessPolicy.isLimitReached(
+                    state.isPremium,
+                    state.trialEndsAtMillis,
+                    count,
+                    state.freeLimit
+                )
                 state.copy(
                     globalTotalCount = count,
-                    isLimitReached = !state.isPremium && count >= 100
+                    isLimitReached = isLimitReached
                 )
             }
         }.launchIn(viewModelScope)

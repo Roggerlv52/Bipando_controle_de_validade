@@ -85,7 +85,7 @@ class SplashViewModel(
                                 if (currentUser != null) {
                                     isUserLoggedIn = true
 
-                                    // A. Carrega e salva as informações básicas do perfil
+                                    // A. Carrega e salva as informações básicas do perfil e plano
                                     try {
                                         val userDoc = firestore.collection("users").document(currentUser.uid).get().await()
                                         if (userDoc.exists()) {
@@ -93,12 +93,26 @@ class SplashViewModel(
                                             val email = userDoc.getString("email") ?: currentUser.email ?: ""
                                             val photoUrl = userDoc.getString("photoUrl") ?: currentUser.photoUrl?.toString() ?: ""
                                             val isPremium = userDoc.getBoolean("isPremium") ?: false
+                                            val trialEndsAtTs = userDoc.getTimestamp("trialEndsAt")
+                                            val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
 
                                             SharedPreferencesManager.saveUserInfo(appContext, currentUser.uid, name, photoUrl, email)
                                             SharedPreferencesManager.setPremiumState(appContext, isPremium)
+                                            SharedPreferencesManager.setTrialEndsAt(appContext, trialEndsAtMillis)
+                                        }
+
+                                        // Carrega configurações globais /config/plans
+                                        val configDoc = firestore.collection("config").document("plans").get().await()
+                                        if (configDoc.exists()) {
+                                            val freeLimit = configDoc.getLong("freeLimit")?.toInt() ?: 100
+                                            val promoActive = configDoc.getBoolean("promoActive") ?: false
+                                            SharedPreferencesManager.setFreeLimit(appContext, freeLimit)
+                                            SharedPreferencesManager.setPromoActive(appContext, promoActive)
+                                        } else {
+                                            SharedPreferencesManager.setFreeLimit(appContext, 100)
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("SplashViewModel", "Erro ao buscar perfil do Firestore", e)
+                                        Log.e("SplashViewModel", "Erro ao buscar perfil/configurações do Firestore", e)
                                     }
 
                                     // B. Sincroniza grupos e modo de trabalho do usuário

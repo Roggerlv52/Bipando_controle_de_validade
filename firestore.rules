@@ -18,7 +18,9 @@ service cloud.firestore {
     // 1. Usuários
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isOwner(userId);
+      allow create: if isOwner(userId) && !request.resource.data.keys().hasAny(['trialStartedAt', 'trialEndsAt']);
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['trialStartedAt', 'trialEndsAt']);
+      allow delete: if isOwner(userId);
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
@@ -91,7 +93,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // 4. COLLECTION GROUP QUERIES
+    // 4. Configurações Globais
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // 5. COLLECTION GROUP QUERIES
 
     match /{path=**}/invitations/{invitationId} {
       allow read: if isSignedIn() && (

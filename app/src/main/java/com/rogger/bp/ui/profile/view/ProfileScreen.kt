@@ -491,7 +491,59 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                     )
                 }
             }
+        } else if (state.isTrialActive) {
+            Column {
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.profile_trial_days_remaining_card, state.trialDaysRemaining),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.profile_trial_active_subtitle),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onPaymentClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.profile_view_premium_plans))
+                }
+            }
         } else {
+            val freeLimit = state.freeLimit.coerceAtLeast(1)
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -504,28 +556,28 @@ fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "${state.totalProductsCount}/100",
+                        text = "${state.totalProductsCount}/$freeLimit",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (state.totalProductsCount >= 100) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (state.totalProductsCount >= freeLimit) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 LinearProgressIndicator(
-                    progress = { (state.totalProductsCount.toFloat() / 100f).coerceIn(0f, 1f) },
+                    progress = { (state.totalProductsCount.toFloat() / freeLimit.toFloat()).coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp)),
-                    color = if (state.totalProductsCount >= 100) Color.Red else Color(0xFF8BC34A),
+                    color = if (state.totalProductsCount >= freeLimit) Color.Red else Color(0xFF8BC34A),
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
 
-                if (state.totalProductsCount >= 90) {
+                if (state.totalProductsCount >= (freeLimit * 0.9).toInt()) {
                     Text(
-                        text = if (state.totalProductsCount >= 100) 
+                        text = if (state.totalProductsCount >= freeLimit) 
                             stringResource(R.string.profile_limit_reached_msg) 
                             else stringResource(R.string.profile_approaching_limit_msg),
                         style = MaterialTheme.typography.labelSmall,

@@ -35,7 +35,9 @@ class ProfileRepository {
                         }
 
                         val isPremium = document.getBoolean("isPremium") ?: false
-                        callback.onSuccess(name, email, photoUrl, isPremium)
+                        val trialEndsAtTs = document.getTimestamp("trialEndsAt")
+                        val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
+                        callback.onSuccess(name, email, photoUrl, isPremium, trialEndsAtMillis)
                     } else {
                         callback.onFailure("Perfil não encontrado no Firestore")
                     }

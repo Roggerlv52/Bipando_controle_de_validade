@@ -3,7 +3,7 @@
     <string name="app_name" translatable="false">Bipando</string>
     <!-- Estado del límite en la navegación lateral -->
     <string name="premium_active_status">Plan Premium Activo (%1$d registrados)</string>
-    <string name="free_limit_status">Límite de Productos: %1$d/100</string>
+    <string name="free_limit_status">Límite de Productos: %1$d/%2$d</string>
 
     <!-- Flujo de Compartir la Aplicación -->
     <string name="share_app_message">¡Echa un vistazo a Bipando - Control de Caducidad! Evita el desperdicio de productos de forma sencilla y rápida.\n\nDescárgalo ahora en la Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
@@ -124,7 +124,7 @@
 
     <!-- Alertas de Limite Premium -->
     <string name="premium_limit_title">Límite gratuito alcanzado</string>
-    <string name="premium_limit_message">Has alcanzado el límite máximo de 100 productos en el plan gratuito. ¡Adquiere el Plan Premium para disfrutar de capacidad ilimitada y continuar gestionando tu inventario de forma profesional!</string>
+    <string name="premium_limit_message">Has alcanzado el límite máximo de %1$d productos en el plan gratuito. ¡Adquiere el Plan Premium para disfrutar de capacidad ilimitada y continuar gestionando tu inventario de forma profesional!</string>
     <string name="premium_limit_positive">Ver Planes Premium</string>
     <string name="premium_limit_negative">Más tarde</string>
     <string name="shared_app">"Compartir "</string>
@@ -410,11 +410,22 @@
     <string name="msg_barcode_copied">¡Código de barras copiado!</string>
     <string name="tap_to_copy">Toque para copiar</string>
 
-    <!-- 30-Day Promotion -->
-    <string name="promo_badge_30_days">🎁 30 DÍAS GRATIS</string>
-    <string name="promo_subtitle_30_days">¡Nuevos suscriptores obtienen 30 días de prueba gratis!</string>
-    <string name="plan_mensal_trial_badge">30 Días Gratis</string>
-    <string name="trial_duration_default_text">30 días gratis, luego %1$s/mes</string>
+    <!-- Promoción / Trial -->
+    <string name="promo_badge_30_days">🎁 PRUEBA GRATIS ACTIVA</string>
+    <string name="promo_subtitle_30_days">¡Disfruta de tu período de prueba gratis en Bipando!</string>
+    <string name="plan_mensal_trial_badge">Plan Bipando</string>
+    <string name="trial_duration_default_text">Período de prueba gratis activo</string>
+
+    <!-- Avisos y Cards de Prueba Gratis -->
+    <string name="trial_ending_today_title">¡Tu prueba gratis termina hoy!</string>
+    <string name="trial_ending_one_day_title">¡Tu prueba gratis termina en 1 día!</string>
+    <string name="trial_ending_days_title">¡Tu prueba gratis termina en %1$d días!</string>
+    <string name="trial_ending_subtitle">Suscríbete a Premium para continuar registrando productos sin límites.</string>
+    <string name="trial_ending_button">Hazte Premium</string>
+
+    <string name="profile_trial_days_remaining_card">Prueba gratis: %1$d días restantes</string>
+    <string name="profile_trial_active_subtitle">Acceso ilimitado activado por el servidor</string>
+    <string name="profile_view_premium_plans">Ver Planes Premium</string>
     <!-- Category Image Selection -->
     <string name="category_select_image_title">Elija una imagen para la categoría</string>
 

@@ -141,4 +141,28 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
     override fun logout() {
         firebaseAuth.signOut()
     }
+
+    override fun observeUserDocument(uid: String): Flow<com.rogger.bp.data.model.UserDocumentData> = callbackFlow {
+        if (uid.isEmpty()) {
+            trySend(com.rogger.bp.data.model.UserDocumentData())
+            awaitClose()
+            return@callbackFlow
+        }
+        val firestore = FirebaseFirestore.getInstance()
+        val userRef = firestore.collection("users").document(uid)
+        val listener = userRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                return@addSnapshotListener
+            }
+            if (snapshot != null && snapshot.exists()) {
+                val isPremium = snapshot.getBoolean("isPremium") ?: false
+                val trialEndsAtTs = snapshot.getTimestamp("trialEndsAt")
+                val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
+                trySend(com.rogger.bp.data.model.UserDocumentData(isPremium = isPremium, trialEndsAtMillis = trialEndsAtMillis))
+            }
+        }
+        awaitClose {
+            listener.remove()
+        }
+    }
 }

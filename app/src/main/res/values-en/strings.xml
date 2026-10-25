@@ -2,7 +2,7 @@
 <resources>
     <!-- Limit status in side navigation -->
     <string name="premium_active_status">Premium Plan Active (%1$d registered)</string>
-    <string name="free_limit_status">Product Limit: %1$d/100</string>
+    <string name="free_limit_status">Product Limit: %1$d/%2$d</string>
 
     <!-- App Sharing Flow -->
     <string name="share_app_message">Check out Bipando - Expiration Date Control! Prevent product waste simply and quickly.\n\nDownload now on the Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
@@ -123,7 +123,7 @@ lost and when you create your account again using the same email, you will need 
 
     <!-- Premium Limit Alerts -->
     <string name="premium_limit_title">Free Limit Reached</string>
-    <string name="premium_limit_message">You have reached the maximum limit of 100 products in the free plan. Purchase the Premium Plan to enjoy unlimited capacity and continue managing your inventory professionally!</string>
+    <string name="premium_limit_message">You have reached the maximum limit of %1$d products in the free plan. Purchase the Premium Plan to enjoy unlimited capacity and continue managing your inventory professionally!</string>
     <string name="premium_limit_positive">View Premium Plans</string>
     <string name="premium_limit_negative">Later</string>
 
@@ -411,11 +411,22 @@ lost and when you create your account again using the same email, you will need 
     <string name="msg_barcode_copied">Barcode copied!</string>
     <string name="tap_to_copy">Tap to copy</string>
 
-    <!-- 30-Day Promotion -->
-    <string name="promo_badge_30_days">🎁 30 DAYS FREE</string>
-    <string name="promo_subtitle_30_days">New subscribers get a 30-day free trial!</string>
-    <string name="plan_mensal_trial_badge">30 Days Free</string>
-    <string name="trial_duration_default_text">30 days free, then %1$s/month</string>
+    <!-- Promotion / Trial -->
+    <string name="promo_badge_30_days">🎁 FREE TRIAL ACTIVE</string>
+    <string name="promo_subtitle_30_days">Enjoy your free trial period on Bipando!</string>
+    <string name="plan_mensal_trial_badge">Bipando Plan</string>
+    <string name="trial_duration_default_text">Free trial period active</string>
+
+    <!-- Trial Warning and Cards -->
+    <string name="trial_ending_today_title">Your free trial ends today!</string>
+    <string name="trial_ending_one_day_title">Your free trial ends in 1 day!</string>
+    <string name="trial_ending_days_title">Your free trial ends in %1$d days!</string>
+    <string name="trial_ending_subtitle">Subscribe to Premium to keep registering unlimited products.</string>
+    <string name="trial_ending_button">Get Premium</string>
+
+    <string name="profile_trial_days_remaining_card">Free trial: %1$d days remaining</string>
+    <string name="profile_trial_active_subtitle">Unlimited access enabled by server</string>
+    <string name="profile_view_premium_plans">View Premium Plans</string>
 
     <!-- Category Image Selection -->
     <string name="category_select_image_title">Select an image for category</string>
