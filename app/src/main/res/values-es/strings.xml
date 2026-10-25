@@ -155,7 +155,7 @@
     <string name="plan_active_badge">ACTIVO</string>
     <string name="plan_unavailable_message">Planes no disponibles por el momento</string>
     <string name="select_plan">Seleccione un plan</string>
-    <string name="information_payment">30 días gratis, luego 14,99 R$/mes</string>
+    <string name="information_payment">Suscríbete al plan para seguir disfrutando de los beneficios</string>
     <string name="information_subscription">La suscripción se renovará automáticamente (mensual, semestral o anual) hasta que se cancele en la configuración de la Play Store.</string>
     <string name="add_product">Añadir producto</string>
     <string name="menu_gallery">Galería</string>
@@ -417,6 +417,9 @@
     <string name="trial_duration_default_text">Período de prueba gratis activo</string>
 
     <!-- Avisos y Cards de Prueba Gratis -->
+    <string name="trial_welcome_title">Bienvenido</string>
+    <string name="trial_welcome_message">Has ganado %1$d días gratis con productos ilimitados</string>
+    <string name="trial_ended_message">Tu prueba gratis ha terminado</string>
     <string name="trial_ending_today_title">¡Tu prueba gratis termina hoy!</string>
     <string name="trial_ending_one_day_title">¡Tu prueba gratis termina en 1 día!</string>
     <string name="trial_ending_days_title">¡Tu prueba gratis termina en %1$d días!</string>
@@ -424,7 +427,7 @@
     <string name="trial_ending_button">Hazte Premium</string>
 
     <string name="profile_trial_days_remaining_card">Prueba gratis: %1$d días restantes</string>
-    <string name="profile_trial_active_subtitle">Acceso ilimitado activado por el servidor</string>
+    <string name="profile_trial_active_subtitle">Registro ilimitado de productos por código de barras</string>
     <string name="profile_view_premium_plans">Ver Planes Premium</string>
     <!-- Category Image Selection -->
     <string name="category_select_image_title">Elija una imagen para la categoría</string>

@@ -20,25 +20,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.IconButton
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import com.rogger.bp.ui.commun.SharedPreferencesManager
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -327,6 +332,38 @@ fun HomeScreenContent(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var deleteDialogProducts by remember { mutableStateOf<Pair<List<Product>, String>?>(null) }
     val removingProductUuids = remember { mutableStateListOf<String>() }
+    var trialBannerDismissed by remember { mutableStateOf(false) }
+    var showWelcomeDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isTrialActive) {
+        if (state.isTrialActive && !SharedPreferencesManager.hasSeenTrialWelcome(context)) {
+            showWelcomeDialog = true
+        }
+    }
+
+    if (showWelcomeDialog) {
+        val n = if (state.trialStartedAtMillis != null && state.trialEndsAtMillis != null) {
+            ((state.trialEndsAtMillis - state.trialStartedAtMillis) / (1000L * 60 * 60 * 24)).toInt().coerceAtLeast(1)
+        } else {
+            state.trialDaysRemaining.coerceAtLeast(1)
+        }
+        AlertDialog(
+            onDismissRequest = {
+                SharedPreferencesManager.setSeenTrialWelcome(context, true)
+                showWelcomeDialog = false
+            },
+            title = { Text(stringResource(R.string.trial_welcome_title)) },
+            text = { Text(stringResource(R.string.trial_welcome_message, n)) },
+            confirmButton = {
+                Button(onClick = {
+                    SharedPreferencesManager.setSeenTrialWelcome(context, true)
+                    showWelcomeDialog = false
+                }) {
+                    Text(stringResource(R.string.dialog_button_accept))
+                }
+            }
+        )
+    }
 
     // Estado derivado para evitar que o "EmptyState" apareça enquanto itens ainda estão sendo removidos visualmente
     val isListVisuallyEmpty by remember(state.products, removingProductUuids) {
@@ -450,11 +487,12 @@ fun HomeScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(top = 0.9.dp, bottom = totalBottomPadding)
                 ) {
-                    if (state.isTrialActive && state.trialDaysRemaining <= 7 && !state.isPremium) {
+                    if (state.isTrialActive && state.trialDaysRemaining <= 7 && !state.isPremium && !trialBannerDismissed) {
                         item {
                             TrialWarningBanner(
                                 daysRemaining = state.trialDaysRemaining,
-                                onPaymentClick = { onPaymentClick(false) }
+                                onPaymentClick = { onPaymentClick(false) },
+                                onDismiss = { trialBannerDismissed = true }
                             )
                         }
                     }
@@ -527,7 +565,8 @@ fun HomeScreenContent(
 @Composable
 fun TrialWarningBanner(
     daysRemaining: Int,
-    onPaymentClick: () -> Unit
+    onPaymentClick: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -537,38 +576,54 @@ fun TrialWarningBanner(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                val titleText = when (daysRemaining) {
-                    0 -> stringResource(R.string.trial_ending_today_title)
-                    1 -> stringResource(R.string.trial_ending_one_day_title)
-                    else -> stringResource(R.string.trial_ending_days_title, daysRemaining)
-                }
-                Text(
-                    text = titleText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = stringResource(R.string.trial_ending_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = onPaymentClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 8.dp, end = 8.dp),
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(stringResource(R.string.trial_ending_button))
+                IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cd_close),
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    val titleText = when (daysRemaining) {
+                        0 -> stringResource(R.string.trial_ending_today_title)
+                        1 -> stringResource(R.string.trial_ending_one_day_title)
+                        else -> stringResource(R.string.trial_ending_days_title, daysRemaining)
+                    }
+                    Text(
+                        text = titleText,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.trial_ending_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onPaymentClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(stringResource(R.string.trial_ending_button))
+                }
             }
         }
     }

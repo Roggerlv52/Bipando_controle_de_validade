@@ -152,7 +152,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="plan_active_badge">ACTIVE</string>
     <string name="plan_unavailable_message">Plans currently unavailable</string>
     <string name="select_plan">Select a plan</string>
-    <string name="information_payment">30 days free, then R$ 14.99/month</string>
+    <string name="information_payment">Subscribe to the plan to continue enjoying benefits</string>
     <string name="information_subscription">The subscription will automatically renew (monthly, semi-annually, or annually) until canceled in the Play Store settings.</string>
 
     <string name="add_product">Add Product</string>
@@ -418,6 +418,9 @@ lost and when you create your account again using the same email, you will need 
     <string name="trial_duration_default_text">Free trial period active</string>
 
     <!-- Trial Warning and Cards -->
+    <string name="trial_welcome_title">Welcome</string>
+    <string name="trial_welcome_message">You got %1$d free days with unlimited products</string>
+    <string name="trial_ended_message">Your free trial has ended</string>
     <string name="trial_ending_today_title">Your free trial ends today!</string>
     <string name="trial_ending_one_day_title">Your free trial ends in 1 day!</string>
     <string name="trial_ending_days_title">Your free trial ends in %1$d days!</string>
@@ -425,7 +428,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="trial_ending_button">Get Premium</string>
 
     <string name="profile_trial_days_remaining_card">Free trial: %1$d days remaining</string>
-    <string name="profile_trial_active_subtitle">Unlimited access enabled by server</string>
+    <string name="profile_trial_active_subtitle">Unlimited product registration by barcode</string>
     <string name="profile_view_premium_plans">View Premium Plans</string>
 
     <!-- Category Image Selection -->

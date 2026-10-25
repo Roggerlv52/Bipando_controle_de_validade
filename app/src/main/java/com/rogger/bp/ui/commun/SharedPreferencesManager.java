@@ -102,7 +102,15 @@ public class SharedPreferencesManager {
         return null;
     }
 
-    // ✅ Guarda e retorna limite de produtos gratuito (default 100)
+    public static void setSeenTrialWelcome(Context context, boolean seen) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("seen_trial_welcome", seen);
+        editor.apply();
+    }
+
+    public static boolean hasSeenTrialWelcome(Context context) {
+        return getPreferences(context).getBoolean("seen_trial_welcome", false);
+    }
     public static void setFreeLimit(Context context, int limit) {
         SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putInt("free_limit", limit);

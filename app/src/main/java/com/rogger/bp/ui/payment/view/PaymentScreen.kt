@@ -97,7 +97,18 @@ fun PaymentScreen(
 
                     if (showLimitWarning) {
                         Text(
-                            text = stringResource(id = R.string.premium_limit_message),
+                            text = stringResource(id = R.string.premium_limit_message, state.freeLimit),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
+                    val isTrialEnded = state.trialEndsAtMillis != null && !com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(state.trialEndsAtMillis) && !state.isPremium
+                    if (isTrialEnded) {
+                        Text(
+                            text = stringResource(id = R.string.trial_ended_message),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,

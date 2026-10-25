@@ -170,7 +170,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="plan_active_badge">ATIVO</string>
     <string name="plan_unavailable_message">Planos indisponíveis no momento</string>
     <string name="select_plan">Selecione um plano</string>
-    <string name="information_payment">30 dias grátis, depois R$ 14,99/mês</string>
+    <string name="information_payment">Assine o plano para continuar aproveitando os benefícios</string>
     <string name="information_subscription">A assinatura será renovada automaticamente (mensal, semestral ou anual) até ser cancelada nas configurações da Play Store.</string>
     <string name="add_product">Adicionar Produto</string>
     <string name="menu_gallery">Galeria</string>
@@ -436,6 +436,9 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="trial_duration_default_text">Período de teste grátis ativo</string>
 
     <!-- Avisos e Cards de Teste Grátis -->
+    <string name="trial_welcome_title">Boas-vindas</string>
+    <string name="trial_welcome_message">Você ganhou %1$d dias grátis com produtos ilimitados</string>
+    <string name="trial_ended_message">Seu teste grátis terminou</string>
     <string name="trial_ending_today_title">Seu teste grátis termina hoje!</string>
     <string name="trial_ending_one_day_title">Seu teste grátis termina em 1 dia!</string>
     <string name="trial_ending_days_title">Seu teste grátis termina em %1$d dias!</string>
@@ -443,7 +446,7 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="trial_ending_button">Seja Premium</string>
 
     <string name="profile_trial_days_remaining_card">Teste grátis: %1$d dias restantes</string>
-    <string name="profile_trial_active_subtitle">Acesso ilimitado ativado pelo servidor</string>
+    <string name="profile_trial_active_subtitle">Cadastro ilimitado de produtos por codigo de barras</string>
     <string name="profile_view_premium_plans">Ver Planos Premium</string>
 
     <!-- Category Image Selection -->

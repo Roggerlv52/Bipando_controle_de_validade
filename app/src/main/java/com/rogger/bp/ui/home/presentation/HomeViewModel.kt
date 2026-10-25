@@ -54,6 +54,7 @@ data class HomeState(
     val userPhoto: String = "",
     val isPremium: Boolean = false,
     val trialEndsAtMillis: Long? = null,
+    val trialStartedAtMillis: Long? = null,
     val freeLimit: Int = 100,
     val isTrialActive: Boolean = false,
     val trialDaysRemaining: Int = 0,
@@ -160,6 +161,7 @@ class HomeViewModel(
                         state.copy(
                             isPremium = userDoc.isPremium,
                             trialEndsAtMillis = userDoc.trialEndsAtMillis,
+                            trialStartedAtMillis = userDoc.trialStartedAtMillis,
                             freeLimit = freeLimit,
                             isTrialActive = isTrialActive,
                             trialDaysRemaining = daysRemaining,
