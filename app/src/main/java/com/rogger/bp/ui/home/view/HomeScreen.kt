@@ -335,8 +335,9 @@ fun HomeScreenContent(
     var trialBannerDismissed by remember { mutableStateOf(false) }
     var showWelcomeDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.isTrialActive) {
-        if (state.isTrialActive && !SharedPreferencesManager.hasSeenTrialWelcome(context)) {
+    LaunchedEffect(state.isTrialActive, state.userName) {
+        val currentUid = SharedPreferencesManager.getUserInfo(context).getOrNull(0) ?: ""
+        if (state.isTrialActive && !SharedPreferencesManager.hasSeenTrialWelcome(context, currentUid)) {
             showWelcomeDialog = true
         }
     }
@@ -347,18 +348,24 @@ fun HomeScreenContent(
         } else {
             state.trialDaysRemaining.coerceAtLeast(1)
         }
+        val currentUid = SharedPreferencesManager.getUserInfo(context).getOrNull(0) ?: ""
+
+        val dismissWelcome = {
+            SharedPreferencesManager.setSeenTrialWelcome(context, currentUid, true)
+            showWelcomeDialog = false
+            if (currentUid.isNotEmpty()) {
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("users").document(currentUid)
+                    .update("seenTrialWelcome", true)
+            }
+        }
+
         AlertDialog(
-            onDismissRequest = {
-                SharedPreferencesManager.setSeenTrialWelcome(context, true)
-                showWelcomeDialog = false
-            },
+            onDismissRequest = { dismissWelcome() },
             title = { Text(stringResource(R.string.trial_welcome_title)) },
             text = { Text(stringResource(R.string.trial_welcome_message, n)) },
             confirmButton = {
-                Button(onClick = {
-                    SharedPreferencesManager.setSeenTrialWelcome(context, true)
-                    showWelcomeDialog = false
-                }) {
+                Button(onClick = { dismissWelcome() }) {
                     Text(stringResource(R.string.dialog_button_accept))
                 }
             }

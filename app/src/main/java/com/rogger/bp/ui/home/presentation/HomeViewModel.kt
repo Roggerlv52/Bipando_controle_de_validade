@@ -145,6 +145,9 @@ class HomeViewModel(
                 if (!isLoggingOut) {
                     SharedPreferencesManager.setPremiumState(context, userDoc.isPremium)
                     SharedPreferencesManager.setTrialEndsAt(context, userDoc.trialEndsAtMillis)
+                    if (userDoc.seenTrialWelcome) {
+                        SharedPreferencesManager.setSeenTrialWelcome(context, user.uuid, true)
+                    }
                     val freeLimit = SharedPreferencesManager.getFreeLimit(context)
 
                     val isTrialActive = com.rogger.bp.domain.policy.AccessPolicy.isTrialActive(userDoc.trialEndsAtMillis)

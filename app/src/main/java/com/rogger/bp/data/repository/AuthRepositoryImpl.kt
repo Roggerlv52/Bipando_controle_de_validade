@@ -160,10 +160,12 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
                 val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
                 val trialStartedAtTs = snapshot.getTimestamp("trialStartedAt")
                 val trialStartedAtMillis = trialStartedAtTs?.toDate()?.time
+                val seenTrialWelcome = snapshot.getBoolean("seenTrialWelcome") ?: false
                 trySend(com.rogger.bp.data.model.UserDocumentData(
                     isPremium = isPremium,
                     trialEndsAtMillis = trialEndsAtMillis,
-                    trialStartedAtMillis = trialStartedAtMillis
+                    trialStartedAtMillis = trialStartedAtMillis,
+                    seenTrialWelcome = seenTrialWelcome
                 ))
             }
         }

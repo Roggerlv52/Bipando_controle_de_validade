@@ -37,6 +37,12 @@ class ProfileRepository {
                         val isPremium = document.getBoolean("isPremium") ?: false
                         val trialEndsAtTs = document.getTimestamp("trialEndsAt")
                         val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
+                        val seenTrialWelcome = document.getBoolean("seenTrialWelcome") ?: false
+                        com.rogger.bp.ui.commun.SharedPreferencesManager.setSeenTrialWelcome(
+                            com.google.firebase.auth.FirebaseAuth.getInstance().app.applicationContext,
+                            user.uid,
+                            seenTrialWelcome
+                        )
                         callback.onSuccess(name, email, photoUrl, isPremium, trialEndsAtMillis)
                     } else {
                         callback.onFailure("Perfil não encontrado no Firestore")

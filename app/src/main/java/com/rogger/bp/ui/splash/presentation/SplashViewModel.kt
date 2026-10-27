@@ -95,10 +95,12 @@ class SplashViewModel(
                                             val isPremium = userDoc.getBoolean("isPremium") ?: false
                                             val trialEndsAtTs = userDoc.getTimestamp("trialEndsAt")
                                             val trialEndsAtMillis = trialEndsAtTs?.toDate()?.time
+                                            val seenTrialWelcome = userDoc.getBoolean("seenTrialWelcome") ?: false
 
                                             SharedPreferencesManager.saveUserInfo(appContext, currentUser.uid, name, photoUrl, email)
                                             SharedPreferencesManager.setPremiumState(appContext, isPremium)
                                             SharedPreferencesManager.setTrialEndsAt(appContext, trialEndsAtMillis)
+                                            SharedPreferencesManager.setSeenTrialWelcome(appContext, currentUser.uid, seenTrialWelcome)
                                         }
 
                                         // Carrega configurações globais /config/plans

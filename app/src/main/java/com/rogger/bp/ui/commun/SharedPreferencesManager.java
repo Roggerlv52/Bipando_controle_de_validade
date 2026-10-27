@@ -103,13 +103,30 @@ public class SharedPreferencesManager {
     }
 
     public static void setSeenTrialWelcome(Context context, boolean seen) {
+        String uid = getPreferences(context).getString("userUid", null);
+        setSeenTrialWelcome(context, uid, seen);
+    }
+
+    public static void setSeenTrialWelcome(Context context, String uid, boolean seen) {
         SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putBoolean("seen_trial_welcome", seen);
+        if (uid != null && !uid.isEmpty()) {
+            editor.putBoolean("seen_trial_welcome_" + uid, seen);
+        }
         editor.apply();
     }
 
     public static boolean hasSeenTrialWelcome(Context context) {
-        return getPreferences(context).getBoolean("seen_trial_welcome", false);
+        String uid = getPreferences(context).getString("userUid", null);
+        return hasSeenTrialWelcome(context, uid);
+    }
+
+    public static boolean hasSeenTrialWelcome(Context context, String uid) {
+        SharedPreferences prefs = getPreferences(context);
+        if (uid != null && !uid.isEmpty() && prefs.contains("seen_trial_welcome_" + uid)) {
+            return prefs.getBoolean("seen_trial_welcome_" + uid, false);
+        }
+        return prefs.getBoolean("seen_trial_welcome", false);
     }
     public static void setFreeLimit(Context context, int limit) {
         SharedPreferences.Editor editor = getPreferences(context).edit();
@@ -207,14 +224,14 @@ public class SharedPreferencesManager {
         int savedDatePicker = getDatePickerType(context);
         boolean savedTour = isTourCompleted(context);
 
-        // Preserva os dados de ícones salvos antes de limpar o SharedPreferences
+        // Preserva os dados de ícones e boas-vindas salvos antes de limpar o SharedPreferences
         SharedPreferences prefs = getPreferences(context);
         Map<String, ?> allEntries = prefs.getAll();
         Map<String, Object> savedIcons = new HashMap<>();
         if (allEntries != null) {
             for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
                 String key = entry.getKey();
-                if (key != null && (key.startsWith("category_icon_") || key.toLowerCase().contains("icon"))) {
+                if (key != null && (key.startsWith("category_icon_") || key.startsWith("seen_trial_welcome") || key.toLowerCase().contains("icon"))) {
                     savedIcons.put(key, entry.getValue());
                 }
             }

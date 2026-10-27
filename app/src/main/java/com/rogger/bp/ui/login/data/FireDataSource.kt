@@ -91,6 +91,8 @@ class FireDataSource : LoginDataSource {
                             com.rogger.bp.ui.commun.SharedPreferencesManager.setTrialEndsAt(context, trialEndsAtMillis)
                             val isPremium = document.getBoolean("isPremium") ?: false
                             com.rogger.bp.ui.commun.SharedPreferencesManager.setPremiumState(context, isPremium)
+                            val seenTrialWelcome = document.getBoolean("seenTrialWelcome") ?: false
+                            com.rogger.bp.ui.commun.SharedPreferencesManager.setSeenTrialWelcome(context, uid, seenTrialWelcome)
                         } else {
                             firestoreData["isPremium"] = false
                             firestoreData["shareCode"] = userShareCode
