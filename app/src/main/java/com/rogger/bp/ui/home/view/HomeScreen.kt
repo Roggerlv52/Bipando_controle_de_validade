@@ -88,6 +88,7 @@ import com.rogger.bp.ui.home.view.componentes.HomeTopAppBar
 import com.rogger.bp.ui.home.view.componentes.ProductGroupHeader
 import com.rogger.bp.ui.home.view.componentes.ProductItem
 import com.rogger.bp.ui.home.view.componentes.SearchTopAppBar
+import com.rogger.bp.ui.home.view.componentes.TrialWelcomeDialog
 import com.rogger.bp.ui.home.view.componentes.UpdateBottomSheet
 import com.rogger.bp.ui.naviation.Routes
 import com.rogger.bp.util.CategorySelectionDialog
@@ -359,16 +360,21 @@ fun HomeScreenContent(
                     .update("seenTrialWelcome", true)
             }
         }
-
-        AlertDialog(
-            onDismissRequest = { dismissWelcome() },
-            title = { Text(stringResource(R.string.trial_welcome_title)) },
-            text = { Text(stringResource(R.string.trial_welcome_message, n)) },
-            confirmButton = {
-                Button(onClick = { dismissWelcome() }) {
-                    Text(stringResource(R.string.dialog_button_accept))
-                }
+        val endsAt = state.trialEndsAtMillis
+        val dateFormatPattern = stringResource(R.string.date_format)
+        val formattedEndDate = remember(endsAt, dateFormatPattern) {
+            if (endsAt != null && endsAt > 0) {
+                java.text.SimpleDateFormat(dateFormatPattern, java.util.Locale.getDefault())
+                    .format(java.util.Date(endsAt))
+            } else {
+                ""
             }
+        }
+
+        TrialWelcomeDialog(
+            days = n,
+            validUntil = formattedEndDate,   // data formatada de trialEndsAt
+            onDismiss = { dismissWelcome() }
         )
     }
 
@@ -404,9 +410,9 @@ fun HomeScreenContent(
                 removingProductUuids.addAll(uuids)
                 scope.launch {
                     // Tempo da animação (600ms) + um pequeno buffer para garantir suavidade
-                    kotlinx.coroutines.delay(650) 
+                    kotlinx.coroutines.delay(650)
                     onDeleteProducts(products)
-                    
+
                     // Aguardamos o processamento do DB e a emissão do novo Flow de produtos
                     // Isso evita que o item 'pisque' de volta caso a lista local ainda contenha o item
                     kotlinx.coroutines.delay(400)
@@ -442,11 +448,11 @@ fun HomeScreenContent(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { 
+                onClick = {
                     if (state.isLimitReached) {
                         onPaymentClick(true)
                     } else {
-                        showCategoryDialog = true 
+                        showCategoryDialog = true
                     }
                 },
                 modifier = Modifier.navigationBarsPadding(),
@@ -531,8 +537,8 @@ fun HomeScreenContent(
                         ) { index, (product, _) ->
                             val isItemVisible = !removingProductUuids.contains(product.uuid)
                             val itemOnClick = remember(product.uuid) { { onProductClick(product) } }
-                            val itemOnImageClick = remember(product.uuid) { 
-                                { if (product.imageUri.isNotEmpty()) onImageClick(product.imageUri) } 
+                            val itemOnImageClick = remember(product.uuid) {
+                                { if (product.imageUri.isNotEmpty()) onImageClick(product.imageUri) }
                             }
 
                             ProductItem(

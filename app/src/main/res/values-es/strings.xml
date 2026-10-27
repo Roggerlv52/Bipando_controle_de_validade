@@ -196,8 +196,8 @@
     <string name="name_or_barcode">Nombre o código de barras</string>
     <string name="txt_no_products">No se han encontrado productos</string>
     <string name="txt_toolbar_barcode">Código de barras</string>
-    <string name="date_format">dd/mm/aaaa</string>
-    <string name="date_format_hour">dd/mm/aaaa hh:mm</string>
+    <string name="date_format">dd/MM/yyyy</string>
+    <string name="date_format_hour">dd/MM/yyyy HH:mm</string>
     <string name="menu_exporta">Exportar</string>
 
     <plurals name="categories_selected_count">

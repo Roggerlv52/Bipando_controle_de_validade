@@ -4,6 +4,19 @@
     <string name="premium_active_status">Plano Premium Ativo (%1$d cadastrados)</string>
     <string name="free_limit_status">Limite de Produtos: %1$d/%2$d</string>
 
+
+    <string name="trial_welcome_badge">PRESENTE</string>
+    <string name="trial_welcome_headline">VOCÊ GANHOU</string>
+    <string name="trial_welcome_unlimited">ILIMITADO</string>
+    <string name="trial_welcome_subtitle">Cadastre quantos produtos quiser durante o teste.</string>
+    <string name="trial_welcome_valid_until">Válido até %1$s</string>
+    <string name="trial_welcome_cta">COMEÇAR A USAR</string>
+
+    <plurals name="trial_welcome_days_badge">
+        <item quantity="one">%d DIA</item>
+        <item quantity="other">%d DIAS</item>
+    </plurals>
+
     <!-- Fluxo de Partilha da Aplicação -->
     <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
     <string name="share_app_title">Compartilhar Bipando via:</string>
