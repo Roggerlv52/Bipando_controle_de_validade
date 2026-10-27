@@ -1,6 +1,6 @@
 package com.rogger.bp.ui.add.data
 
-import android.util.Log
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rogger.bp.data.image.ImageResult
@@ -15,9 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class FireRegisterDataSource : ItemDataSource {
-
-    private val TAG = "FireRegisterDataSource"
+class FireRegisterDataSource(private val context: Context) : ItemDataSource {
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -38,29 +36,48 @@ class FireRegisterDataSource : ItemDataSource {
             return
         }
 
-        // 👉 Usa o ID gerado client-side se existir, garantindo consistência absoluta entre Room e Firestore
-        val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else db.collection("users").document(uid).collection("products").document().id
+        // 👉 Determina o local de gravação baseado no groupId
+        /*
+        Melhoria futura:
+        Melhora onde grava os dados se ouver membro no grupo grava em db.collection("groups")
+        se nao em db.collection("users")
+        Caso de usos: Se usuario adicionar membro dados produtos são migardo para grupo se o membro for add no grupo pessoal.
+         */
+        val docRef =
+            if (produto.groupId.isNotEmpty()) {
+            db.collection("groups").document(
+                produto.groupId)
+                .collection("products")
+        } else {
+            db.collection("users").document(
+                uid)
+                .collection("products")
+        }
+
+        val docId = if (produto.firestoreDocId.isNotEmpty()) produto.firestoreDocId else docRef.document().id
         val finalUuid = if (produto.uuid.isNotEmpty()) produto.uuid else docId
 
-        db.collection("users")
-            .document(uid)
-            .collection("products")
-            .document(docId) // 👉 Cria o documento com o exato mesmo ID do Room
-            .set(
-                hashMapOf(
-                    "uid"        to finalUuid,
-                    "userId"     to uid,
-                    "id"         to produto.id,
-                    "imageUri"   to produto.imageUri,
-                    "name"       to produto.name,
-                    "note"       to produto.note,
-                    "barcode"    to produto.barcode,
-                    "categoryId" to produto.categoryId,
-                    "categoryName" to produto.categoryName,
-                    "deleted"    to produto.deleted,
-                    "timestamp"  to produto.timestamp,
-                )
-            )
+        val data = hashMapOf(
+            "uid"        to finalUuid,
+            "userId"     to uid,
+            "id"         to produto.id,
+            "imageUri"   to produto.imageUri,
+            "name"       to produto.name,
+            "note"       to produto.note,
+            "barcode"    to produto.barcode,
+            "categoryId" to produto.categoryId,
+            "categoryName" to produto.categoryName,
+            "deleted"    to produto.deleted,
+            "timestamp"  to produto.timestamp,
+        )
+
+        // Se for produto de grupo, salva o groupId no documento
+        if (produto.groupId.isNotEmpty()) {
+            data["groupId"] = produto.groupId
+        }
+
+        docRef.document(docId)
+            .set(data)
             .addOnSuccessListener { callback.onSuccess(null) }
             .addOnFailureListener { e -> callback.onFailure(e.message.toString()) }
             .addOnCompleteListener { callback.onComplete() }
@@ -73,7 +90,6 @@ class FireRegisterDataSource : ItemDataSource {
 
             when (result) {
                 is ImageResult.CustomImage -> {
-                    Log.d(TAG, "Imagem personalizada encontrada: ${result.url}")
                     val existing = PostImage(
                         barcode = image.barcode,
                         uri     = result.url,
@@ -85,7 +101,6 @@ class FireRegisterDataSource : ItemDataSource {
                 }
 
                 is ImageResult.GlobalImage -> {
-                    Log.d(TAG, "Imagem global encontrada: ${result.url}")
                     val existing = PostImage(
                         barcode = image.barcode,
                         uri     = result.url,
@@ -101,7 +116,6 @@ class FireRegisterDataSource : ItemDataSource {
                         // Há URI local — tenta criar a imagem global
                         uploadGlobalImageInternal(image, callback)
                     } else {
-                        Log.d(TAG, "Sem imagem e sem URI — aguardando upload do utilizador")
                         CoroutineScope(Dispatchers.Main).launch {
                             callback.onFailure("Nenhuma imagem associada")
                             callback.onComplete()
@@ -110,9 +124,9 @@ class FireRegisterDataSource : ItemDataSource {
                 }
 
                 is ImageResult.Error -> {
-                    Log.e(TAG, "Erro ao verificar imagem: ${result.message}")
                     CoroutineScope(Dispatchers.Main).launch {
                         callback.onFailure(result.message)
+                        callback.onComplete()
                     }
                 }
             }
@@ -138,7 +152,6 @@ class FireRegisterDataSource : ItemDataSource {
 
         // 👉 Se estiver offline, pula o upload e conclui usando a URI local da imagem
         if (!NetworkUtils.isNetworkAvailable()) {
-            Log.d(TAG, "Dispositivo offline — pulando upload e salvando com URI local")
             callback.onSuccess(image)
             callback.onComplete()
             return
@@ -150,11 +163,9 @@ class FireRegisterDataSource : ItemDataSource {
 
             if (!globalExists) {
                 // ── Caso A: sem imagem global → cria global ────────────────
-                Log.d(TAG, "Criando imagem global para barcode=${image.barcode}")
                 uploadGlobalImageInternal(image, callback)
             } else {
                 // ── Caso B: imagem global existe → salva imagem personalizada
-                Log.d(TAG, "Imagem global já existe → salvando imagem personalizada para barcode=${image.barcode}")
                 saveUserImageInternal(image, callback)
             }
         }
@@ -164,6 +175,7 @@ class FireRegisterDataSource : ItemDataSource {
 
     private suspend fun uploadGlobalImageInternal(image: PostImage, callback: SaveImageCallback) {
         val uploadResult = imageRepository.uploadGlobalImage(
+            context     = context,
             barcode     = image.barcode,
             productName = image.name,
             imageUri    = image.uri
@@ -190,7 +202,6 @@ class FireRegisterDataSource : ItemDataSource {
                         name    = image.name,
                         uri     = existingUrl
                     )
-                    Log.w(TAG, "Race condition: imagem global criada por outro utilizador, usando URL existente")
                     callback.onAlreadyExists(existing)
                     callback.onComplete()
                 }
@@ -205,6 +216,7 @@ class FireRegisterDataSource : ItemDataSource {
 
     private suspend fun saveUserImageInternal(image: PostImage, callback: SaveImageCallback) {
         val uploadResult = imageRepository.saveUserImage(
+            context  = context,
             barcode  = image.barcode,
             imageUri = image.uri
         )

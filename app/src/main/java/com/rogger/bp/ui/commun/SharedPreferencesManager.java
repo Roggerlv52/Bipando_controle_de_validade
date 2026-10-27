@@ -1,73 +1,205 @@
 package com.rogger.bp.ui.commun;
 
-
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
+
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SharedPreferencesManager {
-    private static final String PREF_NAME = "shared_key_date";
+    private static final String OLD_PREF_NAME = "shared_key_date";
+    private static final String SECURE_PREF_NAME = "secure_shared_key_date";
+
+    private static volatile SharedPreferences sSharedPreferences;
+
+    private static synchronized SharedPreferences getPreferences(Context context) {
+        if (sSharedPreferences != null) {
+            return sSharedPreferences;
+        }
+
+        Context appContext = context.getApplicationContext();
+        try {
+            MasterKey masterKey = new MasterKey.Builder(appContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            SharedPreferences encryptedPrefs = EncryptedSharedPreferences.create(
+                    appContext,
+                    SECURE_PREF_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+
+            migrateOldPrefsIfNeeded(appContext, encryptedPrefs);
+            sSharedPreferences = encryptedPrefs;
+            return sSharedPreferences;
+        } catch (Exception e) {
+            sSharedPreferences = appContext.getSharedPreferences(OLD_PREF_NAME, Context.MODE_PRIVATE);
+            return sSharedPreferences;
+        }
+    }
+
+    private static void migrateOldPrefsIfNeeded(Context context, SharedPreferences encryptedPrefs) {
+        SharedPreferences oldPrefs = context.getSharedPreferences(OLD_PREF_NAME, Context.MODE_PRIVATE);
+        Map<String, ?> all = oldPrefs.getAll();
+        if (all != null && !all.isEmpty()) {
+            SharedPreferences.Editor editor = encryptedPrefs.edit();
+            for (Map.Entry<String, ?> entry : all.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof Boolean) {
+                    editor.putBoolean(key, (Boolean) value);
+                } else if (value instanceof String) {
+                    editor.putString(key, (String) value);
+                } else if (value instanceof Integer) {
+                    editor.putInt(key, (Integer) value);
+                } else if (value instanceof Long) {
+                    editor.putLong(key, (Long) value);
+                } else if (value instanceof Float) {
+                    editor.putFloat(key, (Float) value);
+                }
+            }
+            editor.apply();
+            oldPrefs.edit().clear().apply();
+        }
+    }
 
     // ✅ Guarda se o utilizador é Premium
     public static void setPremiumState(Context context, boolean isPremium) {
-        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedp.edit();
+        SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putBoolean("is_premium", isPremium);
         editor.apply();
     }
 
     // ✅ Retorna se o utilizador é Premium
     public static boolean isPremium(Context context) {
-        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPre.getBoolean("is_premium", false);
+        return getPreferences(context).getBoolean("is_premium", false);
+    }
+
+    // ✅ Guarda e retorna trialEndsAt (Timestamp em milissegundos)
+    public static void setTrialEndsAt(Context context, Long trialEndsAtMillis) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        if (trialEndsAtMillis != null && trialEndsAtMillis > 0) {
+            editor.putLong("trial_ends_at", trialEndsAtMillis);
+        } else {
+            editor.remove("trial_ends_at");
+        }
+        editor.apply();
+    }
+
+    public static Long getTrialEndsAt(Context context) {
+        SharedPreferences prefs = getPreferences(context);
+        if (prefs.contains("trial_ends_at")) {
+            long val = prefs.getLong("trial_ends_at", 0L);
+            return val > 0 ? val : null;
+        }
+        return null;
+    }
+
+    public static void setSeenTrialWelcome(Context context, boolean seen) {
+        String uid = getPreferences(context).getString("userUid", null);
+        setSeenTrialWelcome(context, uid, seen);
+    }
+
+    public static void setSeenTrialWelcome(Context context, String uid, boolean seen) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("seen_trial_welcome", seen);
+        if (uid != null && !uid.isEmpty()) {
+            editor.putBoolean("seen_trial_welcome_" + uid, seen);
+        }
+        editor.apply();
+    }
+
+    public static boolean hasSeenTrialWelcome(Context context) {
+        String uid = getPreferences(context).getString("userUid", null);
+        return hasSeenTrialWelcome(context, uid);
+    }
+
+    public static boolean hasSeenTrialWelcome(Context context, String uid) {
+        SharedPreferences prefs = getPreferences(context);
+        if (uid != null && !uid.isEmpty() && prefs.contains("seen_trial_welcome_" + uid)) {
+            return prefs.getBoolean("seen_trial_welcome_" + uid, false);
+        }
+        return prefs.getBoolean("seen_trial_welcome", false);
+    }
+    public static void setFreeLimit(Context context, int limit) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt("free_limit", limit);
+        editor.apply();
+    }
+
+    public static int getFreeLimit(Context context) {
+        return getPreferences(context).getInt("free_limit", 100);
+    }
+
+    // ✅ Guarda e retorna promoActive
+    public static void setPromoActive(Context context, boolean active) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("promo_active", active);
+        editor.apply();
+    }
+
+    public static boolean isPromoActive(Context context) {
+        return getPreferences(context).getBoolean("promo_active", false);
+    }
+
+    // ✅ Guarda a chave do plano ativo selecionado/comprado
+    public static void setActivePlanKey(Context context, String planKey) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        if (planKey != null) {
+            editor.putString("active_plan_key", planKey);
+        } else {
+            editor.remove("active_plan_key");
+        }
+        editor.apply();
+    }
+
+    // ✅ Retorna a chave do plano ativo selecionado/comprado
+    public static String getActivePlanKey(Context context) {
+        return getPreferences(context).getString("active_plan_key", null);
     }
 
     // Método para adicionar um valor ao SharedPreferences
     public static void sharedBeepState(Context context, String key, boolean beep) {
-        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedp.edit();
+        SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putBoolean(key, beep);
         editor.apply();
     }
 
-    // Método para atualizar um  valor do SharedPreferences
+    // Método para atualizar um valor do SharedPreferences
     public static void updateThemeNumber(Context context, String key, int newThemeNumber) {
-        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPre.edit();
+        SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putInt(key, newThemeNumber);
         editor.apply();
     }
 
     // Método para recuperar um valor do SharedPreferences
     public static int getThemeNumber(Context context, String key) {
-        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPre.getInt(key, 0);
+        return getPreferences(context).getInt(key, 0);
     }
 
     public static boolean getBeepState(Context context, String key) {
-        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPre.getBoolean(key, false);
+        return getPreferences(context).getBoolean(key, false);
     }
 
     public static void setLoginState(Context context, String key, boolean state) {
-        SharedPreferences sharedp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedp.edit();
+        SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putBoolean(key, state);
         editor.apply();
-
     }
 
     public static boolean getLoginState(Context context, String key) {
-        SharedPreferences sharedPre = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPre.getBoolean(key, false);
+        return getPreferences(context).getBoolean(key, false);
     }
 
     public static void saveUserInfo(Context context, String uid, String name, String imageUrl, String email) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putString("userUid", uid);
         editor.putString("nameUser", name);
         editor.putString("profile_image_url", imageUrl);
@@ -76,20 +208,167 @@ public class SharedPreferencesManager {
     }
 
     public static List<String> getUserInfo(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPreferences(context);
         List<String> userInfo = new ArrayList<>();
-        userInfo.add(sharedPreferences.getString("userUid", null));//  3
-        userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));// 0
+        userInfo.add(sharedPreferences.getString("userUid", null));
+        userInfo.add(sharedPreferences.getString("nameUser", "Nome não encontrado"));
         userInfo.add(sharedPreferences.getString("profile_image_url", null));
         userInfo.add(sharedPreferences.getString("email_", "No email"));
         return userInfo;
     }
 
     public static void clearUserInfo(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int savedWorkMode = getWorkMode(context);
+        int savedTheme = getThemeNumber(context, "chave");
+        boolean savedBeep = getBeepState(context, "beep");
+        int savedDatePicker = getDatePickerType(context);
+        boolean savedTour = isTourCompleted(context);
+
+        // Preserva os dados de ícones e boas-vindas salvos antes de limpar o SharedPreferences
+        SharedPreferences prefs = getPreferences(context);
+        Map<String, ?> allEntries = prefs.getAll();
+        Map<String, Object> savedIcons = new HashMap<>();
+        if (allEntries != null) {
+            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                String key = entry.getKey();
+                if (key != null && (key.startsWith("category_icon_") || key.startsWith("seen_trial_welcome") || key.toLowerCase().contains("icon"))) {
+                    savedIcons.put(key, entry.getValue());
+                }
+            }
+        }
+
+        SharedPreferences.Editor editor = prefs.edit();
         editor.clear(); // remove tudo
+        editor.apply();
+
+        // Restaura as preferências que devem persistir
+        setWorkMode(context, savedWorkMode);
+        updateThemeNumber(context, "chave", savedTheme);
+        sharedBeepState(context, "beep", savedBeep);
+        setDatePickerType(context, savedDatePicker);
+        setTourCompleted(context, savedTour);
+
+        // Restaura os dados de ícones salvos
+        if (!savedIcons.isEmpty()) {
+            SharedPreferences.Editor restoreEditor = prefs.edit();
+            for (Map.Entry<String, Object> entry : savedIcons.entrySet()) {
+                Object value = entry.getValue();
+                if (value instanceof Integer) {
+                    restoreEditor.putInt(entry.getKey(), (Integer) value);
+                } else if (value instanceof String) {
+                    restoreEditor.putString(entry.getKey(), (String) value);
+                } else if (value instanceof Boolean) {
+                    restoreEditor.putBoolean(entry.getKey(), (Boolean) value);
+                } else if (value instanceof Long) {
+                    restoreEditor.putLong(entry.getKey(), (Long) value);
+                } else if (value instanceof Float) {
+                    restoreEditor.putFloat(entry.getKey(), (Float) value);
+                }
+            }
+            restoreEditor.apply();
+        }
+    }
+
+    public static void setDatePickerType(Context context, int type) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt("date_picker_type", type);
         editor.apply();
     }
 
+    public static int getDatePickerType(Context context) {
+        return getPreferences(context).getInt("date_picker_type", 0); // 0 = Calendário (padrão)
+    }
+
+    public static void setWorkMode(Context context, int mode) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt("work_mode", mode); // 0 = Individual, 1 = Grupo
+        editor.apply();
+    }
+
+    public static void setTourCompleted(Context context, boolean completed) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("tour_completed", completed);
+        editor.apply();
+    }
+
+    public static boolean isTourCompleted(Context context) {
+        return getPreferences(context).getBoolean("tour_completed", false);
+    }
+
+    public static int getWorkMode(Context context) {
+        return getPreferences(context).getInt("work_mode", 0);
+    }
+
+    public static void setActiveGroupId(Context context, String groupId) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putString("active_group_id", groupId);
+        editor.apply();
+    }
+
+    public static String getActiveGroupId(Context context) {
+        return getPreferences(context).getString("active_group_id", "");
+    }
+
+    public static void setCachedRole(Context context, String groupId, String role) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putString("cached_role_" + groupId, role);
+        editor.putLong("cached_role_time_" + groupId, System.currentTimeMillis());
+        editor.apply();
+    }
+
+    public static String getCachedRole(Context context, String groupId) {
+        SharedPreferences sharedPre = getPreferences(context);
+        long timestamp = sharedPre.getLong("cached_role_time_" + groupId, 0);
+        long now = System.currentTimeMillis();
+        // TTL de 5 minutos (5 * 60 * 1000 = 300000 ms)
+        if (now - timestamp < 300000) {
+            return sharedPre.getString("cached_role_" + groupId, null);
+        }
+        return null;
+    }
+
+    public static void clearCachedRole(Context context, String groupId) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.remove("cached_role_" + groupId);
+        editor.remove("cached_role_time_" + groupId);
+        editor.apply();
+    }
+
+    public static void setCategoryIcon(Context context, String categoryId, int resId) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt("category_icon_" + categoryId, resId);
+        editor.apply();
+    }
+
+    public static int getCategoryIcon(Context context, String categoryId) {
+        return getPreferences(context).getInt("category_icon_" + categoryId, 0);
+    }
+
+    public static boolean isInvitationNotified(Context context, String invitationId) {
+        if (invitationId == null || invitationId.isEmpty()) return false;
+        return getPreferences(context).getBoolean("notified_invitation_" + invitationId, false);
+    }
+
+    public static void setInvitationNotified(Context context, String invitationId, boolean notified) {
+        if (invitationId == null || invitationId.isEmpty()) return;
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("notified_invitation_" + invitationId, notified);
+        editor.apply();
+    }
+
+    public static boolean isUpdateDismissedInSession(Context context) {
+        return getPreferences(context).getBoolean("update_sheet_dismissed_session", false);
+    }
+
+    public static void setUpdateDismissedInSession(Context context, boolean dismissed) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putBoolean("update_sheet_dismissed_session", dismissed);
+        editor.apply();
+    }
+
+    public static void clearUpdateDismissedInSession(Context context) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.remove("update_sheet_dismissed_session");
+        editor.apply();
+    }
 }

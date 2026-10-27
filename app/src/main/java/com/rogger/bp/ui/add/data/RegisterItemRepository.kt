@@ -53,6 +53,10 @@ class RegisterItemRepository(
         dataSource.saveProductImage(image, callback)
     }
 
+    suspend fun getLocalProductByBarcode(barcode: String): PostProduct? {
+        return localCache.getProductByBarcode(barcode)
+    }
+
     fun uploadImage(image: PostImage, callback: SaveImageCallback) {
         dataSource.uploadImage(image, callback)
     }
