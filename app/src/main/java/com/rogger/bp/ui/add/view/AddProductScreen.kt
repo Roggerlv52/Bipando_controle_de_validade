@@ -112,25 +112,59 @@ fun AddProductScreen(
         val pickerType = SharedPreferencesManager.getDatePickerType(context)
         
         if (pickerType == 1) { // Spinner
-            val calendar = java.util.Calendar.getInstance().apply {
-                timeInMillis = state.expirationDate
+            var isFallbackToCompose by remember { mutableStateOf(false) }
+
+            if (!isFallbackToCompose) {
+                LaunchedEffect(Unit) {
+                    try {
+                        val calendar = java.util.Calendar.getInstance().apply {
+                            timeInMillis = state.expirationDate
+                        }
+                        val datePickerDialog = android.app.DatePickerDialog(
+                            context,
+                            android.R.style.Theme_Holo_Light_Dialog_MinWidth, // Estilo Spinner (legado)
+                            { _, year, month, dayOfMonth ->
+                                val selectedCalendar = java.util.Calendar.getInstance()
+                                selectedCalendar.set(year, month, dayOfMonth)
+                                viewModel.onDateChange(selectedCalendar.timeInMillis)
+                                showDatePicker = false
+                            },
+                            calendar.get(java.util.Calendar.YEAR),
+                            calendar.get(java.util.Calendar.MONTH),
+                            calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                        )
+                        // Desativa a CalendarView legada para evitar o crash android.icu.util.Calendar.setTimeInMillis na Samsung
+                        datePickerDialog.datePicker.calendarViewShown = false
+                        datePickerDialog.datePicker.spinnersShown = true
+                        datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                        datePickerDialog.setOnDismissListener { showDatePicker = false }
+                        datePickerDialog.show()
+                    } catch (e: Exception) {
+                        android.util.Log.e("AddProductScreen", "Erro ao exibir DatePickerDialog Spinner", e)
+                        isFallbackToCompose = true
+                    }
+                }
             }
-            val datePickerDialog = android.app.DatePickerDialog(
-                context,
-                android.R.style.Theme_Holo_Light_Dialog_MinWidth, // Estilo Spinner (legado)
-                { _, year, month, dayOfMonth ->
-                    val selectedCalendar = java.util.Calendar.getInstance()
-                    selectedCalendar.set(year, month, dayOfMonth)
-                    viewModel.onDateChange(selectedCalendar.timeInMillis)
-                    showDatePicker = false
-                },
-                calendar.get(java.util.Calendar.YEAR),
-                calendar.get(java.util.Calendar.MONTH),
-                calendar.get(java.util.Calendar.DAY_OF_MONTH)
-            )
-            datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-            datePickerDialog.setOnDismissListener { showDatePicker = false }
-            datePickerDialog.show()
+
+            if (isFallbackToCompose) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = state.expirationDate
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
+                            showDatePicker = false
+                        }) { Text(stringResource(R.string.scanner_confirm)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_button_cancel)) }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
         } else { // Calendário (Padrao)
             val datePickerState = rememberDatePickerState(
                 initialSelectedDateMillis = state.expirationDate

@@ -138,25 +138,59 @@ fun EditProductScreen(
         val pickerType = SharedPreferencesManager.getDatePickerType(context)
 
         if (pickerType == 1) { // Spinner
-            val calendar = java.util.Calendar.getInstance().apply {
-                timeInMillis = state.expirationDate
+            var isFallbackToCompose by remember { mutableStateOf(false) }
+
+            if (!isFallbackToCompose) {
+                LaunchedEffect(Unit) {
+                    try {
+                        val calendar = java.util.Calendar.getInstance().apply {
+                            timeInMillis = state.expirationDate
+                        }
+                        val datePickerDialog = android.app.DatePickerDialog(
+                            context,
+                            android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+                            { _, year, month, dayOfMonth ->
+                                val selectedCalendar = java.util.Calendar.getInstance()
+                                selectedCalendar.set(year, month, dayOfMonth)
+                                viewModel.onDateChange(selectedCalendar.timeInMillis)
+                                showDatePicker = false
+                            },
+                            calendar.get(java.util.Calendar.YEAR),
+                            calendar.get(java.util.Calendar.MONTH),
+                            calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                        )
+                        // Desativa a CalendarView legada para evitar o crash android.icu.util.Calendar.setTimeInMillis na Samsung
+                        datePickerDialog.datePicker.calendarViewShown = false
+                        datePickerDialog.datePicker.spinnersShown = true
+                        datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                        datePickerDialog.setOnDismissListener { showDatePicker = false }
+                        datePickerDialog.show()
+                    } catch (e: Exception) {
+                        android.util.Log.e("EditProductScreen", "Erro ao exibir DatePickerDialog Spinner", e)
+                        isFallbackToCompose = true
+                    }
+                }
             }
-            val datePickerDialog = android.app.DatePickerDialog(
-                context,
-                android.R.style.Theme_Holo_Light_Dialog_MinWidth,
-                { _, year, month, dayOfMonth ->
-                    val selectedCalendar = java.util.Calendar.getInstance()
-                    selectedCalendar.set(year, month, dayOfMonth)
-                    viewModel.onDateChange(selectedCalendar.timeInMillis)
-                    showDatePicker = false
-                },
-                calendar.get(java.util.Calendar.YEAR),
-                calendar.get(java.util.Calendar.MONTH),
-                calendar.get(java.util.Calendar.DAY_OF_MONTH)
-            )
-            datePickerDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-            datePickerDialog.setOnDismissListener { showDatePicker = false }
-            datePickerDialog.show()
+
+            if (isFallbackToCompose) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = state.expirationDate
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let { viewModel.onDateChange(it) }
+                            showDatePicker = false
+                        }) { Text(stringResource(R.string.scanner_confirm)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_button_cancel)) }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
         } else { // Calendário (Padrao)
             val datePickerState = rememberDatePickerState(
                 initialSelectedDateMillis = state.expirationDate
@@ -170,7 +204,8 @@ fun EditProductScreen(
                     }) { Text(stringResource(R.string.scanner_confirm)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_button_cancel)) }
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text(stringResource(R.string.dialog_button_cancel)) }
                 }
             ) {
                 DatePicker(state = datePickerState)
@@ -185,7 +220,8 @@ fun EditProductScreen(
                 title = { Text(stringResource(R.string.edit_product_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
@@ -293,7 +329,8 @@ fun EditProductScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Category, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Category, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = state.category?.name ?: stringResource(R.string.select_category_hint),
@@ -314,10 +351,12 @@ fun EditProductScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.CalendarToday,
+                            contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(stringResource(R.string.expiration_date_label), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            Text(stringResource(R.string.expiration_date_label),
+                                style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             Text(
                                 text = TimeFormatter.formatTimestamp(state.expirationDate),
                                 style = MaterialTheme.typography.bodyLarge
@@ -348,7 +387,7 @@ fun EditProductScreen(
                 // Banner de publicidade com ID de teste oficial do AdMob
                 AdBanner(
                     modifier = Modifier.fillMaxWidth(),
-                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                    //adUnitId = "ca-app-pub-3940256099942544/6300978111"
                 )
             }
         }
@@ -394,10 +433,8 @@ fun EditProductScreen(
 @Composable
 fun AdBanner(
     modifier: Modifier = Modifier,
-    adUnitId: String = if (BuildConfig.DEBUG)
-        "ca-app-pub-3940256099942544/6300978111" // ID de teste oficial do Google (banner)
-    else
-        "ca-app-pub-9022156527276774/5455163691" // seu bloco real
+    adUnitId: String =  "ca-app-pub-9022156527276774/5455163691"
+         // seu bloco real
 ) {
     AndroidView(
         modifier = modifier.fillMaxWidth(),

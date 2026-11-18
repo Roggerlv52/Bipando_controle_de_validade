@@ -103,7 +103,7 @@ fun SplashScreen(
                 Image(
                     painter = painterResource(id = R.drawable.ic_bp_logo_small),
                     contentDescription = stringResource(R.string.cd_logo_bipando),
-                    modifier = Modifier.size(280.dp)
+                    modifier = Modifier.size(275.dp)
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
