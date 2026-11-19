@@ -1,12 +1,7 @@
 package com.rogger.bp.data.image.datasource
 
-/*
- * Desenvolvido por Roger de Oliveira
- * Data: 28/05/2026
- * Hora: 20:17
- */
+import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,30 +10,19 @@ import com.rogger.bp.data.image.ImageResult
 import com.rogger.bp.data.image.UploadResult
 import com.rogger.bp.data.model.UserProductImage
 import com.rogger.bp.ui.commun.NetworkUtils
+import com.rogger.bp.util.ImagePikerUtil
+import com.rogger.bp.util.ImageUtils
 import kotlinx.coroutines.tasks.await
 import java.io.File
 
-/**
- * DataSource responsável pela imagem PERSONALIZADA do utilizador.
- *
- * REGRAS:
- *  - Apenas o próprio utilizador pode ler/escrever.
- *  - Pode alterar quantas vezes quiser (não afeta a imagem global).
- *  - NÃO toca em imageProdutos/{barcode} (imagem global).
- *
- * Firestore: users/{uid}/productImages/{barcode}
- * Storage:   /produtos/{uid}/{barcode}.jpg
- */
 class UserImageDataSource {
 
-    private val TAG = "UserImageDataSource"
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val storage = FirebaseStorage.getInstance()
 
     private fun currentUid(): String? = auth.currentUser?.uid
 
-    // ── 1. Buscar imagem personalizada ───────────────────────────────────
     suspend fun fetchUserImage(barcode: String): ImageResult {
         val uid = currentUid()
             ?: return ImageResult.Error("Utilizador não autenticado")
@@ -47,9 +31,7 @@ class UserImageDataSource {
             return ImageResult.Error("Código de barras inválido")
         }
 
-        // 👉 Se estiver offline, ignora a busca remota
         if (!NetworkUtils.isNetworkAvailable()) {
-            Log.d(TAG, "Dispositivo offline — ignorando busca de imagem personalizada")
             return ImageResult.NoImage
         }
 
@@ -64,25 +46,20 @@ class UserImageDataSource {
             if (snapshot.exists()) {
                 val image = snapshot.toObject(UserProductImage::class.java)
                 if (image != null && image.customImageUrl.isNotEmpty()) {
-                    Log.d(TAG, "Imagem personalizada encontrada uid=$uid barcode=$barcode")
                     ImageResult.CustomImage(url = image.customImageUrl)
                 } else {
                     ImageResult.NoImage
                 }
             } else {
-                Log.d(TAG, "Sem imagem personalizada uid=$uid barcode=$barcode")
                 ImageResult.NoImage
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar imagem personalizada: ${e.message}")
             ImageResult.Error(e.message ?: "Erro ao buscar imagem personalizada")
         }
     }
 
-    // ── 2. Salvar imagem personalizada ───────────────────────────────────
-
-    suspend fun saveUserImage(barcode: String, imageUri: String): UploadResult {
+    suspend fun saveUserImage(context: Context, barcode: String, imageUri: String): UploadResult {
         val uid = currentUid()
             ?: return UploadResult.Error("Utilizador não autenticado")
 
@@ -90,24 +67,30 @@ class UserImageDataSource {
             return UploadResult.Error("Barcode ou URI de imagem inválidos")
         }
 
-        // 👉 Bloqueia início se estiver offline
-        if (!NetworkUtils.isNetworkAvailable()) { // ← NOT invertido
+        if (!NetworkUtils.isNetworkAvailable()) {
             return UploadResult.Error("OFFLINE")
         }
-        Log.d(TAG,"Estado: "+NetworkUtils.isNetworkAvailable())
+
+        var tempFile: File? = null
         return try {
-            val fileUri: Uri = when {
+            val sourceUri: Uri = when {
                 imageUri.startsWith("content://") -> Uri.parse(imageUri)
                 imageUri.startsWith("file://")    -> Uri.parse(imageUri)
                 else                              -> Uri.fromFile(File(imageUri))
             }
 
+            tempFile = ImagePikerUtil.createImageFile(context)
+            ImageUtils.processImage(context, sourceUri, tempFile)
+            val processedUri = Uri.fromFile(tempFile)
+
             val storagePath = "produtos/$uid/$barcode.jpg"
             val imageRef = storage.reference.child(storagePath)
 
-            Log.d(TAG, "Upload imagem personalizada para: $storagePath")
+            val metadata = com.google.firebase.storage.storageMetadata {
+                contentType = "image/jpeg"
+            }
 
-            imageRef.putFile(fileUri).await()
+            imageRef.putFile(processedUri, metadata).await()
 
             val downloadUrl = imageRef.downloadUrl.await().toString()
 
@@ -124,35 +107,28 @@ class UserImageDataSource {
                 .set(userImage)
                 .await()
 
-            Log.d(TAG, "Imagem personalizada salva: uid=$uid barcode=$barcode url=$downloadUrl")
             UploadResult.Success(downloadUrl)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao salvar imagem personalizada: ${e.message}")
-            // 👉 Trata queda de conexão durante o processo
             if (e.message?.contains("offline", ignoreCase = true) == true ||
                 e.message?.contains("unavailable", ignoreCase = true) == true) {
                 return UploadResult.Error("OFFLINE")
             }
             UploadResult.Error(e.message ?: "Erro ao salvar imagem personalizada")
+        } finally {
+            tempFile?.let { ImagePikerUtil.cleanUpTempFiles(it) }
         }
     }
 
-    // ── 3. Remover imagem personalizada (opcional) ───────────────────────
     suspend fun removeUserImage(barcode: String): Boolean {
         val uid = currentUid() ?: return false
 
         return try {
-            // Remove do Storage
             val storagePath = "produtos/$uid/$barcode.jpg"
             try {
                 storage.reference.child(storagePath).delete().await()
-            } catch (storageEx: Exception) {
-                // Arquivo pode não existir no Storage — não é erro crítico
-                Log.w(TAG, "Arquivo não encontrado no Storage (ignorando): $storagePath")
-            }
+            } catch (_: Exception) {}
 
-            // Remove do Firestore
             db.collection("users")
                 .document(uid)
                 .collection("productImages")
@@ -160,11 +136,9 @@ class UserImageDataSource {
                 .delete()
                 .await()
 
-            Log.d(TAG, "Imagem personalizada removida: uid=$uid barcode=$barcode")
             true
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao remover imagem personalizada: ${e.message}")
+        } catch (_: Exception) {
             false
         }
     }

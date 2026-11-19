@@ -16,14 +16,14 @@ public class NotificationScheduler {
 
     /**
      * Agenda (ou reagenda) o worker diário no horário definido pelo usuário.
-     * Deve ser chamado:
-     *  - ao ativar o switch de notificações
-     *  - ao alterar o horário no TimePicker
-     *  - no MainActivity.onCreate() se notificações estiverem ativas
-     * Usa CANCEL_AND_REENQUEUE para garantir que o novo initialDelay
-     * seja respeitado imediatamente, sem esperar o ciclo anterior acabar.
+     * @param forceReschedule Se true, cancela o anterior e agenda um novo (usado ao mudar configurações).
+     *                        Se false, mantém o agendamento atual se já existir (usado no boot/abertura do app).
      */
-    public static void start(Context c) {
+    public static void start(Context c, boolean forceReschedule) {
+        if (!NotificationPrefs.getAlert(c)) {
+            stop(c);
+            return;
+        }
 
         NotificationUtil.createChannel(c);
 
@@ -38,19 +38,28 @@ public class NotificationScheduler {
 
         PeriodicWorkRequest periodicWork = new PeriodicWorkRequest.Builder(
                 ExpirationWork.class,
-                24, TimeUnit.HOURS          // intervalo diário
+                24, TimeUnit.HOURS
         )
                 .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
                 .setConstraints(constraints)
                 .addTag(TAG)
                 .build();
 
-        // CANCEL_AND_REENQUEUE garante que o initialDelay calculado acima
+        // Se forceReschedule for falso, usamos KEEP para não resetar o delay inicial desnecessariamente
+        ExistingPeriodicWorkPolicy policy = forceReschedule 
+                ? ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE 
+                : ExistingPeriodicWorkPolicy.KEEP;
+
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                policy,
                 periodicWork
         );
+    }
+
+    // Sobrecarga para compatibilidade
+    public static void start(Context c) {
+        start(c, false);
     }
 
     /**
@@ -81,7 +90,7 @@ public class NotificationScheduler {
 
         long delayMs = nextRun.getTimeInMillis() - now.getTimeInMillis();
 
-        // Margem de segurança de 5 segundos
-        return delayMs + 5_000;
+        // Removida a margem de 5s para ser mais pontual
+        return Math.max(0, delayMs);
     }
 }

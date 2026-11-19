@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Apenas a cor de fundo inicial da janela para evitar tela em branco e impedir tela duplicada de Splash -->
+    <item android:drawable="@color/bipando_color" />
+</layer-list>

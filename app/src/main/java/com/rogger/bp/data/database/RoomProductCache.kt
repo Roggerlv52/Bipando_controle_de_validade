@@ -4,6 +4,8 @@ import com.rogger.bp.data.dao.Cache
 import com.rogger.bp.data.dao.ProductDao
 import com.rogger.bp.data.model.PostProduct
 import kotlinx.coroutines.flow.Flow
+import androidx.lifecycle.asFlow
+import kotlinx.coroutines.flow.map
 
 /*
  * Desenvolvido por Roger de Oliveira
@@ -30,15 +32,22 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
 
     override suspend fun remove(key: String) {
         if (key.isNotEmpty()) {
-            productDao.removeCachedProduct(key) // Tenta remover um produto específico
+            productDao.removeProduct(key) // Tenta remover por docId ou uuid
         } else {
             productDao.clearAllProducts()
         }
     }
 
+    suspend fun removeProductByDocIdOrUuid(docId: String, uuid: String) {
+        productDao.removeProductByDocIdOrUuid(docId, uuid)
+    }
+
     suspend fun replaceAllProducts(products: List<PostProduct>) {
-        productDao.clearAllProducts()
-        productDao.putAllProducts(products)
+        productDao.replaceAllProducts(products)
+    }
+
+    suspend fun replaceAllProductsByGroup(groupId: String, products: List<PostProduct>) {
+        productDao.replaceAllProductsByGroup(groupId, products)
     }
 
     override suspend fun clear() {
@@ -49,12 +58,16 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
         productDao.putAllProducts(categories)
     }
 
-    fun getAllProductsFlow(): Flow<List<PostProduct>> {
-        return productDao.getAllProducts()
+    fun getAllProductsFlow(groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getAllProducts(groupId)
     }
 
-    fun getProductsByCategoryFlow(categoryId: String): Flow<List<PostProduct>> {
-        return productDao.getProductsByCategory(categoryId)
+    fun getProductsByCategoryFlow(categoryId: String, groupId: String = ""): Flow<List<PostProduct>> {
+        return productDao.getProductsByCategory(categoryId, groupId)
+    }
+
+    fun getGlobalTotalProductsCountFlow(): Flow<Int> {
+        return productDao.getGlobalTotalProductsCountLiveData().asFlow().map { it ?: 0 }
     }
 
     suspend fun insertProduct(product: PostProduct) {
@@ -63,6 +76,10 @@ class RoomProductCache(private val productDao: ProductDao) : Cache<List<PostProd
 
     suspend fun updateProduct(product: PostProduct) {
         productDao.updateProduct(product)
+    }
+
+    suspend fun getProductByBarcode(barcode: String): PostProduct? {
+        return productDao.getProductByBarcode(barcode)
     }
 
     suspend fun deleteProduct(product: PostProduct) {

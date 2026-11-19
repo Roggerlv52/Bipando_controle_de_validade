@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme para Android 15+ (API 35). -->
+    <style name="Theme.Bpd" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryVariant">@color/black</item>
+        <item name="colorOnPrimary">@color/gray</item>
+        <!-- Secondary brand color-->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Customize your theme here. -->
+        <item name="ic_color_theme">@color/white</item>
+        <item name="_color_theme_status">?attr/colorPrimary</item>
+        <item name="_color_theme_navigation">@color/black</item>
+    </style>
+
+    <style name="ThemeOverlay.Bipando.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_900</item>
+        <item name="fullscreenTextColor">@color/light_blue_A400</item>
+    </style>
+
+    <!-- Tema inicial da Activity sem APIs descontinuadas para Android 15+ (API 35) -->
+    <style name="Theme.Bpd.Splash" parent="Theme.Bpd">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
