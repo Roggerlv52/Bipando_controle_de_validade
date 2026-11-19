@@ -23,13 +23,13 @@ object ShareUtil {
     fun shareUserCode(context: Context, code: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            val message = "Olá! Use meu código no Bipando para colaborar na minha lista de produtos: $code"
+            val message = context.getString(R.string.share_user_code_message, code)
             putExtra(Intent.EXTRA_TEXT, message)
         }
         context.startActivity(
             Intent.createChooser(
                 shareIntent,
-                "Compartilhar Código Bipando"
+                context.getString(R.string.share_user_code_title)
             )
         )
     }

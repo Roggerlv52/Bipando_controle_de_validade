@@ -21,6 +21,8 @@
     <string name="share_app_message">Confira o Bipando - Controle de Validade! Evite o desperdício de produtos de forma simples e rápida.\n\nBaixe agora na Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
     <string name="share_app_title">Compartilhar Bipando via:</string>
     <string name="share_app_no_app_found">Nenhum aplicativo encontrado para compartilhar.</string>
+    <string name="share_user_code_title">Compartilhar Código Bipando</string>
+    <string name="share_user_code_message">Olá! Use meu código no Bipando para colaborar na minha lista de produtos: %1$s</string>
 
     <!-- Notificação -->
     <string name="notification_name">Validade de Produtos</string>
@@ -317,6 +319,8 @@ mais você pode criar uma conta fazendo login com o Google novamente.\n &#8226; 
     <string name="profile_title">Configurações</string>
     <string name="cd_profile_photo">Foto de perfil</string>
     <string name="profile_user_code">Seu Código: %1$s</string>
+
+    <string name="point_user_camera">Aponte a camera para o Qrcode</string>
     <string name="cd_share_code">Compartilhar Código</string>
     <string name="profile_preferences">Preferências</string>
     <string name="profile_date_picker_type">Tipo de Seletor de Data</string>

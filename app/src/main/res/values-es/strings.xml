@@ -6,9 +6,11 @@
     <string name="free_limit_status">Límite de Productos: %1$d/%2$d</string>
 
     <!-- Flujo de Compartir la Aplicación -->
-    <string name="share_app_message">¡Echa un vistazo a Bipando - Control de Caducidad! Evita el desperdicio de productos de forma sencilla y rápida.\n\nDescárgalo ahora en la Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
+    <string name="share_app_message">¡Echa un vistazo a Bipando - Control de Caducidad! Evita el desperdicio de productos de forma sencilla y rápida.\n\nDescárgalo agora en la Play Store: https://play.google.com/store/apps/details?id=com.rogger.bp</string>
     <string name="share_app_title">Compartir Bipando vía:</string>
     <string name="share_app_no_app_found">No se encontró ninguna aplicación para compartir.</string>
+    <string name="share_user_code_title">Compartir Código Bipando</string>
+    <string name="share_user_code_message">¡Hola! Usa mi código en Bipando para colaborar en mi lista de productos: %1$s</string>
 
     <!-- Notificación -->
     <string name="notification_name">Caducidad de Productos</string>
@@ -285,6 +287,7 @@
     <string name="profile_title">Configuración</string>
     <string name="cd_profile_photo">Foto de perfil</string>
     <string name="profile_user_code">Su código: %1$s</string>
+    <string name="point_user_camera">Apunta la cámara al código QR</string>
     <string name="cd_share_code">Compartir código</string>
     <string name="profile_preferences">Preferencias</string>
     <string name="profile_date_picker_type">Tipo de selector de fecha</string>

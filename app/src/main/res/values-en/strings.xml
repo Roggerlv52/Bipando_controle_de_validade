@@ -8,6 +8,8 @@
     <string name="share_app_message">Check out Bipando - Expiration Date Control! Prevent product waste simply and quickly.\n\nDownload now on the Play Store: https://play.google.com/apps/internaltest/4701709773850642852%1$s</string>
     <string name="share_app_title">Share Bipando via:</string>
     <string name="share_app_no_app_found">No app found to share.</string>
+    <string name="share_user_code_title">Share Bipando Code</string>
+    <string name="share_user_code_message">Hello! Use my code in Bipando to collaborate on my product list: %1$s</string>
 
     <string name="digitaliz_c_digo_de_barras">Enter barcode</string>
     <!--Notification-->
@@ -286,6 +288,7 @@ lost and when you create your account again using the same email, you will need 
     <string name="profile_title">Settings</string>
     <string name="cd_profile_photo">Profile picture</string>
     <string name="profile_user_code">Your Code: %1$s</string>
+    <string name="point_user_camera">Point your camera at the QR code</string>
     <string name="cd_share_code">Share Code</string>
     <string name="profile_preferences">Preferences</string>
     <string name="profile_date_picker_type">Date Picker Type</string>

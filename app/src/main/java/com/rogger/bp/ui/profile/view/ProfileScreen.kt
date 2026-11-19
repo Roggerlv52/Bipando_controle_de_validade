@@ -46,6 +46,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import com.rogger.bp.ui.profile.view.componentes.PremiumStatusSection
+import com.rogger.bp.ui.profile.view.componentes.SettingsSection
+import com.rogger.bp.ui.profile.view.componentes.SwitchSetting
+import com.rogger.bp.ui.profile.view.componentes.ThemeOption
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +75,7 @@ fun ProfileScreen(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showSoundDialog by remember { mutableStateOf(false) }
     var showSystemSoundPicker by remember { mutableStateOf(false) }
+    var showQrCodeDialog by remember { mutableStateOf(false) }
 
     val clipboardManager = LocalClipboardManager.current
 
@@ -221,24 +226,43 @@ fun ProfileScreen(
                 }
 
                 if (personalCode.isNotEmpty()) {
+                    val copiedMsg = stringResource(R.string.msg_barcode_copied)
+                    if (showQrCodeDialog) {
+                        com.rogger.bp.util.QrcodeImage(
+                            code = personalCode,
+                            onDismiss = { showQrCodeDialog = false }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(8.dp),
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(personalCode))
-                        }
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy), modifier = Modifier.size(16.dp))
+                            IconButton(
+                                onClick = { showQrCodeDialog = true },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCode2,
+                                    contentDescription = stringResource(R.string.cd_copy),
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = stringResource(R.string.profile_user_code, personalCode),
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable {
+                                    clipboardManager.setText(AnnotatedString(personalCode))
+                                    android.widget.Toast.makeText(context, copiedMsg, android.widget.Toast.LENGTH_SHORT).show()
+                                }
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             IconButton(
@@ -340,7 +364,8 @@ fun ProfileScreen(
                 if (state.isNotificationEnabled) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = stringResource(R.string.profile_expiry_warning_label, state.notificationDays),
+                        text = stringResource(R.string.profile_expiry_warning_label,
+                            state.notificationDays),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -439,238 +464,6 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-fun SettingsSection(title: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.secondary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                content()
-            }
-        }
-    }
-}
 
-@Composable
-fun PremiumStatusSection(state: ProfileState, onPaymentClick: () -> Unit) {
-    SettingsSection(title = stringResource(R.string.profile_plan_usage)) {
-        if (state.isPremium) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.VerifiedUser,
-                    contentDescription = null,
-                    tint = Color(0xFF4CAF50),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.profile_premium_subscriber),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color(0xFF4CAF50),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(R.string.profile_unlimited_registration),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else if (state.isTrialActive) {
-            Column {
-                Surface(
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Timer,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.profile_trial_days_remaining_card, state.trialDaysRemaining),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = stringResource(R.string.profile_trial_active_subtitle),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = onPaymentClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.profile_view_premium_plans))
-                }
-            }
-        } else {
-            val freeLimit = state.freeLimit.coerceAtLeast(1)
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.profile_registered_products),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = "${state.totalProductsCount}/$freeLimit",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (state.totalProductsCount >= freeLimit) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LinearProgressIndicator(
-                    progress = { (state.totalProductsCount.toFloat() / freeLimit.toFloat()).coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp)),
-                    color = if (state.totalProductsCount >= freeLimit) Color.Red else Color(0xFF8BC34A),
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-
-                if (state.totalProductsCount >= (freeLimit * 0.9).toInt()) {
-                    Text(
-                        text = if (state.totalProductsCount >= freeLimit) 
-                            stringResource(R.string.profile_limit_reached_msg) 
-                            else stringResource(R.string.profile_approaching_limit_msg),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Red,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = onPaymentClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.profile_remove_limits))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ThemeOption(
-    title: String,
-    selected: Boolean,
-    isPremiumOnly: Boolean = false,
-    isUserPremium: Boolean = true,
-    onClick: () -> Unit
-) {
-    val alpha = if (isPremiumOnly && !isUserPremium) 0.6f else 1f
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            enabled = if (isPremiumOnly) isUserPremium else true
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-            modifier = Modifier.weight(1f)
-        )
-        if (isPremiumOnly && !isUserPremium) {
-            Surface(
-                color = Color(0xFFFFD700).copy(alpha = 0.2f),
-                shape = RoundedCornerShape(4.dp),
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(
-                    text = "PREMIUM",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFB8860B),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SwitchSetting(
-    title: String,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
